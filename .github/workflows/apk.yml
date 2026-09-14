@@ -1,0 +1,90 @@
+name: Android-App bauen
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  android:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: android-actions/setup-android@v3
+        with:
+          packages: 'platform-tools platforms;android-35 build-tools;35.0.0'
+      - name: Signierschluessel pruefen
+        env:
+          KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          set -euo pipefail
+          for NAME in KEYSTORE_BASE64 ANDROID_KEYSTORE_PASSWORD ANDROID_KEY_ALIAS ANDROID_KEY_PASSWORD; do
+            test -n "${!NAME}" || { echo "::error::Signier-Secret fehlt: $NAME"; exit 1; }
+          done
+          umask 077
+          printf '%s' "$KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/rasenschach-release.jks"
+          keytool -exportcert -keystore "$RUNNER_TEMP/rasenschach-release.jks" -alias "$ANDROID_KEY_ALIAS" -storepass:env ANDROID_KEYSTORE_PASSWORD > "$RUNNER_TEMP/release.der"
+          ACTUAL=$(sha256sum "$RUNNER_TEMP/release.der" | cut -d ' ' -f 1)
+          EXPECTED=$(tr -d '\r\n ' < signing/certificate-sha256.txt)
+          test "$ACTUAL" = "$EXPECTED" || { echo '::error::Falscher Signierschluessel'; exit 1; }
+      - run: npm ci --no-audit --no-fund
+      - name: Spiel bauen
+        run: |
+          set -euo pipefail
+          npm run build
+          npx --no-install cap sync android
+          node tools/android-version.cjs android/app/build.gradle package.json
+      - name: APK und AAB bauen
+        working-directory: android
+        env:
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          set -euo pipefail
+          export ANDROID_KEYSTORE_PATH="$RUNNER_TEMP/rasenschach-release.jks"
+          SDK_PATH="${ANDROID_SDK_ROOT:-${ANDROID_HOME:-}}"
+          test -n "$SDK_PATH"
+          printf 'sdk.dir=%s\n' "$SDK_PATH" > local.properties
+          chmod +x gradlew
+          ./gradlew assembleRelease bundleRelease --no-daemon
+      - name: Signaturen pruefen und Downloads vorbereiten
+        run: |
+          set -euo pipefail
+          SDK_PATH="${ANDROID_SDK_ROOT:-${ANDROID_HOME:-}}"
+          APK=android/app/build/outputs/apk/release/app-release.apk
+          AAB=android/app/build/outputs/bundle/release/app-release.aab
+          test -s "$APK"
+          test -s "$AAB"
+          "$SDK_PATH/build-tools/35.0.0/apksigner" verify --print-certs "$APK" > "$RUNNER_TEMP/apk-signature.txt"
+          EXPECTED=$(tr -d '\r\n ' < signing/certificate-sha256.txt)
+          ACTUAL=$(sed -n 's/^Signer #1 certificate SHA-256 digest: //p' "$RUNNER_TEMP/apk-signature.txt" | tr -d '\r\n ')
+          test "$ACTUAL" = "$EXPECTED"
+          jarsigner -J-Duser.language=en -verify "$AAB" > "$RUNNER_TEMP/aab-signature.txt"
+          grep -q 'jar verified' "$RUNNER_TEMP/aab-signature.txt"
+          VERSION=$(node -p "require('./package.json').version")
+          mkdir -p release
+          cp "$APK" "release/Rasenschach-XI-${VERSION}.apk"
+          cp "$AAB" "release/Rasenschach-XI-${VERSION}.aab"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Rasenschach-Android
+          path: release/*
+          if-no-files-found: error
+          retention-days: 30
+      - name: Schluessel vom Runner entfernen
+        if: always()
+        run: rm -f "$RUNNER_TEMP/rasenschach-release.jks" "$RUNNER_TEMP/release.der"

@@ -1,0 +1,11 @@
+{
+  "appId": "de.rasenschach.xi",
+  "appName": "Rasenschach XI",
+  "webDir": "dist",
+  "android": {
+    "allowMixedContent": false
+  },
+  "server": {
+    "androidScheme": "https"
+  }
+}
