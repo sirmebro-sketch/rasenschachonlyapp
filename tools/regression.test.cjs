@@ -35,7 +35,8 @@ before(async () => {
     .map(n=>`const ${n}=v=>{out[${JSON.stringify(n.slice(3))}]=v;};`).join('\n');
   const extension = `
 import {renderToStaticMarkup} from 'react-dom/server';
-export {SAVE_KEY, AKA_KEY, LIFE_KEY, createPlayer, develop, simulateSeason, vcFuer, vcPosten, vcAusHaeusern, leereAkademie, leereBilanz, KARTEN, VEREIN, zufallSetzen, rerollWildcard, ladenGesperrt};
+export {SAVE_KEY, AKA_KEY, LIFE_KEY, createPlayer, develop, simulateSeason, vcFuer, vcPosten, vcAusHaeusern, leereAkademie, leereBilanz, KARTEN, VEREIN, zufallSetzen, rerollWildcard, ladenGesperrt, EVENTS, strangDran, strangWeiter, laufStand, laufWeiter};
+export const renderReveal=card=>renderToStaticMarkup(<WildcardEnthuellung card={card} onFertig={()=>{}}/>);
 export const renderShop=(spieler,schritt='training')=>renderToStaticMarkup(<VCLadenAnsicht wo="saison" vc={100} laden={{}} onKauf={()=>{}} spieler={spieler} schritt={schritt}/>);
 export async function runFinish(q,initial={}) {
  const out={};const aka={...leereAkademie(),vc:100,verdient:200,gratisPacks:2,...initial.aka};
@@ -135,4 +136,51 @@ test('Gültiger Tauschkauf vor dem ersten Training: genau 45 VC und nutzbarer Be
 
 test('Vorratskauf ohne aktive Karriere bleibt möglich',async()=>{
  saved.clear();const result=await E.runPurchase(null,'training');assert.equal(result.Aka.vc,55);assert.equal(result.Aka.laden.reroll,1);
+});
+
+
+test('Wildcard-Rückseite verrät weder Kartennamen noch Wirkung und deckt den Hintergrund',()=>{
+ const html=E.renderReveal({r:'unfass',n:'GEHEIMER KARTENNAME',t:'VERBORGENE WIRKUNG'});
+ assert(!html.includes('GEHEIMER KARTENNAME'));
+ assert(!html.includes('VERBORGENE WIRKUNG'));
+ assert.match(html,/background:#04050A/);
+ assert.match(html,/backdrop-filter:none/);
+ assert.match(html,/aria-hidden="true"/);
+ assert.match(html,/wird aufgedeckt/);
+});
+
+for(const [weg,id] of [['treu','tr_4'],['hoeflich','tr_4b'],['still','tr_4c']]) {
+ test('Trainer-Abschied folgt dem gespeicherten Kontakt: '+weg,()=>{
+  const p={...sample(12),age:30,straenge:{trainer:{stufe:3,seit:9,weg}}};
+  const eligible=()=>E.EVENTS.filter(e=>e.strang==='trainer' && E.strangDran(e,p) && e.cond(p));
+  assert.deepEqual(eligible().map(e=>e.id),[id]);
+  p.seasons.pop();assert.equal(eligible().length,0);p.seasons.push({});
+  p.age=28;assert.equal(eligible().length,0);p.age=30;
+  const e=eligible()[0];
+  const save=JSON.parse(JSON.stringify(E.laufStand(p,'event',{queue:[e]},E.EVENTS,'35.172')));
+  const loaded=E.laufWeiter(save,[...E.EVENTS].reverse());
+  assert.equal(loaded.queue[0].id,id);
+  assert.deepEqual(loaded.queue[0].choices.map(c=>c.id),e.choices.map(c=>c.id));
+  E.strangWeiter(p,e,e.choices[0].roll[0].fx);
+  assert.equal(eligible().length,0);
+  assert.equal(p.straenge.trainer.weg,weg);
+ });
+}
+test('Bereits gespeicherter alter Trainer-Abschied behält seine Auswahl und Folgen',()=>{
+ for(const schema of [1,2]) {
+  const entry={id:'tr_4',ctx:{},...(schema===1?{wahlen:[0,1]}:{auswahlIds:['tr_4.0','tr_4.1']})};
+  const loaded=E.laufWeiter({p:sample(12),step:'event',ablauf:{schema,ei:0,queue:[entry]}},E.EVENTS);
+  assert.deepEqual(loaded.queue[0].choices.map(c=>c.roll[0].fx.legacy),[34,14]);
+ }
+});
+test('Trainer-Kontakt kann vor dem Abschied wieder aufgenommen werden',()=>{
+ for(const id of ['tr_2b','tr_2c']) {
+  const e=E.EVENTS.find(e=>e.id===id),p={...sample(5),straenge:{trainer:{stufe:1,seit:2,weg:e.weg}}};
+  E.strangWeiter(p,e,e.choices[0].roll[0].fx);
+  assert.equal(p.straenge.trainer.weg,'treu');
+ }
+});
+test('Ereigniskatalog und Auswahlkennungen sind eindeutig',()=>{
+ assert.equal(new Set(E.EVENTS.map(e=>e.id)).size,E.EVENTS.length);
+ for(const e of E.EVENTS)assert.equal(new Set(e.choices.map(c=>c.id)).size,e.choices.length,e.id);
 });

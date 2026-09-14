@@ -1,14 +1,15 @@
-# Weiterentwicklung nach 35.171.0
+# Weiterentwicklung – 35.172.0
 
 ## Aktueller Gerätetest
 
-Kevin testet 35.171.0. Dieser Entwicklungsstand ergänzt ausschließlich Tests, deren Ausführung und diese Übergabe. App-Quellen, Spielregeln, App-ID, Version und Signierung bleiben auf dem getesteten Stand.
+35.172.0 ergänzt die Wildcard-Korrektur, zwei alternative Abschlüsse des Trainer-Strangs und die vorbereiteten Speicherregressionen. Die neue APK kann über die bestehende App installiert werden; App-ID und Signierung bleiben erhalten. Auf dem Gerät besonders die Enthüllung bei normaler/großer Anzeige sowie mit und ohne Animation testen.
 
 ## Regressionen
 
-`npm ci` und anschließend `npm test`. Aktuell 53 Tests einschließlich Untertests:
+`npm ci` und anschließend `npm test`. Aktuell 60 Tests einschließlich Untertests:
 
 - Abschlussbelohnungen und Kaufbuchungen: 19 vorhandene Tests.
+- Sieben weitere Prüfungen zu verdeckter Wildcard, Trainer-Pfaden, Wartezeit, alten Ereignisspielständen und eindeutigen Kennungen.
 - Zusätzlich 34 Prüfungen zu Speicherfehlern, Wiederherstellung, Import/Rücknahme und Fortsetzen.
 - Fehler werden an jedem Zugriff des normalen Mehrfachbuchungsablaufs einzeln injiziert; anschließend wird der vollständig wiederhergestellte Stand geprüft.
 - Simulierte Prozessabbrüche nach 0–3 Teiländerungen sowie ein anhaltender Fehler während der Rücksetzung.
@@ -17,10 +18,10 @@ Kevin testet 35.171.0. Dieser Entwicklungsstand ergänzt ausschließlich Tests, 
 
 GitHub prüft Pull Requests automatisch mit Tests und Web-Build, ohne Signier-Secrets. Der Android-Release-Workflow bleibt unverändert und führt die erweiterte Testsuite ebenfalls aus.
 
-Die Tests verwenden kontrollierte Speicheradapter und Ereignisbeispiele. Sie ersetzen weder den echten Android-Prozessabbruch noch eine vollständige Prüfung aller Ereignisfolgen. Lokal: 53/53 Tests und Produktionsbuild erfolgreich. Das zusätzliche GitHub-Ergebnis steht am Pull Request.
+Die Tests verwenden kontrollierte Speicheradapter und Ereignisbeispiele. Sie ersetzen weder den echten Android-Prozessabbruch noch eine vollständige Prüfung aller Ereignisfolgen. Lokal: 60/60 Tests, Produktionsbuild und Capacitor-Synchronisierung erfolgreich. Die Wildcard-Prüfung kontrolliert das initial gerenderte Markup und die Deckfarbe; sie ersetzt keine visuelle Prüfung der Drehung in der Android-WebView. CI-Ergebnisse stehen am jeweiligen Commit.
 
 ## Nächste kleine Inhaltsrunde
 
-Nach Auswertung des Gerätetests zuerst den vorhandenen Trainer-Storystrang vertiefen: eine spätere passende Konsequenz einer früheren Entscheidung innerhalb der vorhandenen Ereignisfrequenz. Vor Umsetzung die vier bestehenden Schritte und bereits vorhandene Trainerereignisse abgleichen. Keine neuen Pflichtfenster oder zusätzliche Währung.
+Umgesetzt: Der vierte Trainer-Schritt unterscheidet gepflegten, lockeren und abgebrochenen Kontakt. Erfolgreiche Annäherung im zweiten Schritt führt weiter zum engen Kontakt. Vier Schritte und bisherige Ereignisfrequenz bleiben erhalten. Bereits gespeicherte Abschiedsereignisse behalten ihre bisherigen Auswahlfolgen. Neue Varianten erhalten eigene stabile Kennungen.
 
-Danach wenige positions-/altersabhängige Varianten und präzisere Magazin-Schlagzeilen prüfen. Jede Inhaltsrunde braucht eindeutige Ereignis- und Auswahlkennungen sowie einen Ladeverträglichkeitstest für gespeicherte Ereignisse. Bekannte Grenzen 3/15 Saisons und Vorsatz unter der Wildcard erhalten.
+Als mögliche nächste Runde wenige positions-/altersabhängige Varianten und präzisere Magazin-Schlagzeilen prüfen. Jede Inhaltsrunde braucht eindeutige Ereignis- und Auswahlkennungen sowie einen Ladeverträglichkeitstest für gespeicherte Ereignisse. Bekannte Grenzen 3/15 Saisons und Vorsatz unter der Wildcard erhalten.

@@ -23,8 +23,8 @@ import { machAkademie } from "./akademie.js";
    ================================================================ */
 
 const NAME = "Rasenschach XI";
-const VERSION = "35.171";
-const VERSION_INFO = "Abschlussbelohnungen ab 3/15 Saisons; Coinbelege und Wildcard-Kauf korrigiert.";
+const VERSION = "35.172";
+const VERSION_INFO = "Wildcard ohne vorzeitigen Blick; Trainer-Abschied mit Folgen früherer Entscheidungen.";
 
 /* Fester Zufallsstrom aus einer Zeichenkette — damit Angebote des eigenen
    Vereins nicht bei jedem Klick anders aussehen.                        */
@@ -12106,10 +12106,11 @@ function WildcardEnthuellung({ card, onFertig }) {
   }, []);
 
   const auf = stufe >= 1;
-  return (
-    <div className="rs-schleier" onClick={() => bereit && onFertig && onFertig()}
+  const fenster = (
+    <div className={"fl rs-schleier" + (RUHE ? " rs-still" : "")} onClick={() => bereit && onFertig && onFertig()}
       {...flaecheAlsKnopf(() => bereit && onFertig && onFertig(), "Weiter")}
-      style={{ cursor: bereit ? "pointer" : "default", overflow: "hidden" }}>
+      style={{ cursor: bereit ? "pointer" : "default", overflow: "hidden", background: "#04050A",
+        backdropFilter: "none", WebkitBackdropFilter: "none", zIndex: 100 }}>
 
       {/* Blitz im Moment des Umschlags */}
       {!RUHE && stufe === 1 && gross && (
@@ -12166,7 +12167,8 @@ function WildcardEnthuellung({ card, onFertig }) {
             {/* Vorderseite. Die Einblendung der Zeilen hängt an „auf" und
                 wird danach nicht mehr angefasst — sonst begänne sie von
                 vorn und der Text wäre kurz weg. */}
-            <div style={{ position: "absolute", inset: 0,
+            <div aria-hidden={!auf} style={{ position: "absolute", inset: 0,
+              visibility: auf ? "visible" : "hidden",
               backfaceVisibility: "hidden", WebkitBackfaceVisibility: "hidden",
               transform: "rotateY(180deg)", borderRadius: 0, overflow: "hidden",
               border: (1 + Math.round(pomp * 3)) + "px solid " + r.col,
@@ -12181,13 +12183,13 @@ function WildcardEnthuellung({ card, onFertig }) {
               <div className={auf && !RUHE ? "eb rs-auf" : "eb"}
                 style={{ color: r.col, letterSpacing: ".14em", animationDelay: "300ms",
                   position: "relative", zIndex: 1 }}>
-                {r.name.toUpperCase()}</div>
+                {auf ? r.name.toUpperCase() : null}</div>
               <div className={auf && !RUHE ? "d rs-auf" : "d"}
                 style={{ fontSize: "clamp(20px,5.6vw,30px)", lineHeight: 1.08, marginTop: 4,
-                  animationDelay: "390ms" }}>{card.n}</div>
+                  animationDelay: "390ms" }}>{auf ? card.n : null}</div>
               <p className={auf && !RUHE ? "rs-auf" : ""}
                 style={{ fontSize: 11.5, color: "var(--mu)", marginTop: 6,
-                  animationDelay: "480ms" }}>{card.t}</p>
+                  animationDelay: "480ms" }}>{auf ? card.t : null}</p>
               {pomp >= .5 && <span className="rs-band"><i /></span>}
             </div>
           </div>
@@ -12195,12 +12197,15 @@ function WildcardEnthuellung({ card, onFertig }) {
       </div>
 
       {bereit
-        ? <button className="btn sm rs-auf" style={{ zIndex: 3 }} onClick={() => onFertig && onFertig()}>
+        ? <button className="btn sm rs-auf" style={{ zIndex: 3 }} onClick={e => { e.stopPropagation(); onFertig && onFertig(); }} onKeyDown={e => e.stopPropagation()}>
             <span className="m" style={{ fontSize: 11 }}>Weiter</span></button>
         : <div className="m" style={{ fontSize: 10.5, color: "var(--mu)", opacity: .55, zIndex: 3,
             letterSpacing: ".12em" }}>{auf ? "…" : "wird aufgedeckt"}</div>}
     </div>
   );
+  // Außerhalb transformierter Spielbereiche: deckt den gesamten Bildschirm ab.
+  return typeof document !== "undefined" && document.body
+    ? createPortal(fenster, document.body) : fenster;
 }
 
 /* ---------- Spielerkarte (35.82) ------------------------------------------
