@@ -1,3 +1,4 @@
+import { laufbahnBeleg, abschlussBeleg, saisonenGespielt, VC_MIN_SAISONEN, PACK_MIN_SAISONEN } from "./belohnungen.js";
 import { packBuchung, verkaufsBuchung } from "./buchungen.js";
 import React, { useState, useEffect, useLayoutEffect, useRef, useMemo } from "react";
 /* Nur fuer `createPortal` (35.78). Der Sonderschuss ist ein Fenster ueber
@@ -22,8 +23,8 @@ import { machAkademie } from "./akademie.js";
    ================================================================ */
 
 const NAME = "Rasenschach XI";
-const VERSION = "35.170";
-const VERSION_INFO = "Android-Vollbild: Systemleisten per Randgeste einblendbar.";
+const VERSION = "35.171";
+const VERSION_INFO = "Abschlussbelohnungen ab 3/15 Saisons; Coinbelege und Wildcard-Kauf korrigiert.";
 
 /* Fester Zufallsstrom aus einer Zeichenkette — damit Angebote des eigenen
    Vereins nicht bei jedem Klick anders aussehen.                        */
@@ -6371,7 +6372,7 @@ const { ABTEILUNGEN, AKA_MAX, AKA_STUFEN,
 function vcAusHaeusern(akaJahre, vereinSaison, neueErfolge) {
   let vc = 0;
   const posten = [];
-  const dazu = (n, x) => { if (x > 0) { vc += x; posten.push({ n, x }); } };
+  const dazu = (n, x) => { if (x > 0) { vc += x; posten.push({ k: n, v: x }); } };
 
   /* Die Akademie: bezahlt wird, was aus den Jungen wird — nicht, wie viele
      man aufnimmt. Sonst lohnte sich Masse statt Arbeit. */
@@ -6417,59 +6418,18 @@ function vcAusHaeusern(akaJahre, vereinSaison, neueErfolge) {
   const PROSTUFE = { bronze: 1, silber: 1, gold: 2, platin: 4, legende: 7 };
   (neueErfolge || []).forEach((e) => {
     const x = PROSTUFE[e.s] || 0;
-    if (x) { vc += x; posten.push({ n: e.n, x }); }
+    if (x) { vc += x; posten.push({ k: "Errungenschaft: " + e.n, v: x }); }
   });
 
   return { vc, posten };
 }
 
-/* Vermächtnis-Coins für eine beendete Laufbahn. Bewusst so bemessen, dass
-   ein guter Durchgang spürbar etwas bringt, ohne alles sofort zu kaufen. */
+/* Ein Beleg liefert sowohl die Buchung als auch die angezeigten Einzelposten. */
 function vcFuer(p) {
-  if (!p) return 0;
-  const v = p.verdict || verdict(p);
-  /* /26 → /21: rund ein Fünftel mehr. Der Shop zieht Geld aus demselben Topf,
-     mit dem die Akademie bezahlt wird; ohne Ausgleich fiele „Laufbahnen bis
-     Vollausbau" aus dem Zielband. BEWUSST knapp bemessen — der Ausbau soll ein
-     Langzeitziel bleiben, nicht nach zehn Laufbahnen erledigt sein. */
-  let vc = Math.round(v.score / 26);
-  if (v.ehre) vc += 11;                                   // Vermächtnistitel
-  vc += (p.trophies || []).length;
-  vc += Math.round(((p.nt && p.nt.caps) || 0) / 26);
-  if (p.flags && p.flags.legende) vc += 7;
-  if (p.wc && (p.wc.r === "goat" || p.wc.r === "hsv")) vc += 9;
-  /* Ausgleich für den Shop (34.18). Er zieht Geld aus demselben Topf, mit dem
-     die Akademie bezahlt wird; ohne das fiele „Laufbahnen bis Vollausbau" aus
-     dem Zielband, sobald jemand einkauft.
-
-     Der Aufschlag steht bewusst HIER und nicht in einem der Posten: er wirkt
-     dann gleichmässig statt eine einzelne Quelle zu verzerren, und man sieht
-     ihm an, wofür er da ist. 18 % sind knapp bemessen — der Ausbau soll ein
-     Langzeitziel bleiben. Ohne Einkäufe sinkt er von 30 auf rund 25 Laufbahnen,
-     mit üblichen Einkäufen landet er wieder bei etwa 31. */
-  vc = Math.round(vc * 1.18);
-  /* Zweiter Faktor, bewusst getrennt vom ersten (35.13). Die Akademie hat drei
-     Abteilungen mehr bekommen, der Vollausbau kostet 2.912 statt 1.564 VC. Ohne
-     Ausgleich braeuchte er 52 Laufbahnen statt 27 — Kevins Vorgabe war
-     ausdruecklich, das Zielband 25–35 zu halten und den Verdienst mitzuheben.
-     Getrennt gehalten, damit man beiden Faktoren ansieht, wofuer sie da sind:
-     1,18 gleicht den Shop aus, 1,80 die groessere Akademie. Wer eine der beiden
-     Ursachen aendert, weiss dann, an welcher Zahl er zu drehen hat. */
-  vc = Math.round(vc * 1.80);
-  return Math.max(5, vc);
+  return p ? laufbahnBeleg(p, p.verdict || verdict(p)).vc : 0;
 }
-/* Aufschlüsselung für die Anzeige nach dem Karriereende */
 function vcPosten(p) {
-  const v = p.verdict || verdict(p);
-  const L = [{ k: "Aus " + v.score.toLocaleString("de-DE") + " Vermächtnispunkten",
-    v: Math.round(v.score / 26) }];
-  if (v.ehre) L.push({ k: "Vermächtnistitel", v: 11 });
-  if ((p.trophies || []).length) L.push({ k: p.trophies.length + " Titel", v: p.trophies.length });
-  const c = Math.round(((p.nt && p.nt.caps) || 0) / 26);
-  if (c) L.push({ k: p.nt.caps + " Länderspiele", v: c });
-  if (p.flags && p.flags.legende) L.push({ k: "Vereinslegende", v: 7 });
-  if (p.wc && (p.wc.r === "goat" || p.wc.r === "hsv")) L.push({ k: "Besondere Karte", v: 9 });
-  return L;
+  return p ? laufbahnBeleg(p, p.verdict || verdict(p)).posten : [];
 }
 
 /* ==========================================================================
@@ -6579,7 +6539,10 @@ const shopFuer = () => VCLADEN;
    Nur DIESER Artikel: die uebrigen „saison"-Artikel wirken in
    `simulateSeason` und sind bis dahin nutzbar. Eine pauschale Sperre waere
    bequemer und falsch. */
-const ladenGesperrt = (a, wo, schritt) => {
+const ladenGesperrt = (a, wo, schritt, spieler = null) => {
+  if (a.id === "reroll" && wo === "saison"
+      && (saisonenGespielt(spieler) > 0 || (schritt && schritt !== "training")))
+    return "Wildcard-Tausch nur vor dem ersten Training";
   if (a.wann === "saison" && wo !== "saison") return "erst in der Laufbahn";
   if (a.id === "training" && schritt && schritt !== "training")
     return "Das Training dieser Saison ist durch";
@@ -6681,16 +6644,16 @@ function Ueberlagerung({ children, onZu }) {
     </div>);
 }
 
-function LadenSeite({ wo, vc, laden, onKauf, onBack, schritt }) {
+function LadenSeite({ wo, vc, laden, onKauf, onBack, schritt, spieler }) {
   useZurueck(onBack);
   return (
     <div className="fade">
-      <VCLadenAnsicht wo={wo} vc={vc} laden={laden} onKauf={onKauf} schritt={schritt} />
+      <VCLadenAnsicht wo={wo} vc={vc} laden={laden} onKauf={onKauf} schritt={schritt} spieler={spieler} />
       <button className="btn" style={{ marginTop: 14 }} onClick={onBack}>Zurück</button>
     </div>);
 }
 
-function VCLadenAnsicht({ wo, vc, laden, onKauf, schritt }) {
+function VCLadenAnsicht({ wo, vc, laden, onKauf, schritt, spieler }) {
   const artikel = shopFuer();
   const L = laden || {};
   return (
@@ -6702,7 +6665,7 @@ function VCLadenAnsicht({ wo, vc, laden, onKauf, schritt }) {
       <div className="g1" style={{ marginTop: 10 }}>
         {artikel.map((a) => (
           <LadenPosten key={a.id} a={a} vc={vc} onKauf={onKauf}
-            sperre={ladenGesperrt(a, wo, schritt)}
+            sperre={ladenGesperrt(a, wo, schritt, spieler)}
             rest={(L[a.id] || 0)}
             kaufbar={ladenKaufbar(a, L)} />))}
       </div>
@@ -12288,7 +12251,7 @@ function Merkzeichen({ sym, farbe, groesse = 15 }) {
 /* ---------- Der Packladen (35.85) ----------------------------------------
    Kevin: „Packs werden ueber VC gekauft. Es sollte verschiedene Packs geben
    (Bronze, Silber, Gold, Legendaer), einmal nach jeder Spielerkarriere gibt es
-   ein Bronzepack gratis."
+   ein Bronzepack gratis." Seit 35.171 erst nach mindestens 15 gespielten Saisons.
 
    DREI ZUSTAENDE, und der mittlere ist der Punkt:
      Laden      die vier Packs mit Preis und dem, was sie zusagen
@@ -12865,7 +12828,7 @@ function Packladen({ vc, pool, verein, gratis, startpaket, startReiter,
             <div className="d" style={{ fontSize: 17, marginTop: 2 }}>
               {gratis === 1 ? "Ein Bronzepack wartet" : gratis + " Bronzepacks warten"}</div>
             <div className="m" style={{ fontSize: 11, color: "var(--mu)", marginTop: 3 }}>
-              Für jede beendete Laufbahn eines.</div>
+              Je beendeter Laufbahn mit mindestens {PACK_MIN_SAISONEN} gespielten Saisons eines.</div>
             <button className="btn pri" style={{ marginTop: 10, width: "100%" }}
               disabled={speichert} onClick={() => ziehen("bronze", true)}>Gratispack öffnen</button>
           </div>)}
@@ -13579,7 +13542,8 @@ const ANLEITUNG = [
     ["Einmal neu ziehen", "Ganz am Anfang. Danach lebst du damit."]]],
   ["Wenn es vorbei ist", [
     ["Vermächtnispunkte", "Zählen, was du geschafft hast, und bestimmen deinen Platz in der Ruhmeshalle."],
-    ["Vermächtnis-Coins", "Was anderes. Damit baust du die Jugendakademie aus — die bleibt über alle Laufbahnen."],
+    ["Vermächtnis-Coins", "Ab drei gespielten Saisons gibt es beim Karriereabschluss Coins, auch für die dann erreichten Boni. Damit baust du unter anderem deine Jugendakademie aus."],
+    ["Gratispack", "Ein Bronzepack beim Karriereabschluss, wenn du mindestens 15 Saisons gespielt hast. Einmal je Laufbahn."],
     /* ZAHL AUS DER LISTE, nicht abgeschrieben (35.102). Hier stand "162
        Stück", waehrend `ACHIEVEMENTS` laengst 192 Eintraege hatte — 30 zu
        wenig. `ANLEITUNG` steht ab Zeile 11642, `ACHIEVEMENTS` ab 7702, die
@@ -14197,7 +14161,7 @@ const WILLKOMMEN = [
   { kopf: "Deine Laufbahn", bild: BildLaufbahn, frei: null,
     text: "Du bist der Spieler, nicht der Trainer. Jede Saison legst du dein Training fest, triffst eine Entscheidung und schaust zu, wie es läuft. Mit 16 geht's los, das Knie sagt Bescheid, wann Schluss ist." },
   { kopf: "Die Jugendakademie", bild: BildAkademie, frei: "nach 2 abgeschlossenen Laufbahnen",
-    text: "Am Karriereende bleiben dir Coins. Damit baust du eine Akademie, die weiterläuft, während du die nächste Laufbahn spielst. Neun Abteilungen, jede bis Stufe 6 — alles auf einmal geht nie." },
+    text: "Ab drei gespielten Saisons bleiben dir am Karriereende Coins. Damit baust du eine Akademie, die weiterläuft, während du die nächste Laufbahn spielst. Neun Abteilungen, jede bis Stufe 6 — alles auf einmal geht nie." },
   { kopf: "Dein eigener Verein", bild: BildVerein, frei: "nach 5 abgeschlossenen Laufbahnen",
     text: "Irgendwann lässt du die Absolventen nicht mehr ziehen, sondern ziehst sie hoch. Sechzehn Mann, dritte Liga, und von da nach oben. Die Akademie muss nachliefern — das ist die Entscheidung." },
 ];
@@ -17211,11 +17175,18 @@ function EndScreen({ p, onNew }) {
               <div>
                 <div className="eb" style={{ color: "var(--go)" }}>Vermächtnis-Coins</div>
                 <div className="m" style={{ fontSize: 10, color: "var(--mu)", marginTop: 2 }}>
-                  Nicht dasselbe wie Vermächtnispunkte — die bewerten die Laufbahn,
-                  die Coins bauen die Akademie.</div>
+                  Gesamte Gutschrift aus dieser Laufbahn einschließlich aller Boni.</div>
               </div>
               <div className="d" style={{ fontSize: 38, color: "var(--go)", lineHeight: 1 }}>
                 +<Zahl v={p.vcGewinn} dauer={1400} /></div>
+            </div>
+            <div className="m" style={{ fontSize: 11, marginTop: 8, color: "var(--mu)" }}>
+              {saisonenGespielt(p) < VC_MIN_SAISONEN
+                ? "Keine VC: Für Abschlussbelohnungen sind mindestens " + VC_MIN_SAISONEN + " gespielte Saisons nötig."
+                : saisonenGespielt(p) + " Saisons gespielt."}
+              {p.gratisPackGewinn > 0
+                ? " Ein Gratis-Bronzepack liegt im Packladen bereit."
+                : " Ein Gratispack gibt es ab " + PACK_MIN_SAISONEN + " gespielten Saisons beim Karriereabschluss."}
             </div>
             <div className="g2" style={{ marginTop: 8 }}>
               {(p.vcPosten || []).map((x, i) => (
@@ -17665,10 +17636,9 @@ function FlutlichtApp() {
        Summe kein kleiner Betrag, und der erste Entwurf mit 3/6/12/20/35 haette
        fast den ganzen Vollausbau verschenkt. */
     const erfLohn = vcAusHaeusern(null, null, neu);
-    const a3 = erfLohn.vc > 0 ? { ...A, vc: (A.vc || 0) + erfLohn.vc,
-      verdient: (A.verdient || 0) + erfLohn.vc } : A;
+    // Auszahlung erfolgt gesammelt in finish; auch Boni brauchen drei Saisons.
     q.neueErfolge = neu.map((a) => ({ id: a.id, n: a.n, s: a.s, lohn: a.lohn }));
-    return { ges: G, ach: next, meta: frei, wcSeen: wcN, aka: a3 };
+    return { ges: G, ach: next, meta: frei, wcSeen: wcN, aka: A, vcBelohnung: erfLohn };
   };
 
   /* Eine Abteilung ausbauen */
@@ -17694,7 +17664,7 @@ function FlutlichtApp() {
      nur `p.laden` — also stand im Laden ewig „läuft“, Nachkaufen war für immer
      gesperrt, und `start()` schenkte den Kauf jeder weiteren Laufbahn erneut. */
   const ladenKauf = (a) => {
-    if (ladenGesperrt(a, p && !p.retired ? "saison" : "menu", step)) return;
+    if (ladenGesperrt(a, p && !p.retired ? "saison" : "menu", step, p)) return;
     const kasse = aka.vc || 0;
     if (kasse < a.preis) return;
     /* Gegen den Bestand prüfen, der wirklich gilt: läuft eine Laufbahn, ist
@@ -17746,9 +17716,8 @@ function FlutlichtApp() {
     /* Ausgleichszähler der Rautekarte: nach jeder abgeschlossenen Laufbahn
        ohne sie steigt die Aussicht, mit ihr beginnt alles von vorn. */
     const hsvNeu = q.flags.nurderhsv ? 0 : Math.max(hsvZ, q.hsvZaehler || 0) + 1;
-    const vcNeu = vcFuer(q);
-    const AK2 = akaVerbuchen(aka, vcNeu);
-    q.vcGewinn = vcNeu; q.vcPosten = vcPosten(q);
+    // Akademiejahr zuerst, sämtliche VC danach in genau einer Gesamtbuchung.
+    const AK2 = akaVerbuchen(aka, 0);
     q.akaEreignisse = AK2.ereignisse; q.akaName = AK2.a.name; q.akaAktiv = !!AK2.a.gegruendet;
 
     /* ---- AUS DER JUGEND IN DIE SAMMLUNG (35.125) --------------------------
@@ -17887,9 +17856,6 @@ function FlutlichtApp() {
          gehoert GESAGT, sonst wundert man sich, warum der Verein steht. */
       q.vereinBericht = { ausgefallen: true, name: verein.name, jahr: verein.jahr };
     }
-    const zl = akaNaechster(AK2.a);
-    q.akaZiel = zl ? { name: zl.abt.n, stufe: zl.stufe + 1, preis: zl.preis,
-      fehlt: zl.fehlt, reicht: zl.reicht, anteil: zl.anteil } : null;
     /* ---- Die neuen VC-Quellen gutschreiben (35.81) -----------------------
        ERST HIER, nicht bei `akaVerbuchen`. Dort sind das Akademiejahr und die
        Vereinssaison noch nicht gelaufen — es gaebe nichts zu bezahlen.
@@ -17907,22 +17873,20 @@ function FlutlichtApp() {
       turniere: (nachBil.turniere || 0) - (vorBil.turniere || 0),
     };
     const haus = vcAusHaeusern(akaZuwachs, vereinErgebnis, null);
-    /* EIN GRATISPACK JE LAUFBAHN (35.85, Kevins Vorgabe). Es wird
-       GEZAEHLT, nicht sofort geoeffnet: wer drei Laufbahnen am Stueck spielt,
-       soll drei Packs vorfinden und nicht zwei verlieren. */
-    AK2.a = { ...AK2.a, gratisPacks: ((AK2.a && AK2.a.gratisPacks) || 0) + 1 };
-    if (startpaketOffen) {
-      AK2.a = { ...AK2.a, startpaket: startpaketOffen };
-    }
-    if (haus.vc > 0) {
-      AK2.a = { ...AK2.a, vc: (AK2.a.vc || 0) + haus.vc,
-        verdient: (AK2.a.verdient || 0) + haus.vc };
-      q.vcGewinn = (q.vcGewinn || 0) + haus.vc;
-      q.vcPosten = [...(q.vcPosten || []), ...haus.posten];
-    }
+    if (startpaketOffen) AK2.a = { ...AK2.a, startpaket: startpaketOffen };
 
     const erlebtNeu = bereiteErlebtes(q);
     const erfolge = bereiteErfolge(q, AK2.a, vereinNachher, vereinsBilanz);
+    const beleg = abschlussBeleg(q, q.verdict, haus, erfolge.vcBelohnung);
+    erfolge.aka = { ...erfolge.aka,
+      vc: (erfolge.aka.vc || 0) + beleg.vc,
+      verdient: (erfolge.aka.verdient || 0) + beleg.vc,
+      gratisPacks: (erfolge.aka.gratisPacks || 0) + beleg.gratisPacks };
+    q.vcGewinn = beleg.vc; q.vcPosten = beleg.posten;
+    q.gratisPackGewinn = beleg.gratisPacks;
+    const zl = akaNaechster(erfolge.aka);
+    q.akaZiel = zl ? { name: zl.abt.n, stufe: zl.stufe + 1, preis: zl.preis,
+      fehlt: zl.fehlt, reicht: zl.reicht, anteil: zl.anteil } : null;
     /* Verein mit den meisten Einsätzen — das ist der Verein, für den man
        in Erinnerung bleibt, nicht der letzte. */
     const proVerein = {};
@@ -18602,7 +18566,7 @@ function FlutlichtApp() {
   if (phase === "laden") return (
     <Shell blatt="laden">
       <LadenSeite wo={p ? "saison" : "start"} vc={aka.vc || 0} laden={p ? p.laden : aka.laden}
-        onKauf={ladenKauf} onBack={() => setPhase("menu")} schritt={p ? step : null} />
+        onKauf={ladenKauf} onBack={() => setPhase("menu")} schritt={p ? step : null} spieler={p} />
     </Shell>);
   if (phase === "create") return <CreateScreen onStart={start} onBack={() => setPhase("menu")} meta={meta} />;
   if (!p) return null;
@@ -19214,7 +19178,7 @@ function FlutlichtApp() {
 
       {ladenAuf && (
         <Ueberlagerung onZu={() => setLadenAuf(false)}>
-          <VCLadenAnsicht wo="saison" vc={aka.vc || 0} laden={p ? p.laden : aka.laden} onKauf={ladenKauf} schritt={p ? step : null} />
+          <VCLadenAnsicht wo="saison" vc={aka.vc || 0} laden={p ? p.laden : aka.laden} onKauf={ladenKauf} schritt={p ? step : null} spieler={p} />
         </Ueberlagerung>)}
       {schluss && schluss.lauf === p.lauf && !rueckblick && (!jubel || !jubel.length) && !simLauf && (
         <div className="rs-schleier" style={{ padding: "0 18px" }}>

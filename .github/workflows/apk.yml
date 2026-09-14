@@ -68,6 +68,8 @@ jobs:
           EXPECTED=$(tr -d '\r\n ' < signing/certificate-sha256.txt)
           test "$ACTUAL" = "$EXPECTED" || { echo '::error::Falscher Signierschluessel'; exit 1; }
       - run: npm ci --no-audit --no-fund
+      - name: Regressionen pruefen
+        run: npm test
       - name: Spiel bauen
         run: |
           set -euo pipefail
