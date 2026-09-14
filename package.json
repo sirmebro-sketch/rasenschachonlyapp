@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "build": "vite build",
-    "test": "node --test tools/regression.test.cjs"
+    "test": "node --test tools/*.test.cjs"
   },
   "dependencies": {
     "@capacitor/android": "^7.0.0",
