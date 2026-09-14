@@ -22,8 +22,8 @@ import { machAkademie } from "./akademie.js";
    ================================================================ */
 
 const NAME = "Rasenschach XI";
-const VERSION = "35.169";
-const VERSION_INFO = "Gemeinsamer Stand: Saisonbilanz gezielt abgesichert.";
+const VERSION = "35.170";
+const VERSION_INFO = "Android-Vollbild: Systemleisten per Randgeste einblendbar.";
 
 /* Fester Zufallsstrom aus einer Zeichenkette — damit Angebote des eigenen
    Vereins nicht bei jedem Klick anders aussehen.                        */

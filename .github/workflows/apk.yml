@@ -5,6 +5,13 @@ on:
     branches: [main]
     paths:
       - '.github/workflows/apk.yml'
+      - '*.js'
+      - '*.jsx'
+      - '*.json'
+      - 'index.html'
+      - 'android/**'
+      - 'tools/**'
+      - 'signing/certificate-sha256.txt'
 permissions:
   contents: read
 jobs:
