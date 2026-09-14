@@ -1,5 +1,15 @@
 # Änderungen
 
+## 35.172.0 – Verdeckte Wildcard und Trainer-Abschied
+
+- Wildcard-Enthüllung mit vollständig deckendem Hintergrund, außerhalb transformierter Spielbereiche. Name und Wirkung werden erst beim Umdrehen gerendert.
+- Weiter-Knopf reicht Klick und Tastendruck nicht mehr an die umgebende Weiter-Fläche weiter.
+- Trainer-Abschied folgt dem zuvor gepflegten Kontakt: zwei alternative Abschlüsse, weiterhin vier Schritte. Alte gespeicherte Ereigniskennungen und Auswahlfolgen bleiben gültig. Zwei widersprüchliche Trainerformulierungen berichtigt.
+- Vorbereitete Speicher-/Fortsetzungstests übernommen und um Wildcard- und Trainer-Regressionen ergänzt: 60 Prüfungen insgesamt.
+- VersionCode 3517200; App-ID, Signierung, Vollbild und Belohnungsgrenzen 3/15 bleiben erhalten.
+
+Validierung: 60/60 Tests, Produktionsbuild und Capacitor-Synchronisierung lokal erfolgreich. Android-Build und Signaturprüfung im Workflow dieses Commits; visuelle Enthüllung und Langzeitverhalten weiterhin auf dem Gerät prüfen.
+
 ## 35.171.0 – Abschlussbelohnungen und sichere Käufe
 
 - Abschluss-VC erst ab drei tatsächlich abgeschlossenen Saisons, einschließlich Jugend-, Vereins- und Errungenschaftsboni. Unter drei Saisons gibt es keine Abschluss-VC; freigeschaltete Errungenschaften bleiben erhalten.

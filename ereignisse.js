@@ -406,7 +406,7 @@ export const machEreignisse = (H) => {
      roll:[{p:1,text:"Du sagst nichts. Am Donnerstag steht der Neue auf dem Platz und redet über einen Neuanfang.",fx:{strangWeg:"still",morale:-6,form:4}}]}]},
 
 { id:"tr_2a", tag:"Verein", w:3, strang:"trainer", stufe:2, weg:"treu", wartezeit:2, cond:p=>true,
-  title:T("Er ruft aus der zweiten Liga an"),
+  title:T("Er ruft aus einer unteren Liga an"),
   text:T("Er hat wieder eine Mannschaft, drei Klassen tiefer, und ruft nicht wegen eines Wechsels an. Er will wissen, wie es dir geht."),
   choices:[
     {id:"tr_2a.0", altIndex:0, label:"Hinfahren und zusehen",hint:"Ein freies Wochenende",
@@ -432,7 +432,7 @@ export const machEreignisse = (H) => {
      roll:[{p:.55,text:"Es ist unangenehm für zwei Minuten und danach nicht mehr. Ihr trefft euch im Frühjahr.",fx:{strangWeg:"treu",morale:10}},
       {p:.45,text:"Er ist freundlich und bleibt es. Mehr wird daraus nicht.",fx:{morale:-4}}]},
     {id:"tr_2c.1", altIndex:1, label:"Es dabei belassen",hint:"",
-     roll:[{p:1,text:"Ihr seht euch nie wieder außerhalb eines Bildschirms.",fx:{morale:-6,legacy:-4}}]}]},
+     roll:[{p:1,text:"Vorerst bleibt er für dich ein Gesicht auf dem Bildschirm.",fx:{morale:-6,legacy:-4}}]}]},
 
 { id:"tr_3", tag:"Verein", w:3, strang:"trainer", stufe:3, wartezeit:2, cond:p=>true,
   title:T("Er übernimmt wieder oben"),
@@ -444,7 +444,7 @@ export const machEreignisse = (H) => {
     {id:"tr_3.1", altIndex:1, label:"Ihm gratulieren und sonst nichts",hint:"",
      roll:[{p:1,text:"Vier Zeilen, ein Daumen zurück. Ihr habt beide verstanden, dass es dabei bleibt.",fx:{morale:4,legacy:4}}]}]},
 
-{ id:"tr_4", tag:"Verein", w:3, strang:"trainer", stufe:4, wartezeit:3, cond:p=>p.age>=29,
+{ id:"tr_4", tag:"Verein", w:3, strang:"trainer", stufe:4, weg:"treu", wartezeit:3, cond:p=>p.age>=29,
   title:T("Sein letztes Spiel"),
   text:T("Er hört auf. Nicht entlassen, sondern von sich aus, mit einundsechzig. Auf der Einladungsliste für die Verabschiedung stehen vierzig Namen und deiner ganz oben."),
   choices:[
@@ -452,6 +452,25 @@ export const machEreignisse = (H) => {
      roll:[{p:1,text:"Du erzählst die Geschichte vom Dienstagvormittag, an dem er sein Büro geräumt hat. Im Saal wird es still, und danach kommen sechs Leute zu dir.",fx:{legacy:34,morale:18,rep:8,trust:8}}]},
     {id:"tr_4.1", altIndex:1, label:"Hingehen und zuhören",hint:"",
      roll:[{p:1,text:"Du sitzt in der dritten Reihe und sagst nichts. Beim Rausgehen drückt er dir die Hand länger als allen anderen.",fx:{legacy:14,morale:14}}]}]},
+
+/* Abschied ohne enge Bindung: alte Kennungen und vier Stufen bleiben erhalten. */
+{ id:"tr_4b", tag:"Verein", w:3, strang:"trainer", stufe:4, weg:"hoeflich", wartezeit:3, cond:p=>p.age>=29,
+  title:T("Eine Einladung zum Abschied"),
+  text:T("Dein früherer Trainer hört auf. Zwischen euch blieb es bei gelegentlichen Nachrichten. Die Einladung zur Verabschiedung kommt über seinen Verein, mit einer kurzen handschriftlichen Zeile von ihm."),
+  choices:[
+    {id:"tr_4b.0", altIndex:0, label:"Das persönliche Gespräch suchen",hint:"Zeit statt einer großen Rede",
+     roll:[{p:1,text:"Nach dem offiziellen Teil setzt du dich zu ihm. Ihr redet über die Jahre, in denen ihr kaum Kontakt hattet. Es macht euch nicht nachträglich zu engen Freunden, aber ihr geht mit einem guten Gefühl auseinander.",fx:{legacy:14,morale:12}}]},
+    {id:"tr_4b.1", altIndex:1, label:"Eine persönliche Nachricht schicken",hint:"",
+     roll:[{p:1,text:"Diesmal schreibst du mehr als vier Zeilen. Du nennst eine Sache, die du von ihm gelernt hast. Seine Antwort kommt am nächsten Morgen.",fx:{legacy:4,morale:6}}]}]},
+
+{ id:"tr_4c", tag:"Verein", w:3, strang:"trainer", stufe:4, weg:"still", wartezeit:3, cond:p=>p.age>=29,
+  title:T("Du liest von seinem Abschied"),
+  text:T("Dein früherer Trainer beendet seine Laufbahn. Du erfährst es aus einem Artikel. Es gab lange keinen persönlichen Kontakt mehr. Unter dem Text steht ein Foto aus eurer gemeinsamen Zeit."),
+  choices:[
+    {id:"tr_4c.0", altIndex:0, label:"Dich doch noch bei ihm melden",hint:"Ohne etwas zu erwarten",
+     roll:[{p:1,text:"Du schreibst, was du damals nicht gesagt hast. Er bedankt sich freundlich. Ihr holt die verlorenen Jahre nicht nach, aber für dich bleibt ein offener Satz weniger.",fx:{morale:8,legacy:4}}]},
+    {id:"tr_4c.1", altIndex:1, label:"Den Artikel aufbewahren",hint:"Den Abstand akzeptieren",
+     roll:[{p:1,text:"Du legst das Foto zu deinen Erinnerungen. Er gehört zu deiner Geschichte, auch wenn ihr euch nicht nah geblieben seid.",fx:{morale:4}}]}]},
 
 /* --- Storystrang: Der aus der Jugend (35.9) ------------------------------
    Drei Teile ueber die halbe Laufbahn, mit Verzweigung. Kein Fussballstoff im
