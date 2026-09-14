@@ -1,6 +1,10 @@
 name: Android-App bauen
 on:
   workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/apk.yml'
 permissions:
   contents: read
 jobs:
@@ -31,12 +35,28 @@ jobs:
           ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
         run: |
           set -euo pipefail
+          # TXT exports may include trailing CR/LF; preserve all other characters.
+          for NAME in ANDROID_KEYSTORE_PASSWORD ANDROID_KEY_ALIAS ANDROID_KEY_PASSWORD; do
+            VALUE="${!NAME}"
+            while [[ "$VALUE" == *$'\n' || "$VALUE" == *$'\r' ]]; do
+              VALUE="${VALUE%?}"
+            done
+            export "$NAME=$VALUE"
+            test -n "${!NAME}" || { echo "::error::Signier-Secret fehlt: $NAME"; exit 1; }
+          done
           for NAME in KEYSTORE_BASE64 ANDROID_KEYSTORE_PASSWORD ANDROID_KEY_ALIAS ANDROID_KEY_PASSWORD; do
             test -n "${!NAME}" || { echo "::error::Signier-Secret fehlt: $NAME"; exit 1; }
           done
           umask 077
-          printf '%s' "$KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/rasenschach-release.jks"
-          keytool -exportcert -keystore "$RUNNER_TEMP/rasenschach-release.jks" -alias "$ANDROID_KEY_ALIAS" -storepass:env ANDROID_KEYSTORE_PASSWORD > "$RUNNER_TEMP/release.der"
+          if ! printf '%s' "$KEYSTORE_BASE64" | tr -d '\r\n\t ' | base64 --decode > "$RUNNER_TEMP/rasenschach-release.jks"; then
+            echo "::error::ANDROID_KEYSTORE_BASE64 ist ungueltig. Den Inhalt der zugehoerigen TXT-Datei als Secret eintragen."
+            exit 1
+          fi
+          if ! keytool -exportcert -keystore "$RUNNER_TEMP/rasenschach-release.jks" -alias "$ANDROID_KEY_ALIAS" -storepass:env ANDROID_KEYSTORE_PASSWORD -file "$RUNNER_TEMP/release.der" > "$RUNNER_TEMP/keytool-check.log" 2>&1; then
+            echo "::error::Keystore kann nicht geoeffnet oder Alias nicht gefunden werden. ANDROID_KEYSTORE_BASE64, ANDROID_KEYSTORE_PASSWORD und ANDROID_KEY_ALIAS aus demselben privaten Paket pruefen."
+            exit 1
+          fi
+          echo 'Keystore geoeffnet; Zertifikat wird geprueft.'
           ACTUAL=$(sha256sum "$RUNNER_TEMP/release.der" | cut -d ' ' -f 1)
           EXPECTED=$(tr -d '\r\n ' < signing/certificate-sha256.txt)
           test "$ACTUAL" = "$EXPECTED" || { echo '::error::Falscher Signierschluessel'; exit 1; }
@@ -55,6 +75,15 @@ jobs:
           ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
         run: |
           set -euo pipefail
+          # TXT exports may include trailing CR/LF; preserve all other characters.
+          for NAME in ANDROID_KEYSTORE_PASSWORD ANDROID_KEY_ALIAS ANDROID_KEY_PASSWORD; do
+            VALUE="${!NAME}"
+            while [[ "$VALUE" == *$'\n' || "$VALUE" == *$'\r' ]]; do
+              VALUE="${VALUE%?}"
+            done
+            export "$NAME=$VALUE"
+            test -n "${!NAME}" || { echo "::error::Signier-Secret fehlt: $NAME"; exit 1; }
+          done
           export ANDROID_KEYSTORE_PATH="$RUNNER_TEMP/rasenschach-release.jks"
           SDK_PATH="${ANDROID_SDK_ROOT:-${ANDROID_HOME:-}}"
           test -n "$SDK_PATH"
@@ -87,4 +116,4 @@ jobs:
           retention-days: 30
       - name: Schluessel vom Runner entfernen
         if: always()
-        run: rm -f "$RUNNER_TEMP/rasenschach-release.jks" "$RUNNER_TEMP/release.der"
+        run: rm -f "$RUNNER_TEMP/rasenschach-release.jks" "$RUNNER_TEMP/release.der" "$RUNNER_TEMP/keytool-check.log"
