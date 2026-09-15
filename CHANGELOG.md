@@ -1,10 +1,11 @@
-## 35.176.0
+# Änderungen
+
+## 35.176.0 – Persönliche Karrieregeschichten
+
 - Persönlicher Karriereabschluss ergänzt Vorsatz, geteilte Video-Notizen und die gewählte Buchgeschichte anhand gespeicherter Entscheidungen.
 - Späte zweite Bildungschance: Kursbeginn ab 27, Abschluss frühestens zwei Saisons später. Vorhandene Bildungsereignisse bleiben erhalten.
 - Die Mentor-Geschichte kann im späteren Karriereverlauf zeigen, wie die eigenen Notizen weitergegeben werden.
 - Langzeitprüfung erweitert um Vorsatzquoten, Belohnungszeitpunkte, Ereignishäufigkeiten und Karrierephasen; keine Änderung der Belohnungswerte.
-
-# Änderungen
 
 ## 35.175.0 – Vorsätze werden sichtbar und lohnen sich
 
