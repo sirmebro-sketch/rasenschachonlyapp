@@ -257,3 +257,39 @@ test('Neue Videoereignisse passen zur Position und ihre Entscheidungen bleiben l
   }
  }
 });
+/* Der Langzeitlauf (tools/langzeit.cjs) läuft nicht in der CI — er braucht
+   Minuten. Seine Schnittmarken in App.jsx wären damit unbewacht: bis
+   15.09.2026 endete sein Handler-Block an der ungenutzten Funktion
+   `quickSim`, deren Entfernen ihn mit einer irreführenden Meldung beendet
+   hätte, und das erst beim nächsten Lauf von Hand. Diese Prüfung schließt
+   die Lücke — sie kostet Millisekunden und meldet ein Versehen sofort.
+   Siehe README.md.
+
+   Die Prüfungen in DIESER Datei brauchen das nicht: sie schneiden ebenfalls
+   textlich aus App.jsx, laufen aber bei jedem Push, und ihr `part` bricht
+   mit Meldung ab, sobald eine Marke fehlt. */
+test('Prüfstand-Marken für den Langzeitlauf stehen eindeutig in App.jsx',()=>{
+ const {BLOECKE,block,grenzen,anfang,ende}=require('./anker.cjs');
+ const quelle=fs.readFileSync(path.join(root,'App.jsx'),'utf8');
+ for(const b of BLOECKE){
+  const inhalt=block(quelle,b.name);
+  assert(inhalt.includes(b.pflicht),b.name+' umschließt '+b.zweck+' nicht mehr');
+  assert(inhalt.trim().length>0,b.name+' ist leer');
+  assert.equal(quelle.split(anfang(b.name)).length-1,1,b.name+': Anfangsmarke nicht eindeutig');
+  assert.equal(quelle.split(ende(b.name)).length-1,1,b.name+': Endemarke nicht eindeutig');
+ }
+ // Eine verschobene, entfernte oder doppelte Marke muss auffallen, nicht stillschweigend etwas anderes liefern.
+ for(const b of BLOECKE){
+  assert.throws(()=>block(quelle.replace(anfang(b.name),''),b.name),/Prüfstand-Marke/);
+  assert.throws(()=>block(quelle.replace(ende(b.name),''),b.name),/Prüfstand-Marke/);
+  assert.throws(()=>block(quelle+'\n'+ende(b.name),b.name),/Prüfstand-Marke/);
+  /* Der Pflichtinhalt muss IM BLOCK verschwinden, nicht irgendwo in der Datei:
+     der Ankerkommentar oberhalb zitiert „const chooseTraining =" im Fließtext,
+     und ein naives replace() hätte dieses Zitat erwischt statt des Handlers.
+     Deshalb gezielt über die ermittelten Blockgrenzen. */
+  const g=grenzen(quelle,b.name);
+  const verbogen=quelle.slice(0,g.von)+quelle.slice(g.von,g.bis).replace(b.pflicht,'const irgendwasAnderes =')+quelle.slice(g.bis);
+  assert.throws(()=>block(verbogen,b.name),/umschließt nicht mehr/);
+ }
+ assert.throws(()=>block(quelle,'gibtesnicht'),/Unbekannter Prüfstand-Block/);
+});

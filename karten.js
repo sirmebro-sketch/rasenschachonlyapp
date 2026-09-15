@@ -15,7 +15,14 @@
 
    WARUM EINE EIGENE DATEI: App.jsx hat 14.800 Zeilen und ist als Punkt 10 in
    STAND.md als zu gross vermerkt. Ein neues System gehoert nicht hinein.
-   Dasselbe Vorgehen wie bei akademie.js (35.48) und verein.js.              */
+   Dasselbe Vorgehen wie bei akademie.js (35.48) und verein.js.
+
+   [Nachtrag 15.09.2026] Zwei Dinge an diesem Absatz stimmen so nicht mehr.
+   Erstens liegt STAND.md nicht in diesem Repository — es stammt aus der Zeit
+   vor 35.169.0 und wurde beim Import nicht mitgenommen. Zweitens sind aus den
+   14.800 Zeilen inzwischen 19.319 geworden: die Begruendung ist nicht
+   schwaecher geworden, sondern staerker. Der Punkt bleibt offen und steht
+   heute in ENTWICKLUNG.md statt in STAND.md.                                */
 
 export const machKarten = (H) => {
   const { NATIONS, NAT_BY_ID, REGION_KEYS, chance, clamp, gauss, genName, pick, ri } = H;

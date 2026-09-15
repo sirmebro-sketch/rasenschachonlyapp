@@ -6,7 +6,10 @@
 
 ## Regressionen
 
-`npm ci` und anschließend `npm test`. Aktuell 62 Tests einschließlich Untertests:
+`npm ci` und anschließend `npm test`. Aktuell **71** Tests einschließlich
+Untertests (nachgezählt am 15.09.2026). Die Aufstellung darunter beschreibt den
+Stand von 35.172.0 mit 62 Tests und wurde seither nicht nachgeführt; dazu kamen
+die acht Prüfungen aus 35.173.0/35.174.0 und die Ankerprüfung vom 15.09.2026:
 
 - Abschlussbelohnungen und Kaufbuchungen: 19 vorhandene Tests.
 - Sieben weitere Prüfungen zu verdeckter Wildcard, Trainer-Pfaden, Wartezeit, alten Ereignisspielständen und eindeutigen Kennungen.
@@ -61,3 +64,82 @@ Inhalte: `video_tw`, `video_def`, `video_off` für frühe positionsgerechte Vide
 70 Regressionen erfolgreich: echte Abschlussgrenzen 0/3/4/5/15; Akademiejahr, kontrollierter Aufruf der Vereinssimulation, Freischaltzähler und Altdaten nach erneutem Laden; exakter Verkaufserwartungswert; neue Ereignisbedingungen und gespeicherte Auswahlen. Der Vereinsadapter prüft die Aufrufgrenze, nicht jede Vereinskonstellation. Android-Gerätetest bleibt erforderlich, besonders Abschluss mit vier/fünf Saisons und bestehende Freischaltungen.
 
 Neue Langzeit-Stichprobe 35.174: 192 Karrieren, 4.494 Saisons, 7.849 Ereignisse, 444 Ereigniskennungen; alle numerischen/Ablaufprüfungen bestanden. Je 2.000 Packs ergaben 94,3 / 102,0 / 95,4 / 80,9 % Rückfluss (Bronze/Silber/Gold/Legende). Exakte Erwartungswerte oben sind gegenüber dieser endlichen Stichprobe maßgeblich. Produktionsbuild und Capacitor-Synchronisierung erfolgreich; Release-Ergebnis am GitHub-Commit.
+
+## Werkzeug- und Dokumentationsrunde, 15.09.2026 (ohne Versionswechsel)
+
+Die Version bleibt bei 35.174.0, weil sich am Spiel nichts ändert. Nachgewiesen,
+nicht behauptet: das Produktionsbündel ist vor und nach dieser Runde
+**bitgleich** — `dist/assets/index-DZWeO9eP.js`, SHA-256
+`a0b174e4…d308d2ee278`, unverändert. Die Änderungen an `App.jsx` sind reine
+Kommentare, und Kommentare überleben die Minifizierung nicht. Es entsteht also
+keine neue APK und kein neuer versionCode.
+
+**`README.md` neu angelegt.** Bis jetzt hatte das Repository keinen Einstieg:
+`ENTWICKLUNG.md` ist ein Arbeitstagebuch, `CHANGELOG.md` eine Versionsliste,
+aber nirgends stand, was das Projekt ist, wie man es baut und woran man sich
+beim Mitarbeiten hält. Darin jetzt auch die **Vermerk-Konvention** für die
+Arbeit zu dritt: welche Art von Änderung in CHANGELOG, ENTWICKLUNG, README oder
+in einen Kommentar am Code gehört, dazu fünf Regeln, die sich aus den bisherigen
+Fehlern dieses Projekts ergeben (Messwerte mit Verfahren nennen; nichts als
+geprüft ausgeben, was nicht lief; alte Begründungen nicht überschreiben, sondern
+datiert ergänzen; Ereigniskennungen sind endgültig; `App.jsx` ist der
+wahrscheinlichste Konfliktpunkt).
+
+**Tote Verweise auf `STAND.md` aufgelöst.** `akademie.js` und `karten.js`
+verwiesen auf ein Dokument, das nie in diesem Repository lag — es stammt aus der
+Entwicklung vor 35.169.0 und wurde beim Import des vorbereiteten
+Android-Projekts nicht mitgenommen (geprüft über den vollständigen
+Git-Verlauf). Beide Stellen behalten ihren ursprünglichen Wortlaut und bekommen
+einen datierten Nachtrag. Wichtig dabei: der in `akademie.js` erwähnte
+Gleichheitslauf zu 35.48 ist damit **nicht mehr nachlesbar**. Die Aussage „reine
+Umschichtung" steht dort weiter als historische Behauptung, gilt aber nicht als
+heute belegt. In `karten.js` ist zusätzlich die Zahl überholt: aus den genannten
+14.800 Zeilen in `App.jsx` sind 19.319 geworden — die Begründung, neue Systeme
+in eigene Dateien zu legen, ist dadurch stärker geworden, nicht schwächer.
+
+**Prüfstand-Anker eingeführt.** `tools/langzeit.cjs` baut keine React-Oberfläche
+auf, sondern schneidet die echten Handler textlich aus `App.jsx`. Die
+Schnittstellen dafür waren beliebige Codezeilen — der Handler-Block endete an
+`const quickSim =`, also an einer Funktion, die von keiner Stelle aufgerufen
+wird und die jeder jederzeit hätte löschen dürfen. Der Lauf wäre dann mit
+„Handler fehlt: const chooseTraining =" abgebrochen, obwohl `chooseTraining`
+unverändert dasteht; und weil der Langzeitlauf nicht in der CI läuft, hätte das
+erst der nächste bemerkt, der ihn von Hand startet.
+
+Jetzt markieren vier Kommentarzeilen in `App.jsx` die Blöcke
+(`PRUEFSTAND-ANFANG/ENDE: helfer` und `…: handler`), `tools/anker.cjs` führt sie
+an einer Stelle für alle Nutzer, und eine neue Regression prüft bei jedem
+`npm test` Vorhandensein, Eindeutigkeit, Reihenfolge und Inhalt der Marken. Die
+Kopplung an `quickSim` ist gelöst: die Funktion kann jetzt entfernt werden, ohne
+etwas mitzunehmen — bewusst nicht in dieser Runde, das ist eine eigene
+Entscheidung und keine Nebenwirkung.
+
+**`esbuild` als devDependency deklariert.** Sowohl `tools/langzeit.cjs` als auch
+`tools/regression.test.cjs` laden `esbuild`, ohne dass es in `package.json`
+stand; es kam bisher nur zufällig über Vite herein (`npm ls esbuild`:
+`vite@6.4.3 → esbuild@0.25.12`). Das betrifft nicht nur den optionalen Lauf,
+sondern `npm test` und damit die CI: hätte Vite seinen Bündler gewechselt, wären
+die Regressionen ohne eigenes Zutun rot geworden. Jetzt steht `^0.25.12`
+ausdrücklich in `package.json`; npm löst weiterhin auf dieselbe einzige Kopie
+auf (`deduped`), `npm ci` installiert unverändert 160 Pakete.
+
+**Geprüft in dieser Runde:** `npm test` 71/71 (vorher 70/70), Produktionsbündel
+bitgleich, `node tools/langzeit.cjs` zeichengleiche Ausgabe zum Lauf vor der
+Änderung (192 Karrieren, 4.494 Saisons, 7.849 Ereignisse, 444 Kennungen;
+Packrückfluss 94,3 / 102,0 / 95,4 / 80,9 %). Der neue Wächter wurde nicht nur
+geschrieben, sondern ausgelöst: eine testweise entfernte Marke ließ `npm test`
+rot werden und den Langzeitlauf sofort mit der neuen, benannten Meldung
+abbrechen; danach wurde `App.jsx` prüfsummengleich zurückgestellt.
+
+**Kein Eintrag in `CHANGELOG.md`** — dort steht, was Spielende merken, und das
+ist hier nichts. Der Vermerk gehört an diese Stelle.
+
+### Beobachtung am Rand, nicht behoben
+
+Die Laufbahnlänge im Langzeitlauf reicht heute von **8** bis 25 Saisons
+(Median 25). Für 35.173 sind an anderer Stelle in dieser Datei 13–25 vermerkt.
+Mindestens eine der 192 Karrieren endet also deutlich früher als zuvor. Das
+liegt zeitlich an der Fünf-Saisons-Regel aus 35.174, ist aber **nicht**
+untersucht — die Stichprobe fährt feste Strategien, kein Spielerverhalten, und
+eine einzelne Laufbahn kann aus ganz anderen Gründen früh enden. Wer die neue
+Grenze prüft, sollte hier zuerst hinsehen.

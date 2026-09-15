@@ -17553,10 +17553,12 @@ function FlutlichtApp() {
   }, []);
   useEffect(() => { if (topRef.current) topRef.current.scrollIntoView({ block: "start" }); }, [step, phase]);
 
+  /* PRUEFSTAND-ANFANG: helfer */
   const clone = (x) => ({ ...x, attrs: { ...x.attrs }, flags: { ...x.flags }, evLog: { ...x.evLog },
     nt: { ...x.nt, majors: [...x.nt.majors] }, tot: { ...x.tot }, depot: { ...x.depot },
     assets: [...x.assets], milestones: [...x.milestones], seasons: [...x.seasons],
     trophies: [...x.trophies], awards: [...x.awards], squad: [...x.squad], traits: [...x.traits] });
+  /* PRUEFSTAND-ENDE: helfer */
 
   /* F01: Angebote und bereits gezogene Ereignisse gehören zum Spielstand. */
   const saveGame = async (q, st = step, ang = offers, extras = {}) => {
@@ -18130,6 +18132,33 @@ function FlutlichtApp() {
     } finally { startAktiv.current = false; }
   };
 
+  /* ==== PRUEFSTAND-ANKER ====================================================
+     Die vier Zeilen `PRUEFSTAND-ANFANG/ENDE: helfer` und `…: handler` sind
+     KEINE gewoehnlichen Kommentare. `tools/langzeit.cjs` baut keine React-
+     Oberflaeche auf, sondern schneidet die dazwischen liegenden Bloecke
+     TEXTLICH aus dieser Datei heraus und setzt sie mit Testadaptern neu
+     zusammen. Nur so prueft der Langzeitlauf den wirklich ausgelieferten
+     Code und keine Nachbildung.
+
+     Wer eine Marke loescht oder verschiebt, bricht den Prueflauf. Seit
+     15.09.2026 prueft `npm test` Vorhandensein, Eindeutigkeit und
+     Reihenfolge der vier Marken; ein Versehen wird damit sofort rot. Neuer
+     Code, der mitgeprueft werden soll, gehoert ZWISCHEN die Marken.
+
+     Vorher endete der Handler-Block an der Zeichenkette `const quickSim =`.
+     Das war eine unsichtbare Kopplung an toten Code: `quickSim` wird nirgends
+     aufgerufen, haette also jederzeit entfernt werden duerfen — und haette
+     dabei den Pruefstand mitgenommen, ohne dass irgendwo ein Hinweis darauf
+     stand.
+
+     Genau genommen waere der Bruch nicht lautlos gewesen, sondern
+     irrefuehrend: der Lauf endete mit „Handler fehlt: const chooseTraining ="
+     — und `chooseTraining` stand unveraendert da. Schlimmer war die
+     Verzoegerung. Der Langzeitlauf laeuft nicht in der CI, also haette den
+     Bruch erst der naechste bemerkt, der ihn von Hand startet.
+     Siehe README.md, Abschnitt „Pruefstaende".
+     ======================================================================== */
+  /* PRUEFSTAND-ANFANG: handler */
   const chooseTraining = (id) => {
     haptik("wahl");
     const q = clone(p);
@@ -18328,6 +18357,15 @@ function FlutlichtApp() {
       q.flags.renteGefragt = true; setP(q); setStep("retire"); return; }
     setP(q); setGrowth(null); setStep("training"); setTab("verlauf"); saveGame(q, "training");
   };
+  /* PRUEFSTAND-ENDE: handler */
+
+  /* UNGENUTZT (Stand 15.09.2026): `quickSim` wird von keiner Stelle
+     aufgerufen — der Schnelldurchlauf laeuft heute ueber die Handler oben.
+     Die Funktion steht ausdruecklich NICHT auf der Pruefgrundlage des
+     Langzeitlaufs; bis 15.09.2026 diente sie ihm aber unbeabsichtigt als
+     Endmarke, siehe den Ankerblock weiter oben. Diese Kopplung ist geloest:
+     sie kann jetzt entfernt werden, ohne etwas mitzunehmen. Das ist bewusst
+     eine eigene Entscheidung und keine Nebenwirkung dieser Runde. */
   const quickSim = (n) => {
     let q = clone(p);
     const lines = [];

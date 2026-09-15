@@ -1,11 +1,18 @@
 /* Optional: node tools/langzeit.cjs. Nutzt echte UI-Handler ohne DOM/Animation.
-   Abschlussbuchung wird separat in regression.test.cjs geprüft. */
+   Abschlussbuchung wird separat in regression.test.cjs geprüft.
+
+   Die Handler werden textlich aus App.jsx geschnitten, entlang der Marken aus
+   tools/anker.cjs. Bis 15.09.2026 dienten dafür beliebige Codezeilen — zuletzt
+   die ungenutzte Funktion `quickSim`. Ihr Entfernen hätte diesen Lauf mit
+   der irreführenden Meldung „Handler fehlt: const chooseTraining =" beendet,
+   und weil er nicht in der CI läuft, erst beim nächsten Lauf von Hand.
+   Siehe README.md, Abschnitt „Prüfstände". */
 const fs=require('node:fs'),path=require('node:path'),os=require('node:os');
 const {buildSync}=require('esbuild');
+const {block}=require('./anker.cjs');
 const root=path.resolve(__dirname,'..');
 const source=fs.readFileSync(path.join(root,'App.jsx'),'utf8');
-const part=(a,b)=>{const i=source.indexOf(a),j=source.indexOf(b,i);if(i<0||j<i)throw Error('Handler fehlt: '+a);return source.slice(i,j);};
-const handlers=part('  const chooseTraining =','  const quickSim =');
+const handlers=block(source,'handler');
 const names=[...new Set([...handlers.matchAll(/\b(set[A-Z]\w*)\(/g)].map(m=>m[1]))];
 const ext=`
 export {POS,TYPES,MODES,zufallSetzen,KARTEN};
@@ -16,7 +23,7 @@ export function auditCareer(config, choose) {
  const meta={},askCache={current:{}},logs=[];
  const saveGame=()=>true;
  const finish=q=>{p=q;p.retired=true;step='done';};
- ${part('  const clone =','  /* F01:')}
+ ${block(source,'helfer')}
  ${handlers}
  let turns=0;
  while(step!=='done'&&turns++<400) {

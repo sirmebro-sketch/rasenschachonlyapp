@@ -6,6 +6,14 @@
    das nicht durch Hinsehen, sondern durch einen Gleichheitslauf mit fest
    gesetztem Zufall — siehe STAND.md, Fassung 35.48.
 
+   [Nachtrag 15.09.2026] STAND.md liegt nicht in diesem Repository. Es stammt
+   aus der Entwicklung vor 35.169.0 und wurde beim Import des vorbereiteten
+   Android-Projekts nicht mitgenommen; der Verweis laeuft also ins Leere. Der
+   Gleichheitslauf von damals ist damit nicht mehr nachlesbar — die Aussage
+   „reine Umschichtung" bleibt als historische Behauptung stehen, gilt aber
+   nicht als heute belegt. Wo der Stand heute steht: CHANGELOG.md und
+   ENTWICKLUNG.md, siehe README.md.
+
    WARUM: App.jsx hatte 13.674 Zeilen, und die Verwaltung von Akademie und
    Verein (Vertraege, Freigaben, Aufstellung von Hand, Saisonrueckblick) legt
    in beiden noch einmal ungefaehr dasselbe drauf. Der Verein liegt seit 35.17
