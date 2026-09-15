@@ -36,6 +36,9 @@ before(async () => {
   const extension = `
 import {renderToStaticMarkup} from 'react-dom/server';
 export {verdict, vorsatzBelohnen, vorsatzPunkte, bilanzLaden, bilanzErgaenzen, akaGruenden, SAVE_KEY, AKA_KEY, LIFE_KEY, createPlayer, develop, simulateSeason, vcFuer, vcPosten, vcAusHaeusern, leereAkademie, leereBilanz, KARTEN, VEREIN, zufallSetzen, rerollWildcard, ladenGesperrt, saisonSchlagzeile, saisonIndex, EVENTS, strangDran, strangWeiter, laufStand, laufWeiter};
+export const renderEnd=p=>renderToStaticMarkup(<EndScreen p={p} onNew={()=>{}}/>);
+export const renderVerein=(v,aka)=>renderToStaticMarkup(<VereinScreen v={v} aka={aka} onAendern={()=>{}} onZurueck={()=>{}} onAbschluss={()=>{}}/>);
+export const renderPacks=(pool,reiter='laden',verein=null)=>renderToStaticMarkup(<Packladen vc={100} pool={pool} verein={verein} gratis={1} startpaket={false} startReiter={reiter} onKauf={()=>{}} onGratis={()=>{}} onStartpaket={()=>{}} onEinsetzen={()=>{}} onEntfernen={()=>{}} onVerkauf={()=>{}} onZurueck={()=>{}}/>);
 export const renderReveal=card=>renderToStaticMarkup(<WildcardEnthuellung card={card} onFertig={()=>{}}/>);
 export const renderShop=(spieler,schritt='training')=>renderToStaticMarkup(<VCLadenAnsicht wo="saison" vc={100} laden={{}} onKauf={()=>{}} spieler={spieler} schritt={schritt}/>);
 export const renderKarriereRueckblick=p=>renderToStaticMarkup(<KarriereRueckblick p={p} onFertig={()=>{}}/>);
@@ -377,4 +380,38 @@ test('Fernstudium: Anmeldung gibt keinen Abschluss, Fortsetzung erst nach vier S
  const p=player(10);p.flags={};p.straenge={studium:{stufe:1,seit:7,weg:'lernen'}};
  assert(!E.strangDran(ende,p));p.straenge.studium.seit=6;assert(E.strangDran(ende,p));assert(ende.cond(p));
  p.flags.abschluss=true;assert(!ende.cond(p));p.flags={};p.straenge.studium.weg='ohne';assert(!E.strangDran(ende,p));
+});
+
+// Echte Komponenten mit produktiv erzeugten Zuständen; kein Komponenten-Mock.
+test('Abschlussbildschirm rendert nach echtem Abschluss mit und ohne Vorsatz',async()=>{
+ for(const n of [0,3,15]){
+  const p=player(n);p.vorsatz=n===15?'lange':null;
+  const r=await E.runFinish(p);const html=E.renderEnd(r.P);
+  assert(html.includes('Karriereende'));assert(!html.includes('NaN'));
+  if(n===15)assert(html.includes('Vorsatz'));
+ }
+});
+test('Vereinsansicht rendert frisch gegründeten Verein ohne erfundene Kaderspieler',()=>{
+ const r=E.VEREIN.gruenden(E.VEREIN.leererVerein(),{name:'Testverein',stadt:'Hamburg',land:'GER',weltjahr:2026});assert(!r.fehler);
+ const html=E.renderVerein(r.v,E.leereAkademie());assert(html.includes('Testverein'));assert(!html.includes('NaN'));
+});
+test('Packladen und Sammlung rendern leeren sowie gefüllten Fundus',()=>{
+ const leer=E.KARTEN.leererPool();
+ for(const tab of ['laden','sammlung'])assert(E.renderPacks(leer,tab).length>100);
+ const gezogen=E.KARTEN.ziehen('bronze',leer,2026);
+ // Produktive Zusammenführung statt eines handgebauten Kartenbestands.
+ const pool=E.KARTEN.poolErgaenzen(leer,gezogen.karten);
+ assert(pool.karten.length>0);const html=E.renderPacks(pool,'sammlung');assert(html.includes(pool.karten[0].name));
+});
+test('Späte Karrierefortsetzung folgt der tatsächlichen Wahl und wartet eine Saison',()=>{
+ for(const weg of ['einsatz','begleiten','kraefte']){
+  const p=player(15);p.straenge={spaet:{stufe:1,seit:15,weg}};
+  assert.equal(E.EVENTS.filter(e=>e.strang==='spaet'&&E.strangDran(e,p)).length,0);
+  p.straenge.spaet.seit=14;
+  const es=E.EVENTS.filter(e=>e.strang==='spaet'&&E.strangDran(e,p));assert.deepEqual(es.map(e=>e.id),['spaet_'+weg]);
+  const save=E.laufStand(p,'event',{queue:es},E.EVENTS,'35.179');
+  assert.equal(E.laufWeiter(JSON.parse(JSON.stringify(save)),E.EVENTS).queue[0].id,'spaet_'+weg);
+ }
+ const alt=player(15);alt.evLog.spaete_prioritaet=14;
+ assert.equal(E.EVENTS.filter(e=>e.strang==='spaet'&&e.stufe===2&&E.strangDran(e,alt)).length,0,'Historischer evLog darf keine Wahl erfinden');
 });

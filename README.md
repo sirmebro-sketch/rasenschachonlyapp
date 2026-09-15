@@ -158,11 +158,26 @@ Damit es die automatisierten Beteiligten beim Start erreicht, steht der Ablauf
 zusätzlich in `AGENTS.md` (Codex) und `CLAUDE.md` (Claude Code) — beides kurze
 Verweise hierher, damit nicht drei Fassungen derselben Regel auseinanderlaufen.
 
+### Übergaben nach Rebase oder Squash
+
+`--no-merged` vergleicht Abstammung, nicht Inhalte. Nach Rebase-/Squash-Merge
+kann ein bereits übernommener Quellbranch weiter erscheinen. Vor einer
+Bereinigung Remote erneut abrufen und prüfen, ob seit der Abnahme neue Commits
+hinzugekommen sind. Gleiche Dateibäume (`git diff origin/main..<branch>` leer)
+sind ein hilfreicher Nachweis; bei inzwischen weiterentwickeltem main müssen
+übernommene Patches und neue Branch-Arbeit getrennt geprüft werden.
+
+Erst nach dokumentierter Abnahme den erledigten Branch löschen oder auf den
+aktuellen main-Stand bringen. Alternativ die geprüfte Branch-Spitze als
+zusätzlichen Elterncommit übernehmen, wie in 35.178 geschehen. Keine ungeprüfte
+Arbeit überschreiben und keine Force-Pushes zur vermeintlichen Bereinigung.
+Im Entwicklungsvermerk Quell- und Zielcommit sowie die Entscheidung nennen.
+
 ### Versionsschema
 
-`package.json` führt die Version als `major.minor.patch` (derzeit 35.178.0).
+`package.json` führt die Version als `major.minor.patch` (derzeit 35.179.0).
 Daraus rechnet `tools/android-version.cjs` den `versionCode`
-(`major*100000 + minor*100 + patch`, also 3517800) und schreibt ihn zusammen mit
+(`major*100000 + minor*100 + patch`, also 3517900) und schreibt ihn zusammen mit
 dem `versionName` nach `android/app/build.gradle`. Beide Felder sollen nie von
 Hand auseinanderlaufen. Die Version wird erhöht, wenn eine neue APK entsteht —
 reine Werkzeug- oder Dokumentationsänderungen erhöhen sie nicht.

@@ -12,5 +12,7 @@ export function persoenlicherRueckblick(p) {
  else if(p.videoKontakt?.name)texte.push(`Mit ${p.videoKontakt.name} hast du deine frühen Video-Notizen geteilt – einschließlich deiner eigenen Fehler.`);
  const buch=p.straenge?.buch;
  if(buch?.stufe>=3){const t={offen:'Du hast deine Geschichte mit ihren unbequemen Stellen öffentlich erzählt.',kontrolle:'Bei deinem Buch hast du selbst entschieden, welche Erinnerungen privat bleiben.',ohne:'Deine Geschichte wurde auch ohne deine Mitarbeit erzählt.'};if(t[buch.weg])texte.push(t[buch.weg]);}
+ const spaet=p.straenge?.spaet;
+ if(spaet){const t={einsatz:'Im späteren Karriereverlauf hast du noch einmal bewusst an deiner Einsatzchance gearbeitet.',begleiten:'Im späteren Karriereverlauf hast du Trainingszeit für die Begleitung jüngerer Spieler reserviert.',kraefte:'Im späteren Karriereverlauf hast du deine Kräfte bewusst eingeteilt und freiwillige Extras gestrichen.'};if(t[spaet.weg])texte.push(t[spaet.weg]);}
  return texte.slice(0,4);
 }

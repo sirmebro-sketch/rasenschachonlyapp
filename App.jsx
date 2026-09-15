@@ -25,8 +25,8 @@ import { machAkademie } from "./akademie.js";
    ================================================================ */
 
 const NAME = "Rasenschach XI";
-const VERSION = "35.178";
-const VERSION_INFO = "Karriereende korrigiert; nachvollziehbare Vorsatzboni und Ausbildung mit Lernzeit.";
+const VERSION = "35.179";
+const VERSION_INFO = "Vertiefte späte Karrieregeschichten und erweiterte Prüfungen wichtiger Ansichten.";
 
 /* Fester Zufallsstrom aus einer Zeichenkette — damit Angebote des eigenen
    Vereins nicht bei jedem Klick anders aussehen.                        */
@@ -4204,6 +4204,7 @@ const T = (s) => () => s;
    Die Tabelle dient der Anzeige („Teil 2 von 3") und der Prüfung: die
    Ereignisprüfung gleicht sie gegen die tatsächlich vorhandenen Stufen ab. */
 const STRAENGE = {
+  spaet:        { n: "Wofür die Kraft reicht", teile: 2 },
   studium:      { n: "Neben dem Profivertrag", teile: 2 },
   bildung:      { n: "Der zweite Anlauf", teile: 2 },
   jugendfreund: { n: "Der aus der Jugend", teile: 3 },

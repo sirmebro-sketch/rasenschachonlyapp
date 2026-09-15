@@ -462,3 +462,41 @@ Rückblick-Renderings. Frühere Angabe 90 bezog sich auf Codex' Stand vor Merge.
 Langzeitlauf nach Zusammenführung: 192 Karrieren, 4.502 Saisons, 7.858
 Ereignisse, ohne Prüfungsfehler. Web-Build und Capacitor-Synchronisierung
 erfolgreich. Geräteprüfung bleibt offen.
+
+
+## 15.09.2026 — 35.179.0: Rendering-Absicherung und späte Karriere (Codex)
+Basis main 5dd76aa357888dcae501b2f2627709524e0dbb30, vor Beginn remote
+geprüft; keine offenen Branches. Claudes Hotfix und Rückblicktests erhalten.
+
+Echte React-Komponenten via renderToStaticMarkup, ohne Komponenten-Mocks:
+EndScreen nach produktivem finish mit 0/3/15 Saisons, mit/ohne Vorsatz;
+VereinScreen mit produktiv gegründetem Verein und leerem Kader;
+Packladen im Laden- und Sammlungsreiter, leer sowie mit produktiv gezogenen
+und zusammengeführten Karten. Die Assertions prüfen relevante Inhalte.
+Kein zusätzlicher Produktfehler in diesen Ansichten gefunden. Ein fehlerhaft
+angenommener Rückgabewert im neuen Test wurde nach Lesen von karten.js
+korrigiert; kein Fehler im Packladen. Grenzen: keine Klicks, Effekte oder
+Animationen ausgeführt; keine vollständige Abdeckung aller Vereinsreiter,
+Dialoge, Kaderzustände oder Packöffnungsphasen. Dafür bleibt der Gerätetest.
+
+README erklärt den Fehlalarm nach Rebase/Squash, AGENTS verweist darauf.
+Vor Branchbereinigung immer neue Branch-Arbeit ausschließen; keine pauschale
+Löschung und keine Force-Pushes. Bereits erfolgte Abnahme 35.178 unverändert.
+
+Inhalt: spaete_prioritaet startet den Zweiteiler spaet. Drei neue IDs
+spaet_einsatz / spaet_begleiten / spaet_kraefte folgen ausschließlich der
+wirklichen Wahl mit einer Saison Abstand. Keine zusätzlichen Ereignisplätze.
+Die Einsatzgeschichte nennt echte letzte Saisonspiele; keine Behauptung,
+dass Trainer oder Verein unverändert geblieben seien. Alle alten Auswahl-IDs
+bleiben. Historisch nur in evLog vermerkte Ereignisse lösen KEINE rückwirkend
+erfundene Fortsetzung aus. Persönlicher Abschluss erinnert an belegte Priorität.
+
+96 Tests bestanden, einschließlich Zweig-/Wartezeit-/Speicherrundreise und
+historischem Zustand ohne bekannte Wahl. Versionsnummer 35.179.0 / 3517900;
+App-ID, Signierung, Vorsatzprämien und Freischaltungsschwellen unverändert.
+Offen: Darstellung und Bedienung auf Android, subjektive Wirkung der
+Fortsetzungen und weniger häufige Oberflächenzustände.
+
+Abschließender Langzeitlauf: 192 Karrieren, 4.504 Saisons, 7.863 Ereignisse,
+ohne Prüfungsfehler. Web-Build und Capacitor-Synchronisierung erfolgreich.
+main unmittelbar vor Veröffentlichung unverändert bei 5dd76aa.

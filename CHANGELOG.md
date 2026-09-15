@@ -1,5 +1,11 @@
 # Änderungen
 
+## 35.179.0 – Späte Entscheidungen wirken weiter
+
+- Drei Fortsetzungen greifen die gewählte späte Karrierepriorität nach mindestens einer Saison auf; Erinnerung daran im persönlichen Karriereabschluss.
+- Rendering-Prüfungen für Abschlussbildschirm, Vereinsansicht, Packladen und Sammlung ergänzt.
+- Übergaberegel für bereits übernommene Rebase-/Squash-Branches präzisiert.
+
 ## 35.178.0
 - Fernstudium: Anmeldung und Abschluss getrennt; vier gespielte Saisons Lernzeit. Bestehende Abschlüsse bleiben erhalten.
 - Vorsatz zeigt tatsächlich erhaltene Boni; vollständig gedeckelte neue Belohnungen geben einmalig 25.000 € Karrieregeld als Ersatz.

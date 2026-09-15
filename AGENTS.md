@@ -25,7 +25,9 @@ git fetch --all --prune
 git branch -r --no-merged origin/main
 ```
 
-Jeder gelistete Branch trägt Arbeit, die noch nicht in `main` ist. Was darauf
+Jeder gelistete Branch hat Commits, die nicht Vorfahren von `main` sind.
+Nach Rebase/Squash können die Inhalte bereits übernommen sein; zuerst README
+„Übergaben nach Rebase oder Squash“ beachten. Was darauf
 liegt, zeigt `git log --oneline origin/main..<branch>`; der zugehörige
 Abnahmevermerk steht in `ENTWICKLUNG.md` (Basis-Commit, Änderungen, Prüfungen,
 offene Punkte). Erledigte Branches verschwinden von selbst aus der Liste, sobald
