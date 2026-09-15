@@ -1,4 +1,8 @@
-# Weiterentwicklung – 35.174.0
+# Weiterentwicklung
+
+<!-- Bewusst ohne Versionsnummer im Titel (15.09.2026): sie stand zuletzt auf
+     35.174.0, während das Projekt bei 35.176.0 war. Jeder Abschnitt unten trägt
+     seine eigene Version — eine zweite im Titel kann nur veralten. -->
 
 ## Aktueller Gerätetest
 
@@ -6,10 +10,16 @@
 
 ## Regressionen
 
-`npm ci` und anschließend `npm test`. Aktuell **71** Tests einschließlich
-Untertests (nachgezählt am 15.09.2026). Die Aufstellung darunter beschreibt den
-Stand von 35.172.0 mit 62 Tests und wurde seither nicht nachgeführt; dazu kamen
-die acht Prüfungen aus 35.173.0/35.174.0 und die Ankerprüfung vom 15.09.2026:
+`npm ci` und anschließend `npm test`. **Die gültige Zahl nennt der Lauf selbst**
+(`# pass` am Ende der Ausgabe) — hier steht sie bewusst nicht mehr, weil sie
+zuletzt dreimal hintereinander veraltet war: 62, dann 71, dann 86, und im
+Dokument blieb jedes Mal die alte stehen. Wer sie für einen Vermerk braucht,
+zählt sie am eigenen Lauf ab und nennt sie dort mit Datum.
+
+Die Aufstellung darunter beschreibt den Umfang zum Stand 35.172.0 und ist als
+Übersicht gemeint, nicht als Zählung; seither sind die Prüfungen aus
+35.173.0 bis 35.176.0 dazugekommen (Ankerprüfung, Vorsätze, Saisonziele,
+Karrieregeschichten, späte Bildung):
 
 - Abschlussbelohnungen und Kaufbuchungen: 19 vorhandene Tests.
 - Sieben weitere Prüfungen zu verdeckter Wildcard, Trainer-Pfaden, Wartezeit, alten Ereignisspielständen und eindeutigen Kennungen.
@@ -21,7 +31,7 @@ die acht Prüfungen aus 35.173.0/35.174.0 und die Ankerprüfung vom 15.09.2026:
 
 GitHub prüft Pull Requests automatisch mit Tests und Web-Build, ohne Signier-Secrets. Der Android-Release-Workflow bleibt unverändert und führt die erweiterte Testsuite ebenfalls aus.
 
-Die Tests verwenden kontrollierte Speicheradapter und Ereignisbeispiele. Sie ersetzen weder den echten Android-Prozessabbruch noch eine vollständige Prüfung aller Ereignisfolgen. Lokal: 62/62 Tests, Produktionsbuild und Capacitor-Synchronisierung erfolgreich. Die Wildcard-Prüfung kontrolliert das initial gerenderte Markup und die Deckfarbe; sie ersetzt keine visuelle Prüfung der Drehung in der Android-WebView. CI-Ergebnisse stehen am jeweiligen Commit.
+Die Tests verwenden kontrollierte Speicheradapter und Ereignisbeispiele. Sie ersetzen weder den echten Android-Prozessabbruch noch eine vollständige Prüfung aller Ereignisfolgen. Lokal zum Stand 35.172.0: 62/62 Tests, Produktionsbuild und Capacitor-Synchronisierung erfolgreich — der jeweils aktuelle Nachweis steht im Abschnitt der laufenden Runde. Die Wildcard-Prüfung kontrolliert das initial gerenderte Markup und die Deckfarbe; sie ersetzt keine visuelle Prüfung der Drehung in der Android-WebView. CI-Ergebnisse stehen am jeweiligen Commit.
 
 ## Nächste kleine Inhaltsrunde
 
@@ -211,3 +221,36 @@ Abschließender Lauf der neuen Inhalte: 192 Karrieren, 4.505 Saisons,
 ohne Ereignis in den ausgewerteten Phasen. Beruf 15/32 (46,9 %), Glanz
 6/32 (18,8 %); alle anderen obigen Quoten gleich. Ein veränderter Katalog
 ändert den Zufallsverbrauch; Differenzen sind kein isolierter Wirksamkeitsnachweis.
+
+
+## Aufräumrunde Dokumentation, 15.09.2026 (Claude, ohne Versionswechsel)
+
+Basis: `main` 0426852 (35.176.0), vor Beginn abgerufen, keine neueren Änderungen.
+Ausschließlich Dokumentation — kein Quellcode, keine Tests, keine Spielinhalte
+angefasst. Version bleibt 35.176.0, kein neuer versionCode, kein
+CHANGELOG-Eintrag (dort steht, was Spielende merken).
+
+- **`CHANGELOG.md` strukturell repariert.** Der Abschnitt 35.176.0 stand über der
+  Dokumentüberschrift `# Änderungen`; der Titel saß dadurch mitten im Dokument,
+  zwischen 35.176.0 und 35.175.0. Jetzt wieder: eine H1 ganz oben, darunter alle
+  Versionen als H2 in absteigender Reihenfolge. 35.176.0 hat außerdem ein
+  Stichwort bekommen wie alle anderen Einträge auch — übernommen aus dem
+  Commit-Betreff und der Abschnittsüberschrift in dieser Datei, nicht neu
+  erfunden. Am Wortlaut der Einträge selbst wurde nichts geändert.
+
+- **Versionsnummer aus dem Titel dieser Datei entfernt.** Sie stand auf
+  35.174.0, während das Projekt bei 35.176.0 war. Jeder Abschnitt trägt seine
+  eigene Version; eine zweite im Titel kann nur veralten.
+
+- **Feste Testzahlen aus `ENTWICKLUNG.md` und `README.md` entfernt.** Die Zahl im
+  Abschnitt „Regressionen" war dreimal hintereinander überholt — 62, dann 71,
+  dann 86, und im Dokument blieb jedes Mal die alte stehen. Maßgeblich ist
+  jetzt die Ausgabe des Laufs (`# pass`). Die Aufstellung darunter bleibt als
+  Übersicht über den geprüften Umfang erhalten und ist als solche gekennzeichnet.
+  Die historische Angabe „62/62" ist als Stand 35.172.0 markiert, statt als
+  aktueller Nachweis gelesen zu werden.
+
+Geprüft: `npm test` und `npm run build` nach der Änderung erneut durchlaufen,
+beide unverändert erfolgreich — erwartbar, weil keine Datei angefasst wurde, die
+in den Build oder in die Tests eingeht. Der Nachweis dient nur dem Ausschluss
+eines Versehens.

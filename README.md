@@ -108,8 +108,10 @@ reine Werkzeug- oder Dokumentationsänderungen erhöhen sie nicht.
 
 ## Prüfstände
 
-**`npm test`** — `node --test tools/*.test.cjs`, derzeit 86 Prüfungen. Läuft in
-der CI bei Pushes auf `main` und Pull Requests (`.github/workflows/regression.yml`).
+**`npm test`** — `node --test tools/*.test.cjs`. Wie viele Prüfungen es gerade
+sind, sagt die Ausgabe des Laufs (`# pass`); eine Zahl an dieser Stelle wäre nach
+der nächsten Runde wieder falsch. Läuft in der CI bei Pushes auf `main` und Pull
+Requests (`.github/workflows/regression.yml`).
 Schwerpunkt: Abschlussbelohnungen und Kaufbuchungen, Speicherfehler an jedem
 einzelnen Schritt, simulierte Prozessabbrüche, Import mit Rücknahme,
 Ereignisstände nach Umsortierung des Katalogs.
