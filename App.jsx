@@ -1,4 +1,4 @@
-import { laufbahnBeleg, abschlussBeleg, saisonenGespielt, VC_MIN_SAISONEN, PACK_MIN_SAISONEN } from "./belohnungen.js";
+import { laufbahnBeleg, abschlussBeleg, saisonenGespielt, VC_MIN_SAISONEN, PACK_MIN_SAISONEN, HAUS_MIN_SAISONEN } from "./belohnungen.js";
 import { packBuchung, verkaufsBuchung } from "./buchungen.js";
 import React, { useState, useEffect, useLayoutEffect, useRef, useMemo } from "react";
 /* Nur fuer `createPortal` (35.78). Der Sonderschuss ist ein Fenster ueber
@@ -23,8 +23,8 @@ import { machAkademie } from "./akademie.js";
    ================================================================ */
 
 const NAME = "Rasenschach XI";
-const VERSION = "35.173";
-const VERSION_INFO = "Saisonrückblick: Turniere und Vereinsjahre nach dem Laden korrigiert.";
+const VERSION = "35.174";
+const VERSION_INFO = "Akademie und Verein ab fünf Saisons; höhere Kartenverkaufspreise und neue Karriereereignisse.";
 
 /* Fester Zufallsstrom aus einer Zeichenkette — damit Angebote des eigenen
    Vereins nicht bei jedem Klick anders aussehen.                        */
@@ -8060,7 +8060,7 @@ const HSV_KEY  = "rasenschach:raute";      // Ausgleichszähler der Rautekarte
 const RUECK_KEY = "rasenschach:rueckweg";
 
 const leereBilanz = () => ({
-  karrieren:0, saisons:0, apps:0, goals:0, assists:0, cs:0, titel:0, meister:0, pokale:0,
+  karrieren:0, hausKarrieren:0, saisons:0, apps:0, goals:0, assists:0, cs:0, titel:0, meister:0, pokale:0,
   intTitel:0, caps:0, ntTitel:0, punkte:0, bestPunkte:0, geld:0, bestGeld:0,
   laender:{}, ligen:{}, positionen:{}, vereine:{}, karten:{}, seltenheit:{},
   legenden:0, kapitaen:0, ntKapitaen:0, statuen:0, aufstiege:0, abstiege:0,
@@ -8076,10 +8076,20 @@ const leereBilanz = () => ({
   vereinTore:0, vereinPunkteBest:0, vereinPunkteSumme:0,
 });
 
+function bilanzLaden(roh = {}) {
+  const frei = VEREIN.freigeschaltet(roh);
+  return { ...leereBilanz(), ...roh,
+    hausAltFreigaben: { akademie: frei.akademie, verein: frei.verein } };
+}
+
 /* Eine beendete Laufbahn in die Gesamtbilanz einrechnen */
 function bilanzErgaenzen(G, p) {
   const g = { ...leereBilanz(), ...(G || {}) };
   const zaehl = (obj, k) => { if (k) obj[k] = (obj[k] || 0) + 1; };
+  // Bestehende Freischaltungen erhalten; kurze neue Karrieren zählen nicht.
+  const bisherFrei = VEREIN.freigeschaltet(G);
+  g.hausAltFreigaben = { akademie: bisherFrei.akademie, verein: bisherFrei.verein };
+  g.hausKarrieren = (G?.hausKarrieren || 0) + (saisonenGespielt(p) >= HAUS_MIN_SAISONEN ? 1 : 0);
   g.karrieren += 1;
   g.saisons += p.seasons.length;
   g.apps += p.tot.apps || 0;
@@ -13777,8 +13787,9 @@ function VereinDach({ aka, verein, gesamt, karten, onAka, onProfi, onPacks, onFu
           </div>
         </div>
         <p style={{ fontSize: 12, color: "var(--mu)", margin: "5px 0 14px" }}>
-          Die Jugendakademie bildet aus, die Profimannschaft spielt. Beides läuft
-          weiter, während du die nächste Laufbahn spielst.
+          Die Jugendakademie bildet aus, die Profimannschaft spielt. Ein Jahr Fortschritt
+          gibt es pro abgeschlossener Karriere mit mindestens fünf gespielten Saisons.
+          Nur solche Karrieren zählen für neue Freischaltungen.
         </p>
 
         <div className="pan" style={{ marginBottom: 12 }}>
@@ -14174,9 +14185,9 @@ function BildVerein() {
 const WILLKOMMEN = [
   { kopf: "Deine Laufbahn", bild: BildLaufbahn, frei: null,
     text: "Du bist der Spieler, nicht der Trainer. Jede Saison legst du dein Training fest, triffst eine Entscheidung und schaust zu, wie es läuft. Mit 16 geht's los, das Knie sagt Bescheid, wann Schluss ist." },
-  { kopf: "Die Jugendakademie", bild: BildAkademie, frei: "nach 2 abgeschlossenen Laufbahnen",
+  { kopf: "Die Jugendakademie", bild: BildAkademie, frei: "nach 2 Laufbahnen mit je mindestens 5 Saisons",
     text: "Ab drei gespielten Saisons bleiben dir am Karriereende Coins. Damit baust du eine Akademie, die weiterläuft, während du die nächste Laufbahn spielst. Neun Abteilungen, jede bis Stufe 6 — alles auf einmal geht nie." },
-  { kopf: "Dein eigener Verein", bild: BildVerein, frei: "nach 5 abgeschlossenen Laufbahnen",
+  { kopf: "Dein eigener Verein", bild: BildVerein, frei: "nach 5 Laufbahnen mit je mindestens 5 Saisons",
     text: "Irgendwann lässt du die Absolventen nicht mehr ziehen, sondern ziehst sie hoch. Sechzehn Mann, dritte Liga, und von da nach oben. Die Akademie muss nachliefern — das ist die Entscheidung." },
 ];
 
@@ -17164,6 +17175,9 @@ function EndScreen({ p, onNew }) {
                 </div>)}
             </div>);
         })()}
+        {p.hausFortschritt === false && <p style={{ marginTop: 12, color: "var(--mu)" }}>
+          Kein Akademie- oder Vereinsfortschritt: Dafür muss die abgeschlossene Karriere mindestens fünf Saisons umfassen.
+        </p>}
         {p.vcGewinn != null && (() => {
           const gross = (p.akaEreignisse || []).filter((e) => e.art === "gross" || e.art === "titel");
           const rest = (p.akaEreignisse || []).filter((e) => e.art !== "gross" && e.art !== "titel");
@@ -17217,7 +17231,7 @@ function EndScreen({ p, onNew }) {
 
           {/* DER ZWEITE KASTEN NUR MIT AKADEMIE. Ohne sie stand hier eine
               Ueberschrift ueber einem leeren Haus. */}
-          {p.akaAktiv && (
+          {p.akaAktiv && p.hausFortschritt !== false && (
           <div className="pan pad rs-rein" style={{ marginTop: 12, borderColor: "var(--go)",
             background: "linear-gradient(160deg,#E8B84B14 0%,var(--pan) 58%)" }}>
             <div className="eb" style={{ color: "var(--go)" }}>Ein Jahr Jugendakademie</div>
@@ -17496,7 +17510,7 @@ function FlutlichtApp() {
       // Alle JSON-Datensätze vor der ersten Zustandsänderung lesen.
       const gesehenNeu = { ...leerGesehen(), ...lies(WILL_KEY, {}) };
       const seenNeu = lies(SEEN_KEY, {}), achNeu = lies(ACH_KEY, {});
-      const gesNeu = { ...leereBilanz(), ...lies(LIFE_KEY, {}) }, metaNeu = lies(META_KEY, {});
+      const gesNeu = bilanzLaden(lies(LIFE_KEY, {})), metaNeu = lies(META_KEY, {});
       const h = Number(roh[HSV_KEY] || 0);
       // Bestehende Jugendkarten erhalten fehlende Typmetadaten, ohne verkaufte Karten neu zu erzeugen.
       const absolventen = new Map(A.absolventen.map(t => ['t:' + t.id, t]));
@@ -17731,7 +17745,9 @@ function FlutlichtApp() {
        ohne sie steigt die Aussicht, mit ihr beginnt alles von vorn. */
     const hsvNeu = q.flags.nurderhsv ? 0 : Math.max(hsvZ, q.hsvZaehler || 0) + 1;
     // Akademiejahr zuerst, sämtliche VC danach in genau einer Gesamtbuchung.
-    const AK2 = akaVerbuchen(aka, 0);
+    const hausFortschritt = saisonenGespielt(q) >= HAUS_MIN_SAISONEN;
+    q.hausFortschritt = hausFortschritt;
+    const AK2 = hausFortschritt ? akaVerbuchen(aka, 0) : { a: aka, ereignisse: [] };
     q.akaEreignisse = AK2.ereignisse; q.akaName = AK2.a.name; q.akaAktiv = !!AK2.a.gegruendet;
 
     /* ---- AUS DER JUGEND IN DIE SAMMLUNG (35.125) --------------------------
@@ -17782,7 +17798,7 @@ function FlutlichtApp() {
     let vereinErgebnis = null;   /* Rang, Aufstieg — fuer die VC-Rechnung */
     let vereinsBilanz = null;   /* nur gesetzt, wenn ein Verein fertig wird */
     let startpaketOffen = null; /* fuer den naechsten Verein vorgemerkt */
-    if (VEREIN.spieltMit(verein)) {
+    if (hausFortschritt && VEREIN.spieltMit(verein)) {
       const VS = VEREIN.vereinSaison(verein);
       if (!VS.fehler) {
         /* Feldnamen NACHGESEHEN, nicht geraten: die Saison liefert `aufstieg`

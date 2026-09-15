@@ -26,6 +26,40 @@ export const machEreignisse = (H) => {
   return [
 
 
+/* Kleine Inhaltsrunde 35.174: positionsgerechte Videoarbeit und späterer Rückblick. */
+{ id:"video_tw", tag:"Position", w:4, pos:["TW"], cond:p=>p.age<=23&&!p.flags.videobuch,
+  title:T("Die Pause vor dem ersten Pass"),
+  text:T("In der Videoanalyse hält der Torwarttrainer das Bild an. Der Gegner läuft dich an, der Außenverteidiger steht frei. Ihr schaut euch an, wann du diese Lücke erkennen konntest."),
+  choices:[
+    {id:"video_tw.0",altIndex:0,label:"Die Szenen in einem eigenen Heft sammeln",hint:"Ein Muster statt eines einzelnen Fehlers",
+     roll:[{p:1,text:"Du notierst den Blick vor der Ballannahme. Im nächsten Training suchst du genau diesen Moment.",fx:{flag:"videobuch",form:4,fitness:-2}}]},
+    {id:"video_tw.1",altIndex:1,label:"Die Situation auf dem Platz wiederholen",hint:"",
+     roll:[{p:1,text:"Der Trainer stellt die Szene nach. Nach einigen Versuchen wird der erste Pass ruhiger.",fx:{form:5,fitness:-3}}]}]},
+{ id:"video_def", tag:"Position", w:4, pos:["IV","AV","ZDM"], cond:p=>p.age<=23&&!p.flags.videobuch,
+  title:T("Ein Schritt, zwei Aufgaben"),
+  text:T("Du rückst heraus, hinter dir öffnet sich ein Raum. In der Besprechung geht es darum, wer absichert und wann dein Zuruf kommen muss."),
+  choices:[
+    {id:"video_def.0",altIndex:0,label:"Die Abstimmung im eigenen Heft festhalten",hint:"Auch die gelungene Szene danebenlegen",
+     roll:[{p:1,text:"Du schreibst nicht nur den Fehler auf, sondern auch das Signal, mit dem ihr ihn vermeiden könnt.",fx:{flag:"videobuch",trust:4,form:2}}]},
+    {id:"video_def.1",altIndex:1,label:"Mit dem Nebenmann auf dem Platz üben",hint:"",
+     roll:[{p:1,text:"Ihr wiederholt das Herausrücken. Ein kurzer Ruf reicht, sobald beide wissen, was er bedeutet.",fx:{trust:5,fitness:-2}}]}]},
+{ id:"video_off", tag:"Position", w:4, pos:["ZM","ZOM","AF","ST"], cond:p=>p.age<=23&&!p.flags.videobuch,
+  title:T("Der Lauf, der keinen Ball bekam"),
+  text:T("In der Wiederholung siehst du deinen Lauf in die Tiefe. Der Pass kam nicht, aber dein Gegenspieler ging mit und öffnete eine Lücke für einen Mitspieler."),
+  choices:[
+    {id:"video_off.0",altIndex:0,label:"Die Szene im eigenen Heft sammeln",hint:"Wirkung ohne Ballkontakt",
+     roll:[{p:1,text:"Du notierst, was dein Lauf ausgelöst hat. Nicht jede gute Aktion steht später in der Statistik.",fx:{flag:"videobuch",morale:4,trust:3}}]},
+    {id:"video_off.1",altIndex:1,label:"Den Pass mit dem Mitspieler abstimmen",hint:"",
+     roll:[{p:1,text:"Ihr sprecht über Blickkontakt und Timing. Beim nächsten Versuch wisst ihr beide, worauf ihr wartet.",fx:{form:4,trust:2}}]}]},
+{ id:"video_spaeter", tag:"Umfeld", w:5, cond:p=>p.age>=29&&p.seasons.length>=8&&!!p.flags.videobuch,
+  title:T("Das alte Heft in der Sporttasche"),
+  text:T("Zwischen alten Trainingsunterlagen findest du deine frühen Video-Notizen. Manche Fehler erkennst du heute bei jüngeren Mitspielern wieder. Andere machst du gelegentlich immer noch selbst."),
+  choices:[
+    {id:"video_spaeter.0",altIndex:0,label:"Mit einem jüngeren Mitspieler durchgehen",hint:"Auch die eigenen Fehler zeigen",
+     roll:[{p:1,text:"Du zeigst zuerst eine Szene, in der du falsch lagst. Danach wird aus dem Vortrag ein Gespräch.",fx:{legacy:8,trust:5,form:-2}}]},
+    {id:"video_spaeter.1",altIndex:1,label:"Die Notizen für das eigene Spiel nutzen",hint:"",
+     roll:[{p:1,text:"Eine alte Notiz passt erstaunlich gut zu deiner aktuellen Situation. Du nimmst sie mit ins nächste Training.",fx:{form:6,morale:3}}]}]},
+
 /* --- Krisenpfade (35.112) -------------------------------------------------
    Stufe F aus dem Konzeptpapier: „Bei schweren sportlichen Krisen sollen sich
    alternative Wege oeffnen. Der Spieler verliert durch Rueckschlaege

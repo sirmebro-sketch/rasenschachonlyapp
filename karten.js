@@ -401,23 +401,16 @@ export const machKarten = (H) => {
      FALLE. Wer fuenf mittelmaessige Karten eingesetzt hat, kaeme sonst nie
      wieder an einen besseren Spieler.
 
-     DIE PREISE SIND GEGEN DIE PACKPREISE GERECHNET, nicht geschaetzt. Der
-     Rueckfluss — was alle Karten eines Packs zusammen einbringen — liegt bei
-     30 bis 41 Prozent des Packpreises:
-       Bronzepack    30 VC  ->  11,7 VC   39 %
-       Silberpack    65 VC  ->  26,9 VC   41 %
-       Goldpack     130 VC  ->  44,0 VC   34 %
-       Legendenpack 240 VC  ->  71,6 VC   30 %
-     Laege er ueber 100 %, waere Kaufen und Verkaufen eine Geldmaschine — und
-     die VC-Kalibrierung waere wertlos, weil jeder unbegrenzt Coins herstellen
-     koennte. Das ist kein Feinschliff, sondern die Grenze zwischen Wirtschaft
-     und Unsinn.
+     35.174: Kevins Ziel ist 80–120 % durchschnittlicher Rückfluss je Pack.
+     Mit Packwahrscheinlichkeiten und Mindestkarten exakt berechnet:
+     Bronze 95,73 %, Silber 104,83 %, Gold 96,94 %, Legende 81,87 %.
+     Ein positiver Erwartungswert beim Silberpack ist damit beabsichtigt.
 
      WAS MAN NICHT VERKAUFEN KANN: Spieler aus der eigenen Ruhmeshalle und aus
      frueheren eigenen Vereinen. Die sind Erinnerung, keine Ware. Wer seine
      eigene Legende zu Geld macht, verliert sie fuer immer — und der Pool ist
      das einzige Gedaechtnis, das es dafuer gibt.                           */
-  const VERKAUF = { bronze: 4, silber: 10, gold: 24, legende: 55 };
+  const VERKAUF = { bronze: 10, silber: 24, gold: 60, legende: 170 };
 
   const verkaeuflich = (k) => !!k && k.herkunft === "pack";
   const erloes = (k) => (verkaeuflich(k) ? (VERKAUF[k.stufe] || 0) : 0);

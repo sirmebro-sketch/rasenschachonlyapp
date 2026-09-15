@@ -35,12 +35,12 @@ before(async () => {
     .map(n=>`const ${n}=v=>{out[${JSON.stringify(n.slice(3))}]=v;};`).join('\n');
   const extension = `
 import {renderToStaticMarkup} from 'react-dom/server';
-export {SAVE_KEY, AKA_KEY, LIFE_KEY, createPlayer, develop, simulateSeason, vcFuer, vcPosten, vcAusHaeusern, leereAkademie, leereBilanz, KARTEN, VEREIN, zufallSetzen, rerollWildcard, ladenGesperrt, saisonSchlagzeile, saisonIndex, EVENTS, strangDran, strangWeiter, laufStand, laufWeiter};
+export {bilanzLaden, bilanzErgaenzen, akaGruenden, SAVE_KEY, AKA_KEY, LIFE_KEY, createPlayer, develop, simulateSeason, vcFuer, vcPosten, vcAusHaeusern, leereAkademie, leereBilanz, KARTEN, VEREIN, zufallSetzen, rerollWildcard, ladenGesperrt, saisonSchlagzeile, saisonIndex, EVENTS, strangDran, strangWeiter, laufStand, laufWeiter};
 export const renderReveal=card=>renderToStaticMarkup(<WildcardEnthuellung card={card} onFertig={()=>{}}/>);
 export const renderShop=(spieler,schritt='training')=>renderToStaticMarkup(<VCLadenAnsicht wo="saison" vc={100} laden={{}} onKauf={()=>{}} spieler={spieler} schritt={schritt}/>);
 export async function runFinish(q,initial={}) {
  const out={};const aka={...leereAkademie(),vc:100,verdient:200,gratisPacks:2,...initial.aka};
- const ges=leereBilanz(), verein=initial.verein||null, meta={}, ach={}, seen={}, wcSeen={}, hall=[], hsvZ=0;
+ const ges=initial.ges||leereBilanz(), verein=initial.verein||null, meta={}, ach={}, seen={}, wcSeen={}, hall=[], hsvZ=0;
  const karten=KARTEN.leererPool(), kartenRef={current:karten}, abschlussRef={current:null}, buchungAktiv={current:false};
  ${setters(finish)}
  ${finish}
@@ -203,4 +203,57 @@ test('Vereinsjahre und Saisonzuordnung bleiben nach JSON-Laden identisch',()=>{
  assert.equal(E.saisonIndex(p.seasons,{...geladen,year:'2028/29'}),-1);
  assert.equal(E.saisonIndex(p.seasons,{...geladen,club:'Anderer Verein'}),-1);
  assert.equal(E.saisonIndex(p.seasons,JSON.parse(JSON.stringify(vor))),0);
+});
+
+
+for(const n of [0,3,4,5,15]) test('Hausfortschritt beim echten Abschluss nach '+n+' Saisons',async()=>{
+ const aka=E.akaGruenden(E.leereAkademie(),'Testakademie',2026);
+ const old=E.VEREIN.vereinSaison, oldReady=E.VEREIN.spieltMit;let calls=0;
+ E.VEREIN.spieltMit=()=>true;
+ E.VEREIN.vereinSaison=()=>{calls++;return {fehler:'Kontrollierter Vereinsadapter'};};
+ try{
+  const r=await E.runFinish(player(n),{aka,verein:{name:'Testverein'}});
+  assert.equal(r.Aka.jahr,2026+(n>=5?1:0));
+  assert.equal(r.P.hausFortschritt,n>=5);
+  assert.equal(calls,n>=5?1:0);
+  assert.equal(r.Ges.hausKarrieren,n>=5?1:0);
+ }finally{E.VEREIN.vereinSaison=old;E.VEREIN.spieltMit=oldReady;}
+});
+test('Nur fünfjährige Karrieren zählen für neue Freischaltungen; Altbestand bleibt offen',()=>{
+ let g=E.leereBilanz();
+ for(let i=0;i<6;i++)g=E.bilanzErgaenzen(g,player(4));
+ assert.equal(g.hausKarrieren,0);assert.equal(E.VEREIN.freigeschaltet(g).akademie,false);
+ for(let i=0;i<2;i++)g=E.bilanzErgaenzen(g,player(5));
+ assert.equal(E.VEREIN.freigeschaltet(g).akademie,true);assert.equal(E.VEREIN.freigeschaltet(g).verein,false);
+ for(let i=0;i<3;i++)g=E.bilanzErgaenzen(g,player(5));
+ assert.equal(E.VEREIN.freigeschaltet(g).verein,true);
+ for(const n of [0,1,2,4,5,20]){
+  let alt=E.bilanzLaden({karrieren:n});
+  alt=E.bilanzErgaenzen(alt,player(0));alt=E.bilanzLaden(JSON.parse(JSON.stringify(alt)));
+  assert.equal(alt.hausKarrieren,0);
+  assert.equal(E.VEREIN.freigeschaltet(alt).akademie,n>=2);
+  assert.equal(E.VEREIN.freigeschaltet(alt).verein,n>=5);
+ }
+});
+test('Exakter Verkaufserwartungswert jedes Packs liegt zwischen 80 und 120 Prozent',()=>{
+ const ranks=['bronze','silber','gold','legende'];
+ for(const pk of E.KARTEN.PACKS){
+  let ev=0;const enumerate=(a,prob)=>{
+   if(a.length<pk.karten){for(let i=0;i<4;i++)enumerate([...a,i],prob*(pk.chancen[ranks[i]]||0)/100);return;}
+   if(pk.mind&&!a.some(i=>i>=ranks.indexOf(pk.mind)))a[a.indexOf(Math.min(...a))]=ranks.indexOf(pk.mind);
+   ev+=prob*a.reduce((s,i)=>s+E.KARTEN.erloes({herkunft:'pack',stufe:ranks[i]}),0);
+  };enumerate([],1);assert(ev/pk.preis>=.8&&ev/pk.preis<=1.2,pk.id+': '+ev);
+ }
+});
+test('Neue Videoereignisse passen zur Position und ihre Entscheidungen bleiben ladbar',()=>{
+ for(const [pos,id] of [['TW','video_tw'],['IV','video_def'],['ST','video_off']]){
+  const p=player(2);p.pos=pos;p.age=20;
+  const e=E.EVENTS.find(e=>e.id===id);assert(e.pos.includes(pos)&&e.cond(p));
+  const late=E.EVENTS.find(e=>e.id==='video_spaeter');assert(!late.cond(p));
+  p.flags.videobuch=true;p.age=30;p.seasons=Array(8).fill({});assert(late.cond(p));
+  for(const event of [e,late]){
+   const save=E.laufStand(p,'event',{queue:[event]},E.EVENTS,'35.174');
+   assert.deepEqual(E.laufWeiter(JSON.parse(JSON.stringify(save)),E.EVENTS).queue[0].choices.map(c=>c.id),event.choices.map(c=>c.id));
+  }
+ }
 });

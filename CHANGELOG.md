@@ -1,5 +1,12 @@
 # Änderungen
 
+## 35.174.0 – Fünf Saisons für den Vereinsfortschritt
+
+- Akademie-/Vereinsjahr und neue Freischaltungsfortschritte nur nach mindestens fünf abgeschlossenen Spielersaisons. Bisherige Freischaltstufen und bereits freigeschaltete Bereiche erhalten.
+- Kartenverkaufspreise auf durchschnittlich 80–120 % des Packpreises kalibriert; exakte Werte 81,87–104,83 %.
+- Drei positionsgerechte Videoereignisse und eine spätere Rückmeldung auf frühe Notizen ergänzt.
+- 70 Regressionen; App-ID, Release-Signierung, Vollbild und 3-/15-Saisons-Belohnungsgrenzen erhalten. VersionCode 3517400.
+
 ## 35.173.0 – Verlässlicher Saisonrückblick
 
 - Nationalmannschaftsturniere erscheinen wieder als passende Schlagzeile, mit Ergebnis und Jahr.

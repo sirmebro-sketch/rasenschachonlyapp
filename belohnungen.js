@@ -1,5 +1,6 @@
 /* Abschlussbelohnungen: Buchung und Anzeige verwenden denselben Beleg. */
 export const VC_MIN_SAISONEN = 3;
+export const HAUS_MIN_SAISONEN = 5;
 export const PACK_MIN_SAISONEN = 15;
 export const saisonenGespielt = p => Array.isArray(p?.seasons) ? p.seasons.length : 0;
 

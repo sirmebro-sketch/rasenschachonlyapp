@@ -995,13 +995,17 @@ export const machVerein = (H) => {
      musste nichts Neues gezaehlt werden. */
   const FREI_AKADEMIE = 2, FREI_VEREIN = 5;
   const freigeschaltet = (gesamt) => {
-    const n = (gesamt && gesamt.karrieren) || 0;
+    const n = gesamt?.hausKarrieren || 0;
+    // Alte Freischaltungen behalten, ohne alte Kurzkarrieren neu anzurechnen.
+    const alt = gesamt?.hausAltFreigaben || (gesamt?.hausKarrieren == null
+      ? { akademie: (gesamt?.karrieren || 0) >= FREI_AKADEMIE,
+          verein: (gesamt?.karrieren || 0) >= FREI_VEREIN } : {});
     return {
-      akademie: n >= FREI_AKADEMIE,
-      verein: n >= FREI_VEREIN,
+      akademie: !!alt.akademie || n >= FREI_AKADEMIE,
+      verein: !!alt.verein || n >= FREI_VEREIN,
       karrieren: n,
-      nochAkademie: Math.max(0, FREI_AKADEMIE - n),
-      nochVerein: Math.max(0, FREI_VEREIN - n),
+      nochAkademie: alt.akademie ? 0 : Math.max(0, FREI_AKADEMIE - n),
+      nochVerein: alt.verein ? 0 : Math.max(0, FREI_VEREIN - n),
     };
   };
 
