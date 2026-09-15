@@ -1,5 +1,13 @@
 # Änderungen
 
+## 35.175.0 – Vorsätze werden sichtbar und lohnen sich
+
+- Alle sechs Vorsätze mit Fortschritt direkt unter der Wildcard, Status und einmaliger Spielerbelohnung. Am Karriereende 35–90 zusätzliche Vermächtnispunkte, separat ausgewiesen und im Gesamtergebnis enthalten.
+- Daheim: Spielerbonus nach zehn heimischen Saisons; Abschlussbonus nur ohne Auslandssaison bis zum Ende. Ein späterer Bruch wird angezeigt.
+- Situationsabhängiges freiwilliges Saisonziel mit +3 Moral bei Erfolg, Ergebnis im bestehenden Saisonrückblick.
+- Buch-/Knieabschlüsse reagieren auf den gewählten Weg; ein unterstützter Mitspieler meldet sich später namentlich. Alte Ereignis- und Auswahlkennungen erhalten.
+- Claudes Werkzeugrunde übernommen. 83 Regressionen; App-ID, Signierung, Vollbild, 3/5/15-Saisons-Grenzen und Packpreise erhalten. VersionCode 3517500.
+
 ## 35.174.0 – Fünf Saisons für den Vereinsfortschritt
 
 - Akademie-/Vereinsjahr und neue Freischaltungsfortschritte nur nach mindestens fünf abgeschlossenen Spielersaisons. Bisherige Freischaltstufen und bereits freigeschaltete Bereiche erhalten.

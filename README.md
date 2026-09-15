@@ -40,6 +40,7 @@ wenn man sie braucht.
 | `verein.js` | eigener Verein: Liga, Kader, Aufstellung, Taktik, Ausbau |
 | `akademie.js` | Jugendakademie: Talente, Abteilungen, Jahrgänge |
 | `karten.js` | Sammelkarten, Packs, Ziehung, Verkauf |
+| `vorsatz.js` | Vorsatzfortschritt, einmalige Spielerboni, Abschluss-Punkte und Saisonziele |
 | `belohnungen.js` | Abschlussbelohnungen — ein Beleg für Buchung und Anzeige |
 | `buchungen.js` | Karten-/Coinbuchungen, geprüft **vor** dem Schreiben |
 | `spielstand.js` | laufenden Stand serialisieren und wieder laden |
@@ -97,17 +98,17 @@ Dazu fünf Regeln, die sich aus früheren Fehlern ergeben haben:
 
 ### Versionsschema
 
-`package.json` führt die Version als `major.minor.patch` (derzeit 35.174.0).
+`package.json` führt die Version als `major.minor.patch` (derzeit 35.175.0).
 Daraus rechnet `tools/android-version.cjs` den `versionCode`
-(`major*100000 + minor*100 + patch`, also 3517400) und schreibt ihn zusammen mit
+(`major*100000 + minor*100 + patch`, also 3517500) und schreibt ihn zusammen mit
 dem `versionName` nach `android/app/build.gradle`. Beide Felder sollen nie von
 Hand auseinanderlaufen. Die Version wird erhöht, wenn eine neue APK entsteht —
 reine Werkzeug- oder Dokumentationsänderungen erhöhen sie nicht.
 
 ## Prüfstände
 
-**`npm test`** — `node --test tools/*.test.cjs`, derzeit 70 Prüfungen. Läuft in
-der CI bei jedem Push und Pull Request (`.github/workflows/regression.yml`).
+**`npm test`** — `node --test tools/*.test.cjs`, derzeit 83 Prüfungen. Läuft in
+der CI bei Pushes auf `main` und Pull Requests (`.github/workflows/regression.yml`).
 Schwerpunkt: Abschlussbelohnungen und Kaufbuchungen, Speicherfehler an jedem
 einzelnen Schritt, simulierte Prozessabbrüche, Import mit Rücknahme,
 Ereignisstände nach Umsortierung des Katalogs.
@@ -151,3 +152,15 @@ Ebenfalls nicht hier: **`STAND.md`**. Einzelne Kommentare in `akademie.js` und
 35.169.0, also aus der Zeit vor diesem Repository, und wurde nie mit importiert.
 Seine Rolle übernehmen heute `CHANGELOG.md` (was sich geändert hat) und
 `ENTWICKLUNG.md` (Stand, Prüfungen, offene Punkte).
+
+
+### Gleichzeitige Arbeit (Ergänzung Codex, 15.09.2026)
+
+Vor Beginn Remote-Branches aktualisieren, `main` und vorhandene Übergaben lesen.
+Eigene uncommittete Arbeit vor einer Zusammenführung sichern. Fremde Änderungen
+über ihren Commit übernehmen; keine kompletten Dateien aus einem älteren Stand
+zurückkopieren. Unmittelbar vor Veröffentlichung `main` erneut prüfen. Ist er
+weitergelaufen, zuerst zusammenführen und betroffene Tests wiederholen. Keine
+Force-Pushes. Im Entwicklungsvermerk Basis-/übernommene Commits, Konfliktlösungen,
+Tests und verbleibende Geräteprüfungen nennen. Große Arbeiten möglichst auf einem
+eigenen Branch vorbereiten. Maßgeblich ist der Quellstand im Repository.

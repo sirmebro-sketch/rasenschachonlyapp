@@ -35,7 +35,7 @@ before(async () => {
     .map(n=>`const ${n}=v=>{out[${JSON.stringify(n.slice(3))}]=v;};`).join('\n');
   const extension = `
 import {renderToStaticMarkup} from 'react-dom/server';
-export {bilanzLaden, bilanzErgaenzen, akaGruenden, SAVE_KEY, AKA_KEY, LIFE_KEY, createPlayer, develop, simulateSeason, vcFuer, vcPosten, vcAusHaeusern, leereAkademie, leereBilanz, KARTEN, VEREIN, zufallSetzen, rerollWildcard, ladenGesperrt, saisonSchlagzeile, saisonIndex, EVENTS, strangDran, strangWeiter, laufStand, laufWeiter};
+export {verdict, vorsatzBelohnen, vorsatzPunkte, bilanzLaden, bilanzErgaenzen, akaGruenden, SAVE_KEY, AKA_KEY, LIFE_KEY, createPlayer, develop, simulateSeason, vcFuer, vcPosten, vcAusHaeusern, leereAkademie, leereBilanz, KARTEN, VEREIN, zufallSetzen, rerollWildcard, ladenGesperrt, saisonSchlagzeile, saisonIndex, EVENTS, strangDran, strangWeiter, laufStand, laufWeiter};
 export const renderReveal=card=>renderToStaticMarkup(<WildcardEnthuellung card={card} onFertig={()=>{}}/>);
 export const renderShop=(spieler,schritt='training')=>renderToStaticMarkup(<VCLadenAnsicht wo="saison" vc={100} laden={{}} onKauf={()=>{}} spieler={spieler} schritt={schritt}/>);
 export async function runFinish(q,initial={}) {
@@ -292,4 +292,29 @@ test('Prüfstand-Marken für den Langzeitlauf stehen eindeutig in App.jsx',()=>{
   assert.throws(()=>block(verbogen,b.name),/umschließt nicht mehr/);
  }
  assert.throws(()=>block(quelle,'gibtesnicht'),/Unbekannter Prüfstand-Block/);
+});
+
+
+test('Vorsatz im echten Abschluss: Spielerbonus einmal, Punkte exakt in Gesamtwertung',async()=>{
+ const p=player(10);p.vorsatz='lange';const ohne=E.verdict({...p,vorsatz:null}).score;
+ const r=await E.runFinish(p);
+ assert.equal(r.P.verdict.score-ohne,45);
+ assert(r.P.vorsatzLohn.lange);
+ assert.equal(r.P.fitness,Math.min(100,p.fitness+10));
+ assert.equal(E.verdict(r.P).score,r.P.verdict.score);
+});
+test('Buch- und Knieabschlüsse folgen dem Weg; historische Auswahlen bleiben ladbar',()=>{
+ for(const [strang,stufe,wege,ids] of [['buch',3,['offen','kontrolle','ohne'],['bu_3','bu_3_kontrolle','bu_3_ohne']],['knie',3,['getragen','behandelt','pausiert'],['kn_3','kn_3_behandelt','kn_3_pausiert']]]){
+  for(let i=0;i<wege.length;i++){
+   const p=player(10);p.straenge={[strang]:{stufe:stufe-1,seit:5,weg:wege[i]}};
+   const eligible=E.EVENTS.filter(e=>e.strang===strang&&E.strangDran(e,p)&&e.cond(p));
+   assert.deepEqual(eligible.map(e=>e.id),[ids[i]]);
+   const saved=E.laufStand(p,'event',{queue:eligible},E.EVENTS,'35.175');
+   assert.equal(E.laufWeiter(JSON.parse(JSON.stringify(saved)),E.EVENTS).queue[0].id,ids[i]);
+  }
+ }
+ for(const id of ['bu_3','kn_3']){
+  const saved={p:player(10),step:'event',ablauf:{schema:1,ei:0,queue:[{id,wahlen:[0,1],ctx:{}}]}};
+  assert.deepEqual(E.laufWeiter(saved,E.EVENTS).queue[0].choices.map(c=>c.id),[id+'.0',id+'.1']);
+ }
 });

@@ -53,12 +53,40 @@ export const machEreignisse = (H) => {
      roll:[{p:1,text:"Ihr sprecht über Blickkontakt und Timing. Beim nächsten Versuch wisst ihr beide, worauf ihr wartet.",fx:{form:4,trust:2}}]}]},
 { id:"video_spaeter", tag:"Umfeld", w:5, cond:p=>p.age>=29&&p.seasons.length>=8&&!!p.flags.videobuch,
   title:T("Das alte Heft in der Sporttasche"),
-  text:T("Zwischen alten Trainingsunterlagen findest du deine frühen Video-Notizen. Manche Fehler erkennst du heute bei jüngeren Mitspielern wieder. Andere machst du gelegentlich immer noch selbst."),
+  text:c=>"Zwischen alten Trainingsunterlagen findest du deine frühen Video-Notizen. " + c.young.name + " fragt nach einer Szene aus dem Training. Manche Fehler erkennst du wieder — auch bei dir selbst.",
   choices:[
     {id:"video_spaeter.0",altIndex:0,label:"Mit einem jüngeren Mitspieler durchgehen",hint:"Auch die eigenen Fehler zeigen",
      roll:[{p:1,text:"Du zeigst zuerst eine Szene, in der du falsch lagst. Danach wird aus dem Vortrag ein Gespräch.",fx:{legacy:8,trust:5,form:-2}}]},
     {id:"video_spaeter.1",altIndex:1,label:"Die Notizen für das eigene Spiel nutzen",hint:"",
      roll:[{p:1,text:"Eine alte Notiz passt erstaunlich gut zu deiner aktuellen Situation. Du nimmst sie mit ins nächste Training.",fx:{form:6,morale:3}}]}]},
+
+/* Spätere Konsequenzen vorhandener Entscheidungen, keine zusätzlichen Ereignisplätze. */
+{ id:"video_kontakt", tag:"Umfeld", w:5, cond:p=>!!p.videoKontakt&&p.seasons.length-p.videoKontakt.seit>=2,
+  title:T("Eine Nachricht nach dem Training"),
+  text:c=>c.p.videoKontakt.name+" schickt dir eine kurze Videoaufnahme. Darunter steht: Genau die Szene aus deinem Heft. Aus eurem Gespräch ist eine Gewohnheit geworden.",
+  choices:[
+   {id:"video_kontakt.0",altIndex:0,label:"Gemeinsam eine Antwort erarbeiten",hint:"Zeit für jemanden, den du begleitet hast",roll:[{p:1,text:"Du stellst eine Frage, statt die Lösung zu schicken. Am Abend kommt eine zweite Aufnahme — diesmal hat die Abstimmung geklappt.",fx:{legacy:12,morale:8,fitness:-2}}]},
+   {id:"video_kontakt.1",altIndex:1,label:"Zum eigenen Urteil ermutigen",hint:"",roll:[{p:1,text:"Du schreibst, dass die Beobachtung stimmt. Deine Notizen haben geholfen; die nächste Entscheidung gehört deinem Gegenüber.",fx:{legacy:6,morale:6}}]}]},
+{ id:"bu_3_kontrolle", tag:"Medien", w:3, strang:"buch", stufe:3, weg:"kontrolle", wartezeit:2, cond:p=>true,
+ title:T("Zwischen den glatten Sätzen"),text:T("Das Buch erscheint. Du hast jede Seite freigegeben. In den Besprechungen loben sie die Fotos und fragen, was hinter den glatten Formulierungen fehlt."),
+ choices:[
+  {id:"bu_3_kontrolle.0",altIndex:0,label:"Bei der Vorstellung offen darüber sprechen",hint:"Die Kontrolle ein Stück abgeben",roll:[{p:1,text:"Du erzählst, warum du einige Stellen gestrichen hast. Zum ersten Mal an diesem Abend reden die Leute mit dir und nicht über das Buch.",fx:{legacy:14,morale:6,rep:4}}]},
+  {id:"bu_3_kontrolle.1",altIndex:1,label:"Bei deiner Grenze bleiben",hint:"Privates bleibt privat",roll:[{p:1,text:"Du stehst zu den Auslassungen. Nicht jede Erinnerung muss veröffentlicht werden. Die Besprechungen bleiben kühl, du schläfst trotzdem gut.",fx:{morale:10,legacy:4}}]}]},
+{ id:"bu_3_ohne", tag:"Medien", w:3, strang:"buch", stufe:3, weg:"ohne", wartezeit:2, cond:p=>true,
+ title:T("Dein Leben aus fremden Blickwinkeln"),text:T("Das Buch liegt im Laden. Du hast nicht mitgearbeitet. Manche Szenen erkennst du sofort, andere hast du ganz anders in Erinnerung."),
+ choices:[
+  {id:"bu_3_ohne.0",altIndex:0,label:"Mit den Beteiligten darüber reden",hint:"Erst zuhören",roll:[{p:1,text:"Ein früherer Mitspieler erklärt dir seine Erinnerung. Ihr werdet euch nicht in allem einig, aber du verstehst eine alte Entscheidung besser.",fx:{legacy:10,morale:8,trust:4}}]},
+  {id:"bu_3_ohne.1",altIndex:1,label:"Das Buch für sich stehen lassen",hint:"",roll:[{p:1,text:"Es ist eine Geschichte über dich, nicht deine eigene Stimme. Du legst es ins Regal und gehst zum Training.",fx:{morale:5,form:3}}]}]},
+{ id:"kn_3_behandelt", tag:"Körper", w:3, strang:"knie", stufe:3, weg:"behandelt", wartezeit:3, cond:p=>true,
+ title:T("Jemand fragt nach deinem Aufbauprogramm"),text:T("Ein jüngerer Mitspieler kennt deine Kniegeschichte und fragt nach den Übungen. Du weißt inzwischen, dass ein Programm allein keine Diagnose ersetzt."),
+ choices:[
+  {id:"kn_3_behandelt.0",altIndex:0,label:"Deine Erfahrungen und die Fachleute vermitteln",hint:"Keine Ferndiagnose",roll:[{p:1,text:"Du erzählst, was dir geholfen hat, und vermittelst den Kontakt zum medizinischen Team. Den passenden Plan erarbeiten sie gemeinsam.",fx:{trust:12,legacy:18,morale:10}}]},
+  {id:"kn_3_behandelt.1",altIndex:1,label:"Zum medizinischen Team begleiten",hint:"",roll:[{p:1,text:"Du gehst mit. Im Wartezimmer erzählst du, wie schwer dir die erste Pause fiel.",fx:{trust:8,legacy:10,morale:6}}]}]},
+{ id:"kn_3_pausiert", tag:"Körper", w:3, strang:"knie", stufe:3, weg:"pausiert", wartezeit:3, cond:p=>true,
+ title:T("Diesmal zweifeln sie an jemand anderem"),text:T("Ein Mitspieler setzt wegen Schmerzen aus. In der Kabine fällt das Wort vorsichtig. Du kennst den Ton noch aus deiner eigenen Pause."),
+ choices:[
+  {id:"kn_3_pausiert.0",altIndex:0,label:"Vor der Mannschaft Rückendeckung geben",hint:"",roll:[{p:1,text:"Du erzählst von deiner damaligen Situation. Nicht alle nicken, aber die Sprüche hören auf.",fx:{legacy:18,morale:10,trust:-3}}]},
+  {id:"kn_3_pausiert.1",altIndex:1,label:"Unter vier Augen Unterstützung anbieten",hint:"",roll:[{p:1,text:"Du sagst, dass eine Pause keine Entschuldigung vor der ganzen Kabine braucht. Das Gespräch bleibt zwischen euch.",fx:{legacy:10,morale:8}}]}]},
 
 /* --- Krisenpfade (35.112) -------------------------------------------------
    Stufe F aus dem Konzeptpapier: „Bei schweren sportlichen Krisen sollen sich
@@ -360,7 +388,7 @@ export const machEreignisse = (H) => {
      roll:[{p:.5,text:"Sie schweigen. Im Buch steht dafür ein Kapitel darüber, wer alles nicht reden wollte.",fx:{rep:-8,morale:-8}},
       {p:.5,text:"Einer schweigt, einer nicht — und der, der redet, ist sauer über die Bitte.",fx:{trust:-10,rep:-4,morale:-6}}]}]},
 
-{ id:"bu_3", tag:"Medien", w:3, strang:"buch", stufe:3, wartezeit:2, cond:p=>true,
+{ id:"bu_3", tag:"Medien", w:3, strang:"buch", stufe:3, weg:"offen", wartezeit:2, cond:p=>true,
   title:T("Das Buch erscheint"),
   text:T("Dreihundert Seiten über ein Leben, das noch nicht fertig ist. In der Buchhandlung liegt es neben Biografien von Leuten, die aufgehört haben."),
   choices:[
@@ -415,7 +443,7 @@ export const machEreignisse = (H) => {
     {id:"kn_2c.1", altIndex:1, label:"Über die Leistung antworten",hint:"",
      roll:[{p:1,text:"Du sagst nichts und spielst drei starke Wochen. Das erledigt es zuverlässiger als jede Ansprache.",fx:{form:12,trust:10,fitness:-6}}]}]},
 
-{ id:"kn_3", tag:"Körper", w:3, strang:"knie", stufe:3, wartezeit:3, cond:p=>true,
+{ id:"kn_3", tag:"Körper", w:3, strang:"knie", stufe:3, weg:"getragen", wartezeit:3, cond:p=>true,
   title:T("Ein Junger fragt dich nach seinem Knie"),
   text:T("Dieselbe Stelle, dasselbe leere MRT, derselbe Satz vom Arzt. Er fragt dich, weil du der Einzige bist, von dem er weiß, dass du das kennst."),
   choices:[

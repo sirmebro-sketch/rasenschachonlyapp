@@ -19,7 +19,7 @@ export {POS,TYPES,MODES,zufallSetzen,KARTEN};
 export function auditCareer(config, choose) {
  RUHE=true;
  ${names.map(n=>`let ${n[3].toLowerCase()+n.slice(4)};const ${n}=v=>{${n[3].toLowerCase()+n.slice(4)}=v;};`).join('\n')}
- p=createPlayer(config);step='training';queue=[];ei=0;er=null;offers=[];
+ p=createPlayer(config);p.vorsatz=config.vorsatz;step='training';queue=[];ei=0;er=null;offers=[];
  const meta={},askCache={current:{}},logs=[];
  const saveGame=()=>true;
  const finish=q=>{p=q;p.retired=true;step='done';};
@@ -54,7 +54,7 @@ try{
  for(const pos of Object.keys(E.POS))for(const gender of ['m','w'])for(const mode of E.MODES)for(let choice=0;choice<4;choice++){
   E.zufallSetzen(seed++);const type=E.TYPES.filter(t=>t.pos.includes(pos))[choice];
   try{
-   const r=E.auditCareer({name:'Pruefling',nation:['GER','BRA','JPN','NGA'][choice],pos,gender,mode:mode.id,type:type.id,speed:choice===3,foot:'rechts',number:9},choice);
+   const r=E.auditCareer({name:'Pruefling',vorsatz:['welt','daheim','lange','glanz','beruf','einsatz'][(seed-351721)%6],nation:['GER','BRA','JPN','NGA'][choice],pos,gender,mode:mode.id,type:type.id,speed:choice===3,foot:'rechts',number:9},choice);
    rows.push({pos,gender,mode:mode.id,years:r.p.seasons.length,vc:r.vc,events:r.logs.length,ids:r.logs});
   }catch(e){throw Error(JSON.stringify({seed:seed-1,pos,gender,mode:mode.id,choice})+': '+e.message);}
  }

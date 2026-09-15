@@ -1,3 +1,4 @@
+import { VORSAETZE, vorsatzStand, vorsatzBelohnen, vorsatzPunkte, saisonZielStart, saisonZielAbschluss } from "./vorsatz.js";
 import { laufbahnBeleg, abschlussBeleg, saisonenGespielt, VC_MIN_SAISONEN, PACK_MIN_SAISONEN, HAUS_MIN_SAISONEN } from "./belohnungen.js";
 import { packBuchung, verkaufsBuchung } from "./buchungen.js";
 import React, { useState, useEffect, useLayoutEffect, useRef, useMemo } from "react";
@@ -23,8 +24,8 @@ import { machAkademie } from "./akademie.js";
    ================================================================ */
 
 const NAME = "Rasenschach XI";
-const VERSION = "35.174";
-const VERSION_INFO = "Akademie und Verein ab fünf Saisons; höhere Kartenverkaufspreise und neue Karriereereignisse.";
+const VERSION = "35.175";
+const VERSION_INFO = "Vorsätze mit Fortschritt und Belohnungen; persönliche Saisonziele und vertiefte Geschichten.";
 
 /* Fester Zufallsstrom aus einer Zeichenkette — damit Angebote des eigenen
    Vereins nicht bei jedem Klick anders aussehen.                        */
@@ -5758,6 +5759,8 @@ function simulateSeason(p) {
   p.tot.apps += apps; p.tot.goals += goals; p.tot.assists += assists; p.tot.cs += cs; p.tot.seasons++;
   if (TOP5.includes(club.l) && ro.f >= .8) p.tot.topSeasons++;
   season.milestones = checkMilestones(p);
+  vorsatzBelohnen(p);
+  saisonZielAbschluss(p, season);
   return season;
 }
 
@@ -6280,7 +6283,7 @@ function verdict(p) {
   const score = Math.round(p.peakOvr * 3.2 + p.trophies.length * 9 + cl * 34 + majors * 46 + bdo * 75
     + p.nt.caps * .55 + p.tot.goals * .34 + p.tot.assists * .25 + p.tot.cs * .4
     + p.tot.topSeasons * 5.5 + p.tot.seasons * 2.2 + p.awards.length * 5
-    + p.legacyBonus + p.donated * 6 + (legendRank(loyalty(p)) ? legendRank(loyalty(p)).leg : 0));
+    + p.legacyBonus + vorsatzPunkte(p) + p.donated * 6 + (legendRank(loyalty(p)) ? legendRank(loyalty(p)).leg : 0));
   const tiers = [[1750,"Unsterblich","Man wird in fünfzig Jahren noch Videos von dir schauen."],
     [1400,"Jahrhundertspieler","Eine Laufbahn, die man Kindern als Maßstab erzählt."],
     [1120,"Weltklasse","Du gehörst in jede ernsthafte Diskussion über deine Generation."],
@@ -11114,7 +11117,7 @@ function saisonGruende(s, vorSaison) {
    eine der vorhandenen Errungenschaften, sie steht waehrend der Laufbahn
    sichtbar da, und am Ende steht, ob man sie gehalten hat.
 
-   KEINE BELOHNUNG. Der Bericht warnt: „Belohnungen so bemessen, dass kein
+   HISTORISCH (bis 35.174): keine Belohnung. Der Bericht warnte: „Belohnungen so bemessen, dass kein
    leicht wiederholbarer Sonderweg die Vermaechtnisoekonomie aushebelt." Der
    einfachste Weg, das sicherzustellen, ist gar keine Belohnung — der Vorsatz
    ist eine Selbstverpflichtung, kein Auftrag mit Lohn. Wer ihn haelt, hat
@@ -11134,38 +11137,6 @@ function saisonGruende(s, vorSaison) {
 
    Je zwei stehen gegeneinander: Weltenbummler und Daheim schliessen sich
    aus. Das ist der Punkt des Vorschlags — eine Wahl, die etwas kostet. */
-const VORSAETZE = [
-  { id: "welt",   ach: "b_drei",    n: "Der Weltenbummler",
-    t: "In drei Ländern spielen — jeder Wechsel kostet Eingewöhnung." },
-  { id: "daheim", ach: "a_ausland", n: "Daheim bleiben", umkehr: true,
-    t: "Nie im Ausland spielen, egal wie gut das Angebot ist." },
-  { id: "lange",  ach: "a_zehn",    n: "Die lange Laufbahn",
-    t: "Mindestens zehn Saisons — auch durch schwache Jahre hindurch." },
-  { id: "glanz",  ach: "b_note2",   n: "Eine herausragende Saison",
-    t: "Einmal eine Note von 2,0 oder besser." },
-  { id: "beruf", ach: "a_beruf", n: "Ein zweites Standbein",
-    t: "Während dieser Laufbahn einen Abschluss machen." },
-  { id: "einsatz", ach: "b_300", n: "Auf dem Platz zuhause",
-    t: "300 Pflichtspiele in dieser Laufbahn bestreiten." },
-];
-
-/* Ob der Vorsatz noch zu halten ist — geprueft an derselben Bedingung wie
-   die Errungenschaft, nicht an einer nachgebauten. Zwei Regeln fuer
-   dieselbe Sache liefen sonst auseinander. */
-function vorsatzStand(p, G, A) {
-  if (!p || !p.vorsatz) return null;
-  const v = VORSAETZE.find((x) => x.id === p.vorsatz);
-  if (!v) return null;
-  const a = ACHIEVEMENTS.find((x) => x.id === v.ach);
-  let erfuellt = false;
-  try { erfuellt = !!(a && a.ok(p, G || leereBilanz(), A)); } catch (e) { erfuellt = false; }
-  /* „Daheim bleiben" ist die UMKEHRUNG von „Ins Ausland": erfuellt ist, wer
-     die Errungenschaft NICHT hat. Ein eigener Eintrag dafuer waere eine
-     zweite Regel fuer dieselbe Sache. */
-  if (v.umkehr) erfuellt = !erfuellt;
-  return { n: v.n, t: v.t, erfuellt };
-}
-
 function naechstesZiel(p) {
   if (!p || !p.seasons) return null;
   const offen = MILESTONES.filter((m) =>
@@ -11364,6 +11335,7 @@ function KarriereRueckblick({ p, onFertig }) {
     <div style={{ textAlign: "center" }}>
       <Zahl v={p.tot.apps} className="d" style={{ ...GZ, color: "var(--go)" }} />
       <div className="eb" style={{ marginTop: 4 }}>Pflichtspiele</div>
+      {s.saisonZiel && <p style={{ fontSize: 12 }}>Saisonziel „{s.saisonZiel.n}“: {s.saisonZiel.ist} / {s.saisonZiel.soll} Spiele · {s.saisonZiel.geschafft ? "erreicht, +3 Moral (bis 100)" : "diesmal nicht erreicht"}.</p>}
       <div style={{ display: "flex", justifyContent: "center", gap: "clamp(16px,6vw,40px)", marginTop: 22 }}>
         <div><Zahl v={isTW ? p.tot.cs : p.tot.goals} className="d" style={{ ...MZ, color: "var(--go)" }} />
           <div className="eb" style={{ marginTop: 3 }}>{isTW ? "Zu Null" : "Tore"}</div></div>
@@ -15261,8 +15233,8 @@ function CreateScreen({ onStart, onBack, meta }) {
           bleibt es dann so, wie es beim Start stand.
         </div>
 
-          {/* EIN VORSATZ FÜR DIESE LAUFBAHN (35.162, V07). Freiwillig, ohne
-              Belohnung — wer ihn hält, hat ohnehin die Errungenschaft. Der
+          {/* EIN VORSATZ FÜR DIESE LAUFBAHN (35.162, V07). Freiwillig, seit 35.175 mit
+              einmaliger Spielerbelohnung und Punkten bei Karriereabschluss. Der
               Wert liegt darin, ein Ziel im Blick zu haben, während man
               Entscheidungen trifft.
 
@@ -15280,8 +15252,8 @@ function CreateScreen({ onStart, onBack, meta }) {
           </div>
           <p style={{ fontSize: 11.5, color: "var(--mu)", marginTop: 6 }}>
             {vorsatz
-              ? (VORSAETZE.find((v) => v.id === vorsatz) || {}).t
-              : "Ohne Vorsatz spielst du wie bisher. Er bringt keine Belohnung — nur ein Ziel."}</p>
+              ? (() => { const v = VORSAETZE.find(v => v.id === vorsatz); return v.t + " Belohnung: " + v.lohn + ". Am Karriereende: +" + v.punkte + " Vermächtnispunkte bei gehaltenem Vorsatz."; })()
+              : "Freiwillig: Erreiche deinen Vorsatz für eine einmalige Spielerbelohnung und zusätzliche Vermächtnispunkte."}</p>
 
         <div style={{ display: "flex", gap: 8, marginTop: 20 }}>
           <button className="btn pri" style={{ maxWidth: 200 }}
@@ -17033,6 +17005,7 @@ function EndScreen({ p, onNew }) {
           <div className="eb" style={{ color: "var(--bad)" }}>Grund</div>
           <div style={{ fontSize: 13.5, marginTop: 3 }}>{p.endReason}</div></div>}
         <div style={{ marginTop: 12 }}><WildcardCard card={p.wc} /></div>
+        {vorsatzStand(p) && <p style={{ marginTop: 10 }}>Vorsatz „{vorsatzStand(p).n}“: {vorsatzStand(p).status} · +{vorsatzPunkte(p)} Vermächtnispunkte (in der Gesamtwertung enthalten).</p>}
         {p.neueErfolge && p.neueErfolge.length > 0 && (
           <div className="pan pad" style={{ marginTop: 12, borderColor: "var(--go)" }}>
             <div className="eb" style={{ color: "var(--go)", marginBottom: 6 }}>
@@ -17741,6 +17714,7 @@ function FlutlichtApp() {
     let poolNachher = kartenRef.current || karten;
     const ergaenze = (neue) => { poolNachher = KARTEN.poolErgaenzen(poolNachher, neue); };
     q.karriereId = id;
+    vorsatzBelohnen(q);
     q.verdict = verdict(q); q.retired = true; q.endReason = reason || q.endNow || null;
     /* Vermächtnis-Coins und ein Jahr Akademie */
     /* Ausgleichszähler der Rautekarte: nach jeder abgeschlossenen Laufbahn
@@ -18162,6 +18136,7 @@ function FlutlichtApp() {
   const chooseTraining = (id) => {
     haptik("wahl");
     const q = clone(p);
+    if (!q.saisonZiel || q.saisonZiel.jahr !== q.year) q.saisonZiel = saisonZielStart(q);
     q.training = q.speed ? autoTraining(q) : id;
     setOvrAlt(p.ovr);
     setGrowth(develop(q));
@@ -18188,6 +18163,11 @@ function FlutlichtApp() {
     const extra = [];
     applyFx(q, out.fx, extra);
     strangWeiter(q, queue[ei], out.fx);
+    if (queue[ei]?.id === "video_spaeter" && choice.id === "video_spaeter.0") {
+      const kontakt = queue[ei]._ctx?.young;
+      if (kontakt?.name) q.videoKontakt = { name: kontakt.name, seit: q.seasons.length };
+    }
+    vorsatzBelohnen(q);
     q.ovr = ovrOf(q.attrs, q.pos);
     q.mv = marketValue(q);
     setP(q);
@@ -18726,21 +18706,22 @@ function FlutlichtApp() {
                 <div className="eb" style={{ color: r.col }}>Wildcard</div>
                 <div className="d" style={{ fontSize: 15, marginTop: 1 }}>{p.wc.n}</div>
               </div>); })()}
-            {/* 35.166: Vorsatz bei der Wildcard, ohne Tätigkeitskasten im Spielfluss. */}
-            {(() => {
-              const vs = vorsatzStand(p, ges, aka);
-              if (!vs) return null;
-              return (
-                <div style={{ marginTop: 11, paddingTop: 9, borderTop: "1px solid var(--ln)" }}>
-                  <div className="eb" style={{ color: vs.erfuellt ? "var(--ok)" : "var(--mu)" }}>
-                    Vorsatz{vs.erfuellt ? " · gehalten" : ""}</div>
-                  <div className="d" style={{ fontSize: 15, marginTop: 1 }}>{vs.n}</div>
-                </div>);
-            })()}
+            {(() => { const vs = vorsatzStand(p); return vs ? (
+              <div style={{ marginTop: 11, paddingTop: 9, borderTop: "1px solid var(--ln)" }}>
+                <div className="eb">Vorsatz · {vs.status}</div>
+                <div className="d" style={{ fontSize: 15 }}>{vs.n}</div>
+                <div style={{ fontSize: 12, marginTop: 5 }}>{vs.text}</div>
+                <progress aria-label={vs.n} value={vs.anteil} max="1" style={{ width: "100%", accentColor: "var(--ok)" }} />
+                <div style={{ fontSize: 11.5, color: "var(--mu)" }}>{vs.belohnt ? "Spielerbelohnung erhalten: " : "Einmalige Spielerbelohnung: "}{vs.lohn} (bis zur jeweiligen Wertgrenze).</div>
+                <div style={{ fontSize: 11.5 }}>Karriereende: {vs.gebrochen ? "keine Vorsatzpunkte" : "+" + vs.punkte + " Vermächtnispunkte bei gehaltenem Vorsatz"}.</div>
+              </div>) : null; })()}
           </div>
         </div>
 
         <div className="a-buehne g1" style={{ alignContent: "start", minWidth: 0 }}>
+          {step === "training" && (() => { const z = saisonZielStart(p); return <div style={{ fontSize: 12, color: "var(--mu)" }}>
+            Freiwilliges Saisonziel: {z.n} · {z.soll} Pflichtspiele · bei Erfolg +3 Moral.
+          </div>; })()}
           {step === "training" && (
             <div className="fade g1 laufzettel"><div className="zettelkopf"><span>Training</span><span className="nr">Schritt 1 von 3</span></div>
               {p.seasons.length === 0 && p.wc && (
