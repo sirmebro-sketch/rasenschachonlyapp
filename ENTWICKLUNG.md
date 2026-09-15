@@ -254,3 +254,45 @@ Geprüft: `npm test` und `npm run build` nach der Änderung erneut durchlaufen,
 beide unverändert erfolgreich — erwartbar, weil keine Datei angefasst wurde, die
 in den Build oder in die Tests eingeht. Der Nachweis dient nur dem Ausschluss
 eines Versehens.
+
+
+## Übergaberegel für alle Beteiligten, 15.09.2026 (Claude, ohne Versionswechsel)
+
+Basis: `main` 0426852. Wieder ausschließlich Dokumentation, kein Quellcode.
+
+Anlass: Die Aufräumrunde davor lag fertig auf einem Branch, während `main`
+unverändert weiterlief. Wer aus `main` heraus die nächste Runde begonnen hätte,
+hätte die reparierte CHANGELOG-Struktur nicht gesehen — und den nächsten
+Versionseintrag vermutlich wieder über der Dokumentüberschrift eingefügt, also
+genau den Fehler reproduziert, den die Korrektur verhindern soll. Das ist kein
+Einzelfall, sondern die Regel bei drei Beteiligten, die einander nicht sehen.
+
+Umgesetzt als Regel 6 in `README.md` samt neuem Abschnitt „Offene Übergaben
+finden". Der Kern: **die Übergabeliste pflegt niemand von Hand.**
+
+    git fetch --all --prune
+    git branch -r --no-merged origin/main
+
+Jeder gelistete Branch trägt Arbeit, die noch nicht in `main` ist; erledigte
+verschwinden von selbst, sobald ihre Commits dort stehen. Am 15.09.2026
+geprüft: die Ausgabe nennt genau `origin/claude/elegant-cray-29rcm8` und
+übergeht `origin/test/save-resume-regressions` korrekt, weil dessen Commit
+längst in `main` liegt. Eine handgeführte Liste hätte denselben Alterungsfehler
+wie die Testzahlen davor.
+
+Damit es die automatisierten Beteiligten beim Start erreicht, steht der Ablauf
+zusätzlich in `AGENTS.md` (der Datei, die Codex als Projektanweisung liest) und
+`CLAUDE.md` (dieselbe Rolle für Claude Code). Beide sind bewusst kurze
+Wegweiser auf `README.md` und wiederholen die Regeln nicht — sonst gäbe es drei
+Fassungen, die auseinanderlaufen. Ob ein fremdes Werkzeug seine Anweisungsdatei
+tatsächlich liest, lässt sich von hier aus nicht nachweisen; belegt ist nur,
+dass die README-Konventionen in den Runden 35.175/35.176 übernommen und sogar
+erweitert wurden.
+
+Verbindlich ist auch der Umkehrfall: Wer eine gefundene Übergabe bewusst nicht
+mitnimmt, schreibt den Grund hierher. Stillschweigendes Übergehen ist der eine
+Fall, den die Regel verhindern soll.
+
+Geprüft: `npm test` und `npm run build` erneut durchlaufen, Produktionsbündel
+prüfsummengleich. Dokumentation ändert daran nichts — der Lauf schließt nur ein
+Versehen aus.

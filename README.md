@@ -74,7 +74,7 @@ der Stelle, an der der nächste ihn sucht:
 | Werkzeuge, Abhängigkeiten, Aufbau des Repositorys, Konventionen | `README.md` (diese Datei) |
 | Jede Änderung ohne Ausnahme | Commit-Nachricht: Version und Stichwort |
 
-Dazu fünf Regeln, die sich aus früheren Fehlern ergeben haben:
+Dazu sechs Regeln, die sich aus früheren Fehlern ergeben haben:
 
 1. **Messwerte mit Datum und Verfahren nennen.** „Rückfluss 94,3 %" allein ist
    wertlos; „2.000 Ziehungen je Packtyp, `node tools/langzeit.cjs`" ist
@@ -96,6 +96,37 @@ Dazu fünf Regeln, die sich aus früheren Fehlern ergeben haben:
    denen alle drei arbeiten. Wer dort etwas Größeres vorhat, sagt vorher, in
    welchem Bereich — das ist billiger als ein Merge-Konflikt in einer Datei
    dieser Größe.
+6. **Offene Übergaben mitnehmen, bevor eine Runde beginnt.** Wer hier arbeitet,
+   arbeitet oft auf einem eigenen Branch; Arbeit, die dort liegt, ist fertig,
+   aber für alle anderen unsichtbar. Sie bleibt liegen, bis jemand sie
+   mitnimmt — siehe „Offene Übergaben finden" unten. Das ist keine Höflichkeit,
+   sondern verhindert den teuren Fall: dieselbe Datei wird an derselben Stelle
+   zweimal geändert, oder ein gerade behobener Fehler wird nach altem Muster
+   wieder eingebaut.
+
+### Offene Übergaben finden
+
+Die Liste führt niemand von Hand — Git kennt sie. Vor jeder Runde:
+
+```
+git fetch --all --prune
+git branch -r --no-merged origin/main
+```
+
+Jeder gelistete Branch trägt Arbeit, die noch nicht in `main` ist. Erledigte
+Branches verschwinden von selbst aus der Liste, sobald ihre Commits in `main`
+stehen — auch dann, wenn der Branch als solcher liegen bleibt. Was auf einem
+Branch liegt, zeigt `git log --oneline origin/main..<branch>`.
+
+Gefundene Arbeit wird **vor** dem eigenen Beginn in die Arbeitsbasis
+übernommen. Wer sie bewusst nicht übernimmt, schreibt den Grund in den
+Entwicklungsvermerk. Der eine Fall, den diese Regel verhindern soll, ist das
+stillschweigende Übergehen.
+
+Das gilt für alle drei gleichermaßen. Damit es auch die automatisierten
+Beteiligten erreicht, steht es zusätzlich in `AGENTS.md` (Codex) und
+`CLAUDE.md` (Claude Code) — beides kurze Verweise auf diesen Abschnitt, damit
+nicht drei Fassungen derselben Regel auseinanderlaufen.
 
 ### Versionsschema
 
