@@ -1,3 +1,4 @@
+import { KartenEffekt } from "./karteneffekte.jsx";
 import { portraetOptionen, portraetWuerfeln, PORTRAET_NAMEN, NEUE_FRISUREN, FRISUR_NAMEN } from "./portraet.js";
 import { persoenlicherRueckblick } from "./karrieregeschichten.js";
 import { VORSAETZE, vorsatzStand, vorsatzBelohnen, vorsatzPunkte, saisonZielStart, saisonZielAbschluss, vorsatzLohnText, bildungsFortschritt } from "./vorsatz.js";
@@ -26,8 +27,8 @@ import { machAkademie } from "./akademie.js";
    ================================================================ */
 
 const NAME = "Rasenschach XI";
-const VERSION = "35.180";
-const VERSION_INFO = "Neue Porträtgalerie, freie Farben und festhaltbare Charaktermerkmale.";
+const VERSION = "35.181";
+const VERSION_INFO = "Überarbeitete Karten- und Packeffekte: dezenter Randglanz, freie Sicht auf Porträts und Text.";
 
 /* Fester Zufallsstrom aus einer Zeichenkette — damit Angebote des eigenen
    Vereins nicht bei jedem Klick anders aussehen.                        */
@@ -7505,9 +7506,13 @@ table.led td.r,table.led th.r{text-align:right;}
   .kartenwisch{animation:none;display:none;}
 }
 .kartenjubel{animation:rs-kartenjubel .62s cubic-bezier(.22,1.3,.36,1) both;}
-.kartenjubel::after{content:"";position:absolute;top:0;bottom:0;width:38%;
-  background:linear-gradient(100deg,transparent,rgba(255,255,255,.55),transparent);
-  animation:rs-kartenglanz .95s ease-out .18s both;pointer-events:none;}
+/* 35.181: Der frühere breite Jubelstreifen übermalte Porträt und Text.
+   Die Bewegung der Karte bleibt, Glanz sitzt jetzt ausschließlich am Rand. */
+.kartenjubel::after{content:none;}
+.rs-materiallicht{animation:rs-materiallicht 5s ease-in-out infinite alternate;}
+@keyframes rs-materiallicht{from{opacity:.08}to{opacity:.42}}
+.rs-still .rs-materiallicht{animation:none;}
+@media (prefers-reduced-motion: reduce){.rs-materiallicht{animation:none;}}
 @media (prefers-reduced-motion: reduce){
   .kartenjubel,.kartenjubel::after{animation:none;}
 }
@@ -12219,8 +12224,7 @@ function WildcardEnthuellung({ card, onFertig }) {
               {/* Folie für die obersten Stufen. Liegt INNERHALB der Vorderseite und
                   fasst kein transform an — die drei Bewegungsebenen bleiben unberührt. */}
               {pomp >= .8 && (
-                <span className="folie" aria-hidden="true" style={{ position: "absolute", inset: 0,
-                  opacity: .17, pointerEvents: "none", zIndex: 0 }} />)}
+                <KartenEffekt stark still={RUHE} />)}
               <div className={auf && !RUHE ? "eb rs-auf" : "eb"}
                 style={{ color: r.col, letterSpacing: ".14em", animationDelay: "300ms",
                   position: "relative", zIndex: 1 }}>
@@ -12388,8 +12392,7 @@ function Boosterpack({ stufe, breit }) {
           Jetzt `eng` und ein Zuschnitt, der die Zacken auslaesst — er beginnt
           UNTER der Naht, wo das Pack wirklich eine gerade Kante hat. */}
       {glanz && !RUHE && (
-        <span className="holo eng" style={{ opacity: stufe === "legende" ? .34 : .24,
-          clipPath: "polygon(4% 16%,96% 16%,96% 95%,4% 95%)" }}><i /></span>)}
+        <KartenEffekt form="pack" stark={stufe === "legende"} />)}
     </div>
   );
 }
@@ -12435,8 +12438,7 @@ function Elfkarte({ spieler, stufe, klein, onTippen, aktiv, platz, eignung }) {
         outline: aktiv ? "2px solid var(--ac)" : "none", outlineOffset: 1 }}>
       {/* `eng`, weil die Karte klein ist — und leiser: auf 82 px faellt
           derselbe Schimmer viel staerker auf als auf 380. */}
-      {holo && <span className="holo eng"
-        style={{ opacity: stufe === "legende" ? .26 : .18 }}><i /></span>}
+      {holo && <KartenEffekt form="elf" stark={stufe === "legende"} />}
       <span style={{ position: "relative", display: "block", padding: "5px 4px 14px" }}>
         <span style={{ display: "flex", justifyContent: "space-between",
           alignItems: "center", marginBottom: 2 }}>
@@ -12972,17 +12974,8 @@ function Spielerkarte({ karte, gross, aufgedeckt = true, onTippen, jubel }) {
       {/* HOLOSCHIMMER, nur auf den beiden obersten Stufen (35.84). Auf Bronze
           und Silber wäre er kein Merkmal mehr, sondern Dekoration — und
           Dekoration, die überall ist, sagt nichts. */}
-      {holo && (
-        <span className="holo" aria-hidden
-          /* Deckung GEMESSEN, nicht nach Gefuehl: die Farbsaettigung im
-             Kartenbild steigt bis 0,3 kaum und macht dann einen Sprung.
-             Der Text liegt darueber, seine Lesbarkeit ist davon unberuehrt. */
-          style={{ opacity: karte.stufe === "legende" ? .44 : .32 }}><i /></span>)}
-      {/* Folienrand nur fuer die oberste Stufe — Material als Auszeichnung,
-          wie bei den Wildcards. */}
-      {karte.stufe === "legende" && (
-        <span className="folie" aria-hidden="true" style={{ position: "absolute",
-          left: 0, right: 0, bottom: 0, height: 3, opacity: .8 }} />)}
+      {holo && <KartenEffekt stark={karte.stufe === "legende"} />}
+      {/* 35.181: Keine Vollflächenfolie über Porträt und Text mehr. */}
 
       <div style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
         <Avatar seed={kartenKennung(karte)} zuege={null} club={null}
@@ -13072,8 +13065,7 @@ function WildcardCard({ card, big, onReroll, rerollLeft, rerollN }) {
       <span className="streifen" aria-hidden="true" />
       {/* Seltenheit als Material: die obersten Stufen bekommen einen Folienrand. */}
       {RARITY[card.r] && (RARITY[card.r].w === 0 || RARITY[card.r].w <= 8) && (
-        <span className="folie" aria-hidden="true" style={{ position: "absolute", left: 0, right: 0, bottom: 0,
-          height: 3, pointerEvents: "none", zIndex: 1 }} />)}
+        <KartenEffekt stark still={RUHE} />)}
       <div className="band" style={{ background: r.col }}>
         <span>Wildcard · {r.name}</span>
         {nur && <span style={{ letterSpacing: ".08em" }}>nur {nur}</span>}

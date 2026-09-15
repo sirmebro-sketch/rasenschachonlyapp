@@ -1,5 +1,11 @@
 # Änderungen
 
+## 35.181.0 – Glanz ohne verdeckte Inhalte
+
+- Holo- und Glanzeffekte folgen den Konturen von Wildcards, Spielerkarten und Packs. Porträts und Schrift bleiben frei.
+- Packs erhalten einen Schimmer entlang ihrer gezackten Verpackung; Kaderkarten entlang ihrer Schildform.
+- Breiter Lichtstreifen beim Kartenjubel entfernt. Dezentes Randlicht berücksichtigt reduzierte Bewegung.
+
 ## 35.180.0 – Dein eigenes Spielerporträt
 
 - Große Porträtvorschau und anklickbare Variantenbilder statt Pfeilreglern; Farben als benannte Farbfelder.

@@ -40,6 +40,7 @@ wenn man sie braucht.
 | `verein.js` | eigener Verein: Liga, Kader, Aufstellung, Taktik, Ausbau |
 | `akademie.js` | Jugendakademie: Talente, Abteilungen, Jahrgänge |
 | `karten.js` | Sammelkarten, Packs, Ziehung, Verkauf |
+| `karteneffekte.jsx` | Gemeinsame Materialkonturen für Karten und Packs |
 | `portraet.js` | Stabile Editoroptionen, Namen und Würfeln mit festgehaltenen Merkmalen |
 | `karrieregeschichten.js` | Persönliche Erinnerungen für den Karriereabschluss |
 | `vorsatz.js` | Vorsatzfortschritt, einmalige Spielerboni, Abschluss-Punkte und Saisonziele |
@@ -137,6 +138,16 @@ Daraus folgt ein fester Weg für Claudes Beiträge:
 
 Umgekehrt gilt die Abnahme nicht: Codex' eigene Runden gehen direkt nach `main`.
 
+### Freigabe für die weitere Zusammenarbeit (15.09.2026)
+
+Der Eigentümer hat im Chat Commit `4cc06f4` (35.181.0), dessen Upload nach
+`main` und den APK-Build ausdrücklich autorisiert. Außerdem hat er Codex den
+künftigen lesenden und schreibenden Zugriff auf
+`sirmebro-sketch/rasenschachonlyapp` erlaubt. Diese Freigabe gilt für die
+beauftragte Projektarbeit; gewöhnliche geprüfte Änderungen müssen nicht jedes
+Mal erneut freigegeben werden. Die oben beschriebenen Rollen und die Regeln
+zum Schutz gleichzeitiger Arbeit bleiben bestehen.
+
 ### Offene Übergaben finden
 
 Die Liste führt niemand von Hand — Git kennt sie. Vor jeder Runde:
@@ -176,9 +187,9 @@ Im Entwicklungsvermerk Quell- und Zielcommit sowie die Entscheidung nennen.
 
 ### Versionsschema
 
-`package.json` führt die Version als `major.minor.patch` (derzeit 35.180.0).
+`package.json` führt die Version als `major.minor.patch` (derzeit 35.181.0).
 Daraus rechnet `tools/android-version.cjs` den `versionCode`
-(`major*100000 + minor*100 + patch`, also 3518000) und schreibt ihn zusammen mit
+(`major*100000 + minor*100 + patch`, also 3518100) und schreibt ihn zusammen mit
 dem `versionName` nach `android/app/build.gradle`. Beide Felder sollen nie von
 Hand auseinanderlaufen. Die Version wird erhöht, wenn eine neue APK entsteht —
 reine Werkzeug- oder Dokumentationsänderungen erhöhen sie nicht.

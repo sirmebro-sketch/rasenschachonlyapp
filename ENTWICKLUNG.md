@@ -539,3 +539,55 @@ Zusätzliche Altporträt-Gegenprobe: acht m/w-Kennungen gegen 35.179,
 SVG nach Normalisierung der technischen IDs zeichengleich. Produktionsbuild
 und Capacitor-Synchronisierung erfolgreich. main vor Veröffentlichung
 unverändert bei fccac8f. Keine Simulation nötig: reine Porträt-/Editorrunde.
+
+## 35.181.0 – Kartenmaterial, Codex, 15.09.2026
+
+Basis 095fb762 (35.180.0); Remote vor Veröffentlichung erneut geprüft,
+keine offenen Übergaben und main unverändert. Die unterbrochene Arbeitsrunde
+hatte keine Änderungen hinterlassen.
+
+Befund: flächige Holo-/Jubelüberlagerungen konnten Text und Porträts aufhellen.
+Der rechteckige Packeffekt entsprach nicht der gezackten Packkontur.
+Gemeinsame SVG-Materialkante in karteneffekte.jsx ersetzt diese Überlagerungen
+an Wildcard, Aufdeckung, Spielerkarte, Kaderkarte und Pack. Drei Konturen,
+keine Füllung, eindeutige Gradientreferenzen; nur dezente Lichtopazität animiert.
+Breiter Jubelstreifen entfällt. Reduzierte Bewegung bleibt berücksichtigt.
+Historische CSS-Begründungen bleiben erhalten, die alten Flächeneffekte werden
+an diesen Stellen nicht mehr eingesetzt.
+
+102 Tests erfolgreich, einschließlich SVG-Referenzen und ungefüllter Konturen;
+Produktionsbuild und Capacitor-Synchronisierung erfolgreich. Drei produktive
+SVG-Konturen mit Sharp in Kartenformaten gerastert und visuell geprüft;
+mittlere Inhaltsflächen zusätzlich auf transparente Pixel geprüft. Kein
+Chromium vorhanden: Prüfung kompletter animierter Ansichten/Touch auf Android
+bleibt offen. Bitte Gold-/Legendenkarte, Wildcardaufdeckung und Packöffnung
+auf dem Gerät ansehen. Keine Änderung an Spielständen, Belohnungen, App-ID
+oder bestehender Release-Signatur. Version 35.181.0 / 3518100.
+
+Fortsetzung am 15.09.2026: Die vorbereiteten, bereits gestagten Änderungen
+wiedergefunden und erhalten. Remote erfolgreich aktualisiert: main weiterhin
+095fb762, keine nicht integrierten Remote-Branches. Alle 102 Tests, Web-Build
+und Capacitor-Synchronisierung erneut erfolgreich. Vorhandene Kontur-Bildtafel
+erneut angesehen; kein Ersatz für die weiterhin offene Android-Sichtprüfung.
+Versionshinweis im Spiel auf die Kartenrunde aktualisiert.
+
+## 15.09.2026 – Arbeitsbasis und fortlaufende Freigabe
+
+Eigentümer autorisiert Upload von 4cc06f4, APK-Build sowie zukünftigen lesenden
+und schreibenden Repository-Zugriff. Freigabe in README festgehalten.
+Vor Upload Remote aktualisiert: origin/main bei 095fb762 (35.180.0), keine
+nicht integrierten Remote-Branches, keine offenen Pull Requests.
+
+Arbeitsbasis: React/Vite mit Capacitor Android, App-ID de.rasenschach.xi.
+35.178 korrigiert Vorsätze/Studienverlauf, 35.179 vertieft späte Entscheidungen,
+35.180 erweitert Porträts und Editor; 35.181 bearbeitet Kartenmaterial.
+Alte angehängte Prüfstandsdateien (u. a. Anleitung 35.98) sind historische
+Unterlagen, keine Basis zum Überschreiben des aktuellen Repositorys.
+
+Nächste Schritte: Android-Sichtprüfung der Charaktergalerie, Karten und Packs;
+danach anhand konkreter Rückmeldungen Optik/Individualisierung nachbessern und
+die inhaltliche Vertiefung fortsetzen. Animierte Gesamtansichten und Touch
+sind durch die bisherigen Renderer-/Konturtests nicht abgedeckt.
+Je Runde Remote und Claude-Übergaben prüfen, Änderungen gezielt testen,
+Web-Build ausführen und bei App-Änderungen APK-Workflow bis zum Ergebnis prüfen.
+Spielstandskennungen, Altporträts und Release-Signatur erhalten.
