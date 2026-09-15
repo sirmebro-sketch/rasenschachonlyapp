@@ -1,5 +1,8 @@
 # Rasenschach XI
 
+**Einstieg für neue Chats:** [START-NEUER-CHAT.md](START-NEUER-CHAT.md)
+enthält Zugriffshinweise, Lesereihenfolge und eine datierte Übergabe.
+
 Ein deutschsprachiger Fußball-Karriere-Simulator. Eine React-Einzelseite, die
 über Capacitor als Android-App ausgeliefert wird (`de.rasenschach.xi`). Die App
 läuft vollständig ohne Netz: Schriften und Titelbild sind als Daten eingebettet,
@@ -147,6 +150,15 @@ künftigen lesenden und schreibenden Zugriff auf
 beauftragte Projektarbeit; gewöhnliche geprüfte Änderungen müssen nicht jedes
 Mal erneut freigegeben werden. Die oben beschriebenen Rollen und die Regeln
 zum Schutz gleichzeitiger Arbeit bleiben bestehen.
+
+Wortlaut des Eigentümers im Chat vom 15.09.2026:
+
+> Ja, ich autorisiere dich, Commit 4cc06f4 (Version 35.181) nach main im GitHub-Repository sirmebro-sketch/rasenschachonlyapp hochzuladen und den APK-Build auszulösen. Und auch zukünftig auf das Repository zuzugreifen, lesen und schreiben zu dürfen.
+
+Diese dokumentierte Freigabe gilt als Arbeitsauftrag im genannten Rahmen,
+nicht als technische Zugangsgarantie. Neue Chats prüfen ihre verfügbare
+GitHub-Verbindung selbst; Plattformregeln und spätere Nutzeranweisungen gelten
+weiter. Einzelheiten zum Einstieg stehen in `START-NEUER-CHAT.md`.
 
 ### Offene Übergaben finden
 

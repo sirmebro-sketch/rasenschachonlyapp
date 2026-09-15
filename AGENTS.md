@@ -1,5 +1,10 @@
 # Hinweise für automatisierte Mitarbeit
 
+**Neuer Chat oder neue Arbeitsumgebung:** zuerst [START-NEUER-CHAT.md](START-NEUER-CHAT.md)
+lesen. Dort stehen Repository-Adresse, dokumentierte Nutzerfreigabe und der
+Einstieg zur Prüfung des tatsächlich verfügbaren Zugriffs. Danach die folgende
+Reihenfolge ausführen; die Freigabe ersetzt keine technische Verbindung.
+
 An diesem Projekt arbeiten drei Beteiligte: der Eigentümer, ChatGPT/Codex und
 Claude. Keiner sieht, was die anderen gerade getan haben — außer, es steht im
 Repository.

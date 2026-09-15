@@ -591,3 +591,12 @@ sind durch die bisherigen Renderer-/Konturtests nicht abgedeckt.
 Je Runde Remote und Claude-Übergaben prüfen, Änderungen gezielt testen,
 Web-Build ausführen und bei App-Änderungen APK-Workflow bis zum Ergebnis prüfen.
 Spielstandskennungen, Altporträts und Release-Signatur erhalten.
+
+## 15.09.2026 – Einstieg für zukünftige Chats (Dokumentation)
+
+Auf ausdrücklichen Wunsch des Eigentümers START-NEUER-CHAT.md erstellt und in
+AGENTS.md sowie README.md verlinkt. Nutzerfreigabe in README mit Originalwortlaut
+belegt. Einstieg trennt Autorisierung von technisch verfügbarem Zugriff,
+erklärt Shell-/GitHub-Anbindung, Remote-Abgleich, Rollen und Buildkontrolle.
+Ausgangsstand und offene Android-Prüfungen ausdrücklich datiert statt als
+dauerhaft aktuellen Status dargestellt. Keine Code-, Versions- oder APK-Änderung.
