@@ -619,3 +619,20 @@ unverändert. Keine Spielregel- oder Speicheränderung. Browserinstallation in
  dieser Umgebung nicht verfügbar: bewegte Gesamtansicht und Lesbarkeit auf
 Android noch offen, insbesondere Gold/Legende, Wildcardaufdeckung und Packs.
 Die Gestaltung ist implementiert, aber nicht als visuell abgenommen bezeichnet.
+
+## 35.183.0 – Doppelten Wildcard-Glanz entfernt, Codex, 15.09.2026
+
+Basis e59a807 (35.182.0); keine offenen PRs oder nicht integrierten Branches.
+Kevins Gerätetest bestätigt die verbesserte Folie, meldet aber zwei Glanzzüge
+auf seltenen Wildcards. Ursache: WildcardEnthuellung renderte ab pomp .8
+KartenEffekt und zusätzlich ab pomp .5 den alten rs-band auf derselben
+Vorderseite. Letzterer überlagerte weiter den Inhalt im 1,5-Sekunden-Takt.
+Vorderseite jetzt ausschließlich KartenEffekt ab pomp .5, kräftig ab .8.
+Der alte Streifen bleibt nur auf der verdeckten Rückseite; die dauerhafte
+Wildcard, Spieler- und Packfolie aus 35.182 bleiben erhalten.
+
+103 Tests bestanden, darunter Renderer-Gegenprobe aller sechs regulären
+Seltenheiten auf genau eine beziehungsweise keine Folie und nur einen alten
+Streifen auf der Rückseite. Web-Build und Capacitor-Sync erfolgreich.
+Android-Version 35.183.0 / 3518300. Keine Regeln oder Spielstände geändert.
+Animierte Geräteprüfung bleibt offen; kein Browser-/Android-Sichttest behauptet.

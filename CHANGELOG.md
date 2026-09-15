@@ -1,5 +1,10 @@
 # Änderungen
 
+## 35.183.0 – Einheitlicher Wildcard-Glanz
+
+- Alten zusätzlichen Lichtstreifen auf der Wildcard-Vorderseite entfernt.
+- Bei der Aufdeckung läuft nur die neue Materialfolie: sanfter bei unfassbaren, kräftiger bei den höchsten Seltenheiten.
+
 ## 35.182.0 – Seltene Karten glänzen wieder
 
 - Wandernder Goldreflex und farbige Holografie statt nur pulsierender Konturen. Legendäre Karten schimmern kräftiger als Goldkarten.

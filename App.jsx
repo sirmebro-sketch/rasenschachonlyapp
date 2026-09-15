@@ -27,8 +27,8 @@ import { machAkademie } from "./akademie.js";
    ================================================================ */
 
 const NAME = "Rasenschach XI";
-const VERSION = "35.182";
-const VERSION_INFO = "Sichtbarer Goldglanz und bewegte Holografie für seltene Karten und Packs – ohne Innenrahmen.";
+const VERSION = "35.183";
+const VERSION_INFO = "Wildcard-Aufdeckung mit einheitlicher Holo-Folie: kein doppelter Glanz auf der Vorderseite.";
 
 /* Fester Zufallsstrom aus einer Zeichenkette — damit Angebote des eigenen
    Vereins nicht bei jedem Klick anders aussehen.                        */
@@ -12234,8 +12234,10 @@ function WildcardEnthuellung({ card, onFertig }) {
               padding: "16px 18px", display: "flex", flexDirection: "column", justifyContent: "center" }}>
               {/* Folie für die obersten Stufen. Liegt INNERHALB der Vorderseite und
                   fasst kein transform an — die drei Bewegungsebenen bleiben unberührt. */}
-              {pomp >= .8 && (
-                <KartenEffekt stark still={RUHE} />)}
+              {/* 35.183: Ein Materialeffekt statt Folie plus altem rs-band.
+                  Mittlere Seltenheit sanfter, höchste Stufen mit kräftiger Holografie. */}
+              {pomp >= .5 && (
+                <KartenEffekt stark={pomp >= .8} still={RUHE} />)}
               <div className={auf && !RUHE ? "eb rs-auf" : "eb"}
                 style={{ color: r.col, letterSpacing: ".14em", animationDelay: "300ms",
                   position: "relative", zIndex: 1 }}>
@@ -12246,7 +12248,6 @@ function WildcardEnthuellung({ card, onFertig }) {
               <p className={auf && !RUHE ? "rs-auf" : ""}
                 style={{ fontSize: 11.5, color: "var(--mu)", marginTop: 6,
                   animationDelay: "480ms" }}>{auf ? card.t : null}</p>
-              {pomp >= .5 && <span className="rs-band"><i /></span>}
             </div>
           </div>
         </div>

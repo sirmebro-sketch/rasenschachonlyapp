@@ -156,6 +156,17 @@ test('Wildcard-Rückseite verrät weder Kartennamen noch Wirkung und deckt den H
  assert.match(html,/wird aufgedeckt/);
 });
 
+test('Wildcard-Vorderseite hat je Seltenheit genau eine Folie ohne alten Glanzstreifen',()=>{
+ for(const [r,folie,stark] of [['normal',false,false],['selten',false,false],['aussen',false,false],['unfass',true,false],['welt',true,true],['goat',true,true]]){
+  const html=E.renderReveal({r,n:'Karte',t:'Wirkung'});
+  // Beide Kartenseiten werden gerendert, die Vorderseite ist anfangs verborgen.
+  // Nur auf der Rückseite darf der alte Streifen noch vorkommen.
+  assert.equal((html.match(/class="rs-band"/g)||[]).length,1,r);
+  assert.equal((html.match(/class="rs-materialkante/g)||[]).length,folie?1:0,r);
+  assert.equal(html.includes('rs-folie-stark'),stark,r);
+ }
+});
+
 for(const [weg,id] of [['treu','tr_4'],['hoeflich','tr_4b'],['still','tr_4c']]) {
  test('Trainer-Abschied folgt dem gespeicherten Kontakt: '+weg,()=>{
   const p={...sample(12),age:30,straenge:{trainer:{stufe:3,seit:9,weg}}};
