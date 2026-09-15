@@ -27,8 +27,8 @@ import { machAkademie } from "./akademie.js";
    ================================================================ */
 
 const NAME = "Rasenschach XI";
-const VERSION = "35.181";
-const VERSION_INFO = "Überarbeitete Karten- und Packeffekte: dezenter Randglanz, freie Sicht auf Porträts und Text.";
+const VERSION = "35.182";
+const VERSION_INFO = "Sichtbarer Goldglanz und bewegte Holografie für seltene Karten und Packs – ohne Innenrahmen.";
 
 /* Fester Zufallsstrom aus einer Zeichenkette — damit Angebote des eigenen
    Vereins nicht bei jedem Klick anders aussehen.                        */
@@ -7509,6 +7509,17 @@ table.led td.r,table.led th.r{text-align:right;}
 /* 35.181: Der frühere breite Jubelstreifen übermalte Porträt und Text.
    Die Bewegung der Karte bleibt, Glanz sitzt jetzt ausschließlich am Rand. */
 .kartenjubel::after{content:none;}
+/* 35.182: Eigener Stapel: Material über dem Kartongrund, unter allen Inhalten. */
+*:has(> .rs-materialkante){isolation:isolate;}
+.rs-folienfarbe{animation:rs-folienfarbe 7s ease-in-out infinite alternate;}
+.rs-folienzug{animation:rs-folienzug 5.5s ease-in-out infinite;}
+.rs-folie-stark .rs-folienzug{animation-duration:4s;}
+.rs-folie-stark .rs-folienfarbe{animation-duration:4.5s;}
+@keyframes rs-folienfarbe{from{transform:translateX(-45px)}to{transform:translateX(45px)}}
+@keyframes rs-folienzug{0%{transform:translateX(-110px);opacity:0}12%{opacity:1}70%{opacity:1}88%,100%{transform:translateX(180px);opacity:0}}
+.rs-folie-still .rs-folienfarbe,.rs-folie-still .rs-folienzug,
+.rs-still .rs-folienfarbe,.rs-still .rs-folienzug{animation:none;}
+@media(prefers-reduced-motion:reduce){.rs-folienfarbe,.rs-folienzug{animation:none;}}
 .rs-materiallicht{animation:rs-materiallicht 5s ease-in-out infinite alternate;}
 @keyframes rs-materiallicht{from{opacity:.08}to{opacity:.42}}
 .rs-still .rs-materiallicht{animation:none;}

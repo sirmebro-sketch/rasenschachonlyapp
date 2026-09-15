@@ -1,5 +1,11 @@
 # Änderungen
 
+## 35.182.0 – Seltene Karten glänzen wieder
+
+- Wandernder Goldreflex und farbige Holografie statt nur pulsierender Konturen. Legendäre Karten schimmern kräftiger als Goldkarten.
+- Störenden Innenrahmen entfernt. Die Folie liegt hinter den Karteninhalten; Pack-Symbol und Beschriftung bleiben ausgespart.
+- Packfolie folgt der gezackten Verpackung, Kaderfolie der Schildform. Reduzierte Bewegung wird berücksichtigt.
+
 ## 35.181.0 – Glanz ohne verdeckte Inhalte
 
 - Holo- und Glanzeffekte folgen den Konturen von Wildcards, Spielerkarten und Packs. Porträts und Schrift bleiben frei.

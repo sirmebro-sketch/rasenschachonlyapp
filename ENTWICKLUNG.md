@@ -600,3 +600,22 @@ belegt. Einstieg trennt Autorisierung von technisch verfügbarem Zugriff,
 erklärt Shell-/GitHub-Anbindung, Remote-Abgleich, Rollen und Buildkontrolle.
 Ausgangsstand und offene Android-Prüfungen ausdrücklich datiert statt als
 dauerhaft aktuellen Status dargestellt. Keine Code-, Versions- oder APK-Änderung.
+
+## 35.182.0 – Sichtbare Sammelfolie, Codex, 15.09.2026
+
+Basis 371e10f, keine offenen PRs oder nicht integrierten Remote-Branches.
+Kevins Gerätetest zeigt: 35.181 ist zu dezent, die inset-Kontur wirkt auf
+breiten Spielerkarten wie ein ungewollter zweiter Rahmen. Er möchte sichtbare
+Animation und eine stärkere Seltenheitswirkung. Kontur deshalb durch bewegte
+Gold-/Holografiefolie ersetzt, legendär mit stärkerem Farbwechsel und kürzerem
+Lichtzyklus. Keine umlaufende Innenlinie mehr. SVG wird auf die jeweilige
+Karten-/Packform zugeschnitten; eigener isolierter Stapel legt Kartenfolie
+unter Inhalte. Packfolie maskiert Ball und Text aus. Animationszyklen blenden
+außerhalb der Fläche um; Bewegungseinstellungen bleiben berücksichtigt.
+
+102 Tests bestanden, Web-Build und Capacitor-Sync erfolgreich; SVG-Referenzen,
+Packmaskierung und Ebenenvertrag geprüft. Remote vor Veröffentlichung erneut
+unverändert. Keine Spielregel- oder Speicheränderung. Browserinstallation in
+ dieser Umgebung nicht verfügbar: bewegte Gesamtansicht und Lesbarkeit auf
+Android noch offen, insbesondere Gold/Legende, Wildcardaufdeckung und Packs.
+Die Gestaltung ist implementiert, aber nicht als visuell abgenommen bezeichnet.
