@@ -40,6 +40,7 @@ wenn man sie braucht.
 | `verein.js` | eigener Verein: Liga, Kader, Aufstellung, Taktik, Ausbau |
 | `akademie.js` | Jugendakademie: Talente, Abteilungen, Jahrgänge |
 | `karten.js` | Sammelkarten, Packs, Ziehung, Verkauf |
+| `portraet.js` | Stabile Editoroptionen, Namen und Würfeln mit festgehaltenen Merkmalen |
 | `karrieregeschichten.js` | Persönliche Erinnerungen für den Karriereabschluss |
 | `vorsatz.js` | Vorsatzfortschritt, einmalige Spielerboni, Abschluss-Punkte und Saisonziele |
 | `belohnungen.js` | Abschlussbelohnungen — ein Beleg für Buchung und Anzeige |
@@ -175,9 +176,9 @@ Im Entwicklungsvermerk Quell- und Zielcommit sowie die Entscheidung nennen.
 
 ### Versionsschema
 
-`package.json` führt die Version als `major.minor.patch` (derzeit 35.179.0).
+`package.json` führt die Version als `major.minor.patch` (derzeit 35.180.0).
 Daraus rechnet `tools/android-version.cjs` den `versionCode`
-(`major*100000 + minor*100 + patch`, also 3517900) und schreibt ihn zusammen mit
+(`major*100000 + minor*100 + patch`, also 3518000) und schreibt ihn zusammen mit
 dem `versionName` nach `android/app/build.gradle`. Beide Felder sollen nie von
 Hand auseinanderlaufen. Die Version wird erhöht, wenn eine neue APK entsteht —
 reine Werkzeug- oder Dokumentationsänderungen erhöhen sie nicht.

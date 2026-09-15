@@ -36,6 +36,8 @@ before(async () => {
   const extension = `
 import {renderToStaticMarkup} from 'react-dom/server';
 export {verdict, vorsatzBelohnen, vorsatzPunkte, bilanzLaden, bilanzErgaenzen, akaGruenden, SAVE_KEY, AKA_KEY, LIFE_KEY, createPlayer, develop, simulateSeason, vcFuer, vcPosten, vcAusHaeusern, leereAkademie, leereBilanz, KARTEN, VEREIN, zufallSetzen, rerollWildcard, ladenGesperrt, saisonSchlagzeile, saisonIndex, EVENTS, strangDran, strangWeiter, laufStand, laufWeiter};
+export const renderCreate=()=>renderToStaticMarkup(<CreateScreen meta={{}} onStart={()=>{}} onBack={()=>{}}/>);
+export const renderPortraits=()=>renderToStaticMarkup(<>{['m','w'].flatMap(g=>Array.from({length:4},(_,i)=><Avatar key={g+i} seed={1} g={g} zuege={{...zuegeAusKennung(1,g,'GER',{}),stil:2,haut:10+i,haar:9+i,frisur:(g==='w'?14:16)+i,details:i,bart:g==='w'?0:10+i%3}}/>))}</>);
 export const renderEnd=p=>renderToStaticMarkup(<EndScreen p={p} onNew={()=>{}}/>);
 export const renderVerein=(v,aka)=>renderToStaticMarkup(<VereinScreen v={v} aka={aka} onAendern={()=>{}} onZurueck={()=>{}} onAbschluss={()=>{}}/>);
 export const renderPacks=(pool,reiter='laden',verein=null)=>renderToStaticMarkup(<Packladen vc={100} pool={pool} verein={verein} gratis={1} startpaket={false} startReiter={reiter} onKauf={()=>{}} onGratis={()=>{}} onStartpaket={()=>{}} onEinsetzen={()=>{}} onEntfernen={()=>{}} onVerkauf={()=>{}} onZurueck={()=>{}}/>);
@@ -414,4 +416,13 @@ test('Späte Karrierefortsetzung folgt der tatsächlichen Wahl und wartet eine S
  }
  const alt=player(15);alt.evLog.spaete_prioritaet=14;
  assert.equal(E.EVENTS.filter(e=>e.strang==='spaet'&&e.stufe===2&&E.strangDran(e,alt)).length,0,'Historischer evLog darf keine Wahl erfinden');
+});
+
+test('Charaktererstellung rendert neue Galerie und Festhalte-Bedienung',()=>{
+ const html=E.renderCreate();assert(html.includes('Dein Spielerporträt'));assert(html.includes('Freie Merkmale würfeln'));assert(html.includes('Frisur festhalten'));assert(html.includes('Kurze Naturkrause'));assert(!html.includes('NaN'));
+});
+test('Neue Porträts haben gültige SVG-Werte und eindeutige Clip-/Gradientenkennungen',()=>{
+ const html=E.renderPortraits();assert(!html.includes('NaN'));assert(!html.includes('undefined'));
+ const ids=[...html.matchAll(/ id="([^"]+)"/g)].map(m=>m[1]);assert.equal(ids.length,new Set(ids).size);
+ for(const m of html.matchAll(/url\(#([^)]*)\)/g))assert(ids.includes(m[1]));
 });

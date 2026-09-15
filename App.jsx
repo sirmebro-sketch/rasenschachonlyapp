@@ -1,3 +1,4 @@
+import { portraetOptionen, portraetWuerfeln, PORTRAET_NAMEN, NEUE_FRISUREN, FRISUR_NAMEN } from "./portraet.js";
 import { persoenlicherRueckblick } from "./karrieregeschichten.js";
 import { VORSAETZE, vorsatzStand, vorsatzBelohnen, vorsatzPunkte, saisonZielStart, saisonZielAbschluss, vorsatzLohnText, bildungsFortschritt } from "./vorsatz.js";
 import { laufbahnBeleg, abschlussBeleg, saisonenGespielt, VC_MIN_SAISONEN, PACK_MIN_SAISONEN, HAUS_MIN_SAISONEN } from "./belohnungen.js";
@@ -25,8 +26,8 @@ import { machAkademie } from "./akademie.js";
    ================================================================ */
 
 const NAME = "Rasenschach XI";
-const VERSION = "35.179";
-const VERSION_INFO = "Vertiefte späte Karrieregeschichten und erweiterte Prüfungen wichtiger Ansichten.";
+const VERSION = "35.180";
+const VERSION_INFO = "Neue Porträtgalerie, freie Farben und festhaltbare Charaktermerkmale.";
 
 /* Fester Zufallsstrom aus einer Zeichenkette — damit Angebote des eigenen
    Vereins nicht bei jedem Klick anders aussehen.                        */
@@ -2524,6 +2525,10 @@ function Crest({ club, size = 32 }) {
 /* ---------------- Spielerporträt ---------------- */
 const SKIN = ["#F0D0B4", "#E5BC96", "#D6A177", "#B87C4F", "#8D5A32", "#61402A"];
 const HAIRC = ["#17120F", "#33241A", "#5E4028", "#8E6234", "#C9A052", "#9A9A9A", "#B04A2C"];
+// Editorpaletten separat: Kennungen alter Porträts behalten ihren Zufallsstrom.
+const SKIN_EDIT=[...SKIN,"#F7DDC8","#EAC7AD","#D7AC91","#C68E6C","#AA7658","#855941","#704C39","#493128"];
+const HAIRC_EDIT=[...HAIRC,"#E9D8AE","#D7B07D","#743C29","#773124","#C2BBB0","#E4E1D8"];
+
 /* Hauttöne nach Herkunft. Der Namenspool taugt dafür nicht — Nigeria und
    England teilen sich denselben Eintrag. Deshalb über Verband und Klima,
    mit einer kurzen Liste für die Länder, wo das zu grob wäre.          */
@@ -2788,7 +2793,7 @@ function zugDrehen(zuege, feld, richtung, g, nat, meta) {
   const A = ZUEGE_ANZAHL(meta, g === "w");
   const z = { ...zuege };
   if (feld === "haut" || feld === "haar") {
-    const R = feld === "haut" ? hautBereich(nat) : haarBereich(nat);
+    const R = [0, (feld === "haut" ? SKIN_EDIT.length : HAIRC_EDIT.length)-1];
     const spanne = R[1] - R[0] + 1;
     const rel = ((z[feld] - R[0]) % spanne + spanne) % spanne;
     z[feld] = R[0] + ((rel + richtung) % spanne + spanne) % spanne;
@@ -2815,7 +2820,9 @@ function Avatar({ seed = 1, zuege, club, size = 72, ring, g, nat, meta }) {
      Portraets einen Fehlerbildschirm. */
   const z = (zuege && Object.keys(zuege).length) ? zuege
     : zuegeAusKennung(seed, g, nat, K);
-  const kennung = Math.abs((seed | 0)) % 999979;
+  // Jede Galerie-Kachel braucht eigene SVG-IDs, auch bei derselben Spielerkennung.
+  const kennung = React.useId().replace(/[^a-zA-Z0-9_-]/g, "");
+  const modern = z.stil === 2;
 
   const kopf = KOPFFORM[z.kopf % KOPFFORM.length] || KOPFFORM[0];
   /* `|| 0` GEGEN LEERE ZUGLISTEN (35.69). `zuege || zuegeAusKennung(...)`
@@ -2826,10 +2833,12 @@ function Avatar({ seed = 1, zuege, club, size = 72, ring, g, nat, meta }) {
      Im Spiel entsteht `{}` heute nicht. Aber ein beschaedigter Spielstand
      oder ein aelteres Format reichen, und der Absturz waere fuer den Spieler
      ein weisser Bildschirm statt eines Portraets. */
-  const haut = SKIN[clamp(z.haut || 0, 0, SKIN.length - 1)];
+  const hautPalette=modern?SKIN_EDIT:SKIN;
+  const haarPalette=modern?HAIRC_EDIT:HAIRC;
+  const haut = hautPalette[clamp(z.haut || 0, 0, hautPalette.length - 1)];
   const schatten = shade(haut, -26);      /* Flächenschatten, keine Verläufe */
   const tief = shade(haut, -46);
-  const haar = HAIRC[clamp(z.haar || 0, 0, HAIRC.length - 1)];
+  const haar = haarPalette[clamp(z.haar || 0, 0, haarPalette.length - 1)];
   const haarHell = shade(haar, 26);
   const iris = (AUGENFARBE[z.augenfarbe % AUGENFARBE.length] || AUGENFARBE[0]).c;
   const [c1, c2] = clubColors(club);
@@ -2936,6 +2945,12 @@ function Avatar({ seed = 1, zuege, club, size = 72, ring, g, nat, meta }) {
 
         {/* Kopf, dazu eine Schattenseite — Volumen ohne Verlauf */}
         <path d={kopfD} fill={haut} />
+        {modern && <g clipPath={"url(#kf" + kennung + ")"}>
+          <defs><radialGradient id={"skin"+kennung} cx=".34" cy=".3" r=".72"><stop offset="0" stopColor={shade(haut,18)}/><stop offset=".65" stopColor={haut}/><stop offset="1" stopColor={shade(haut,-30)}/></radialGradient></defs>
+          <path d={kopfD} fill={"url(#skin"+kennung+")"}/>
+          <path d="M30,53 Q36,50 43,54 M57,54 Q64,50 70,53" fill="none" stroke={shade(haut,-25)} strokeWidth=".7" opacity=".4"/>
+        </g>}
+
         {/* Schattenseite NUR an der aeusseren Wange. Ein Schatten bis zur Mitte
             hinterlaesst eine harte Naht mitten im Gesicht — das sah aus wie ein
             Riss und war der groesste Makel des ersten Wurfs. */}
@@ -3115,6 +3130,14 @@ function Avatar({ seed = 1, zuege, club, size = 72, ring, g, nat, meta }) {
             <circle key={i} cx={50 - kopf.b + 5 + i * ((kopf.b * 2 - 10) / 3)} cy="17" r="7" />)}</g>}
         </>}
 
+        {z.frisur >= (w?14:16) && (()=>{const f=z.frisur-(w?14:16);return <g>
+          <path d={kappe} fill={haar}/>
+          {f===0&&<><path d={`M${hl},34 Q${hl-2},14 42,13 Q63,6 ${hr},27 Q61,19 50,27 Q38,34 ${hl},34`} fill={haar}/><path d="M31,24 Q46,11 67,20 M35,27 Q49,17 62,22" fill="none" stroke={haarHell} strokeWidth="1.2" opacity=".6"/></>}
+          {f===1&&Array.from({length:24},(_,i)=><circle key={i} cx={hl+4+(i%8)*(kopf.b*2-8)/7} cy={19+Math.floor(i/8)*5+Math.sin(i)*2} r="3.4" fill={i%3?haar:shade(haar,12)}/>)}
+          {f===2&&<g clipPath={"url(#"+kid+")"} fill="none" stroke={haarHell} strokeWidth="2">{[-15,-9,-3,3,9,15].map(x=><path key={x} d={`M${50+x},12 Q${50+x-7},26 ${50+x},41`} />)}</g>}
+          {f===3&&Array.from({length:13},(_,i)=><path key={i} d={`M${hl+3+i*3.4},${23+Math.sin(i)*4} q-4,-8 2,-9 q7,1 2,7`} fill={haar} stroke={shade(haar,18)} strokeWidth=".8"/>)}
+        </g>;})()}
+
         {/* ---- Augenbrauen ---- */}
         <g fill={shade(haar, -12)}>
           {z.brauen === 0 && <><rect x="33" y="39.5" width="13" height="2.6" rx="1.3" />
@@ -3129,10 +3152,15 @@ function Avatar({ seed = 1, zuege, club, size = 72, ring, g, nat, meta }) {
             <path d="M67.5,42.4 Q60.5,36.8 53.5,41 L53.5,43.6 Q60.5,39.4 67.5,44.6 Z" /></>}
         </g>
 
+        {z.details > 0 && <g fill={shade(haut,-46)} opacity=".55">
+          {(z.details===1||z.details===2)&&Array.from({length:z.details===1?12:28},(_,i)=><circle key={i} cx={29+(i*7%41)} cy={52+(i*3%7)*.55} r={.38+(i%3)*.12}/>)}
+          {z.details===3&&<path d="M62,38 l-2,6" stroke={shade(haut,30)} strokeWidth="1.1"/>}
+          {z.details===4&&<path d="M65,54 l-3,6" stroke={shade(haut,30)} strokeWidth=".9"/>}
+        </g>}
         {/* ---- Augen: Lidspalt, Iris in der gewählten Farbe, Pupille, Glanz ----
             Vorher waren es zwei weiße Ellipsen mit einem Punkt darin. */}
         {[40, 60].map((cx) => (
-          <g key={cx}>
+          <g key={cx} transform={modern ? `translate(${cx},${augenY}) scale(.87,.8) translate(${-cx},${-augenY})` : undefined}>
             <path d={"M" + (cx - 6) + "," + augenY + " q6," + (-lidH - 1.6) + " 12,0 q-6," + (lidH + 1.6) + " -12,0 Z"}
               fill="#F2F4F1" />
             <circle cx={cx} cy={augenY - .3} r={Math.min(3.1, lidH + .5)} fill={iris} />
@@ -3219,6 +3247,9 @@ function Avatar({ seed = 1, zuege, club, size = 72, ring, g, nat, meta }) {
             + (50 + 8) + "," + (y - 5) + " 50," + (y - 5) + " C" + (50 - 8) + "," + (y - 5) + " "
             + (50 - kopf.b + 5) + "," + (y - 10) + " " + (50 - kopf.b + 1) + ",44 Z";
           return (<g fill={haar} clipPath={"url(#kf" + kennung + ")"}>
+            {z.bart === 10 && <><path d={rahmen} opacity=".3"/><path d={`M41,${kinnY-13} q9,-4 18,0 l-2,2 q-7,-2 -14,0 Z`}/></>}
+            {z.bart === 11 && <path d={`M39,${kinnY-13} q11,-5 22,0 l-2,4 q-9,-3 -18,0 Z`}/>}
+            {z.bart === 12 && <><path d={rahmen} opacity=".85"/><path d={`M44,${kinnY-3} h12 l-3,5 h-6 Z`}/></>}
             {z.bart === 1 && <path d={rahmen} opacity=".22" />}
             {z.bart === 2 && <path d={rahmen} opacity=".45" />}
             {z.bart === 3 && <path d={"M41," + (kinnY - 13.5) + " q9,-3.4 18,0 q-2.5,3 -5.5,3 q-3.5,0 -3.5,-1.4 q0,1.4 -3.5,1.4 q-3,0 -5.5,-3 Z"} />}
@@ -9049,7 +9080,7 @@ function VereinGruenden({ aka, verein, art = "voll", onFertig, onZurueck }) {
             weil sie direkt am Element steht. Der Grund muss deckend sein, sonst
             liest man den durchscheinenden Text darunter mit. */}
         <div className="pan pad" style={{ display: "flex", alignItems: "center", gap: 14,
-          position: "sticky", top: 0, zIndex: 5, borderBottomWidth: 2, background: "var(--pan)" }}>
+          borderBottomWidth: 2, background: "var(--pan)" }}>
           <Wappen w={wappen} farben={farben} groesse={78} />
           <div style={{ flex: 1, minWidth: 0 }}>
             <div className="d" style={{ fontSize: 22, overflow: "hidden", textOverflow: "ellipsis" }}>
@@ -14928,6 +14959,8 @@ const PORTRAET_REGLER = (g) => [
   ["Ohren", "ohren", null],
   ["Wangen und Kinn", "wangen", null],
   ["Schmuck", "schmuck", null],
+  ["Besondere Merkmale", "details", null],
+  ...(g === "w" ? [["Make-up", "schminke", null]] : []),
 ];
 
 function CreateScreen({ onStart, onBack, meta }) {
@@ -14968,24 +15001,29 @@ function CreateScreen({ onStart, onBack, meta }) {
   const [namensDreh, setNamensDreh] = useState(0);
   /* Die Merkmale liegen einzeln vor. Jeder Regler ändert genau eines —
      das ist der Grund, warum die Feineinstellung nicht mehr würfelt. */
-  const [zuege, setZuege] = useState(() => zuegeAusKennung(ri(1, 999999), "m", "GER", meta));
-  /* Herkunft oder Geschlecht gewechselt: Hautton und Haarfarbe müssen in den
-     Rahmen der neuen Herkunft, sonst stünde ein Wert dort, den die Regler gar
-     nicht erreichen können. Alles andere bleibt, wie es eingestellt war. */
+  const [zuege, setZuege] = useState(() => ({...zuegeAusKennung(ri(1, 999999), "m", "GER", meta),stil:2,details:0}));
+  /* Früher: Herkunft oder Geschlecht gewechselt → Haut-/Haarfarbe wurden auf
+     den Herkunftsbereich begrenzt, damit die damaligen Regler sie erreichten.
+     35.180: Diese Einschränkung ist auf Kevins Wunsch aufgehoben. Bei
+     Geschlechtswechsel nur nicht verfügbare Merkmale auf gültige Varianten
+     setzen. Nationalitätswechsel lässt die manuell gewählten Farben stehen. */
   useEffect(() => {
     if (!eigenerName) setName(namensVorschlag(nation, gender, avatar + namensDreh * 7919));
   }, [nation, gender, avatar, eigenerName, namensDreh]);
   useEffect(() => {
     setZuege((z) => {
-      const T = hautBereich(nation), H = haarBereich(nation);
+      // Manuelle Farben bleiben beim Nationalitätswechsel erhalten.
       const A = ZUEGE_ANZAHL(meta, gender === "w");
-      const n = { ...z, haut: clamp(z.haut, T[0], T[1]), haar: clamp(z.haar, H[0], H[1]) };
-      Object.keys(A).forEach((k) => { if (n[k] >= A[k]) n[k] = A[k] - 1; });
+      const n = { ...z };
+      const opts=portraetOptionen({...A,haut:SKIN_EDIT.length,haar:HAIRC_EDIT.length},gender);
+      Object.keys(opts).forEach(k=>{if(!opts[k].includes(n[k]))n[k]=opts[k][0];});
       if (gender === "w") n.bart = 0;
       return n;
     });
   }, [nation, gender]);
-  const [fein, setFein] = useState(false);
+  const [fein, setFein] = useState(true);
+  const [merkmal,setMerkmal] = useState("frisur");
+  const [fest,setFest] = useState({});
   const [statur, setStatur] = useState("normal");
   /* Die Statur zieht den Kopf schmal oder breit. OHNE diesen Effekt wäre sie
      im Gesicht wirkungslos — genau die Sorte Merkmal, die in diesem Projekt
@@ -15044,7 +15082,7 @@ function CreateScreen({ onStart, onBack, meta }) {
             läge der Text darunter durch. */}
         <div className="pan pad" style={{ marginTop: 12, display: "flex", gap: 14, alignItems: "center", flexWrap: "wrap",
           position: "sticky", top: 0, zIndex: 5, borderBottomWidth: 2, background: "var(--pan)" }}>
-          <Avatar zuege={zuege} seed={avatar} club={CLUBS.find((c) => c.n === club) || null} size={86} ring="var(--ln2)" g={gender} nat={nation} meta={meta} />
+          <Avatar zuege={zuege} seed={avatar} club={CLUBS.find((c) => c.n === club) || null} size={fein ? 164 : 86} ring="var(--ln2)" g={gender} nat={nation} meta={meta} />
           <div style={{ flex: 1, minWidth: 180 }}>
             <div className="d" style={{ fontSize: 20 }}>{nat.flag} {name.trim() || "Der Namenlose"}</div>
             <div className="m" style={{ fontSize: 11, color: "var(--mu)", marginTop: 4 }}>
@@ -15053,43 +15091,34 @@ function CreateScreen({ onStart, onBack, meta }) {
             {club && <div className="m" style={{ fontSize: 10.5, color: "var(--go)", marginTop: 3 }}>{club}</div>}
             <div style={{ display: "flex", gap: 6, marginTop: 9, flexWrap: "wrap" }}>
               <button className="btn sm" onClick={() => { const k = ri(1, 999999); setAvatar(k);
-                setZuege(zuegeAusKennung(k, gender, nation, meta, statur)); }}>Neu würfeln</button>
+                setZuege(z=>portraetWuerfeln(z,portraetOptionen({...ZUEGE_ANZAHL(meta,gender === "w"),haut:SKIN_EDIT.length,haar:HAIRC_EDIT.length},gender),fest,zufall)); }}>Freie Merkmale würfeln</button>
               <button className="btn sm" onClick={() => setFein(!fein)}>
                 <span className="m" style={{ fontSize: 11 }}>{fein ? "Feinheiten zu" : "Feinheiten"}</span></button>
             </div>
           </div>
         </div>
 
-        {fein && (
-          <div className="pan pad" style={{ marginTop: 10 }}>
-            <div className="eb" style={{ marginBottom: 8 }}>Porträt anpassen</div>
-            <div className="g2">
-              {PORTRAET_REGLER(gender).map(([lbl, feld, wert]) => {
-                const anz = ZUEGE_ANZAHL(meta, gender === "w");
-                const spanne = feld === "haut" ? hautBereich(nation) : feld === "haar" ? haarBereich(nation) : null;
-                const n = spanne ? spanne[1] - spanne[0] + 1 : (anz[feld] || 1);
-                const jetzt = spanne ? zuege[feld] - spanne[0] + 1 : (zuege[feld] || 0) + 1;
-                return (
-                  <div key={feld} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
-                    <span className="m" style={{ fontSize: 11, color: "var(--mu)" }}>
-                      {lbl}{wert ? " · " + wert(zuege) : ""}
-                    </span>
-                    <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
-                      <span className="m" style={{ fontSize: 9.5, color: "var(--ln2)", minWidth: 30, textAlign: "right" }}>
-                        {n > 1 ? jetzt + "/" + n : "—"}</span>
-                      <button className="btn sm" style={{ padding: "4px 10px" }} disabled={n <= 1} aria-label={lbl + ": vorherige Variante"}
-                        onClick={() => setZuege((z) => zugDrehen(z, feld, -1, gender, nation, meta))}>‹</button>
-                      <button className="btn sm" style={{ padding: "4px 10px" }} disabled={n <= 1} aria-label={lbl + ": nächste Variante"}
-                        onClick={() => setZuege((z) => zugDrehen(z, feld, 1, gender, nation, meta))}>›</button>
-                    </div>
-                  </div>);
-              })}
-            </div>
-            <div className="m" style={{ fontSize: 10.5, color: "var(--mu)", marginTop: 9 }}>
-              Hautton und Haarfarbe bleiben im Rahmen deiner Herkunft. Jeder Regler ändert
-              genau eine Sache, der Rest bleibt, wie er ist.
-            </div>
-          </div>)}
+        {fein && <div className="pan pad" style={{marginTop:10}}>
+          <div className="eb">Dein Spielerporträt</div>
+          <p style={{fontSize:12,color:"var(--mu)"}}>Wähle ein Merkmal und tippe auf deine Variante. Festgehaltene Merkmale bleiben beim Würfeln erhalten.</p>
+          <div style={{display:"flex",gap:6,flexWrap:"wrap",marginBottom:12}}>
+            {PORTRAET_REGLER(gender).map(([lbl,feld])=><button key={feld} className="btn sm" aria-pressed={merkmal===feld} onClick={()=>setMerkmal(feld)} style={{borderColor:merkmal===feld?"var(--ac)":undefined}}>{lbl}{fest[feld]?" · fest":""}</button>)}
+          </div>
+          {(()=>{const feld=PORTRAET_REGLER(gender).some(x=>x[1]===merkmal)?merkmal:"frisur";
+            const optionen=portraetOptionen({...ZUEGE_ANZAHL(meta,gender==="w"),haut:SKIN_EDIT.length,haar:HAIRC_EDIT.length},gender)[feld];
+            const farben=feld==="haut"?SKIN_EDIT:feld==="haar"?HAIRC_EDIT:feld==="augenfarbe"?AUGENFARBE.map(x=>x.c):null;
+            const titel=PORTRAET_REGLER(gender).find(x=>x[1]===feld)[0];
+            const name=i=>feld==="kopf"?KOPFFORM[i].n:feld==="augenfarbe"?AUGENFARBE[i].n:feld==="frisur"&&i>=(gender==="w"?14:16)?NEUE_FRISUREN[i-(gender==="w"?14:16)]:feld==="frisur"?FRISUR_NAMEN[gender][i]:PORTRAET_NAMEN[feld]?.[i]||titel+" "+(i+1);
+            return <><button className="btn sm" aria-pressed={!!fest[feld]} onClick={()=>setFest(v=>({...v,[feld]:!v[feld]}))}>{fest[feld]?titel+" freigeben":titel+" festhalten"}</button>
+              <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(90px,1fr))",gap:8,marginTop:10}}>
+                {optionen.map(i=><button key={i} className="btn" aria-label={name(i)} aria-pressed={zuege[feld]===i} onClick={()=>setZuege(z=>({...z,[feld]:i,stil:2}))} style={{padding:6,minHeight:64,borderColor:zuege[feld]===i?"var(--ac)":"var(--ln)",borderWidth:2}}>
+                  {farben?<span style={{display:"block",height:36,background:farben[i],border:"1px solid var(--ln2)"}}/>:<Avatar seed={avatar} zuege={{...zuege,[feld]:i,stil:2}} size={72} g={gender} nat={nation} meta={meta}/>}
+                  <span style={{display:"block",fontSize:10,marginTop:5}}>{name(i)}{zuege[feld]===i?" ✓":""}</span>
+                </button>)}
+              </div></>;
+          })()}
+          <p style={{fontSize:11,color:"var(--mu)",marginTop:10}}>Haut- und Haarfarbe sind unabhängig von deiner Nationalität frei wählbar. Dein Aussehen verändert keine Spielwerte.</p>
+        </div>}
 
         <div style={{ display: "grid", gap: 10, gridTemplateColumns: "repeat(auto-fit,minmax(150px,1fr))", marginTop: 12 }}>
           <div style={{ gridColumn: "span 2" }}>

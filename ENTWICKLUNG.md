@@ -500,3 +500,42 @@ Fortsetzungen und weniger häufige Oberflächenzustände.
 Abschließender Langzeitlauf: 192 Karrieren, 4.504 Saisons, 7.863 Ereignisse,
 ohne Prüfungsfehler. Web-Build und Capacitor-Synchronisierung erfolgreich.
 main unmittelbar vor Veröffentlichung unverändert bei 5dd76aa.
+
+
+## 15.09.2026 — 35.180.0: Charakterporträts (Codex)
+Basis main fccac8f1f4f5537d9496eaba049c5fa51371a6da, Remote/Übergaben vor
+Beginn abgerufen, keine offenen Branches. Schwerpunkt CreateScreen und Avatar.
+
+Neue Figuren speichern zuege.stil=2. Weicheres Gesichtlicht und kleinere
+Augenproportionen nur für diesen Stil. Alte Figuren ohne stil=2 behalten
+Formen, Farben und Darstellung; Basisgenerator und Merkmalsreihenfolge bleiben
+unverändert. Editorpaletten getrennt erweitert, damit Zufallskennungen alter
+Porträts nicht durch neue Palettenlängen verändert werden.
+
+Galerie: 164px Vorschau statt 86px; bei geschlossener Anpassung kompakt.
+Anklickbare Varianten mit Auswahlmarkierung/aria-pressed, benannte Farbflächen,
+Merkmalskategorien und Festhalten beim Würfeln. Vorschau nicht mehr sticky,
+damit sie auf schmalen Geräten nicht den gesamten sichtbaren Bereich besetzt.
+Farben unabhängig von Nationalität. 14 Haut-/13 Haarfarben. Neu vier Frisuren
+je Geschlecht (m16–19/w14–17), Bärte10–12, details0–4. Frühere freischaltbare
+Frisuren behalten ihre Sperren. Make-up war vorhanden, jetzt direkt sichtbar.
+Geschlechtswechsel setzt nicht verfügbare Varianten zurück; ein Festhalten
+kann eine im neuen Geschlecht nicht vorhandene Variante nicht verfügbar machen.
+
+React.useId trennt SVG-Clip-/Gradienten-IDs zwischen Galeriekacheln, die dieselbe
+Spielerkennung besitzen. Sonst würden Elemente nach dem ersten Porträt clippen.
+Neue reine Funktionen in portraet.js; Auswahlwerte werden im bestehenden
+zuege-Objekt gespeichert. Festhalten ist eine Editorpräferenz dieser Sitzung.
+
+101 Tests: neue Rendererprüfungen für CreateScreen/acht neue Porträts und
+SVG-Referenzen, Optionen/Freischaltungen, Würfelgrenzen und gesperrte Merkmale
+mit JSON-Rundreise. Bestehende Karriere-/Rückblicktests bleiben erhalten.
+Produktive SVGs für zwölf unterschiedliche Porträts mit Sharp gerastert und
+visuell geprüft. Kein Chromium installiert: interaktive Touch-/Scrollprüfung
+und Darstellung auf Android bleiben offen. Die Sichtprobe ersetzt diese nicht.
+App-ID, Signierung und Spiellogik/Belohnungen unverändert.
+
+Zusätzliche Altporträt-Gegenprobe: acht m/w-Kennungen gegen 35.179,
+SVG nach Normalisierung der technischen IDs zeichengleich. Produktionsbuild
+und Capacitor-Synchronisierung erfolgreich. main vor Veröffentlichung
+unverändert bei fccac8f. Keine Simulation nötig: reine Porträt-/Editorrunde.

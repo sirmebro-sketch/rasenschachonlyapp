@@ -1,5 +1,13 @@
 # Änderungen
 
+## 35.180.0 – Dein eigenes Spielerporträt
+
+- Große Porträtvorschau und anklickbare Variantenbilder statt Pfeilreglern; Farben als benannte Farbfelder.
+- 14 Hauttöne und 13 Haarfarben frei von der Nationalität wählbar.
+- Vier neue Frisuren je Geschlecht, drei zusätzliche Bärte, Sommersprossen und Narben; Make-up direkt auswählbar.
+- Merkmale beim Würfeln einzeln festhalten. Neue Gesichter mit weicherem Licht und zurückhaltenderen Augenproportionen.
+- Bisherige gespeicherte Porträts behalten ihre Formen und Darstellung; freischaltbare Extras bleiben erhalten.
+
 ## 35.179.0 – Späte Entscheidungen wirken weiter
 
 - Drei Fortsetzungen greifen die gewählte späte Karrierepriorität nach mindestens einer Saison auf; Erinnerung daran im persönlichen Karriereabschluss.
