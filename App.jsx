@@ -27,8 +27,8 @@ import { machAkademie } from "./akademie.js";
    ================================================================ */
 
 const NAME = "Rasenschach XI";
-const VERSION = "35.183";
-const VERSION_INFO = "Wildcard-Aufdeckung mit einheitlicher Holo-Folie: kein doppelter Glanz auf der Vorderseite.";
+const VERSION = "35.184";
+const VERSION_INFO = "Kompakter Spielerpass: Feinheiten zunächst geschlossen, einheitliche Buttons und einzeilige Angaben.";
 
 /* Fester Zufallsstrom aus einer Zeichenkette — damit Angebote des eigenen
    Vereins nicht bei jedem Klick anders aussehen.                        */
@@ -15025,7 +15025,7 @@ function CreateScreen({ onStart, onBack, meta }) {
       return n;
     });
   }, [nation, gender]);
-  const [fein, setFein] = useState(true);
+  const [fein, setFein] = useState(false);
   const [merkmal,setMerkmal] = useState("frisur");
   const [fest,setFest] = useState({});
   const [statur, setStatur] = useState("normal");
@@ -15084,25 +15084,26 @@ function CreateScreen({ onStart, onBack, meta }) {
             `.pan` bringt `position:relative` mit; die Angabe hier sticht sie
             aus, weil sie direkt am Element steht. Der Grund ist deckend, sonst
             läge der Text darunter durch. */}
-        <div className="pan pad" style={{ marginTop: 12, display: "flex", gap: 14, alignItems: "center", flexWrap: "wrap",
+        <div className="pan pad" style={{ marginTop: 12, display: "flex", gap: 12, alignItems: "center", flexWrap: fein ? "wrap" : "nowrap",
           position: "sticky", top: 0, zIndex: 5, borderBottomWidth: 2, background: "var(--pan)" }}>
           <Avatar zuege={zuege} seed={avatar} club={CLUBS.find((c) => c.n === club) || null} size={fein ? 164 : 86} ring="var(--ln2)" g={gender} nat={nation} meta={meta} />
-          <div style={{ flex: 1, minWidth: 180 }}>
-            <div className="d" style={{ fontSize: 20 }}>{nat.flag} {name.trim() || "Der Namenlose"}</div>
-            <div className="m" style={{ fontSize: 11, color: "var(--mu)", marginTop: 4 }}>
-              {POS[pos].label} · {foot} · Rückennummer {number || "—"}
+          <div style={{ flex: 1, minWidth: fein ? 180 : 0 }}>
+            <div className="d" title={name.trim() || "Der Namenlose"} style={{ fontSize: 20, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{nat.flag} {name.trim() || "Der Namenlose"}</div>
+            {/* 35.184: Kurze Angaben und reservierte Zeilen halten den kompakten Pass stabil. */}
+            <div className="m" title={POS[pos].label + " · " + foot + " · Rückennummer " + (number || "—")}
+              style={{ fontSize: 11, color: "var(--mu)", marginTop: 4, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+              {POS[pos].short} · {foot} · Nr. {number || "—"}
             </div>
-            {club && <div className="m" style={{ fontSize: 10.5, color: "var(--go)", marginTop: 3 }}>{club}</div>}
-            <div style={{ display: "flex", gap: 6, marginTop: 9, flexWrap: "wrap" }}>
-              <button className="btn sm" onClick={() => { const k = ri(1, 999999); setAvatar(k);
-                setZuege(z=>portraetWuerfeln(z,portraetOptionen({...ZUEGE_ANZAHL(meta,gender === "w"),haut:SKIN_EDIT.length,haar:HAIRC_EDIT.length},gender),fest,zufall)); }}>Freie Merkmale würfeln</button>
-              <button className="btn sm" onClick={() => setFein(!fein)}>
-                <span className="m" style={{ fontSize: 11 }}>{fein ? "Feinheiten zu" : "Feinheiten"}</span></button>
+            <div className="m" title={club || ""} style={{ fontSize: 10.5, color: "var(--go)", marginTop: 3, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", minHeight: "1.5em" }}>{club || "\u00a0"}</div>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(2,minmax(0,1fr))", gap: 6, marginTop: 9 }}>
+              <button className="btn sm m" aria-label="Freie Merkmale würfeln" title="Nur freie Merkmale würfeln; festgehaltene Merkmale bleiben erhalten" style={{ fontSize: 11, padding: "10px 4px", minWidth: 0, whiteSpace: "nowrap" }} onClick={() => { const k = ri(1, 999999); setAvatar(k);
+                setZuege(z=>portraetWuerfeln(z,portraetOptionen({...ZUEGE_ANZAHL(meta,gender === "w"),haut:SKIN_EDIT.length,haar:HAIRC_EDIT.length},gender),fest,zufall)); }}>Würfeln</button>
+              <button className="btn sm m" aria-expanded={fein} aria-controls={formularId + "-feinheiten"} style={{ fontSize: 11, padding: "10px 4px", minWidth: 0, whiteSpace: "nowrap" }} onClick={() => setFein(!fein)}>Feinheiten</button>
             </div>
           </div>
         </div>
 
-        {fein && <div className="pan pad" style={{marginTop:10}}>
+        {fein && <div id={formularId + "-feinheiten"} className="pan pad" style={{marginTop:10}}>
           <div className="eb">Dein Spielerporträt</div>
           <p style={{fontSize:12,color:"var(--mu)"}}>Wähle ein Merkmal und tippe auf deine Variante. Festgehaltene Merkmale bleiben beim Würfeln erhalten.</p>
           <div style={{display:"flex",gap:6,flexWrap:"wrap",marginBottom:12}}>

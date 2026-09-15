@@ -429,8 +429,8 @@ test('Späte Karrierefortsetzung folgt der tatsächlichen Wahl und wartet eine S
  assert.equal(E.EVENTS.filter(e=>e.strang==='spaet'&&e.stufe===2&&E.strangDran(e,alt)).length,0,'Historischer evLog darf keine Wahl erfinden');
 });
 
-test('Charaktererstellung rendert neue Galerie und Festhalte-Bedienung',()=>{
- const html=E.renderCreate();assert(html.includes('Dein Spielerporträt'));assert(html.includes('Freie Merkmale würfeln'));assert(html.includes('Frisur festhalten'));assert(html.includes('Kurze Naturkrause'));assert(!html.includes('NaN'));
+test('Charaktererstellung startet mit eingeklappten Feinheiten und kompaktem Spielerpass',()=>{
+ const html=E.renderCreate();assert(!html.includes('Dein Spielerporträt'));assert(html.includes('Freie Merkmale würfeln'));assert(html.includes('aria-expanded="false"'));assert(html.includes('>Würfeln</button>'));assert(html.includes('>Feinheiten</button>'));assert(html.includes(' · Nr. '));assert(!html.includes('NaN'));
 });
 test('Neue Porträts haben gültige SVG-Werte und eindeutige Clip-/Gradientenkennungen',()=>{
  const html=E.renderPortraits();assert(!html.includes('NaN'));assert(!html.includes('undefined'));

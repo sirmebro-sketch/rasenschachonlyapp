@@ -1,5 +1,11 @@
 # Änderungen
 
+## 35.184.0 – Kompakter Spielerpass
+
+- Feinheiten beim Start der Charaktererstellung eingeklappt.
+- Gleich gestaltete Buttons „Würfeln“ und „Feinheiten“ bleiben nebeneinander.
+- Position, Fuß und Nummer kompakt in einer Zeile; Name und Verein ohne höhenverändernde Umbrüche.
+
 ## 35.183.0 – Einheitlicher Wildcard-Glanz
 
 - Alten zusätzlichen Lichtstreifen auf der Wildcard-Vorderseite entfernt.

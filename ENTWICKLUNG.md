@@ -636,3 +636,20 @@ Seltenheiten auf genau eine beziehungsweise keine Folie und nur einen alten
 Streifen auf der Rückseite. Web-Build und Capacitor-Sync erfolgreich.
 Android-Version 35.183.0 / 3518300. Keine Regeln oder Spielstände geändert.
 Animierte Geräteprüfung bleibt offen; kein Browser-/Android-Sichttest behauptet.
+
+## 35.184.0 – Kompakte Charaktervorschau, Codex, 15.09.2026
+
+Basis c8e4077; keine offenen PRs oder nicht integrierten Remote-Branches.
+Auf Kevins Wunsch startet CreateScreen mit geschlossenen Feinheiten.
+Würfeln/Feinheiten sind zwei gleich gestaltete Grid-Spalten; die Beschriftung
+Würfeln behält den vollständigen zugänglichen Namen „Freie Merkmale würfeln“.
+Positionskürzel, Fuß und Nr. stehen ohne Umbruch unter dem Namen. Name und
+Verein ebenfalls einzeilig mit Ellipse bei Platzmangel; Vereinszeile bleibt
+reserviert. Im kompakten Modus kein Wrap zwischen Avatar und Angaben.
+Feinheiten lassen sich weiterhin öffnen, einschließlich großer Vorschau;
+aria-expanded und aria-controls bilden den Zustand ab.
+
+103 Tests, Web-Build und Capacitor-Sync erfolgreich. Bestehende Renderprüfung
+an den ausdrücklich gewünschten geschlossenen Startzustand angepasst.
+Android-Sichtprüfung, besonders schmale Anzeige und große Schrift, bleibt offen.
+Version 35.184.0 / 3518400; keine Änderungen an Spielständen oder Spielregeln.
