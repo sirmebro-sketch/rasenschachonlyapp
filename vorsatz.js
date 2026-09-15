@@ -33,10 +33,36 @@ export function vorsatzBelohnen(p) {
   const alt=Number.isFinite(p[k])?p[k]:0;
   const [min,max]=grenzen[k]||[0,Infinity];p[k]=Math.max(min,Math.min(max,alt+wert));wirkung[k]=p[k]-alt;
  }
+ // 35.177: Vollständig gedeckelte Boni dürfen keine leere Belohnung sein.
+ // Einmalige Ersatzprämie in Karrieregeld, keine VC; alte Belege bleiben gültig.
+ if(Object.values(wirkung).every(x=>x===0)){
+  const alt=Number.isFinite(p.money)?p.money:0;
+  p.money=alt+.025;wirkung.money=p.money-alt;
+ }
  p.vorsatzLohn={...(p.vorsatzLohn||{}),[v.id]:{jahr:p.year,saisons:(p.seasons||[]).length,wirkung}};
  return true;
 }
 export function vorsatzPunkte(p){const v=vorsatzStand(p);return v?.erreicht?v.punkte:0;}
+
+// Der gespeicherte Beleg enthält die tatsächlichen, bereits begrenzten Deltas.
+export function vorsatzLohnText(p){
+ const w=p.vorsatzLohn?.[p.vorsatz]?.wirkung;
+ if(!w)return 'Belohnung verbucht; Einzelwerte nicht gespeichert';
+ const namen={rep:'Bekanntheit',morale:'Moral',trust:'Vertrauen',fitness:'Fitness',injuryProne:'Verletzungsanfälligkeit',money:'Vermögen'};
+ const teile=Object.entries(w).filter(([,v])=>Number.isFinite(v)&&v!==0).map(([k,v])=>`${namen[k]||k} ${v>0?'+':'−'}${k==='money'?Math.round(Math.abs(v)*1000000).toLocaleString('de-DE')+' €':Number(Math.abs(v).toFixed(2))}`);
+ return teile.length?teile.join(', '):'keine zusätzliche Steigerung – die Werte lagen bereits an ihren Grenzen';
+}
+export function bildungsFortschritt(p){
+ if(p.flags?.abschluss)return null;
+ for(const [id,dauer,name] of [['studium',4,'Fernstudium'],['bildung',2,'Zweiter Bildungsweg']]){
+  const s=p.straenge?.[id];
+  if(s?.stufe===1&&s.weg==='lernen'){
+   const jahre=Math.max(0,(p.seasons?.length||0)-(s.seit||0));
+   return jahre>=dauer?`${name}: Lernzeit erfüllt; die Abschlussentscheidung steht noch aus.`:`${name}: ${jahre} / ${dauer} Saisons Lernzeit.`;
+  }
+ }
+ return null;
+}
 
 /* Ein freiwilliges, aus der Ausgangslage abgeleitetes Saisonziel. */
 export function saisonZielStart(p){

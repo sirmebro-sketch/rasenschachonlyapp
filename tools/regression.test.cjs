@@ -370,3 +370,11 @@ test('Saisonrückblick zeichnet und zeigt das Saisonziel genau dann, wenn es ein
  const verfehlt=E.renderSaisonRueckblick(p,{...s,saisonZiel:{n:'Die eigene Chance erarbeiten',soll:10,ist:4,geschafft:false}});
  assert(verfehlt.includes('diesmal nicht erreicht'),'verfehltes Ziel fehlt');
 });
+test('Fernstudium: Anmeldung gibt keinen Abschluss, Fortsetzung erst nach vier Saisons',()=>{
+ const start=E.EVENTS.find(e=>e.id==='ew_ausbildung'),ende=E.EVENTS.find(e=>e.id==='ew_studienabschluss');
+ assert.deepEqual(start.choices.map(c=>c.id),['ew_ausbildung.0','ew_ausbildung.1','ew_ausbildung.2']);
+ for(const c of start.choices)for(const o of c.roll)assert.notEqual(o.fx.flag,'abschluss');
+ const p=player(10);p.flags={};p.straenge={studium:{stufe:1,seit:7,weg:'lernen'}};
+ assert(!E.strangDran(ende,p));p.straenge.studium.seit=6;assert(E.strangDran(ende,p));assert(ende.cond(p));
+ p.flags.abschluss=true;assert(!ende.cond(p));p.flags={};p.straenge.studium.weg='ohne';assert(!E.strangDran(ende,p));
+});

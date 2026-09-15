@@ -69,7 +69,7 @@ export const machEreignisse = (H) => {
    {id:"video_kontakt.1",altIndex:1,label:"Zum eigenen Urteil ermutigen",hint:"",roll:[{p:1,text:"Du schreibst, dass die Beobachtung stimmt. Deine Notizen haben geholfen; die nächste Entscheidung gehört deinem Gegenüber.",fx:{legacy:6,morale:6}}]}]},
 /* 35.176: Zweite Bildungschance mit tatsächlich verstrichener Lernzeit. */
 { id:"bildung_spaet_start", tag:"Zukunft", w:5, strang:"bildung", stufe:1,
- cond:p=>p.age>=27&&p.age<=35&&!p.flags.abschluss,
+ cond:p=>p.age>=27&&p.age<=35&&!p.flags.abschluss&&!(p.straenge?.studium?.stufe===1&&p.straenge.studium.weg==="lernen"),
  title:T("Die Anmeldung liegt noch da"),text:T("Zwischen Trainingsplan und Vertragsunterlagen liegt ein Kursangebot. Zwei Jahre berufsbegleitendes Lernen. Du könntest den Abschluss nachholen, den du früher verschoben hast."),
  choices:[
  {id:"bildung_spaet_start.0",altIndex:0,label:"Einen festen Lernabend einplanen",hint:"Abschluss frühestens nach zwei Saisons",roll:[{p:1,text:"Du meldest dich an. Ein Abend gehört jetzt den Unterlagen; für Erholung bleibt etwas weniger Zeit.",fx:{strangWeg:"lernen",fitness:-4,morale:4}}]},
@@ -228,6 +228,15 @@ export const machEreignisse = (H) => {
     {id:"kr_tiefer.1", altIndex:1, label:"Es hier zu Ende bringen",hint:"",
      roll:[{p:.4,text:"Du beißt dich zurück in den Kader. Es kostet ein halbes Jahr und jedes Training.",fx:{form:10,trust:8,fitness:-8,morale:-4}},
            {p:.6,text:"Es ändert sich nichts. Du sitzt weiter, und der Markt merkt es sich.",fx:{morale:-14,rep:-8,trust:-6}}]}]},
+
+/* 35.177: Altersentscheidung beeinflusst die vorhandenen Form-/Vertrauenswertungen,
+   verspricht aber weder einen garantierten Stammplatz noch einen Transfer. */
+{ id:"spaete_prioritaet", tag:"Führung", w:5, cond:p=>p.age>=33&&p.seasons.length>=12,
+ title:T("Wofür die Kraft noch reicht"),text:T("Du kannst nicht mehr jedes Zusatztraining mitnehmen und danach noch für alle ansprechbar sein. Der Trainer fragt, worauf du dich in den nächsten Wochen konzentrieren willst."),
+ choices:[
+ {id:"spaete_prioritaet.0",altIndex:0,label:"Für meine Einsatzchance trainieren",hint:"Form +8 · Fitness −5 · kein garantierter Stammplatz",roll:[{p:1,text:"Du reservierst die zusätzlichen Einheiten für dein eigenes Spiel. Die Chance willst du dir auf dem Platz erarbeiten.",fx:{form:8,fitness:-5}}]},
+ {id:"spaete_prioritaet.1",altIndex:1,label:"Jüngere im Training begleiten",hint:"Vertrauen +6 · Form −3 · Vermächtnis +8",roll:[{p:1,text:"Du nimmst dir Zeit zum Erklären. Für dein eigenes Zusatztraining bleibt weniger, aber der Trainer weiß, was du beiträgst.",fx:{trust:6,form:-3,legacy:8}}]},
+ {id:"spaete_prioritaet.2",altIndex:2,label:"Meine Kräfte für den Verein einteilen",hint:"Fitness +6 · Moral +4 · Form −2",roll:[{p:1,text:"Du streichst die freiwilligen Extras und hältst dich an den Belastungsplan. Du möchtest weiter verlässlich verfügbar sein.",fx:{fitness:6,morale:4,form:-2}}]}]},
 
 { id:"kr_kleinerolle", tag:"Führung", w:11, ph:2,
   cond:p=>{ const s=lastS(p); return !!s && p.trust<45 && (s.note||0)>=3.9
@@ -2973,10 +2982,15 @@ export const machEreignisse = (H) => {
   choices:[{id:"ew_therapie.0", altIndex:0, label:"Hilfe holen",hint:"",roll:[{p:1,text:"Der Verein vermittelt jemanden, mit dem du reden kannst. Nach drei Monaten geht es dir merklich besser.",fx:{morale:24,form:8,fitness:5,legacy:6}}]},
     {id:"ew_therapie.1", altIndex:1, label:"Allein durch",hint:"",roll:[{p:.35,text:"Es wird von selbst wieder besser.",fx:{morale:8}},
       {p:.65,text:"Es wird schlechter, bevor es besser wird. Eine halbe Saison geht dabei verloren.",fx:{morale:-14,form:-12,fitness:-8}}]}]},
-{ id:"ew_ausbildung", tag:"Zukunft", w:5, ph:2, cond:p=>p.age>=19&&p.age<=26&&!p.flags.abschluss, title:T("Fernstudium neben dem Profivertrag"),
+{ id:"ew_ausbildung", tag:"Zukunft", w:5, ph:2, strang:"studium", stufe:1, cond:p=>p.age>=19&&p.age<=26&&!p.flags.abschluss, title:T("Fernstudium neben dem Profivertrag"),
   text:T("Die Spielergewerkschaft bietet Studiengänge an, die auf Trainingszeiten Rücksicht nehmen."),
-  choices:[{id:"ew_ausbildung.0", altIndex:0, label:"Es der Mannschaft erzählen",hint:"Statt es zu verstecken",manchmal:.3,roll:[{p:.65,text:"Drei melden sich im selben Semester an. Der Verein hängt es sich später ans Revers.",fx:{legacy:14,trust:12,morale:10}},{p:.35,text:"Zwei ziehen dich damit auf, bis du es nicht mehr erwähnst. Du machst es trotzdem zu Ende.",fx:{morale:-6,trust:-4}}]},{id:"ew_ausbildung.1", altIndex:1, label:"Einschreiben",hint:"",roll:[{p:1,text:"Vier Jahre lang zwei Abende pro Woche. Am Ende hast du etwas, das dir niemand nehmen kann.",fx:{flag:"abschluss",legacy:14,morale:8,fitness:-4}}]},
-    {id:"ew_ausbildung.2", altIndex:2, label:"Nicht jetzt",hint:"",roll:[{p:1,text:"Später vielleicht. Sagen viele.",fx:{}}]}]},
+  choices:[{id:"ew_ausbildung.0", altIndex:0, label:"Es der Mannschaft erzählen",hint:"Statt es zu verstecken",manchmal:.3,roll:[{p:.65,text:"Du schreibst dich ein. Drei melden sich im selben Semester an. Die ersten Lernabende stehen fest.",fx:{strangWeg:"lernen",trust:12,morale:10,fitness:-4}},{p:.35,text:"Zwei ziehen dich damit auf. Du schreibst dich trotzdem ein und beginnst mit den ersten Unterlagen.",fx:{strangWeg:"lernen",morale:-6,trust:-4,fitness:-4}}]},{id:"ew_ausbildung.1", altIndex:1, label:"Einschreiben",hint:"Abschluss frühestens nach vier Saisons",roll:[{p:1,text:"Vier Jahre sind vorgesehen, zwei Abende pro Woche. Du beginnst mit dem ersten Modul.",fx:{strangWeg:"lernen",morale:8,fitness:-4}}]},
+    {id:"ew_ausbildung.2", altIndex:2, label:"Nicht jetzt",hint:"",roll:[{p:1,text:"Später vielleicht. Sagen viele.",fx:{strangWeg:"ohne"}}]}]},
+/* 35.177: Abschluss erst nach der tatsächlich gespielten Studienzeit. */
+{ id:"ew_studienabschluss", tag:"Zukunft", w:5, strang:"studium", stufe:2, weg:"lernen", wartezeit:4, cond:p=>!p.flags.abschluss,
+ title:T("Die letzte Abgabe"),text:T("Vier Saisons mit Training und Lernabenden liegen hinter dir. Die Abschlussarbeit ist fertig, die letzte Prüfung steht an."),
+ choices:[{id:"ew_studienabschluss.0",altIndex:0,label:"Den Abschluss machen",hint:"Abschluss · Moral +8 · Fitness −4",roll:[{p:1,text:"Du bestehst. Aus dem damaligen Plan ist ein Abschluss geworden.",fx:{flag:"abschluss",legacy:14,morale:8,fitness:-4}}]},
+ {id:"ew_studienabschluss.1",altIndex:1,label:"Ohne Abschluss aufhören",hint:"Der Vorsatz bleibt offen",roll:[{p:1,text:"Du entscheidest dich gegen die letzte Prüfung. Die Studienzeit bleibt Teil deiner Laufbahn, das Zeugnis fehlt.",fx:{morale:2}}]}]},
 { id:"ew_heimatbesuch", tag:"Umfeld", w:5, ph:2, cond:p=>p.club.c!==p.nation.id&&p.age>=20, title:T("Zwei Wochen zu Hause"),
   text:T("Die einzige längere Pause im Jahr. Alle wollen dich sehen, und die Liste ist länger als die Zeit."),
   choices:[{id:"ew_heimatbesuch.0", altIndex:0, label:"Niemandem sagen, dass du da bist",hint:"Zwei Wochen unsichtbar",manchmal:.35,roll:[{p:1,text:"Keine Anrufe, keine Termine, kein Verein. Du kommst zurück, als hättest du zwei Monate frei gehabt.",fx:{morale:18,fitness:8,rep:-4}}]},{id:"ew_heimatbesuch.1", altIndex:1, label:"Alle abarbeiten",hint:"",roll:[{p:1,text:"Vierzehn Tage Termine statt Urlaub. Alle sind glücklich außer deinem Körper.",fx:{morale:12,fitness:-9}}]},

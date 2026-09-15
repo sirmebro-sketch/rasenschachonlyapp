@@ -395,3 +395,70 @@ konsistent.
 Offen: Der Gerätetest dieser Behebung steht aus. Die Prüfungen zeichnen mit
 `renderToStaticMarkup` und ersetzen keine Sicht auf dem Gerät — insbesondere
 nicht das Weitertippen durch die Rückblickseiten.
+
+
+## 15.09.2026 — 35.178.0: Vorsatzvergleich und zeitliche Konsistenz (Codex)
+Basis main 0426852 (35.176). Vor Beginn keine neuen Remote-Commits.
+
+Vollständige Kombinationen: 1.152 Karrieren / 27.214 Saisons / 47.534
+Ereignisse auf 35.176; alle acht Positionen, beide Geschlechter, drei Modi,
+vier Strategien und sechs Vorsätze. Pro Vorsatz 192 Karrieren.
+Erfüllung: Welt 93,8 %, Daheim 68,8 %, Lange 100 %, Glanz 31,3 %, Beruf
+33,3 %, Einsatz 95,8 %. Glanz positionsweise 20,8–41,7 % (24 Läufe je
+Position); nach Modus 46,9 / 25 / 21,9 %. Beruf m 24 %, w 42,7 %.
+Feste Wahl-/Transferstrategie, vier Nationen und unterschiedliche Seeds;
+keine repräsentativen Spielerquoten oder isolierten Kausalvergleiche.
+Deshalb bleiben Punkte und Schwellen unverändert.
+
+Bestätigt: vollständig wirkungslose Belohnungen bei Welt 8, Lange 4,
+Glanz 26 (von 60 erfüllten Glanz-Vorsätzen). Neu: nur wenn sämtliche
+berechneten Deltas null sind, einmalig 25.000 € Karrieregeld. Betrag ist
+eine Designentscheidung (halbe Berufsprämie), keine empirische Kalibrierung.
+Keine VC. Bestehende Belege bekommen keine rückwirkende Ersatzprämie.
+Anzeige nutzt jetzt wirkliche Deltas aus dem gespeicherten Beleg. Auch
+Wertgrenzen und Ersatzprämie werden vorab erläutert.
+
+Bestätigt: ew_ausbildung.1 vergab Abschluss sofort bei Text „vier Jahre“;
+Option .0 behauptete ebenfalls einen Abschluss ohne entsprechende Flagge.
+IDs bleiben bestehen, beide Einschreibewege beginnen jetzt den Strang
+studium. Neue Fortsetzung ew_studienabschluss erst vier Saisons später.
+Absage schließt den Strang ohne Abschluss. Bereits erhaltene Abschlüsse
+werden nicht entfernt. Bereits geladene alte Auswahlen behalten ihre IDs,
+werden bei Entscheidung nach den aktuellen Einschreiberegeln behandelt.
+Laufender Studienweg verhindert parallelen späten Bildungskurs. Beim
+Berufsvorsatz steht Lernzeit bzw. ausstehende Abschlussentscheidung.
+
+spaete_prioritaet nutzt vorhandene Form-/Fitness-/Vertrauenswerte und
+behauptet weder garantierten Stammplatz noch fest zugesagten Transfer.
+Kein zusätzlicher Ereignisplatz. Bestehende Folgenanzeige von applyFx
+bleibt erhalten; keine spekulative Erklärung für Vertragsangebote ergänzt.
+
+90 Tests: neue Prüfungen für vierjährige Wartezeit/Abbruch, gespeicherte
+Abschlüsse, tatsächliche Deltas, einmalige Ersatzprämie und Lernanzeige.
+Offen für Gerätetest: Verständlichkeit/Lesbarkeit der ergänzten Hinweise,
+subjektiver Wert der Ersatzprämie, späte Karriereentscheidung.
+
+
+### Abgleich und Abnahme vor Veröffentlichung (Codex, 15.09.2026)
+Während der Runde main bis e67b19daaec7bb4bf263db288b68c8e2951a012c
+weitergelaufen. Enthält vom Eigentümer freigegebene Claude-Arbeit:
+93a6660 (Dokumentation), 2b6b7d7 (Übergaberegel), b876c8a (Rollen),
+e67b19d (Absturz Karriereende). Alle vier geprüft und übernommen.
+Claude-Branch 771a6c6f04f404af59d11c14dbd9acb84821e0de ist baumgleich
+mit diesem main, aber hat andere Commit-IDs. Wird als weiterer Elterncommit
+integriert; dadurch verschwindet die bereits abgenommene Übergabe aus
+`--no-merged`. Keine Produktänderung allein durch diesen Elterncommit.
+
+Abnahme: Saisonziel gehört in SaisonRueckblick; Verschiebung und Hotfixversion
+35.177 sind richtig. Rendering-Testlücke bestand in Codex' voriger Runde.
+Neue Runde deshalb 35.178.0. Konflikte: VERSION_INFO zusammengeführt,
+CHANGELOG-Hauptüberschrift und historische Versionen erhalten, Entwicklungs-
+vermerke beider Seiten bewahrt; README ohne veraltende Testzahl; beide
+angehängten Testgruppen erhalten. App-ID und Signierkonfiguration unverändert.
+
+Gemeinsamer Stand: 92 Tests bestanden, einschließlich beider tatsächlicher
+Rückblick-Renderings. Frühere Angabe 90 bezog sich auf Codex' Stand vor Merge.
+
+Langzeitlauf nach Zusammenführung: 192 Karrieren, 4.502 Saisons, 7.858
+Ereignisse, ohne Prüfungsfehler. Web-Build und Capacitor-Synchronisierung
+erfolgreich. Geräteprüfung bleibt offen.

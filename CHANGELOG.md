@@ -1,5 +1,13 @@
 # Änderungen
 
+## 35.178.0
+- Fernstudium: Anmeldung und Abschluss getrennt; vier gespielte Saisons Lernzeit. Bestehende Abschlüsse bleiben erhalten.
+- Vorsatz zeigt tatsächlich erhaltene Boni; vollständig gedeckelte neue Belohnungen geben einmalig 25.000 € Karrieregeld als Ersatz.
+- Lernfortschritt beim Berufsvorsatz sichtbar. Keine Änderung von VC, Vermächtnispunkten oder Freischaltungsgrenzen.
+- Späte Karriereentscheidung zwischen eigener Einsatzchance, Begleitung jüngerer Spieler und Belastungssteuerung mit klar benannten Folgen.
+- Vorsatzvergleich über alle Positionen, Geschlechter und Modi ergänzt.
+
+
 ## 35.177.0 – Das Karriereende ist wieder erreichbar
 
 - Behoben: Beim Beenden einer Laufbahn brach der Rückblick mit einer Fehlermeldung ab, statt die Bilanz zu zeigen. Betroffen war jede Laufbahn mit mindestens einem Pflichtspiel — also praktisch jede. Der Fehler kam aus 35.175.0 und betraf auch 35.176.0.

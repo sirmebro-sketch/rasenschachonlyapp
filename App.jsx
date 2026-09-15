@@ -1,5 +1,5 @@
 import { persoenlicherRueckblick } from "./karrieregeschichten.js";
-import { VORSAETZE, vorsatzStand, vorsatzBelohnen, vorsatzPunkte, saisonZielStart, saisonZielAbschluss } from "./vorsatz.js";
+import { VORSAETZE, vorsatzStand, vorsatzBelohnen, vorsatzPunkte, saisonZielStart, saisonZielAbschluss, vorsatzLohnText, bildungsFortschritt } from "./vorsatz.js";
 import { laufbahnBeleg, abschlussBeleg, saisonenGespielt, VC_MIN_SAISONEN, PACK_MIN_SAISONEN, HAUS_MIN_SAISONEN } from "./belohnungen.js";
 import { packBuchung, verkaufsBuchung } from "./buchungen.js";
 import React, { useState, useEffect, useLayoutEffect, useRef, useMemo } from "react";
@@ -25,8 +25,8 @@ import { machAkademie } from "./akademie.js";
    ================================================================ */
 
 const NAME = "Rasenschach XI";
-const VERSION = "35.177";
-const VERSION_INFO = "Karriereende wieder erreichbar; Saisonziel steht im Saisonrückblick.";
+const VERSION = "35.178";
+const VERSION_INFO = "Karriereende korrigiert; nachvollziehbare Vorsatzboni und Ausbildung mit Lernzeit.";
 
 /* Fester Zufallsstrom aus einer Zeichenkette — damit Angebote des eigenen
    Vereins nicht bei jedem Klick anders aussehen.                        */
@@ -4204,6 +4204,7 @@ const T = (s) => () => s;
    Die Tabelle dient der Anzeige („Teil 2 von 3") und der Prüfung: die
    Ereignisprüfung gleicht sie gegen die tatsächlich vorhandenen Stufen ab. */
 const STRAENGE = {
+  studium:      { n: "Neben dem Profivertrag", teile: 2 },
   bildung:      { n: "Der zweite Anlauf", teile: 2 },
   jugendfreund: { n: "Der aus der Jugend", teile: 3 },
   buch:         { n: "Das Buch",           teile: 3 },
@@ -15269,7 +15270,7 @@ function CreateScreen({ onStart, onBack, meta }) {
           </div>
           <p style={{ fontSize: 11.5, color: "var(--mu)", marginTop: 6 }}>
             {vorsatz
-              ? (() => { const v = VORSAETZE.find(v => v.id === vorsatz); return v.t + " Belohnung: " + v.lohn + ". Am Karriereende: +" + v.punkte + " Vermächtnispunkte bei gehaltenem Vorsatz."; })()
+              ? (() => { const v = VORSAETZE.find(v => v.id === vorsatz); return v.t + " Belohnung: " + v.lohn + ". Sind alle Bonuswerte ausgeschöpft: stattdessen 25.000 €. Am Karriereende: +" + v.punkte + " Vermächtnispunkte bei gehaltenem Vorsatz."; })()
               : "Freiwillig: Erreiche deinen Vorsatz für eine einmalige Spielerbelohnung und zusätzliche Vermächtnispunkte."}</p>
 
         <div style={{ display: "flex", gap: 8, marginTop: 20 }}>
@@ -18730,10 +18731,11 @@ function FlutlichtApp() {
             {(() => { const vs = vorsatzStand(p); return vs ? (
               <div style={{ marginTop: 11, paddingTop: 9, borderTop: "1px solid var(--ln)" }}>
                 <div className="eb">Vorsatz · {vs.status}</div>
+                {vs.id === "beruf" && bildungsFortschritt(p) && <div style={{fontSize:12}}>{bildungsFortschritt(p)}</div>}
                 <div className="d" style={{ fontSize: 15 }}>{vs.n}</div>
                 <div style={{ fontSize: 12, marginTop: 5 }}>{vs.text}</div>
                 <progress aria-label={vs.n} value={vs.anteil} max="1" style={{ width: "100%", accentColor: "var(--ok)" }} />
-                <div style={{ fontSize: 11.5, color: "var(--mu)" }}>{vs.belohnt ? "Spielerbelohnung erhalten: " : "Einmalige Spielerbelohnung: "}{vs.lohn} (bis zur jeweiligen Wertgrenze).</div>
+                <div style={{ fontSize: 11.5, color: "var(--mu)" }}>{vs.belohnt ? "Tatsächlich erhalten: " + vorsatzLohnText(p) : "Einmalige Spielerbelohnung: " + vs.lohn + " (bis zur jeweiligen Wertgrenze; bei vollständig ausgeschöpften Werten stattdessen 25.000 €)"}.</div>
                 <div style={{ fontSize: 11.5 }}>Karriereende: {vs.gebrochen ? "keine Vorsatzpunkte" : "+" + vs.punkte + " Vermächtnispunkte bei gehaltenem Vorsatz"}.</div>
               </div>) : null; })()}
           </div>

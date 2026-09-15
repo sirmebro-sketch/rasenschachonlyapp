@@ -160,9 +160,9 @@ Verweise hierher, damit nicht drei Fassungen derselben Regel auseinanderlaufen.
 
 ### Versionsschema
 
-`package.json` führt die Version als `major.minor.patch` (derzeit 35.176.0).
+`package.json` führt die Version als `major.minor.patch` (derzeit 35.178.0).
 Daraus rechnet `tools/android-version.cjs` den `versionCode`
-(`major*100000 + minor*100 + patch`, also 3517600) und schreibt ihn zusammen mit
+(`major*100000 + minor*100 + patch`, also 3517800) und schreibt ihn zusammen mit
 dem `versionName` nach `android/app/build.gradle`. Beide Felder sollen nie von
 Hand auseinanderlaufen. Die Version wird erhöht, wenn eine neue APK entsteht —
 reine Werkzeug- oder Dokumentationsänderungen erhöhen sie nicht.
@@ -228,3 +228,7 @@ weitergelaufen, zuerst zusammenführen und betroffene Tests wiederholen. Keine
 Force-Pushes. Im Entwicklungsvermerk Basis-/übernommene Commits, Konfliktlösungen,
 Tests und verbleibende Geräteprüfungen nennen. Große Arbeiten möglichst auf einem
 eigenen Branch vorbereiten. Maßgeblich ist der Quellstand im Repository.
+
+Vollständiger Vorsatzvergleich: `node tools/langzeit.cjs --vorsatzvergleich`.
+1.152 Karrieren: acht Positionen × zwei Geschlechter × drei Modi × vier
+Auswahlstrategien × sechs Vorsätze. Feste Seeds, keine Spielerprognose.

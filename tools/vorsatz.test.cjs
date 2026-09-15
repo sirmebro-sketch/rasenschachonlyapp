@@ -32,3 +32,19 @@ test('Saisonziel wird passend gewählt und nur einmal belohnt',()=>{
  p.seasons=[{apps:30,club:'A'}];p.club={n:'B'};assert.equal(V.saisonZielStart(p).id,'ankommen');
  p.age=35;assert.equal(V.saisonZielStart(p).id,'erfahrung');
 });
+test('Vorsatzbeleg zeigt tatsächliche Werte statt Wunschbonus',()=>{
+ const p=base();p.vorsatz='welt';success.welt(p);p.morale=99;p.rep=100;V.vorsatzBelohnen(p);
+ assert.equal(V.vorsatzLohnText(p),'Moral +1');
+ p.vorsatzLohn.welt.wirkung={morale:0,rep:0};assert(V.vorsatzLohnText(p).includes('keine zusätzliche'));
+});
+test('Bildungsfortschritt wartet auf Abschlussentscheidung, alte Abschlüsse bleiben gültig',()=>{
+ const p=base();p.seasons=Array(6).fill({});p.straenge={studium:{stufe:1,seit:3,weg:'lernen'}};
+ assert(V.bildungsFortschritt(p).includes('3 / 4'));p.seasons.push({});assert(V.bildungsFortschritt(p).includes('steht noch aus'));
+ p.flags.abschluss=true;assert.equal(V.bildungsFortschritt(p),null);
+});
+test('Vollständig gedeckelte Belohnung gibt einmalig Karrieregeld, alte Belege keine Nachzahlung',()=>{
+ const p=base();p.vorsatz='glanz';p.seasons=[{note:1.8}];p.rep=100;p.morale=100;
+ assert(V.vorsatzBelohnen(p));assert.equal(p.money,.025);assert.equal(V.vorsatzLohnText(p),'Vermögen +25.000 €');
+ const q=JSON.parse(JSON.stringify(p));assert(!V.vorsatzBelohnen(q));assert.equal(q.money,.025);
+ q.vorsatzLohn.glanz.wirkung={rep:0,morale:0};assert(!V.vorsatzBelohnen(q));assert.equal(q.money,.025);
+});
