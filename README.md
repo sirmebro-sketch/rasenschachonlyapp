@@ -96,13 +96,45 @@ Dazu sechs Regeln, die sich aus früheren Fehlern ergeben haben:
    denen alle drei arbeiten. Wer dort etwas Größeres vorhat, sagt vorher, in
    welchem Bereich — das ist billiger als ein Merge-Konflikt in einer Datei
    dieser Größe.
-6. **Offene Übergaben mitnehmen, bevor eine Runde beginnt.** Wer hier arbeitet,
-   arbeitet oft auf einem eigenen Branch; Arbeit, die dort liegt, ist fertig,
-   aber für alle anderen unsichtbar. Sie bleibt liegen, bis jemand sie
-   mitnimmt — siehe „Offene Übergaben finden" unten. Das ist keine Höflichkeit,
-   sondern verhindert den teuren Fall: dieselbe Datei wird an derselben Stelle
-   zweimal geändert, oder ein gerade behobener Fehler wird nach altem Muster
-   wieder eingebaut.
+6. **Nichts Fremdes bleibt stillschweigend liegen.** Arbeit auf einem eigenen
+   Branch ist für alle anderen unsichtbar. Wer eine Runde beginnt, sieht nach,
+   was offen liegt, und entscheidet ausdrücklich darüber — siehe „Rollen und
+   Abnahme". Das verhindert den teuren Fall: dieselbe Datei wird an derselben
+   Stelle zweimal geändert, oder ein gerade behobener Fehler wird nach altem
+   Muster wieder eingebaut.
+
+### Rollen und Abnahme
+
+Die Rollen sind nicht gleich verteilt, und das ist Absicht:
+
+| Wer | Rolle |
+|---|---|
+| **Eigentümer** | entscheidet, was gebaut wird, und hat in allem das letzte Wort |
+| **ChatGPT/Codex** | entwickelt **und** nimmt Claudes Arbeit ab, bevor sie nach `main` geht |
+| **Claude** | entwickelt zu, liefert auf einem eigenen Branch und integriert nicht selbst |
+
+Daraus folgt ein fester Weg für Claudes Beiträge:
+
+1. **Claude arbeitet auf einem eigenen Branch**, nie direkt auf `main`, und
+   führt seine Arbeit nicht selbst zusammen — auch dann nicht, wenn es ein
+   einfacher Fast-Forward wäre und die Prüfungen grün sind.
+2. **Claude legt die Abnahme vor:** je Runde ein Vermerk in `ENTWICKLUNG.md`
+   mit Basis-Commit, was geändert wurde, was geprüft wurde und mit welchem
+   Ergebnis, und was ausdrücklich offen bleibt. Ein Pull Request ist der
+   bevorzugte Weg, weil dort zusätzlich die CI läuft (ein reiner Branch-Push
+   löst sie nicht aus); die Übergabe über den Branch allein ist zulässig, wenn
+   es schneller gehen soll.
+3. **Codex entscheidet.** Drei Ausgänge, alle drei in Ordnung: übernehmen;
+   mit Änderungswünschen zurückgeben; ablehnen. Nur einer ist es nicht:
+   kommentarlos liegen lassen.
+4. **Ablehnung oder Änderung wird begründet** — im Pull Request oder in
+   `ENTWICKLUNG.md`. Der Grund ist die eigentliche Information; ohne ihn baut
+   Claude denselben Vorschlag in der nächsten Runde wieder.
+5. **Bei fachlicher Uneinigkeit entscheidet Codex.** Claude darf widersprechen
+   und soll es tun, wenn er einen Fehler sieht — aber einmal, mit Begründung,
+   und dann ist gut. Der Eigentümer kann jede dieser Entscheidungen aufheben.
+
+Umgekehrt gilt die Abnahme nicht: Codex' eigene Runden gehen direkt nach `main`.
 
 ### Offene Übergaben finden
 
@@ -118,15 +150,13 @@ Branches verschwinden von selbst aus der Liste, sobald ihre Commits in `main`
 stehen — auch dann, wenn der Branch als solcher liegen bleibt. Was auf einem
 Branch liegt, zeigt `git log --oneline origin/main..<branch>`.
 
-Gefundene Arbeit wird **vor** dem eigenen Beginn in die Arbeitsbasis
-übernommen. Wer sie bewusst nicht übernimmt, schreibt den Grund in den
-Entwicklungsvermerk. Der eine Fall, den diese Regel verhindern soll, ist das
-stillschweigende Übergehen.
+Für Codex ist das die Abnahmeliste: jeder Eintrag ist ein Vorschlag, der auf
+eine Entscheidung wartet. Für Claude ist es die Kontrolle, ob eigene Arbeit noch
+hängt, und die Erinnerung, fremde Arbeit vor dem eigenen Beginn zu übernehmen.
 
-Das gilt für alle drei gleichermaßen. Damit es auch die automatisierten
-Beteiligten erreicht, steht es zusätzlich in `AGENTS.md` (Codex) und
-`CLAUDE.md` (Claude Code) — beides kurze Verweise auf diesen Abschnitt, damit
-nicht drei Fassungen derselben Regel auseinanderlaufen.
+Damit es die automatisierten Beteiligten beim Start erreicht, steht der Ablauf
+zusätzlich in `AGENTS.md` (Codex) und `CLAUDE.md` (Claude Code) — beides kurze
+Verweise hierher, damit nicht drei Fassungen derselben Regel auseinanderlaufen.
 
 ### Versionsschema
 
