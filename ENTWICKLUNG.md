@@ -296,3 +296,43 @@ Fall, den die Regel verhindern soll.
 Geprüft: `npm test` und `npm run build` erneut durchlaufen, Produktionsbündel
 prüfsummengleich. Dokumentation ändert daran nichts — der Lauf schließt nur ein
 Versehen aus.
+
+
+## Rollen und Abnahme, 15.09.2026 (Claude, ohne Versionswechsel)
+
+Basis: `main` 0426852. Ausschließlich Dokumentation, kein Quellcode.
+
+Entscheidung des Eigentümers: Claude entwickelt zu, **Codex nimmt ab.** Claudes
+Arbeit geht nicht direkt nach `main`, sondern wird von Codex geprüft und
+entschieden. Codex' eigene Runden gehen weiterhin direkt nach `main`; die
+Abnahme gilt nur in eine Richtung. Der Eigentümer hat in allem das letzte Wort.
+
+Das ersetzt die Übergaberegel von heute Vormittag, statt sie zu ergänzen: dort
+hieß es „gefundene Arbeit wird übernommen", was keine Ablehnung kannte. Jetzt
+sind drei Ausgänge vorgesehen — übernehmen, mit Änderungswünschen zurückgeben,
+ablehnen —, alle drei mit Begründung. Nicht vorgesehen ist der vierte:
+kommentarlos liegen lassen. Die Begründung ist dabei die eigentliche
+Information; ohne sie legt Claude denselben Vorschlag in der nächsten Runde
+wieder vor.
+
+Umgesetzt in `README.md` („Rollen und Abnahme", Regel 6 umformuliert),
+`AGENTS.md` (Codex' Abnahmeliste und die drei Ausgänge) und `CLAUDE.md`
+(Claudes Pflichten: eigener Branch, kein Selbst-Zusammenführen auch bei grünen
+Prüfungen, Abnahme vorlegen, Entscheidung nicht neu verhandeln). Die beiden
+Agentendateien bleiben kurze Verweise auf `README.md`.
+
+Der Befehl aus „Offene Übergaben finden" bleibt unverändert und bekommt nur
+eine zweite Lesart: für Codex ist die Ausgabe die Abnahmeliste, für Claude die
+Kontrolle, ob eigene Arbeit noch hängt.
+
+Nicht nachweisbar von hier aus: ob Codex seine Anweisungsdatei liest und die
+Rolle annimmt. Was technisch erzwingbar wäre — ein Branch-Schutz auf `main` mit
+Pflichtprüfung —, ist bewusst nicht eingerichtet; er würde auch Codex und den
+Eigentümer binden. Vorerst gilt die Vereinbarung, nicht der Zwang.
+
+Offen zur Abnahme liegen damit drei Commits auf `claude/elegant-cray-29rcm8`:
+`c824e34` (Dokumentation aufräumen), `8eb858b` (Übergaberegel) und dieser.
+
+Geprüft: `npm test` 86/86, `npm run build` erfolgreich, Produktionsbündel
+prüfsummengleich. Dokumentation ändert daran nichts; der Lauf schließt nur ein
+Versehen aus.
