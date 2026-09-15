@@ -1,5 +1,12 @@
 # Änderungen
 
+## 35.177.0 – Das Karriereende ist wieder erreichbar
+
+- Behoben: Beim Beenden einer Laufbahn brach der Rückblick mit einer Fehlermeldung ab, statt die Bilanz zu zeigen. Betroffen war jede Laufbahn mit mindestens einem Pflichtspiel — also praktisch jede. Der Fehler kam aus 35.175.0 und betraf auch 35.176.0.
+- Das Saisonziel steht jetzt dort, wo es angekündigt war: im Saisonrückblick, bei den Pflichtspielen der jeweiligen Saison. Wortlaut und Wirkung (+3 Moral bei Erfolg) unverändert.
+- Gespeicherte Laufbahnen, Sammlung, Akademie und Verein bleiben unberührt; keine Inhalts- oder Belohnungsänderung.
+- 88 Regressionen; beide Rückblicke werden dabei erstmals wirklich gezeichnet. VersionCode 3517700.
+
 ## 35.176.0 – Persönliche Karrieregeschichten
 
 - Persönlicher Karriereabschluss ergänzt Vorsatz, geteilte Video-Notizen und die gewählte Buchgeschichte anhand gespeicherter Entscheidungen.

@@ -25,8 +25,8 @@ import { machAkademie } from "./akademie.js";
    ================================================================ */
 
 const NAME = "Rasenschach XI";
-const VERSION = "35.176";
-const VERSION_INFO = "Vorsätze mit Fortschritt und Belohnungen; persönliche Saisonziele und vertiefte Geschichten.";
+const VERSION = "35.177";
+const VERSION_INFO = "Karriereende wieder erreichbar; Saisonziel steht im Saisonrückblick.";
 
 /* Fester Zufallsstrom aus einer Zeichenkette — damit Angebote des eigenen
    Vereins nicht bei jedem Klick anders aussehen.                        */
@@ -11337,7 +11337,16 @@ function KarriereRueckblick({ p, onFertig }) {
     <div style={{ textAlign: "center" }}>
       <Zahl v={p.tot.apps} className="d" style={{ ...GZ, color: "var(--go)" }} />
       <div className="eb" style={{ marginTop: 4 }}>Pflichtspiele</div>
-      {s.saisonZiel && <p style={{ fontSize: 12 }}>Saisonziel „{s.saisonZiel.n}“: {s.saisonZiel.ist} / {s.saisonZiel.soll} Spiele · {s.saisonZiel.geschafft ? "erreicht, +3 Moral (bis 100)" : "diesmal nicht erreicht"}.</p>}
+      {/* HIER STAND DAS SAISONZIEL (35.175, entfernt 15.09.2026).
+          Die Zeile las `s.saisonZiel` — aber diese Komponente bekommt nur
+          `{ p, onFertig }`, ein `s` gibt es hier nicht. Ergebnis: jedes
+          Karriereende mit mindestens einem Pflichtspiel endete im
+          Fehlerbildschirm, weil das JSX beim Bau der Seite ausgewertet wird
+          und nicht erst beim Anzeigen. Nachgestellt mit 3, 5 und 12 Saisons.
+          Der Ort war ohnehin falsch: hier stehen die Zahlen einer ganzen
+          Laufbahn, das Saisonziel gehoert zu EINER Saison — und genau dort,
+          im SaisonRueckblick, steht es jetzt. Das ist auch, was CHANGELOG
+          35.175.0 zusagt: „Ergebnis im bestehenden Saisonrueckblick". */}
       <div style={{ display: "flex", justifyContent: "center", gap: "clamp(16px,6vw,40px)", marginTop: 22 }}>
         <div><Zahl v={isTW ? p.tot.cs : p.tot.goals} className="d" style={{ ...MZ, color: "var(--go)" }} />
           <div className="eb" style={{ marginTop: 3 }}>{isTW ? "Zu Null" : "Tore"}</div></div>
@@ -11799,6 +11808,12 @@ function SaisonRueckblick({ p, s, onFertig }) {
     <div style={{ textAlign: "center" }}>
       <Zahl v={s.apps} className="d" style={{ fontSize: "clamp(52px,17vw,104px)", lineHeight: 1, color: "var(--ac)" }} />
       <div className="eb" style={{ marginTop: 4 }}>Pflichtspiele</div>
+      {/* Das freiwillige Saisonziel aus 35.175. Es stand bis 15.09.2026
+          versehentlich im KarriereRueckblick, wo es kein `s` gibt; siehe den
+          Vermerk dort. Hier ist `s` die Saison, und `saisonZielAbschluss`
+          haengt das Ergebnis an sie an — historische Saisons ohne Zielfeld
+          zeigen nichts, statt eines zu erfinden. */}
+      {s.saisonZiel && <p style={{ fontSize: 12 }}>Saisonziel „{s.saisonZiel.n}“: {s.saisonZiel.ist} / {s.saisonZiel.soll} Spiele · {s.saisonZiel.geschafft ? "erreicht, +3 Moral (bis 100)" : "diesmal nicht erreicht"}.</p>}
       {schlag.satz && (
         <div style={{ fontSize: 13, marginTop: 10, maxWidth: 320, marginLeft: "auto", marginRight: "auto" }}>
           {schlag.satz}</div>)}
