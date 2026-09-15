@@ -336,3 +336,62 @@ Offen zur Abnahme liegen damit drei Commits auf `claude/elegant-cray-29rcm8`:
 Geprüft: `npm test` 86/86, `npm run build` erfolgreich, Produktionsbündel
 prüfsummengleich. Dokumentation ändert daran nichts; der Lauf schließt nur ein
 Versehen aus.
+
+
+## Fehlerbehebung 35.177.0 — Karriereende stürzte ab (Claude, 15.09.2026)
+
+Basis: `main` 0426852 (35.176.0), auf `claude/elegant-cray-29rcm8` aufgesetzt.
+
+**Befund aus dem Gerätetest.** Ein Mitspieler des Eigentümers beendete seine
+Laufbahn über die Rücktrittsfrage („Wie lange noch?" → „Schluss machen") und
+bekam statt der Bilanz den Fehlerbildschirm mit `s is not defined`. Die
+Meldung stammt aus dem ausgelieferten Bündel `index-DJDCFSJK.js`, also aus
+35.176.0.
+
+**Ursache.** In `KarriereRueckblick` (App.jsx, Seite „Auf dem Platz") stand
+seit 35.175.0 die Zeile `{s.saisonZiel && …}`. Die Komponente bekommt aber nur
+`{ p, onFertig }` — ein `s` gibt es dort nicht. Die Seiten dieses Rückblicks
+werden gebaut, bevor die erste erscheint; das JSX wird also sofort ausgewertet
+und wirft beim Bau, nicht erst beim Anzeigen.
+
+**Reichweite — größer als der gemeldete Fall.** `finish()` setzt
+`setKarriereRueck(...)` bei *jedem* Karriereende (App.jsx:18034). Der
+vorzeitige Rücktritt war nur der Weg, den der Tester genommen hat. Nachgestellt
+mit 3, 5 und 12 Saisons: alle drei stürzen ab. Es entkommt nur, wer die Laufbahn
+ohne einen einzigen Pflichtspiel-Einsatz beendet, weil die Seite dann unter
+`p.tot.apps > 0` entfällt. Praktisch heißt das: in 35.175.0 und 35.176.0 war
+das Karriereende nicht erreichbar.
+
+**Behebung.** Die Zeile ist aus `KarriereRueckblick` entfernt und steht jetzt
+im `SaisonRueckblick`, der `s` als Saison führt — dort, wo CHANGELOG 35.175.0
+sie ohnehin zusagt („Ergebnis im bestehenden Saisonrückblick"). Wortlaut und
+Auszeichnung des Autors sind unverändert übernommen; die Textfassung ist
+bewusst nicht angefasst worden, das wäre eine Produktentscheidung.
+
+**Warum keine der 86 Prüfungen das gefunden hat.** `runFinish` prüft den
+Abschluss-*Handler*, der Langzeitlauf ersetzt die Oberfläche vollständig. Den
+Rückblick hat schlicht nie etwas gezeichnet. Zwei neue Regressionen schließen
+die Lücke: Karriererückblick für 1/3/5/12 Saisons und ohne Pflichtspiele,
+Saisonrückblick mit erfülltem, verfehltem und fehlendem Saisonziel. Gegenprobe
+gemacht — der Fehler testweise wieder eingebaut, `npm test` wurde rot, danach
+`App.jsx` prüfsummengleich zurückgestellt.
+
+Geprüft: 88/88 Regressionen, Produktionsbuild erfolgreich. Version auf 35.177.0,
+versionCode 3517700 über `tools/android-version.cjs`, alle drei Versionsfelder
+konsistent.
+
+**Für die Abnahme, zwei bewusste Entscheidungen zum Widersprechen:**
+
+1. *Das Saisonziel wurde verschoben, nicht gelöscht.* Die kleinstmögliche
+   Behebung wäre gewesen, die Zeile ersatzlos zu streichen — dann fehlte aber
+   eine Zusage aus CHANGELOG 35.175.0. Wer das anders sieht, streicht sie; die
+   Regression dazu müsste dann mit.
+2. *Die Version wurde auf 35.177.0 erhöht.* Das ist ein ausgelieferter
+   Absturz, der eine neue APK braucht. Soll die Behebung stattdessen in eine
+   größere Runde einfließen, ist die Nummer frei wählbar — dann sind
+   `package.json`, `App.jsx` (`VERSION`), `android/app/build.gradle` und der
+   CHANGELOG-Kopf gemeinsam anzupassen.
+
+Offen: Der Gerätetest dieser Behebung steht aus. Die Prüfungen zeichnen mit
+`renderToStaticMarkup` und ersetzen keine Sicht auf dem Gerät — insbesondere
+nicht das Weitertippen durch die Rückblickseiten.

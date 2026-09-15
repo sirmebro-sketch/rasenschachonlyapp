@@ -38,6 +38,8 @@ import {renderToStaticMarkup} from 'react-dom/server';
 export {verdict, vorsatzBelohnen, vorsatzPunkte, bilanzLaden, bilanzErgaenzen, akaGruenden, SAVE_KEY, AKA_KEY, LIFE_KEY, createPlayer, develop, simulateSeason, vcFuer, vcPosten, vcAusHaeusern, leereAkademie, leereBilanz, KARTEN, VEREIN, zufallSetzen, rerollWildcard, ladenGesperrt, saisonSchlagzeile, saisonIndex, EVENTS, strangDran, strangWeiter, laufStand, laufWeiter};
 export const renderReveal=card=>renderToStaticMarkup(<WildcardEnthuellung card={card} onFertig={()=>{}}/>);
 export const renderShop=(spieler,schritt='training')=>renderToStaticMarkup(<VCLadenAnsicht wo="saison" vc={100} laden={{}} onKauf={()=>{}} spieler={spieler} schritt={schritt}/>);
+export const renderKarriereRueckblick=p=>renderToStaticMarkup(<KarriereRueckblick p={p} onFertig={()=>{}}/>);
+export const renderSaisonRueckblick=(p,s)=>renderToStaticMarkup(<SaisonRueckblick p={p} s={s} onFertig={()=>{}}/>);
 export async function runFinish(q,initial={}) {
  const out={};const aka={...leereAkademie(),vc:100,verdient:200,gratisPacks:2,...initial.aka};
  const ges=initial.ges||leereBilanz(), verein=initial.verein||null, meta={}, ach={}, seen={}, wcSeen={}, hall=[], hsvZ=0;
@@ -330,4 +332,41 @@ test('Mentor-Abschluss braucht Kontakt und zwei Saisons Abstand',()=>{
  const e=E.EVENTS.find(e=>e.id==='video_abschied'),p=player(10);p.age=35;p.evLog={};
  assert(!e.cond(p));p.videoKontakt={name:'Alex',seit:5};p.evLog.video_kontakt=9;assert(!e.cond(p));
  p.evLog.video_kontakt=8;assert(e.cond(p));assert(e.text({p}).includes('Alex'));
+});
+/* 15.09.2026: Beide Rückblicke werden hier WIRKLICH gerendert. Der Anlass ist
+   ein Fehler aus dem Gerätetest: im KarriereRueckblick stand eine Zeile, die
+   `s.saisonZiel` las, obwohl die Komponente nur `{ p, onFertig }` bekommt —
+   jedes Karriereende mit mindestens einem Pflichtspiel endete dadurch im
+   Fehlerbildschirm („s is not defined").
+
+   Warum das keine der 86 bestehenden Prüfungen gefunden hat: `runFinish`
+   prüft den Abschluss-HANDLER, der Langzeitlauf ersetzt die Oberfläche
+   vollständig. Den Rückblick hat schlicht nie etwas gezeichnet. Ein
+   Renderlauf kostet Millisekunden und hätte den Fehler am Tag seiner
+   Entstehung gemeldet. */
+test('Karriererückblick einer beendeten Laufbahn lässt sich zeichnen',()=>{
+ /* Gezeichnet wird immer nur die erste Seite — die übrigen entstehen beim
+    Weitertippen. Das genügt: die Seitenliste wird vollständig aufgebaut,
+    bevor die erste erscheint, und genau dabei ist der Fehler entstanden.
+    Deshalb prüft der Zähler „1/N", dass mehr als eine Seite gebaut wurde. */
+ for(const n of [1,3,5,12]){
+  const p=player(n);p.retired=true;p.verdict=E.verdict(p);
+  assert(p.tot.apps>0,'Voraussetzung: Laufbahn mit Pflichtspielen ('+n+' Saisons)');
+  const html=E.renderKarriereRueckblick(p);
+  assert(html.includes('Deine Laufbahn'),n+' Saisons: Kopf fehlt');
+  const seiten=html.match(/1\s*\/\s*(\d+)/);
+  assert(seiten&&Number(seiten[1])>1,n+' Saisons: keine Seitenfolge aufgebaut');
+ }
+ // Ohne Pflichtspiele entfällt die Seite „Auf dem Platz"; zeichnen muss es trotzdem.
+ const leer=player(1);leer.retired=true;leer.verdict=E.verdict(leer);leer.tot.apps=0;
+ assert(E.renderKarriereRueckblick(leer).includes('Deine Laufbahn'));
+});
+test('Saisonrückblick zeichnet und zeigt das Saisonziel genau dann, wenn es eines gibt',()=>{
+ const p=player(3), s=p.seasons.at(-1);
+ const ohne=E.renderSaisonRueckblick(p,{...s,saisonZiel:undefined});
+ assert(ohne.includes('Pflichtspiele')&&!ohne.includes('Saisonziel'),'ohne Zielfeld darf nichts erfunden werden');
+ const mit=E.renderSaisonRueckblick(p,{...s,saisonZiel:{n:'Regelmäßig auf dem Platz',soll:20,ist:24,geschafft:true}});
+ assert(mit.includes('Saisonziel')&&mit.includes('24 / 20')&&mit.includes('erreicht'),'erfülltes Ziel fehlt');
+ const verfehlt=E.renderSaisonRueckblick(p,{...s,saisonZiel:{n:'Die eigene Chance erarbeiten',soll:10,ist:4,geschafft:false}});
+ assert(verfehlt.includes('diesmal nicht erreicht'),'verfehltes Ziel fehlt');
 });
