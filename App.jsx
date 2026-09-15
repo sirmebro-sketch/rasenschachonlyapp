@@ -23,8 +23,8 @@ import { machAkademie } from "./akademie.js";
    ================================================================ */
 
 const NAME = "Rasenschach XI";
-const VERSION = "35.172";
-const VERSION_INFO = "Wildcard ohne vorzeitigen Blick; Trainer-Abschied mit Folgen früherer Entscheidungen.";
+const VERSION = "35.173";
+const VERSION_INFO = "Saisonrückblick: Turniere und Vereinsjahre nach dem Laden korrigiert.";
 
 /* Fester Zufallsstrom aus einer Zeichenkette — damit Angebote des eigenen
    Vereins nicht bei jedem Klick anders aussehen.                        */
@@ -11561,6 +11561,13 @@ const ROLLENRANG = { "Tribüne": 0, "Ergänzungsspieler": 1, "Rotationsspieler":
 
    DETERMINISTISCH: kein Zufall, keine neue Ziehung beim Oeffnen. Derselbe
    Spielstand ergibt denselben Text — auch das verlangt der Bericht. */
+// Gespeicherte Saisonkopien haben eine andere Objektidentität.
+function saisonIndex(saisons, saison) {
+  const direkt = saisons.indexOf(saison);
+  if (direkt >= 0 || !saison || saison.year == null) return direkt;
+  return saisons.findIndex(x => x.year === saison.year && x.club === saison.club);
+}
+
 function saisonSchlagzeile(s, vor, p, vorigeZeile) {
   const beste = schlagzeileRoh(s, vor, p);
   if (!vorigeZeile || !beste || beste.kopf !== vorigeZeile) return beste;
@@ -11642,8 +11649,10 @@ function schlagzeileRoh(s, vor, p, aus) {
       satz: "Mit " + alter + " eine Saisonnote von " + note.toFixed(1).replace(".", ",") + "." };
 
   /* 6. Ein grosses Turnier mit der Nationalmannschaft. */
-  if (s.ntMajor && s.ntMajor.n) return { kopf: s.ntMajor.n,
-    satz: "Der Sommer gehörte dem Nationaltrikot." };
+  const turnier = s.ntMajor && (s.ntMajor.turnier || s.ntMajor.n);
+  if (turnier && aus !== turnier) return { kopf: turnier,
+    satz: (s.ntMajor.y ? s.ntMajor.y + " · " : "")
+      + (s.ntMajor.res || "Der Sommer gehörte dem Nationaltrikot.") };
 
   /* 7. Das verlorene Jahr: Einsatzzeit auf ein Drittel eingebrochen. Nur
         wenn es vorher etwas zu verlieren gab. */
@@ -11695,7 +11704,7 @@ function schlagzeileRoh(s, vor, p, aus) {
          gezaehlt, weil `s` in `p.seasons` stehen kann oder nicht. */
   const reihe = (() => {
     const alle = (p && p.seasons) || [];
-    let i = alle.indexOf(s);
+    let i = saisonIndex(alle, s);
     if (i === -1) i = alle.length;          /* s noch nicht angehängt */
     let n = 1;
     for (let k = i - 1; k >= 0; k--) { if (alle[k].club !== s.club) break; n++; }
@@ -11791,7 +11800,7 @@ function SaisonRueckblick({ p, s, onFertig }) {
      Vorsaison in einem der beiden Faelle die Saison selbst, und jeder
      Vergleich ergaebe „keine Veraenderung". */
   const alleS = (p && p.seasons) || [];
-  const iS = alleS.indexOf(s);
+  const iS = saisonIndex(alleS, s);
   const vorSaison = iS > 0 ? alleS[iS - 1]
     : iS === -1 && alleS.length ? alleS[alleS.length - 1] : null;
   /* Die vorige Zeile mitgeben, damit der Wiederholungsschutz greift
@@ -11950,7 +11959,7 @@ function SaisonRueckblick({ p, s, onFertig }) {
      verloren ging. Gibt es nichts Auffälliges, fällt die Seite weg statt
      eine Erklärung zu erfinden. */
   {
-    const gruende = saisonGruende(s, (p.seasons || [])[(p.seasons || []).indexOf(s) - 1]);
+    const gruende = saisonGruende(s, vorSaison);
     if (gruende.length) S("Warum es so lief", "Was diese Saison geprägt hat", (
       <div data-saison-gruende="true" style={{ maxWidth: 380, margin: "0 auto" }}>
         {/* KEIN `pan` AUF KARTON (35.168).

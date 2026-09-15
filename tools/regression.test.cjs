@@ -35,7 +35,7 @@ before(async () => {
     .map(n=>`const ${n}=v=>{out[${JSON.stringify(n.slice(3))}]=v;};`).join('\n');
   const extension = `
 import {renderToStaticMarkup} from 'react-dom/server';
-export {SAVE_KEY, AKA_KEY, LIFE_KEY, createPlayer, develop, simulateSeason, vcFuer, vcPosten, vcAusHaeusern, leereAkademie, leereBilanz, KARTEN, VEREIN, zufallSetzen, rerollWildcard, ladenGesperrt, EVENTS, strangDran, strangWeiter, laufStand, laufWeiter};
+export {SAVE_KEY, AKA_KEY, LIFE_KEY, createPlayer, develop, simulateSeason, vcFuer, vcPosten, vcAusHaeusern, leereAkademie, leereBilanz, KARTEN, VEREIN, zufallSetzen, rerollWildcard, ladenGesperrt, saisonSchlagzeile, saisonIndex, EVENTS, strangDran, strangWeiter, laufStand, laufWeiter};
 export const renderReveal=card=>renderToStaticMarkup(<WildcardEnthuellung card={card} onFertig={()=>{}}/>);
 export const renderShop=(spieler,schritt='training')=>renderToStaticMarkup(<VCLadenAnsicht wo="saison" vc={100} laden={{}} onKauf={()=>{}} spieler={spieler} schritt={schritt}/>);
 export async function runFinish(q,initial={}) {
@@ -183,4 +183,24 @@ test('Trainer-Kontakt kann vor dem Abschied wieder aufgenommen werden',()=>{
 test('Ereigniskatalog und Auswahlkennungen sind eindeutig',()=>{
  assert.equal(new Set(E.EVENTS.map(e=>e.id)).size,E.EVENTS.length);
  for(const e of E.EVENTS)assert.equal(new Set(e.choices.map(c=>c.id)).size,e.choices.length,e.id);
+});
+
+
+test('Turnier-Schlagzeile verwendet die Felder der Saisonbilanz und nennt das Ergebnis',()=>{
+ const vor={year:'2026/27',club:'Probe',age:25,role:'Stammspieler',note:3,apps:30};
+ const s={...vor,year:'2027/28',ntMajor:{turnier:'EM',res:'Halbfinale',y:2028}};
+ const text=E.saisonSchlagzeile(s,vor,{seasons:[vor,s]});
+ assert.deepEqual(text,{kopf:'EM',satz:'2028 · Halbfinale'});
+ assert.notEqual(E.saisonSchlagzeile(s,vor,{seasons:[vor,s]},'EM').kopf,'EM');
+});
+test('Vereinsjahre und Saisonzuordnung bleiben nach JSON-Laden identisch',()=>{
+ const vor={year:'2026/27',club:'Probe',age:25,role:'Stammspieler',note:3,apps:30};
+ const s={...vor,year:'2027/28',age:26}, p={seasons:[vor,s]};
+ const geladen=JSON.parse(JSON.stringify(s));
+ assert.equal(E.saisonIndex(p.seasons,geladen),1);
+ assert.deepEqual(E.saisonSchlagzeile(geladen,vor,p),E.saisonSchlagzeile(s,vor,p));
+ assert.equal(E.saisonSchlagzeile(geladen,vor,p).kopf,'Das zweite Jahr');
+ assert.equal(E.saisonIndex(p.seasons,{...geladen,year:'2028/29'}),-1);
+ assert.equal(E.saisonIndex(p.seasons,{...geladen,club:'Anderer Verein'}),-1);
+ assert.equal(E.saisonIndex(p.seasons,JSON.parse(JSON.stringify(vor))),0);
 });

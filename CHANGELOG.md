@@ -1,5 +1,14 @@
 # Änderungen
 
+## 35.173.0 – Verlässlicher Saisonrückblick
+
+- Nationalmannschaftsturniere erscheinen wieder als passende Schlagzeile, mit Ergebnis und Jahr.
+- Geladene Saisonkopien werden richtig zugeordnet: Vereinsjahre, Vorsaisonvergleich und Saisonerklärungen bleiben konsistent.
+- Zwei Regressionen ergänzt (62 insgesamt), separaten Langzeit-Prüfstand für 192 Karrieren und Packverkäufe aufgenommen. Ergebnisse, Grenzen und nächste Inhaltsrunde in ENTWICKLUNG.md.
+- VersionCode 3517300. App-ID, Release-Signierung, Vollbild und Belohnungsgrenzen bleiben erhalten.
+
+Validierung: Regressionen, Langzeitrunde, Produktionsbuild und Capacitor-Synchronisierung. Visuelle Android-Prüfung bleibt Teil des Gerätetests.
+
 ## 35.172.0 – Verdeckte Wildcard und Trainer-Abschied
 
 - Wildcard-Enthüllung mit vollständig deckendem Hintergrund, außerhalb transformierter Spielbereiche. Name und Wirkung werden erst beim Umdrehen gerendert.
