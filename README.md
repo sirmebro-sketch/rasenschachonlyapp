@@ -40,6 +40,7 @@ wenn man sie braucht.
 | `verein.js` | eigener Verein: Liga, Kader, Aufstellung, Taktik, Ausbau |
 | `akademie.js` | Jugendakademie: Talente, Abteilungen, Jahrgänge |
 | `karten.js` | Sammelkarten, Packs, Ziehung, Verkauf |
+| `karrieregeschichten.js` | Persönliche Erinnerungen für den Karriereabschluss |
 | `vorsatz.js` | Vorsatzfortschritt, einmalige Spielerboni, Abschluss-Punkte und Saisonziele |
 | `belohnungen.js` | Abschlussbelohnungen — ein Beleg für Buchung und Anzeige |
 | `buchungen.js` | Karten-/Coinbuchungen, geprüft **vor** dem Schreiben |
@@ -98,16 +99,16 @@ Dazu fünf Regeln, die sich aus früheren Fehlern ergeben haben:
 
 ### Versionsschema
 
-`package.json` führt die Version als `major.minor.patch` (derzeit 35.175.0).
+`package.json` führt die Version als `major.minor.patch` (derzeit 35.176.0).
 Daraus rechnet `tools/android-version.cjs` den `versionCode`
-(`major*100000 + minor*100 + patch`, also 3517500) und schreibt ihn zusammen mit
+(`major*100000 + minor*100 + patch`, also 3517600) und schreibt ihn zusammen mit
 dem `versionName` nach `android/app/build.gradle`. Beide Felder sollen nie von
 Hand auseinanderlaufen. Die Version wird erhöht, wenn eine neue APK entsteht —
 reine Werkzeug- oder Dokumentationsänderungen erhöhen sie nicht.
 
 ## Prüfstände
 
-**`npm test`** — `node --test tools/*.test.cjs`, derzeit 83 Prüfungen. Läuft in
+**`npm test`** — `node --test tools/*.test.cjs`, derzeit 86 Prüfungen. Läuft in
 der CI bei Pushes auf `main` und Pull Requests (`.github/workflows/regression.yml`).
 Schwerpunkt: Abschlussbelohnungen und Kaufbuchungen, Speicherfehler an jedem
 einzelnen Schritt, simulierte Prozessabbrüche, Import mit Rücknahme,

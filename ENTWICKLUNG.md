@@ -171,3 +171,43 @@ Validierung: `npm ci`, `npm test` (83/83, inklusive Claudes Wächter), Produktio
 Hinweis zu Claudes offener Beobachtung (8 statt 13 Saisons): Die 35.174-Runde änderte auch den Ereigniskatalog und damit den Verbrauch des festen Zufallsstroms. Aus derselben Startzahl allein lässt sich deshalb keine Ursache für einzelne kürzere Laufbahnen ableiten. Die Fünf-Saisons-Regel betrifft den Abschlussfortschritt; ihre Grenze wird gezielt getestet. Keine kausale Diagnose der kürzesten Laufbahn behauptet.
 
 Langzeitlauf des gemeinsamen Stands am 15.09.2026: `node tools/langzeit.cjs`, 192 Karrieren mit allen sechs Vorsätzen, 4.494 Saisons, 7.852 Ereignisse, 447 Kennungen; alle Ablauf-/Zahlenprüfungen bestanden. Laufbahn-VC Median 83, Spanne 22–279; unveränderte Packstichprobe. Gerätetest ersetzt das nicht.
+
+
+## 15.09.2026 — 35.176.0: Prüfung und persönliche Karrieregeschichten (Codex)
+Basis: main fa3b395 (35.175 inklusive Claudes Werkzeugrunde). Vor Beginn abgerufen;
+keine neueren Änderungen. Claudes Anker und Dokumentationsregeln erhalten.
+
+Prüfung vor Inhaltsänderung: 192 Karrieren, 7.852 Ereignisse, darunter 77
+Wiederholungen innerhalb derselben Karriere (0,98 %). Zielbewusster Vergleich:
+heimische Sommerangebote für Daheim bevorzugt, Abschlussoptionen für Beruf.
+Daheim steigt von 0/32 auf 15/32 (46,9 %). Welt 30/32, Lange 32/32,
+Glanz 8/32, Beruf 11/32, Einsatz 30/32. Das sind feste Strategien und Seeds,
+keine menschlichen Erfolgswahrscheinlichkeiten; Vorsatzzuweisung ist nicht
+vollfaktoriell über Position, Modus, Auswahl und Geschlecht. Daher keine
+Belohnungsanpassung aus diesen Zahlen. Im Vergleichslauf in allen fünf
+Karrierephasen keine Saison ohne Ereignis, im Mittel 1,73–1,75 Ereignisse
+(enthält Schnellmodus). Ereignismenge misst keine subjektive Spannung.
+
+Neue Inhalte: bildung_spaet_start / bildung_spaet_ende bilden einen optionalen
+Zweiteiler mit zwei wirklich verstrichenen Saisons. Abbruch und vorhandener
+Abschluss sperren die Fortsetzung. video_abschied braucht den gespeicherten
+Kontakt, Alter 34 und zwei Saisons Abstand zu video_kontakt. Neue IDs;
+keine historischen Auswahl-IDs geändert. Keine zusätzlichen Ereignisplätze.
+
+karrieregeschichten.js liefert bis zu vier kurze Rückblickabsätze aus Vorsatz,
+Kontakt, mentorSpur und abgeschlossenem Buchzweig. evLog allein ist KEIN
+Beweis für eine Wahl, da auch übersprungene Ereignisse dort stehen. Neue
+Mentorflagge wird erst bei tatsächlicher Auswahl gesetzt. Kein neuer Dialog.
+
+86 Tests bestanden, Produktionsbuild erfolgreich. Neue Regressionen prüfen
+Bildungswartezeit/Abbruch, Mentorbedingungen und belegte Erinnerungen nach
+JSON-Rundreise. Android-Darstellung bleibt im Gerätetest zu prüfen.
+Offen: subjektive Wiederholung, positionsweise Vorsatzbalance in einer
+vollfaktoriellen Stichprobe; bestehende ältere Bildungsereignisse fassen
+mehrjährige Ausbildung teils weiterhin in einem Ereignis zusammen.
+
+Abschließender Lauf der neuen Inhalte: 192 Karrieren, 4.505 Saisons,
+7.860 Ereignisse, 449 verschiedene IDs, 77 Wiederholungen. Keine Saison
+ohne Ereignis in den ausgewerteten Phasen. Beruf 15/32 (46,9 %), Glanz
+6/32 (18,8 %); alle anderen obigen Quoten gleich. Ein veränderter Katalog
+ändert den Zufallsverbrauch; Differenzen sind kein isolierter Wirksamkeitsnachweis.

@@ -318,3 +318,16 @@ test('Buch- und Knieabschlüsse folgen dem Weg; historische Auswahlen bleiben la
   assert.deepEqual(E.laufWeiter(saved,E.EVENTS).queue[0].choices.map(c=>c.id),[id+'.0',id+'.1']);
  }
 });
+
+test('Zweiter Bildungsanlauf wartet zwei Saisons und respektiert Abbruch und vorhandenen Abschluss',()=>{
+ const e=E.EVENTS.find(e=>e.id==='bildung_spaet_ende'),p=player(10);
+ p.flags={};p.straenge={bildung:{stufe:1,seit:9,weg:'lernen'}};
+ assert(!E.strangDran(e,p));p.straenge.bildung.seit=8;assert(E.strangDran(e,p));assert(e.cond(p));
+ p.straenge.bildung.weg='ohne';assert(!E.strangDran(e,p));
+ p.flags.abschluss=true;assert(!e.cond(p));
+});
+test('Mentor-Abschluss braucht Kontakt und zwei Saisons Abstand',()=>{
+ const e=E.EVENTS.find(e=>e.id==='video_abschied'),p=player(10);p.age=35;p.evLog={};
+ assert(!e.cond(p));p.videoKontakt={name:'Alex',seit:5};p.evLog.video_kontakt=9;assert(!e.cond(p));
+ p.evLog.video_kontakt=8;assert(e.cond(p));assert(e.text({p}).includes('Alex'));
+});

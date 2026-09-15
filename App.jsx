@@ -1,3 +1,4 @@
+import { persoenlicherRueckblick } from "./karrieregeschichten.js";
 import { VORSAETZE, vorsatzStand, vorsatzBelohnen, vorsatzPunkte, saisonZielStart, saisonZielAbschluss } from "./vorsatz.js";
 import { laufbahnBeleg, abschlussBeleg, saisonenGespielt, VC_MIN_SAISONEN, PACK_MIN_SAISONEN, HAUS_MIN_SAISONEN } from "./belohnungen.js";
 import { packBuchung, verkaufsBuchung } from "./buchungen.js";
@@ -24,7 +25,7 @@ import { machAkademie } from "./akademie.js";
    ================================================================ */
 
 const NAME = "Rasenschach XI";
-const VERSION = "35.175";
+const VERSION = "35.176";
 const VERSION_INFO = "Vorsätze mit Fortschritt und Belohnungen; persönliche Saisonziele und vertiefte Geschichten.";
 
 /* Fester Zufallsstrom aus einer Zeichenkette — damit Angebote des eigenen
@@ -4203,6 +4204,7 @@ const T = (s) => () => s;
    Die Tabelle dient der Anzeige („Teil 2 von 3") und der Prüfung: die
    Ereignisprüfung gleicht sie gegen die tatsächlich vorhandenen Stufen ab. */
 const STRAENGE = {
+  bildung:      { n: "Der zweite Anlauf", teile: 2 },
   jugendfreund: { n: "Der aus der Jugend", teile: 3 },
   buch:         { n: "Das Buch",           teile: 3 },
   knie:         { n: "Das Knie",           teile: 3 },
@@ -17001,6 +17003,10 @@ function EndScreen({ p, onNew }) {
         <div className="eb">Karriereende {p.year}</div>
         <div className="d" style={{ fontSize: "clamp(32px,9vw,64px)", color: "var(--ac)" }}>{v.tier}</div>
         <p style={{ maxWidth: 560, marginTop: 8, color: "var(--mu)" }}>{v.text}</p>
+        {persoenlicherRueckblick(p).length > 0 && <div style={{maxWidth:560,marginTop:12}}>
+          <div className="eb">Was von deiner Laufbahn bleibt</div>
+          {persoenlicherRueckblick(p).map((text,i)=><p key={i} style={{marginTop:6}}>{text}</p>)}
+        </div>}
         {p.endReason && <div className="pan pad" style={{ marginTop: 10, borderLeft: "3px solid var(--bad)" }}>
           <div className="eb" style={{ color: "var(--bad)" }}>Grund</div>
           <div style={{ fontSize: 13.5, marginTop: 3 }}>{p.endReason}</div></div>}

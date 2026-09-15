@@ -67,6 +67,24 @@ export const machEreignisse = (H) => {
   choices:[
    {id:"video_kontakt.0",altIndex:0,label:"Gemeinsam eine Antwort erarbeiten",hint:"Zeit für jemanden, den du begleitet hast",roll:[{p:1,text:"Du stellst eine Frage, statt die Lösung zu schicken. Am Abend kommt eine zweite Aufnahme — diesmal hat die Abstimmung geklappt.",fx:{legacy:12,morale:8,fitness:-2}}]},
    {id:"video_kontakt.1",altIndex:1,label:"Zum eigenen Urteil ermutigen",hint:"",roll:[{p:1,text:"Du schreibst, dass die Beobachtung stimmt. Deine Notizen haben geholfen; die nächste Entscheidung gehört deinem Gegenüber.",fx:{legacy:6,morale:6}}]}]},
+/* 35.176: Zweite Bildungschance mit tatsächlich verstrichener Lernzeit. */
+{ id:"bildung_spaet_start", tag:"Zukunft", w:5, strang:"bildung", stufe:1,
+ cond:p=>p.age>=27&&p.age<=35&&!p.flags.abschluss,
+ title:T("Die Anmeldung liegt noch da"),text:T("Zwischen Trainingsplan und Vertragsunterlagen liegt ein Kursangebot. Zwei Jahre berufsbegleitendes Lernen. Du könntest den Abschluss nachholen, den du früher verschoben hast."),
+ choices:[
+ {id:"bildung_spaet_start.0",altIndex:0,label:"Einen festen Lernabend einplanen",hint:"Abschluss frühestens nach zwei Saisons",roll:[{p:1,text:"Du meldest dich an. Ein Abend gehört jetzt den Unterlagen; für Erholung bleibt etwas weniger Zeit.",fx:{strangWeg:"lernen",fitness:-4,morale:4}}]},
+ {id:"bildung_spaet_start.1",altIndex:1,label:"Die Zeit beim Fußball lassen",hint:"Kein Kursbeginn",roll:[{p:1,text:"Du legst das Angebot beiseite. Diesmal entscheidest du bewusst, wofür deine Zeit reichen soll.",fx:{strangWeg:"ohne",morale:3}}]}]},
+{ id:"bildung_spaet_ende", tag:"Zukunft", w:5, strang:"bildung", stufe:2, weg:"lernen", wartezeit:2,
+ cond:p=>!p.flags.abschluss,
+ title:T("Die letzte Prüfung"),text:T("Zwei Saisons zwischen Training und Lernunterlagen liegen hinter dir. Jetzt steht die Abschlussprüfung an. Für die Vorbereitung müsstest du noch einmal Training und Lernen abstimmen."),
+ choices:[
+ {id:"bildung_spaet_ende.0",altIndex:0,label:"Zur Prüfung antreten",hint:"Abschluss erwerben · Fitness −4",roll:[{p:1,text:"Du bestehst. Diesen Abschluss hast du dir Abend für Abend erarbeitet.",fx:{flag:"abschluss",fitness:-4,morale:8,legacy:10}}]},
+ {id:"bildung_spaet_ende.1",altIndex:1,label:"Den Kurs ohne Abschluss beenden",hint:"Der Vorsatz bleibt offen",roll:[{p:1,text:"Du behältst die Unterlagen. Gelernt hast du etwas; ein Abschlusszeugnis gibt es dafür nicht.",fx:{morale:2}}]}]},
+{ id:"video_abschied", tag:"Umfeld", w:5, cond:p=>p.age>=34&&!!p.videoKontakt&&p.evLog.video_kontakt!=null&&p.seasons.length-p.evLog.video_kontakt>=2,
+ title:T("Die Notizen werden weitergereicht"),text:c=>c.p.videoKontakt.name+" erzählt dir von einem jungen Neuzugang. Zum ersten Mal werden deine damaligen Notizen ohne dich erklärt. Jemand gibt weiter, was du einmal gezeigt hast.",
+ choices:[
+ {id:"video_abschied.0",altIndex:0,label:"Eine eigene schwierige Szene ergänzen",hint:"Auch Zweifel weitergeben",roll:[{p:1,text:"Du schickst eine Aufnahme, für die du dich früher geschämt hast. Die Antwort: Genau so etwas hilft uns.",fx:{flag:"mentorSpur",legacy:10,morale:6}}]},
+ {id:"video_abschied.1",altIndex:1,label:"Das Heft in andere Hände geben",hint:"Verantwortung abgeben",roll:[{p:1,text:"Du musst nicht mehr jede Seite erklären. Aus deinem Heft ist längst etwas Gemeinsames geworden.",fx:{flag:"mentorSpur",legacy:8,morale:8}}]}]},
 { id:"bu_3_kontrolle", tag:"Medien", w:3, strang:"buch", stufe:3, weg:"kontrolle", wartezeit:2, cond:p=>true,
  title:T("Zwischen den glatten Sätzen"),text:T("Das Buch erscheint. Du hast jede Seite freigegeben. In den Besprechungen loben sie die Fotos und fragen, was hinter den glatten Formulierungen fehlt."),
  choices:[
