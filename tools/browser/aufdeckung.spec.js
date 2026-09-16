@@ -18,8 +18,8 @@ for(const still of [false,true]){
    expect(box.x+box.width).toBeLessThanOrEqual(viewport.width+1);
    expect(box.y+box.height).toBeLessThanOrEqual(viewport.height);
    if(still){
-    const animations=await page.locator('.rs-schleier').evaluate(el=>el.getAnimations({subtree:true}).filter(a=>a.playState==='running').length);
-    expect(animations).toBe(0);
+    const animations=await page.locator('.rs-schleier').evaluate(el=>el.getAnimations({subtree:true}).filter(a=>a.playState==='running').map(a=>({name:a.animationName,property:a.transitionProperty,target:a.effect.target.outerHTML.slice(0,240)})));
+    expect(animations).toEqual([]);
    }
    if(rarity==='goat')await page.screenshot({path:testInfo.outputPath(`goat-${still?'still':'animiert'}.png`)});
    await next.click();

@@ -733,3 +733,7 @@ berücksichtigt. Deshalb App-Korrektur als 35.187.0 / 3518700.
 Nach Korrektur im Browser-Ruhemodus keine animierten Nachfahren mehr;
 HSV-Sonderkarte auch bei 844 × 390 vollständig samt Weiter sichtbar.
 105 Node-Tests, Web-Build und Capacitor-Sync erfolgreich.
+
+CI-Nachprüfung: APK erfolgreich, neun Browserfälle bestanden; drei Ruhefälle
+melden eine laufende Animation. Diagnose um Name, Übergangseigenschaft und
+Zielelement erweitert; Freigabe bis zur Klärung offen.
