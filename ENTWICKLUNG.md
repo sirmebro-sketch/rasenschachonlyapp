@@ -776,3 +776,11 @@ Browserprüfungen um stabile Aufdeckposition, Startleiste, gespeicherte Optionen
 und einmaligen Sonderschuss erweitert. 105 Node-Tests, Web-Build und Capacitor-
 Sync erfolgreich. GitHub-Browser- und Android-Build bei Veröffentlichung prüfen.
 Android-Launcher, native Touchbedienung und Effektleistung bleiben Geräteprüfung.
+
+Abschluss 35.188: veröffentlicht als 86a9589, Dateibaum b9493eb identisch
+zum lokal geprüften 1c422e1. Alle GitHub-Prüfungen erfolgreich: 105 Regressionen,
+18 Browserprüfungen in drei Bildschirmgrößen; APK und AAB gebaut und Signaturen
+geprüft. Android-Artefakt verfügbar unter Lauf 35131289278, Browserbericht unter
+35131289445. Verwaltete Vorschau nach Prüfung beendet. Nächster Schritt ist
+Kevins Android-Sichtprüfung, insbesondere Launcher-Icon, seltene Aufdeckungen
+und konkrete noch auffällige Haar-/Bartkombinationen; Beispielbilder willkommen.
