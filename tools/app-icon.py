@@ -46,9 +46,9 @@ for x in (10,88):
  rect(x-3,40,7,5,'#C6D1B5')
  for dx in (-2,1):
   for dy in (41,43): rect(x+dx,dy,2,1.2,'#FFFCEE')
-path('M5 37L95 31V35L5 41Z','#DDDCC6')
-path('M5 15Q5 5 15 5H85Q95 5 95 15V31L5 37Z','#BB201C')
-path('M7 15Q7 7 16 7H85Q92 7 93 14L7 20Z','#D63227')
+path('M-30 39.333L130 28.667V32.667L-30 43.333Z','#DDDCC6')
+path('M-30 -30H130V28.667L-30 39.333Z','#BB201C')
+path('M-30 -30H130V11.419L-30 22.581Z','#D63227')
 lettering('RASENSCHACH',18,31,64,12,'#FFFDEE')
 # Custom slanted XI avoids font dependencies and keeps the distinctive large mark.
 path('M32 42H48L54 58L64 39H79L60 68L70 91H54L48 76L39 94H23L41 66Z','#A21D1A')

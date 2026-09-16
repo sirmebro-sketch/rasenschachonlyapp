@@ -1,5 +1,9 @@
 # Änderungen
 
+## 35.190.0 – Icon-Kopf bis an den Rand
+
+- Rote Kopffläche und weißer Trennstreifen reichen über die Launcher-Schnittkante; dunkler Saum oben und seitlich entfernt. Native Vektor- und Legacy-Icons neu erzeugt.
+
 ## 35.189.0 – Seltene Funde und saubere Konturen
 
 - Wildcard-Titel und Beschreibung beim Aufdecken wieder mittig unter dem Kopfstreifen.

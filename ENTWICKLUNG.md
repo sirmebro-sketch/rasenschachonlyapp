@@ -804,3 +804,11 @@ Icon ohne eingebetteten Rahmen; Vordergrund nutzt sichtbare 72dp statt54dp
 der108dp-Fläche, Hintergrund reicht über deren Maskenrand. Legacy-PNGs und
 Vektoren neu generiert, runden Zuschnitt angesehen. Launcherwirkung und native
 Effektleistung bleiben Android-Sichtprüfung.
+
+## Icon-Rand 35.190 – Codex, 16.09.2026
+
+Basis 2894ab5. Nutzerfoto zeigt dunklen Saum um den roten Icon-Kopf.
+Die ehemaligen Abzeichenpfade endeten bei x5/95 und y5. Rot und weißer
+Trennstreifen nun mit Beschnittzugabe von -30 bis130 gezeichnet; Android
+schneidet die äußere Form. Motiv, Schrift und unterer Teil unverändert.
+Vektor und alle Legacy-Dichten aus derselben Quelle regeneriert.

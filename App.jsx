@@ -31,7 +31,7 @@ import { machAkademie } from "./akademie.js";
    ================================================================ */
 
 const NAME = "Rasenschach XI";
-const VERSION = "35.189";
+const VERSION = "35.190";
 const VERSION_INFO = "Zentrierte Wildcards, eindrucksvollere seltene Enthüllungen und ein randfüllendes App-Icon.";
 
 /* Fester Zufallsstrom aus einer Zeichenkette — damit Angebote des eigenen
