@@ -31,8 +31,8 @@ import { machAkademie } from "./akademie.js";
    ================================================================ */
 
 const NAME = "Rasenschach XI";
-const VERSION = "35.188";
-const VERSION_INFO = "Einheitliche Wildcards, sauberere Porträts, neue Einstellungen und ein klarerer Sonderschuss.";
+const VERSION = "35.189";
+const VERSION_INFO = "Zentrierte Wildcards, eindrucksvollere seltene Enthüllungen und ein randfüllendes App-Icon.";
 
 /* Fester Zufallsstrom aus einer Zeichenkette — damit Angebote des eigenen
    Vereins nicht bei jedem Klick anders aussehen.                        */
@@ -12170,7 +12170,7 @@ function WildcardEnthuellung({ card, onFertig }) {
 
   /* Zeitplan. Im Ruhemodus springt alles sofort auf die letzte Stufe. */
   const T = RUHE ? [0, 0, 0, 0]
-    : [0, 620 + Math.round(pomp * 420), 0, 0];
+    : [0, 620 + Math.round(pomp * 680), 0, 0];
   T[2] = T[1] + 820;      /* 700 ms Drehung plus 120 ms Abstand, damit sich
                              Drehung und Schweben nicht überschneiden */
   T[3] = T[2] + 420 + Math.round(pomp * 700);
@@ -12193,8 +12193,7 @@ function WildcardEnthuellung({ card, onFertig }) {
       style={{ cursor: bereit ? "pointer" : "default", overflow: "hidden", background: "#04050A",
         backdropFilter: "none", WebkitBackdropFilter: "none", zIndex: 100 }}>
 
-      {/* 35.185: Bühne um die Karte statt Blitz, Dauerkonfetti und Funken.
-          Ein ruhiger Lichtabschluss lässt die seltene Karte selbst wirken. */}
+      {/* Seltene Aufdeckungen: einmaliger Lichtausbruch, danach sanfte Bühne. */}
       <div className="eb rs-auf" style={{ color: "var(--mu)", letterSpacing: ".2em", zIndex: 3 }}>
         {auf ? (pomp >= .8 ? "DAS GIBT ES FAST NIE" : gross ? "DAS IST SELTEN" : "DEINE KARTE") : "DEINE KARTE"}
       </div>
@@ -13057,8 +13056,10 @@ function WildcardCard({ card, big, onReroll, rerollLeft, rerollN, aufdeckung=fal
         <span>Wildcard · {r.name}</span>
         {nur && <span style={{ letterSpacing: ".08em" }}>nur {nur}</span>}
       </div>
+      <div className="rs-wildtext" style={aufdeckung?{flex:1,display:"flex",flexDirection:"column",justifyContent:"center",textAlign:"center",minHeight:0}:undefined}>
       <div className="d" style={{ fontSize: big ? 24 : 18, color: r.col }}>{card.n}</div>
       <p style={{ fontSize: big ? 13 : 11.5, color: "var(--tx)", marginTop: 4 }}>{card.t}</p>
+      </div>
       {onReroll && (
         <div style={{ marginTop: 10 }}>
           {rerollLeft ? (

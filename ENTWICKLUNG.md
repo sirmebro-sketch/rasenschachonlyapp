@@ -784,3 +784,23 @@ geprüft. Android-Artefakt verfügbar unter Lauf 35131289278, Browserbericht unt
 35131289445. Verwaltete Vorschau nach Prüfung beendet. Nächster Schritt ist
 Kevins Android-Sichtprüfung, insbesondere Launcher-Icon, seltene Aufdeckungen
 und konkrete noch auffällige Haar-/Bartkombinationen; Beispielbilder willkommen.
+
+## Nachbesserung 35.189 – Codex, 16.09.2026
+
+Basis 5936f64, keine neuen Remote-Branches. Nutzerbilder zeigen Restkanten bei
+Rasiert/Halbglatze. Ursache: pauschal skalierte Schädelkontur mit abweichenden
+Bezier-Stützpunkten. Haarunterlage folgt nun exakt der Kopfkurve; Halbglatze
+verwendet deren Teilkurven, Kanten leicht überdeckt gegen Antialias-Hautsäume.
+Bartkonturen innerhalb des Kopfbeschnitts ebenfalls minimal überdeckt.
+Zarte Kopfform als Haar-/Bartbogen visuell geprüft; Kennungen bleiben erhalten.
+
+Aufdecktext in flexibler Mitte unter dem Band, im echten Browser an HSV geprüft.
+Seltene Enthüllungen: längere Vorbereitung, zwei endende Lichtwellen und
+18 einmalige Funken (HSV: Rauten), langsamer Lichtfächer. Ruhe- und Systemmodus
+reduzierter Bewegung berücksichtigt. Vorhandene Browserprüfungen überprüfen
+weiterhin alle Stufen, Abschlussposition, Lesbarkeit und Ruhemodus.
+
+Icon ohne eingebetteten Rahmen; Vordergrund nutzt sichtbare 72dp statt54dp
+der108dp-Fläche, Hintergrund reicht über deren Maskenrand. Legacy-PNGs und
+Vektoren neu generiert, runden Zuschnitt angesehen. Launcherwirkung und native
+Effektleistung bleiben Android-Sichtprüfung.

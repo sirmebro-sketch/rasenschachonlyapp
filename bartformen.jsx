@@ -15,7 +15,7 @@ export function Bartform({index,kopf,farbe,hell,clipId}){
  const kinn=`M44 ${k-4} Q50 ${k-6} 56 ${k-4} Q55 ${k+2} 50 ${k+3} Q45 ${k+2} 44 ${k-4} Z`;
  return <g fill={farbe}>
  <g clipPath={`url(#${clipId})`}>
- {[1,2,6,7,8,10,12,13,15].includes(index)&&<path d={ring} opacity={index===1?.23:index===2||index===10?.43:1}/>}
+ {[1,2,6,7,8,10,12,13,15].includes(index)&&<path d={ring} stroke={farbe} strokeWidth=".65" strokeLinejoin="round" opacity={index===1?.23:index===2||index===10?.43:1}/>}
  {[3,5,6,7,10,12,13,14,15].includes(index)&&<path d={schnauzer}/>}
  {[4,5,14].includes(index)&&<path d={kinn}/>}
  {index===11&&<path d={`M38 ${k-14} Q45 ${k-17} 50 ${k-14} Q55 ${k-17} 62 ${k-14} Q64 ${k-10} 58 ${k-10} L50 ${k-12} L42 ${k-10} Q36 ${k-10} 38 ${k-14} Z`}/>}

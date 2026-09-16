@@ -32,8 +32,7 @@ def lettering(text,x,y,w,h,color):
   path(pen.getCommands(),color);advance+=glyphs[n].width
 # The compact badge keeps the former red / ivory / turf identity. Clear geometry
 # replaces photographic noise that turns grey when launcher icons are small.
-path('M14 1H86Q99 1 99 14V86Q99 99 86 99H14Q1 99 1 86V14Q1 1 14 1Z','#A8AD91')
-path('M14 3H86Q97 3 97 14V86Q97 97 86 97H14Q3 97 3 86V14Q3 3 14 3Z','#131D16')
+rect(-30,-30,160,160,'#131D16')
 path('M3 67L97 52V86Q97 97 86 97H14Q3 97 3 86Z','#2E4824')
 path('M3 80L97 65V75L3 90Z','#36502A')
 path('M15 96L97 83V86Q97 97 86 97H15Z','#23381E')
@@ -50,7 +49,7 @@ for x in (10,88):
 path('M5 37L95 31V35L5 41Z','#DDDCC6')
 path('M5 15Q5 5 15 5H85Q95 5 95 15V31L5 37Z','#BB201C')
 path('M7 15Q7 7 16 7H85Q92 7 93 14L7 20Z','#D63227')
-lettering('RASENSCHACH',8,29,84,17,'#FFFDEE')
+lettering('RASENSCHACH',18,31,64,12,'#FFFDEE')
 # Custom slanted XI avoids font dependencies and keeps the distinctive large mark.
 path('M32 42H48L54 58L64 39H79L60 68L70 91H54L48 76L39 94H23L41 66Z','#A21D1A')
 path('M32 40H47L53 56L63 38H77L58 67L68 90H53L47 74L37 92H22L40 65Z','#F6F4E8')
@@ -64,10 +63,10 @@ path('M14 80L11 82L10 81L13.5 79Z M18 77L20 75L21 76L19 78Z M18 82L19 85L18 86L1
 def svg(scale=1,offset=0,bg=False):
  p=''.join(f'<path fill="{c}" d="{d}"/>' for d,c in paths)
  return f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">'+('<path fill="#171A12" d="M0 0H100V100H0Z"/>' if bg else '')+f'<g transform="translate({offset} {offset}) scale({scale})">{p}</g></svg>'
-(ROOT/'artwork/app-icon.svg').write_text(svg())
-# Native adaptive foreground. All significant content lies within the central
-# 54dp region of the 108dp canvas, including circular launcher masks.
-xml='<?xml version="1.0" encoding="utf-8"?>\n<vector xmlns:android="http://schemas.android.com/apk/res/android" android:width="108dp" android:height="108dp" android:viewportWidth="108" android:viewportHeight="108">\n<group android:translateX="27" android:translateY="27" android:scaleX="0.54" android:scaleY="0.54">\n'
+(ROOT/'artwork/app-icon.svg').write_text(svg(bg=True))
+# Full-bleed background; Android supplies the sole outer mask.
+# The artwork spans the visible 72dp region, without a second inset badge.
+xml='<?xml version="1.0" encoding="utf-8"?>\n<vector xmlns:android="http://schemas.android.com/apk/res/android" android:width="108dp" android:height="108dp" android:viewportWidth="108" android:viewportHeight="108">\n<group android:translateX="17" android:translateY="17" android:scaleX="0.74" android:scaleY="0.74">\n'
 xml+='\n'.join(f'<path android:fillColor="{c}" android:pathData="{escape(d)}"/>' for d,c in paths)
 xml+='\n</group>\n</vector>\n'
 (RES/'drawable-v24/ic_launcher_foreground.xml').write_text(xml)
@@ -76,7 +75,10 @@ with tempfile.TemporaryDirectory() as tmp:
  for density,size in [('mdpi',48),('hdpi',72),('xhdpi',96),('xxhdpi',144),('xxxhdpi',192)]:
   target=RES/f'mipmap-{density}'
   for name in ['ic_launcher','ic_launcher_round']:
-   art=svg(.96,2) if name=='ic_launcher' else svg(.75,12.5).replace('<g ', '<circle cx="50" cy="50" r="50" fill="#171A12"/><g ',1)
+   art=svg(bg=True)
+   if name=='ic_launcher_round':
+    art=art.replace('<g ', '<defs><clipPath id="round"><circle cx="50" cy="50" r="50"/></clipPath></defs><g clip-path="url(#round)"><g ',1).replace('</svg>','</g></svg>')
+    art=art.replace('<path fill="#171A12" d="M0 0H100V100H0Z"/>','')
    source.write_text(art)
    subprocess.run(['inkscape',str(source),f'--export-filename={target/name}.png',f'--export-width={size}',f'--export-height={size}'],check=True,stdout=subprocess.DEVNULL)
 print('Wrote outlined SVG master, native adaptive vector and 10 launcher PNGs.')

@@ -1,5 +1,12 @@
 # Änderungen
 
+## 35.189.0 – Seltene Funde und saubere Konturen
+
+- Wildcard-Titel und Beschreibung beim Aufdecken wieder mittig unter dem Kopfstreifen.
+- Weltklasse, GOAT und HSV mit längerem Spannungsaufbau, Lichtwellen, einmaligem Funkenausbruch und langsamem Lichtfächer; HSV mit blau-weißen Rauten. Ruhemodus bleibt unbewegt.
+- App-Icon ohne inneres Abzeichen und mit randfüllender Grafik; Android bestimmt die äußere Form.
+- Rasierte Haare und Halbglatze aus der tatsächlichen Schädelkurve; Haar- und Bartkanten überlappen minimal gegen sichtbare Hautsäume.
+
 ## 35.188.0 – Karten, Porträts und Bedienung
 
 - Wildcards beim Aufdecken und im Spielerpass teilen Kopfstreifen, Seltenheitsrahmen und Textur; kein Sprung beim Erscheinen von Weiter.

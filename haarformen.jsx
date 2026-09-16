@@ -23,7 +23,8 @@ export function Haarform({index=0,weiblich=false,breite=24,farbe,hell,ebene='vor
  }
  // Die Unterlage deckt die tatsächliche Schädelkurve ab; einzelne Strähnen
  // dürfen keine hautfarbenen Spalten am Scheitel oder an den Schläfen lassen.
- const scalp='M25.6 41 C25.6 20 34 10.8 50 10.8 C66 10.8 74.4 20 74.4 41 Q69 31 50 28 Q31 31 25.6 41 Z';
+ const schlaefe=26+9*24/breite;
+ const scalp=`M26 40 C26 21 ${schlaefe} 12 50 12 C${100-schlaefe} 12 74 21 74 40 Q69 31 50 28 Q31 31 26 40 Z`;
  const base='M26 40 C25 21 33 12 49 11 C65 9 76 22 74 40 C70 33 64 29 50 29 C36 29 30 34 26 40 Z';
  const swept='M26 39 C24 27 29 13 45 10 C60 6 72 14 75 30 Q68 23 60 25 Q42 32 28 31 Z';
  const curls='M25 40 Q22 34 25 29 Q21 23 27 20 Q25 14 32 14 Q33 8 40 11 Q43 5 49 9 Q56 4 61 10 Q68 7 71 14 Q79 14 76 22 Q81 27 76 32 L74 40 Q70 32 65 33 Q60 28 56 32 Q50 28 45 32 Q38 28 34 33 Q29 31 25 40 Z';
@@ -40,7 +41,12 @@ export function Haarform({index=0,weiblich=false,breite=24,farbe,hell,ebene='vor
  if(typ==='pferdeschwanz')d='M26 41 C24 23 34 10 50 10 C67 10 76 23 74 41 L69 35 Q65 29 50 27 Q35 29 31 35 Z';
  if(typ==='seitenzopf')d='M26 41 C24 22 35 10 50 10 Q72 9 75 34 Q60 23 55 27 Q42 38 28 34 Z';
  if(typ==='textur')d='M26 40 Q23 29 29 23 Q25 15 37 15 Q35 8 46 12 Q49 5 56 12 Q67 8 67 18 Q77 17 74 32 L73 39 Q61 26 48 30 Q34 28 26 40 Z';
- if(typ==='licht')d='M25.6 43 C24 26 30 18 40 14 Q32 26 33 36 L30 46 Z M74.4 43 C76 26 70 18 60 14 Q68 26 67 36 L70 46 Z';
+ if(typ==='licht'){
+  // Teilkurven derselben Schädel-Bezier: kein gerader Steg über der Glatze.
+  const t=.76,u=1-t,x=26*u*u*u+78*u*u*t+3*schlaefe*u*t*t+50*t*t*t,y=40*u*u*u+63*u*u*t+36*u*t*t+12*t*t*t;
+  const c=26+(schlaefe-26)*t*t,cy=40-38*t+10*t*t;
+  d=`M26 40 C26 ${40-19*t} ${c} ${cy} ${x} ${y} Q32 25 33 36 L30 46 L26 43 Z M74 40 C74 ${40-19*t} ${100-c} ${cy} ${100-x} ${y} Q68 25 67 36 L70 46 L74 43 Z`;
+ }
  if(typ==='slick'||typ==='hoch')d='M26 40 C24 23 31 12 45 9 C63 5 77 21 74 40 Q65 28 50 28 Q35 28 26 40 Z';
  if(typ==='crop')d='M26 39 C24 20 36 11 50 11 C65 11 76 22 74 39 L70 31 Q62 33 57 31 Q49 33 43 31 Q34 33 30 31 Z';
  if(typ==='flach')d='M26 40 L28 18 Q30 9 39 9 L62 9 Q72 9 73 22 L74 40 Q67 29 50 29 Q33 29 26 40 Z';
@@ -50,14 +56,14 @@ export function Haarform({index=0,weiblich=false,breite=24,farbe,hell,ebene='vor
  if(typ==='krause')d='M26 39 Q23 32 26 27 Q23 21 29 19 Q30 12 36 14 Q41 8 47 12 Q53 8 58 12 Q65 10 69 17 Q76 17 74 24 Q79 29 74 39 Q67 29 61 32 Q54 28 48 32 Q39 28 32 34 Z';
  if(typ==='lockenseite')d='M25 40 Q21 31 25 25 Q22 18 30 17 Q29 10 39 11 Q43 4 50 10 Q61 5 65 13 Q74 13 75 23 L74 40 Q67 29 60 30 Q54 25 49 30 Q43 27 38 34 Q31 30 25 40 Z';
  if(typ==='vorhang'||typ==='scheitellang')d='M25 44 C22 22 32 9 49 11 Q66 8 74 24 Q78 35 74 44 L68 38 Q58 35 50 22 Q43 36 32 39 Z';
- return <g transform={transform}>
+ return <g><g transform={transform}>
   <defs><linearGradient id={id+'farbe'} x1="0" y1="0" x2=".75" y2="1"><stop stopColor={hell}/><stop offset=".38" stopColor={farbe}/><stop offset="1" stopColor={farbe}/></linearGradient><linearGradient id={id+'fade'} x1="0" y1="0" x2="0" y2="1"><stop offset=".25" stopColor={farbe}/><stop offset="1" stopColor={farbe} stopOpacity=".22"/></linearGradient><clipPath id={id+'clip'}><path d={d}/></clipPath></defs>
-  {typ!=='licht'&&<path d={scalp} fill={['undercut','fade'].includes(typ)?'url(#'+id+'fade)':farbe} opacity={typ==='rasiert'?.42:1}/>}
-  {typ!=='rasiert'&&<path d={d} fill={'url(#'+id+'farbe)'}/>}
+  {typ!=='licht'&&<path d={scalp} stroke={farbe} strokeWidth={.65} fill={['undercut','fade'].includes(typ)?'url(#'+id+'fade)':farbe} opacity={typ==='rasiert'?.42:1}/>}
+  {typ!=='rasiert'&&<path d={d} stroke={typ==='licht'?farbe:'none'} strokeWidth={.5} strokeLinejoin="round" fill={'url(#'+id+'farbe)'}/>}
   <g clipPath={'url(#'+id+'clip)'} fill="none" stroke={hell} strokeLinecap="round" opacity=".27">
    {['cornrows','zoepfe'].includes(typ)?[-18,-10,-2,6,14,22].map(x=><path key={x} d={`M${50+x} 9 Q${43+x} 24 ${49+x} 41`} strokeWidth="1.5"/>):
     ['locken','krause','lockenseite','afro','volumen'].includes(typ)?Array.from({length:18},(_,i)=><path key={i} d={`M${27+(i%6)*8} ${18+Math.floor(i/6)*7} q-2 -3 2 -4 q4 0 3 3`} strokeWidth=".7"/>):
     typ!=='rasiert'&&typ!=='licht'&&[0,1,2].map(i=><path key={i} d={['slick','hoch','knoten'].includes(typ)?`M${32+i*12} 28 Q${27+i*12} 14 ${42+i*8} 8`:`M${29+i*3} ${27-i*4} Q48 ${12-i*2} ${70-i*4} ${23-i*3}`} strokeWidth=".8"/>)}
   </g>
- </g>;
+ </g></g>;
 }
