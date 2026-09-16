@@ -9,10 +9,15 @@ for(const still of [false,true]){
   await page.getByRole('checkbox',{name:'Animationen aus',exact:true}).setChecked(still);
   for(const rarity of ['normal','selten','aussen','unfass','welt','goat','hsv']){
    await page.getByRole('button',{name:rarity,exact:true}).click();
+   const stage=page.locator('.rs-enthuellungsraum');
+   const before=await stage.boundingBox();
    const text=page.getByText('Du erkennst den freien Raum, bevor alle anderen ihn sehen.',{exact:true});
    await expect(text).toBeVisible();
    const next=page.locator('button').filter({hasText:/^Weiter$/});
    await expect(next).toBeVisible({timeout:8000});
+   const after=await stage.boundingBox();
+   expect(Math.abs(after.y-before.y)).toBeLessThan(1);
+   await expect(page.locator('[data-wildcard] .band')).toContainText('Wildcard ·');
    const box=await text.boundingBox(),viewport=page.viewportSize();
    expect(box.x).toBeGreaterThanOrEqual(0);
    expect(box.x+box.width).toBeLessThanOrEqual(viewport.width+1);

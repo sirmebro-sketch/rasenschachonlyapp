@@ -199,9 +199,9 @@ Im Entwicklungsvermerk Quell- und Zielcommit sowie die Entscheidung nennen.
 
 ### Versionsschema
 
-`package.json` führt die Version als `major.minor.patch` (derzeit 35.187.0).
+`package.json` führt die Version als `major.minor.patch` (derzeit 35.188.0).
 Daraus rechnet `tools/android-version.cjs` den `versionCode`
-(`major*100000 + minor*100 + patch`, also 3518700) und schreibt ihn zusammen mit
+(`major*100000 + minor*100 + patch`, also 3518800) und schreibt ihn zusammen mit
 dem `versionName` nach `android/app/build.gradle`. Beide Felder sollen nie von
 Hand auseinanderlaufen. Die Version wird erhöht, wenn eine neue APK entsteht —
 reine Werkzeug- oder Dokumentationsänderungen erhöhen sie nicht.
@@ -277,7 +277,7 @@ Auswahlstrategien × sechs Vorsätze. Feste Seeds, keine Spielerprognose.
 `node tools/visuelle-vorschau.cjs` erzeugt `.preview/sichtprobe.html`, eine
 lokal im Browser öffnungsfähige Einzeldatei mit den echten React-Komponenten:
 Frisuren einschließlich Freischaltungen, Wildcards aller Stufen, Spielerkarten
-und Charaktererstellung. Testdaten und Speicheradapter sind isoliert; sie
+Packs, Sonderschuss und Charaktererstellung. Testdaten und Speicheradapter sind isoliert; sie
 schreiben keine Spielstände. Nicht Teil des Android-Bündels. Bei Codeänderungen
 neu erzeugen. Vorschau ist ein Prüfwerkzeug, kein vollständiger Spieltest.
 
@@ -314,3 +314,11 @@ Media Queries, wenn der Cloud-Browser seine Fenstergröße nicht ändern kann.
 Zwischen echtem Spiel und isolierter Galerie umschalten. Der Rahmen ist kein
 Android-Emulator. Wildcard-Browsertests decken alle sieben Seltenheiten mit
 und ohne Bewegung ab, einschließlich Abschlussbutton und Text im Sichtbereich.
+
+### App-Icon
+
+`artwork/app-icon.svg` ist die scharfe Vektorfassung. `python tools/app-icon.py`
+erzeugt daraus beziehungsweise aus derselben Geometrie das native Android-
+Foreground und die Legacy-PNGs in allen Dichten. Benötigt Python fonttools
+mit WOFF2-Unterstützung und Inkscape. Die Buchstaben stammen aus der bereits
+eingebetteten Spielschrift; keine externe Ersatzschrift.

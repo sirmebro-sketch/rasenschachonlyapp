@@ -1,5 +1,16 @@
 # Änderungen
 
+## 35.188.0 – Karten, Porträts und Bedienung
+
+- Wildcards beim Aufdecken und im Spielerpass teilen Kopfstreifen, Seltenheitsrahmen und Textur; kein Sprung beim Erscheinen von Weiter.
+- Weltklasse, GOAT und Nur der HSV mit eigenen Motiven und Aufdeckakzenten; HSV mit blau-weißer Folie und Rautenmotiv.
+- Gold- und Legendenpacks ohne graue Folienausschnitte: Ball und Beschriftung liegen sauber über der durchgehenden Folie.
+- Geschlossene Haarsilhouetten und an Kopfformen angepasste Bartkonturen; ähnliche Varianten deutlicher unterscheidbar, Freischaltungen erhalten.
+- Dezenter Startpfeil im Hauptmenü; Los geht’s und Zurück in der Charaktererstellung am unteren Bildschirmrand, Start mit ruhigem Puls.
+- Einstellungen in fünf verständliche Bereiche gegliedert, auch bei großer Anzeige bedienbar.
+- App-Icon als scharfe Vektorgeometrie samt Android-Ressourcen neu aufgebaut.
+- Sonderschuss im Spielfeld-Look mit deutlicherem Fußball; Timing und Belohnungen unverändert.
+
 ## 35.187.0 – Ruhemodus bei Wildcards
 
 - Rückseitenschimmer läuft im Ruhemodus nicht mehr und endet beim Aufdecken.

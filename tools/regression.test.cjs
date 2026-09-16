@@ -41,6 +41,7 @@ export const renderPortraits=()=>renderToStaticMarkup(<>{['m','w'].flatMap(g=>Ar
 export const renderEnd=p=>renderToStaticMarkup(<EndScreen p={p} onNew={()=>{}}/>);
 export const renderVerein=(v,aka)=>renderToStaticMarkup(<VereinScreen v={v} aka={aka} onAendern={()=>{}} onZurueck={()=>{}} onAbschluss={()=>{}}/>);
 export const renderPacks=(pool,reiter='laden',verein=null)=>renderToStaticMarkup(<Packladen vc={100} pool={pool} verein={verein} gratis={1} startpaket={false} startReiter={reiter} onKauf={()=>{}} onGratis={()=>{}} onStartpaket={()=>{}} onEinsetzen={()=>{}} onEntfernen={()=>{}} onVerkauf={()=>{}} onZurueck={()=>{}}/>);
+export const renderWildcard=card=>renderToStaticMarkup(<WildcardCard card={card} big aufdeckung/>);
 export const renderReveal=card=>renderToStaticMarkup(<WildcardEnthuellung card={card} onFertig={()=>{}}/>);
 export const renderShop=(spieler,schritt='training')=>renderToStaticMarkup(<VCLadenAnsicht wo="saison" vc={100} laden={{}} onKauf={()=>{}} spieler={spieler} schritt={schritt}/>);
 export const renderKarriereRueckblick=p=>renderToStaticMarkup(<KarriereRueckblick p={p} onFertig={()=>{}}/>);
@@ -158,10 +159,9 @@ test('Wildcard-Rückseite verrät weder Kartennamen noch Wirkung und deckt den H
 
 test('Wildcard-Vorderseite hat je Seltenheit genau eine Folie ohne alten Glanzstreifen',()=>{
  for(const [r,folie,stark] of [['normal',false,false],['selten',false,false],['aussen',false,false],['unfass',true,false],['welt',true,true],['goat',true,true]]){
-  const html=E.renderReveal({r,n:'Karte',t:'Wirkung'});
-  // Beide Kartenseiten werden gerendert, die Vorderseite ist anfangs verborgen.
-  // Nur auf der Rückseite darf der alte Streifen noch vorkommen.
-  assert.equal((html.match(/class="rs-band"/g)||[]).length,1,r);
+  const html=E.renderWildcard({r,n:'Karte',t:'Wirkung'});
+  // Gemeinsame Vorderseite: Spielerpass und Aufdeckung benutzen denselben Renderer.
+  assert.equal((html.match(/class="rs-band"/g)||[]).length,0,r);
   assert.equal((html.match(/class="rs-materialkante/g)||[]).length,folie?1:0,r);
   assert.equal(html.includes('rs-folie-stark'),stark,r);
  }

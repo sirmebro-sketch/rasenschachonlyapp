@@ -742,3 +742,37 @@ Diagnose bestätigt: die verbleibende Meldung ist ausschließlich der
 background-color-Übergang des Weiter-Buttons (keine Kartenbewegung). Der Test
 erlaubt deshalb Farb-Transitions als Bedienfeedback, prüft aber weiterhin
 alle CSS-Animationen und sonstigen Transitions. Kein App-Code geändert.
+
+## Karten, Porträts und Bedienung – Codex, 16.09.2026
+
+Basis 210dada (35.187), Remote und offene PRs erneut geprüft: keine fremden
+Änderungen. Alle zehn Punkte der Nutzerliste bearbeitet; bisherige Korrekturen
+waren teilweise vorhanden, die gemeldeten Restfehler aber weiterhin relevant.
+Version 35.188.0 / 3518800.
+
+Wildcards verwenden dieselbe Vorderseite mit Kopfstreifen, Seltenheitsrahmen
+und permanenter Prägung im Pass und beim Aufdecken. Reservierter Fußbereich
+verhindert Positionssprung bei Weiter. Welt/GOAT/HSV erhalten eigene Bühne,
+HSV blau-weiße Folie. Packfolie ohne grobe Ausschnittmaske; Druck separat darüber.
+
+Porträt-Zuarbeit abgenommen: geschlossene Kopfhaarfläche, differenzierte Formen,
+Bartkonturen aus den tatsächlichen Kieferdaten statt angenäherter Kontur.
+Kopfschatten zusätzlich auf Kopf geclippt. Breite, schmale, kantige und zarte
+Köpfe samt hellen Haarfarben anhand gerenderter Bögen angesehen. Bestehende
+Merkmalnummern und Freischaltungen erhalten. Kein Anspruch, jede mögliche
+Kombination ästhetisch abschließend abgenommen zu haben.
+
+Einstellungs-Zuarbeit abgenommen und bei 320 Pixeln mit XL-Anzeige nachgebessert:
+Kopfzeile, Abschnittsbänder und Schalterreihen umbrechen innerhalb ihrer Breite.
+Fünf Bereiche, bestehende Speicher- und Bestätigungslogik erhalten. Charakter-
+Startleiste außerhalb des transformierten fade-Containers, damit position:fixed
+wirklich am Bildschirm haftet; im echten Browser geprüft. Dezenter Menüpfeil.
+Icon-Geometrie vektoriell neu aufgebaut, native und Legacy-Ressourcen enthalten.
+Sonderschuss zuletzt optisch überarbeitet, Spielmechanik unverändert.
+
+Sichtprüfung im verwalteten Browser: kompakte Erstellung und Fußleiste bei320,
+Einstellungen XL bei320, Packfolie, HSV-Aufdeckung, Sonderschuss. Automatische
+Browserprüfungen um stabile Aufdeckposition, Startleiste, gespeicherte Optionen
+und einmaligen Sonderschuss erweitert. 105 Node-Tests, Web-Build und Capacitor-
+Sync erfolgreich. GitHub-Browser- und Android-Build bei Veröffentlichung prüfen.
+Android-Launcher, native Touchbedienung und Effektleistung bleiben Geräteprüfung.

@@ -1,3 +1,4 @@
+import { WildcardPraegung, WildcardBuehne, WILDCARD_CSS } from "./wildcardoptik.jsx";
 import { Bartform } from "./bartformen.jsx";
 import { AufdeckLicht, AUFDECK_CSS } from "./aufdeckeffekte.jsx";
 import { Haarform } from "./haarformen.jsx";
@@ -30,8 +31,8 @@ import { machAkademie } from "./akademie.js";
    ================================================================ */
 
 const NAME = "Rasenschach XI";
-const VERSION = "35.187";
-const VERSION_INFO = "Wildcard-Rückseiten respektieren den Ruhemodus; Aufdeckungen auf schmalen Bildschirmen geprüft.";
+const VERSION = "35.188";
+const VERSION_INFO = "Einheitliche Wildcards, sauberere Porträts, neue Einstellungen und ein klarerer Sonderschuss.";
 
 /* Fester Zufallsstrom aus einer Zeichenkette — damit Angebote des eigenen
    Vereins nicht bei jedem Klick anders aussehen.                        */
@@ -2964,7 +2965,7 @@ function Avatar({ seed = 1, zuege, club, size = 72, ring, g, nat, meta }) {
           + (50 + kj) + "," + (kinnY - 6) + " C" + (50 + kj) + "," + (kinnY - 3) + " "
           + (50 + kj * .7) + "," + (kinnY - 1) + " " + (50 + kj * .5) + "," + (kinnY - 1)
           + " C" + (50 + kj * .8) + "," + (kinnY - 9) + " " + (50 + kopf.b - 7) + ",30 "
-          + (50 + kopf.b - 10) + ",16 Z"} fill={schatten} opacity=".2" />
+          + (50 + kopf.b - 10) + ",16 Z"} clipPath={modern ? "url(#kf"+kennung+")" : undefined} fill={schatten} opacity=".2" />
 
         {/* Wangenknochen / Kinngrübchen */}
         {z.wangen === 1 && <ellipse cx="50" cy={kinnY - 6} rx="3.6" ry="2" fill={schatten} opacity=".55" />}
@@ -7258,7 +7259,7 @@ function useSchriftBefund() {
   return befund;
 }
 
-const CSS = SCHRIFTEN + AUFDECK_CSS + `
+const CSS = SCHRIFTEN + AUFDECK_CSS + WILDCARD_CSS + `
 .fl{
  /* Grund: dunkles Zeitungspapier — die Nachtausgabe. Vorher Rasen bei Nacht,
     davor ein Blauschwarz. Warm, weil der Karton der Sammelkarten (#E9E2D3)
@@ -12202,7 +12203,7 @@ function WildcardEnthuellung({ card, onFertig }) {
           Beben und Schweben verschieben nur, gedreht wird eine Ebene
           tiefer — so streiten sich nie zwei Vorschriften um „transform". */}
       <div className="rs-enthuellungsraum" style={{ perspective: 1000, zIndex: 3, position: "relative", margin: "12px 0" }}>
-        {auf && pomp >= .2 && <AufdeckLicht farbe={r.col} stark={pomp >= .8} still={RUHE}/>}
+        {auf && pomp >= .2 && <AufdeckLicht farbe={r.col} stark={pomp >= .8} still={RUHE}/>}{auf && <WildcardBuehne art={card.r} still={RUHE}/>}
 
         <div style={{ animation: RUHE ? "none"
             : !auf && gross ? "rs-beben .65s ease-in-out infinite" : "none",
@@ -12225,43 +12226,20 @@ function WildcardEnthuellung({ card, onFertig }) {
               {!RUHE && !auf && <span className="rs-band"><i /></span>}
             </div>
 
-            {/* Vorderseite. Die Einblendung der Zeilen hängt an „auf" und
-                wird danach nicht mehr angefasst — sonst begänne sie von
-                vorn und der Text wäre kurz weg. */}
-            <div aria-hidden={!auf} style={{ position: "absolute", inset: 0,
-              visibility: auf ? "visible" : "hidden",
-              backfaceVisibility: "hidden", WebkitBackfaceVisibility: "hidden",
-              transform: "rotateY(180deg)", borderRadius: 0, overflow: "hidden",
-              border: (1 + Math.round(pomp * 3)) + "px solid " + r.col,
-              background: "linear-gradient(140deg," + r.col + (gross ? "4E" : "38") + " 0%,var(--pan) 62%)",
-              boxShadow: pomp >= .2 ? "0 12px 40px #0008, 0 0 24px " + r.col + "35" : "0 12px 40px #0008",
-              padding: "16px 18px", display: "flex", flexDirection: "column", justifyContent: "center" }}>
-              {/* Folie für die obersten Stufen. Liegt INNERHALB der Vorderseite und
-                  fasst kein transform an — die drei Bewegungsebenen bleiben unberührt. */}
-              {/* 35.183: Ein Materialeffekt statt Folie plus altem rs-band.
-                  Mittlere Seltenheit sanfter, höchste Stufen mit kräftiger Holografie. */}
-              {pomp >= .5 && (
-                <KartenEffekt stark={pomp >= .8} still={RUHE} />)}
-              <div className={auf && !RUHE ? "eb rs-auf" : "eb"}
-                style={{ color: r.col, letterSpacing: ".14em", animationDelay: "300ms",
-                  position: "relative", zIndex: 1 }}>
-                {auf ? r.name.toUpperCase() : null}</div>
-              <div className={auf && !RUHE ? "d rs-auf" : "d"}
-                style={{ fontSize: "clamp(25px,6.4vw,34px)", lineHeight: 1.08, marginTop: 4,
-                  animationDelay: "390ms" }}>{auf ? card.n : null}</div>
-              <p className={auf && !RUHE ? "rs-auf" : ""}
-                style={{ fontSize: 14, color: "var(--tx)", marginTop: 10, lineHeight: 1.5,
-                  animationDelay: "480ms" }}>{auf ? card.t : null}</p>
+            <div aria-hidden={!auf} style={{position:"absolute",inset:0,visibility:auf?"visible":"hidden",backfaceVisibility:"hidden",WebkitBackfaceVisibility:"hidden",transform:"rotateY(180deg)"}}>
+              {auf && <WildcardCard card={card} big aufdeckung />}
             </div>
           </div>
         </div>
       </div>
 
+      <div style={{height:44,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
       {bereit
         ? <button className="btn sm rs-auf" style={{ zIndex: 3 }} onClick={e => { e.stopPropagation(); onFertig && onFertig(); }} onKeyDown={e => e.stopPropagation()}>
             <span className="m" style={{ fontSize: 11 }}>Weiter</span></button>
         : <div className="m" style={{ fontSize: 10.5, color: "var(--mu)", opacity: .55, zIndex: 3,
             letterSpacing: ".12em" }}>{auf ? "…" : "wird aufgedeckt"}</div>}
+      </div>
     </div>
   );
   // Außerhalb transformierter Spielbereiche: deckt den gesamten Bildschirm ab.
@@ -12365,13 +12343,14 @@ function Boosterpack({ stufe, breit }) {
   const fl = KARTEN.flaeche(stufe);
   const glanz = stufe === "gold" || stufe === "legende";
   const b = breit || 64;
+  const bpId="bp"+React.useId().replace(/[^a-zA-Z0-9_-]/g,"");
   return (
     <div aria-hidden style={{ width: b, height: Math.round(b * 1.42),
       position: "relative", flexShrink: 0 }}>
       <svg viewBox="0 0 64 91" width={b} height={Math.round(b * 1.42)}
         style={{ display: "block", overflow: "visible" }}>
         <defs>
-          <linearGradient id={"bp" + stufe} x1="0" y1="0" x2=".4" y2="1">
+          <linearGradient id={bpId} x1="0" y1="0" x2=".4" y2="1">
             <stop offset="0" stopColor={fl.kante} />
             <stop offset=".45" stopColor={fl.oben} />
             <stop offset="1" stopColor={fl.unten} />
@@ -12381,11 +12360,15 @@ function Boosterpack({ stufe, breit }) {
             Zeichen, an dem man ein Pack erkennt, noch vor der Farbe. */}
         <path d="M2 8 L6 4 L10 8 L14 4 L18 8 L22 4 L26 8 L30 4 L34 8 L38 4
                  L42 8 L46 4 L50 8 L54 4 L58 8 L62 4 L62 87 L2 87 Z"
-          fill={"url(#bp" + stufe + ")"} stroke={st.farbe} strokeWidth="2"
+          fill={"url(#" + bpId + ")"} stroke={st.farbe} strokeWidth="2"
           strokeLinejoin="round" />
         {/* Die Naht unter der Aufreisskante. */}
         <path d="M4 14 H60" stroke={st.farbe} strokeWidth="1" opacity=".55"
           strokeDasharray="3 3" />
+
+      </svg>
+      {glanz && <KartenEffekt form="pack" stark={stufe === "legende"} still={RUHE}/>}
+      <svg viewBox="0 0 64 91" width={b} height={Math.round(b*1.42)} style={{position:"absolute",inset:0,zIndex:2,pointerEvents:"none"}}>
         {/* Das Zeichen: ein Ball, weil es ein Fussballspiel ist. */}
         <g transform="translate(20 34) scale(1)">
           <path d={MERKSYMBOL.ball} fill={st.farbe} opacity=".9"
@@ -12395,20 +12378,6 @@ function Boosterpack({ stufe, breit }) {
           style={{ font: "700 8px 'Barlow Condensed', sans-serif",
             letterSpacing: ".12em" }}>{st.n.toUpperCase()}</text>
       </svg>
-      {/* DER SCHMALE SCHIMMER, wie bei den Elfkarten (berichtigt 35.94, von
-          Kevin gemeldet: „die Holo-Animation der zu kaufenden Packs sieht
-          kaputt aus, irgendwie abgebrochen").
-          Zwei Fehler auf einmal, beide dieselben wie in 35.90:
-            * `.holo` ohne `eng` ist 150 % der ELEMENTBREITE breit. Auf einem
-              64 px schmalen Pack deckt der Farbbogen alles auf einmal ab —
-              er scheint zu stehen statt zu wandern.
-            * der rechteckige `clipPath` schnitt quer durch die GEZACKTE
-              Aufreisskante. Genau dort wirkt es „abgebrochen": der Schimmer
-              endet an einer geraden Linie, die im Pack nicht existiert.
-          Jetzt `eng` und ein Zuschnitt, der die Zacken auslaesst — er beginnt
-          UNTER der Naht, wo das Pack wirklich eine gerade Kante hat. */}
-      {glanz && !RUHE && (
-        <KartenEffekt form="pack" stark={stufe === "legende"} />)}
     </div>
   );
 }
@@ -13064,31 +13033,32 @@ function kartenKennung(k) {
   return n || 1;
 }
 
-function WildcardCard({ card, big, onReroll, rerollLeft, rerollN }) {
+function WildcardCard({ card, big, onReroll, rerollLeft, rerollN, aufdeckung=false }) {
   if (!card) return null;
   const r = RARITY[card.r] || RARITY.normal;
   const nur = card.pos && card.pos.length
     ? card.pos.map((k) => (POS[k] ? POS[k].kurz || k : k)).join(", ") : null;
   return (
-    <div className="pan pad klebe winkel wkarte" style={{ borderColor: r.col,
+    <div className={"pan pad winkel wkarte"+(aufdeckung?"":" klebe")} data-wildcard={card.r} style={{ borderColor: r.col, borderWidth:1, boxSizing:"border-box", height:aufdeckung?"100%":undefined, display:aufdeckung?"flex":undefined, flexDirection:"column", justifyContent:"flex-start", isolation:"isolate",
       /* Der Verlauf liegt AUF einer deckenden Fläche. Vorher blendete er bei
          62 % nach var(--pan) — die erste Stufe hatte aber nur 12 % Deckung,
          also schien der Untergrund durch. Auf dunklem Grund fiel das nie auf;
          seit die Wildcard im Trainingsschritt auf hellem Formularpapier liegt
          (34.31), wusch das die Karte aus. */
       background: "linear-gradient(140deg," + r.col + "1F 0%,transparent 62%), var(--pan)",
-      transform: RUHE ? "none" : "rotate(" + winkel(card.n) + ")" }}>
+      transform: RUHE || aufdeckung ? "none" : "rotate(" + winkel(card.n) + ")" }}>
       {/* Ein Streifen hält die eine Karte fest, die dich die ganze Laufbahn begleitet. */}
-      <span className="streifen" aria-hidden="true" />
+      {!aufdeckung && <span className="streifen" aria-hidden="true" />}
+      <WildcardPraegung art={card.r}/>
       {/* Seltenheit als Material: die obersten Stufen bekommen einen Folienrand. */}
-      {RARITY[card.r] && (RARITY[card.r].w === 0 || RARITY[card.r].w <= 8) && (
-        <KartenEffekt stark still={RUHE} />)}
+      {RARITY[card.r] && (["unfass","welt","goat","hsv"].includes(card.r)) && (
+        <KartenEffekt stark={card.r!=="unfass"} still={RUHE} hsv={card.r==="hsv"} />)}
       <div className="band" style={{ background: r.col }}>
         <span>Wildcard · {r.name}</span>
         {nur && <span style={{ letterSpacing: ".08em" }}>nur {nur}</span>}
       </div>
       <div className="d" style={{ fontSize: big ? 24 : 18, color: r.col }}>{card.n}</div>
-      <p style={{ fontSize: big ? 13 : 11.5, color: "var(--mu)", marginTop: 4 }}>{card.t}</p>
+      <p style={{ fontSize: big ? 13 : 11.5, color: "var(--tx)", marginTop: 4 }}>{card.t}</p>
       {onReroll && (
         <div style={{ marginTop: 10 }}>
           {rerollLeft ? (
@@ -13261,14 +13231,14 @@ function Sonderschuss({ grund, ruhe, onFertig }) {
       alignItems: "center", justifyContent: "center", padding: 14 }}
       role="dialog" aria-modal="true" aria-label="Sonderschuss" ref={dlgRahmen} tabIndex={-1}>
     <div className="pan pad rs-rein" style={{ borderColor: "var(--go)",
-      maxWidth: 420, width: "100%", boxShadow: "0 10px 40px rgba(0,0,0,.6)" }}>
+      maxWidth: 420, width: "100%", borderTopWidth:4, boxShadow: "0 10px 40px rgba(0,0,0,.6)" }}>
       <div className="eb" style={{ color: "var(--go)" }}>Sonderschuss</div>
       <div className="m" style={{ fontSize: 11, color: "var(--mu)", marginTop: 3 }}>
         {grund} — dafür gibt es einen Versuch. Triff die Mitte.
       </div>
 
-      <div style={{ position: "relative", height: 44, marginTop: 12,
-        display: "flex", borderRadius: 3, overflow: "hidden" }}>
+      <div style={{ position: "relative", height: 104, marginTop: 18,
+        display: "flex", border:"1px solid var(--ln2)", background:"#173c2c", overflow: "hidden" }}>
         {SCHUSS_FELDER.map((f, i) => (
           /* VOLL SICHTBAR VOR DEM SCHUSS (berichtigt 35.77). Der erste Entwurf
              dämpfte alle Segmente auf 45 % und hob erst das getroffene hervor
@@ -13278,24 +13248,16 @@ function Sonderschuss({ grund, ruhe, onFertig }) {
              blasser Schleier auf hellem Karton. Im Bild gesehen.
              Jetzt andersherum: vorher alle voll, nachher alle bis auf das
              getroffene zurückgenommen. */
-          <div key={i} style={{ flex: f.w, background: f.farbe,
+          <div key={i} style={{ flex: f.w, background: "linear-gradient(to top,"+f.farbe+" 0 16px,transparent 16px)",
             opacity: !halt ? 1 : halt.f === f ? 1 : .28,
             borderRight: i < SCHUSS_FELDER.length - 1 ? "1px solid var(--bg)" : "none" }} />))}
-        {/* Der Ball. Bei abgeschalteter Bewegung steht er still in der Mitte. */}
-        {/* EIN RICHTIGER FUSSBALL, 16 statt 20 px (35.78, Kevins Wunsch:
-            „der Ball könnte noch einen Tick kleiner sein und es wäre voll,
-            wenn der aussehen würde wie ein klassischer Fußball").
-            Als SVG gezeichnet: weißes Rund, ein Fünfeck in der Mitte, drei
-            angeschnittene am Rand — das reicht, damit man bei 16 px einen
-            Fußball erkennt. Mehr Flächen wären bei dieser Größe Matsch.
-            OHNE `calc`: jsdoms CSS-Parser bricht an `calc(47.1% - 10px)` ab,
-            und die Ablaufprüfung liest die Stile des ganzen Dokuments. Ein
-            negativer Rand rechnet dasselbe und versteht jeder. */}
-        <svg aria-hidden ref={ball} viewBox="0 0 32 32" width="16" height="16"
-          style={{ position: "absolute", top: 14,
-            left: ((halt ? halt.bei : stelle.current) * 100) + "%", marginLeft: -8,
+        <div aria-hidden style={{position:"absolute",inset:"10px 8px 26px",border:"1px solid #d8e4d966",pointerEvents:"none"}}><span style={{position:"absolute",left:"50%",top:0,bottom:0,borderLeft:"1px solid #d8e4d988"}}/><span style={{position:"absolute",left:"50%",top:"50%",width:32,height:32,marginLeft:-16,marginTop:-16,border:"1px solid #d8e4d988",borderRadius:"50%"}}/></div>
+        {/* Ballmittelpunkt und Timing unverändert; größere klare Lederfelder. */}
+        <svg aria-hidden ref={ball} viewBox="0 0 32 32" width="28" height="28"
+          style={{ position: "absolute", top: 32,
+            left: ((halt ? halt.bei : stelle.current) * 100) + "%", marginLeft: -14,
             filter: "drop-shadow(0 1px 2px rgba(0,0,0,.55))" }}>
-          <circle cx="16" cy="16" r="15" fill="#f4f1ea" stroke="#14171a" strokeWidth="2" />
+          <circle cx="16" cy="16" r="15" fill="#f4f1ea" stroke="#14171a" strokeWidth="1.2" /><path d="M16 7V1M23 12L30 9M20 20L25 28M12 20L7 28M9 12L2 9" stroke="#525851" strokeWidth=".8" fill="none"/>
           <path d="M16 7 L23 12 L20 20 L12 20 L9 12 Z" fill="#14171a" />
           <path d="M16 1 L20 4 L16 6 L12 4 Z" fill="#14171a" opacity=".85" />
           <path d="M1 18 L6 15 L8 21 L4 24 Z" fill="#14171a" opacity=".85" />
@@ -14330,77 +14292,48 @@ function Optionen({ ruhe, aufRuhe, onBackup, onZu, onAnleitung, hall, aka, laeuf
   const merken = (k, v) => { schreibe(k, v, "eine Einstellung"); };
 
   return (
-    <div className="fade" style={{ maxWidth: 520, margin: "0 auto" }}>
-      <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 8 }}>
-        <div className="d" style={{ fontSize: 26 }}>Optionen</div>
+    <div className="fade optionen" style={{ maxWidth: 560, margin: "0 auto" }}>
+      <style>{`
+        .optionen .optionen-gruppe { margin-top: 16px; }
+        .optionen .optionen-gruppe > .band { justify-content: space-between; margin: 0; padding: 8px 11px; }
+        .optionen .optionen-gruppe .band small { font: inherit; opacity: .65; letter-spacing: .08em; }
+        .optionen .optionen-gruppe .pad { padding: 14px; }
+        .optionen .optionen-gruppe .btn { min-height: 44px; max-width: 100%; white-space: normal; overflow-wrap: anywhere; }
+        .optionen .optionen-kopf { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+        .optionen .optionen-kopf > div { min-width: 0; max-width: 100%; }
+        .optionen .optionen-kopf h1 { overflow-wrap: anywhere; }
+        .optionen .optionen-kopf > button { flex: 0 0 auto; }
+        .optionen .optionen-auswahl { display: flex; gap: 6px; margin-top: 6px; flex-wrap: wrap; }
+        .optionen .optionen-auswahl > button { flex: 1 1 80px !important; min-width: 0; padding-left: 8px; padding-right: 8px; }
+        .optionen .zellen > div { min-width: 0; overflow-wrap: anywhere; }
+        .optionen .optionen-schalter { text-align: left; border-bottom: 1px solid var(--ln) !important; }
+        .optionen .inhalt { gap: 10px; }
+        .optionen .inhalt .d { min-width: 0; overflow-wrap: anywhere; }
+        .optionen .optionen-schalter .wert { flex-shrink: 0; font-size: 12px; border: 1px solid var(--ln2); padding: 3px 7px; }
+        .optionen .optionen-schalter[aria-pressed="true"] .wert { color: var(--go); border-color: var(--go); }
+        .optionen .btn:focus-visible { outline: 2px solid var(--go); outline-offset: 3px; }
+        @media (max-width: 360px) { .optionen .optionen-gruppe .pad { padding: 11px; } }
+      `}</style>
+      <div className="optionen-kopf">
+        <div><div className="eb" style={{ color: "var(--go)", marginBottom: 4 }}>Deine Ausgabe</div><h1 className="d" style={{ fontSize: 28, margin: 0 }}>Einstellungen</h1></div>
         <button className="btn sm" onClick={onZu}>Zurück</button>
       </div>
 
-      <div className="pan" style={{ marginTop: 14 }}>
-        <div className="band matt"><span>Spiel</span></div>
-        <div className="pad" style={{ paddingTop: 9 }}>
-          <span className="eb">Spielweise</span>
-          <div style={{ display: "flex", gap: 6, marginTop: 6 }}>
-            {[[false, "Karriere"], [true, "Speedmodus"]].map(([v, n]) => (
-              <button key={n} className={"btn sm" + (speed === v ? " on" : "")} style={{ flex: 1 }}
-                onClick={() => { setSpeedmodus(v); setSpeed(v);
-                  merken("rasenschach:speed", v ? "1" : "0"); haptik("tipp"); }}>{n}</button>))}
-          </div>
-          <p style={{ fontSize: 11.5, color: "var(--mu)", marginTop: 6 }}>
-            {speed
-              ? "Ein Ereignis je Saison, Training und Anschaffungen laufen von selbst."
-              : "Alles selbst entscheiden: Training, Einkäufe, Gehaltspoker."}</p>
-
-
-          <div style={{ borderTop: "1px solid var(--ln)", paddingTop: 11, marginTop: 11 }}>
-            <span className="eb">Schwierigkeit</span>
-            <div style={{ display: "flex", gap: 6, marginTop: 6 }}>
-              {MODES.map((m) => (
-                <button key={m.id} className={"btn sm" + (schwer === m.id ? " on" : "")} style={{ flex: 1 }}
-                  onClick={() => { setSchwierigkeit(m.id); setSchwer(m.id);
-                    merken("rasenschach:schwer", m.id); haptik("tipp"); }}>{m.name}</button>))}
-            </div>
-            <p style={{ fontSize: 11.5, color: "var(--mu)", marginTop: 6 }}>
-              {(MODES.find((m) => m.id === schwer) || MODES[1]).desc}</p>
-          </div>
-
-          {laeuft && (
-            <div className="up pad" style={{ marginTop: 11, borderLeft: "3px solid var(--go)" }}>
-              <div className="m" style={{ fontSize: 11, color: "var(--mu)" }}>
-                Eine Laufbahn läuft gerade. Sie behält, womit sie gestartet ist —
-                die Änderung greift erst bei der nächsten.
-              </div>
-            </div>)}
-        </div>
-      </div>
-
-      <div className="pan" style={{ marginTop: 12 }}>
-        <div className="band matt"><span>Darstellung</span></div>
+      <p className="m" style={{ color: "var(--mu)", fontSize: 12, lineHeight: 1.6, margin: "12px 0 18px" }}>
+        Passe deine Ausgabe an. Änderungen werden direkt gespeichert.
+      </p>
+      <section className="pan optionen-gruppe" aria-label="Darstellung">
+        <div className="band matt"><span>Darstellung</span><small aria-hidden="true">01</small></div>
         <div className="pad" style={{ paddingTop: 4 }}>
-          <button className="btn" style={{ border: 0, padding: "11px 0" }}
+          <button className="btn optionen-schalter" aria-pressed={!ruhe} aria-label="Animationen" style={{ border: 0, padding: "11px 0" }}
             onClick={() => { const n = !ruhe; aufRuhe(n); merken("rasenschach:ruhe", n ? "1" : "0"); }}>
             <span className="inhalt">
-              <span className="d" style={{ fontSize: 15 }}>Bewegung</span>
+              <span className="d" style={{ fontSize: 15 }}>Animationen</span>
               <span className="punkte" />
-              <span className="wert">{ruhe ? "ruhig" : "an"}</span>
+              <span className="wert">{ruhe ? "reduziert" : "an"}</span>
             </span>
             <span className="m" style={{ fontSize: 10.5, color: "var(--mu)", display: "block", marginTop: 2 }}>
-              {ruhe ? "Karten drehen und blenden nicht mehr" : "Enthüllung, Wenden und Folie laufen"}</span>
-          </button>
-
-          <button className="btn" style={{ border: 0, padding: "11px 0", opacity: wachGeht ? 1 : .45 }}
-            disabled={!wachGeht}
-            onClick={() => { const n = !wach; setWach(n); setWachAn(n);
-              merken("rasenschach:wach", n ? "1" : "0"); haptik("tipp"); }}>
-            <span className="inhalt">
-              <span className="d" style={{ fontSize: 15 }}>Bildschirm anlassen</span>
-              <span className="punkte" />
-              <span className="wert">{!wachGeht ? "nicht möglich" : wach ? "an" : "aus"}</span>
-            </span>
-            <span className="m" style={{ fontSize: 10.5, color: "var(--mu)", display: "block", marginTop: 2 }}>
-              {!wachGeht
-                ? "Dieses Gerät bietet die Bildschirmsperre nicht an"
-                : "Der Bildschirm geht während langer Simulationen nicht aus"}</span>
+              {ruhe ? "Ruhige Karten ohne Folienbewegung und Aufdeckanimationen" : "Aufdecken, Kartenbewegung und schimmernde Folie"}</span>
           </button>
 
           <div style={{ borderTop: "1px solid var(--ln)", paddingTop: 11, marginTop: 4 }}>
@@ -14413,7 +14346,7 @@ function Optionen({ ruhe, aufRuhe, onBackup, onZu, onAnleitung, hall, aka, laeuf
               {[["XS", "Sehr klein"], ["S", "Klein"], ["M", "Normal"],
                 ["L", "Groß"], ["XL", "Sehr groß"]].map(([kurz, lang], i) => (
                 <button key={kurz} className={"btn sm" + (stufe === i ? " on" : "")}
-                  style={{ flex: 1, minWidth: 0, padding: "6px 2px" }} aria-label={"Anzeigegröße " + lang}
+                  style={{ flex: 1, minWidth: 0, padding: "6px 2px" }} aria-label={"Anzeigegröße " + lang} aria-pressed={stufe === i}
                   onClick={() => { setTextstufe(i); setStufe(i); merken("rasenschach:text", String(i)); haptik("tipp"); }}>
                   <span style={{ fontSize: [10.5, 11.5, 12.5, 13.5, 14.5][i] }}>{kurz}</span>
                 </button>))}
@@ -14440,6 +14373,7 @@ function Optionen({ ruhe, aufRuhe, onBackup, onZu, onAnleitung, hall, aka, laeuf
                   {[["keiner", { n: "Keiner", c: "var(--ln2)", w: 1 }], ...offen.map((k) => [k, RAHMEN[k]])]
                     .map(([k, r]) => (
                     <button key={k} className={"btn sm" + (jetzt === k ? " on" : "")}
+                      aria-pressed={jetzt === k}
                       onClick={() => { aufRahmen && aufRahmen(k); haptik("tipp"); }}
                       style={{ display: "flex", alignItems: "center", gap: 6 }}>
                       <span aria-hidden="true" style={{ width: 14, height: 14, flexShrink: 0,
@@ -14452,12 +14386,12 @@ function Optionen({ ruhe, aufRuhe, onBackup, onZu, onAnleitung, hall, aka, laeuf
               </div>);
           })()}
         </div>
-      </div>
+      </section>
 
-      <div className="pan" style={{ marginTop: 12 }}>
-        <div className="band matt"><span>Rückmeldung</span></div>
+      <section className="pan optionen-gruppe" aria-label="Bedienung">
+        <div className="band matt"><span>Bedienung</span><small aria-hidden="true">02</small></div>
         <div className="pad" style={{ paddingTop: 4 }}>
-          <button className="btn" style={{ border: 0, padding: "11px 0" }}
+          <button className="btn optionen-schalter" aria-pressed={vib} aria-label="Vibration" style={{ border: 0, padding: "11px 0" }}
             onClick={() => { const n = !vib; setVibration(n); setVib(n);
               merken("rasenschach:vib", n ? "1" : "0"); if (n) haptik("wahl"); }}>
             <span className="inhalt">
@@ -14468,15 +14402,68 @@ function Optionen({ ruhe, aufRuhe, onBackup, onZu, onAnleitung, hall, aka, laeuf
             <span className="m" style={{ fontSize: 10.5, color: "var(--mu)", display: "block", marginTop: 2 }}>
               Kurzes Brummen bei Entscheidungen</span>
           </button>
-        </div>
-      </div>
+          <button className="btn optionen-schalter" aria-pressed={wach} aria-label="Bildschirm anlassen" style={{ border: 0, padding: "11px 0", opacity: wachGeht ? 1 : .45 }}
+            disabled={!wachGeht}
+            onClick={() => { const n = !wach; setWach(n); setWachAn(n);
+              merken("rasenschach:wach", n ? "1" : "0"); haptik("tipp"); }}>
+            <span className="inhalt">
+              <span className="d" style={{ fontSize: 15 }}>Bildschirm anlassen</span>
+              <span className="punkte" />
+              <span className="wert">{!wachGeht ? "nicht möglich" : wach ? "an" : "aus"}</span>
+            </span>
+            <span className="m" style={{ fontSize: 10.5, color: "var(--mu)", display: "block", marginTop: 2 }}>
+              {!wachGeht
+                ? "Dieses Gerät bietet die Bildschirmsperre nicht an"
+                : "Der Bildschirm geht während langer Simulationen nicht aus"}</span>
+          </button>
 
-      <div className="pan" style={{ marginTop: 12 }}>
-        <div className="band matt"><span>Daten</span></div>
+        </div>
+      </section>
+
+      <section className="pan optionen-gruppe" aria-label="Spielweise">
+        <div className="band matt"><span>Spielweise</span><small aria-hidden="true">03</small></div>
+        <div className="pad" style={{ paddingTop: 9 }}>
+          <span className="eb">Spielweise</span>
+          <div className="optionen-auswahl">
+            {[[false, "Karriere"], [true, "Speedmodus"]].map(([v, n]) => (
+              <button key={n} className={"btn sm" + (speed === v ? " on" : "")} style={{ flex: 1 }} aria-pressed={speed === v}
+                onClick={() => { setSpeedmodus(v); setSpeed(v);
+                  merken("rasenschach:speed", v ? "1" : "0"); haptik("tipp"); }}>{n}</button>))}
+          </div>
+          <p style={{ fontSize: 11.5, color: "var(--mu)", marginTop: 6 }}>
+            {speed
+              ? "Ein Ereignis je Saison, Training und Anschaffungen laufen von selbst."
+              : "Alles selbst entscheiden: Training, Einkäufe, Gehaltspoker."}</p>
+
+
+          <div style={{ borderTop: "1px solid var(--ln)", paddingTop: 11, marginTop: 11 }}>
+            <span className="eb">Schwierigkeit</span>
+            <div className="optionen-auswahl">
+              {MODES.map((m) => (
+                <button key={m.id} className={"btn sm" + (schwer === m.id ? " on" : "")} style={{ flex: 1 }} aria-pressed={schwer === m.id}
+                  onClick={() => { setSchwierigkeit(m.id); setSchwer(m.id);
+                    merken("rasenschach:schwer", m.id); haptik("tipp"); }}>{m.name}</button>))}
+            </div>
+            <p style={{ fontSize: 11.5, color: "var(--mu)", marginTop: 6 }}>
+              {(MODES.find((m) => m.id === schwer) || MODES[1]).desc}</p>
+          </div>
+
+          {laeuft && (
+            <div className="up pad" style={{ marginTop: 11, borderLeft: "3px solid var(--go)" }}>
+              <div className="m" style={{ fontSize: 11, color: "var(--mu)" }}>
+                Eine Laufbahn läuft gerade. Sie behält, womit sie gestartet ist —
+                die Änderung greift erst bei der nächsten.
+              </div>
+            </div>)}
+        </div>
+      </section>
+
+      <section className="pan optionen-gruppe" aria-label="Spielstand">
+        <div className="band matt"><span>Spielstand</span><small aria-hidden="true">04</small></div>
         <div className="pad" style={{ paddingTop: 4 }}>
           <button className="btn" style={{ border: 0, padding: "11px 0" }} onClick={onBackup}>
             <span className="inhalt">
-              <span className="d" style={{ fontSize: 15 }}>Sicherung</span>
+              <span className="d" style={{ fontSize: 15 }}>Sichern & wiederherstellen</span>
               <span className="punkte" />
               <span className="wert">{hall.length} Laufbahnen</span>
             </span>
@@ -14521,10 +14508,10 @@ function Optionen({ ruhe, aufRuhe, onBackup, onZu, onAnleitung, hall, aka, laeuf
               </div>)}
           </div>
         </div>
-      </div>
+      </section>
 
-      <div className="pan" style={{ marginTop: 12 }}>
-        <div className="band matt"><span>Über</span></div>
+      <section className="pan optionen-gruppe" aria-label="Hilfe & Ausgabe">
+        <div className="band matt"><span>Hilfe & Ausgabe</span><small aria-hidden="true">05</small></div>
         <div className="pad" style={{ paddingTop: 9 }}>
           <div className="m zellen" style={{ fontSize: 11 }}>
             <div><span className="eb">Fassung</span>{VERSION}</div>
@@ -14542,7 +14529,7 @@ function Optionen({ ruhe, aufRuhe, onBackup, onZu, onAnleitung, hall, aka, laeuf
             <span className="m" style={{ fontSize: 10.5, color: "var(--mu)", display: "block", marginTop: 2 }}>
               Wie das Spiel läuft, in zwei Minuten</span>
           </button>
-          <button className="btn sm" style={{ marginTop: 9 }} onClick={() => setLizenz((x) => !x)}>
+          <button className="btn sm" style={{ marginTop: 9 }} aria-expanded={lizenz} onClick={() => setLizenz((x) => !x)}>
             {lizenz ? "Schriften ausblenden" : "Verwendete Schriften"}</button>
           {lizenz && (
             <p className="m" style={{ fontSize: 10, color: "var(--mu)", marginTop: 8, lineHeight: 1.65 }}>
@@ -14553,7 +14540,7 @@ function Optionen({ ruhe, aufRuhe, onBackup, onZu, onAnleitung, hall, aka, laeuf
               als schriften-lizenz.txt bei.
             </p>)}
         </div>
-      </div>
+      </section>
     </div>
   );
 }
@@ -14804,7 +14791,7 @@ function MenuScreen({ onSammlung, hall, onNew, onHall, save, onResume, onAch, ac
             </div>
           )}
           {/* Störer: schräg, laut, rund — die Hauptaktion der Seite. */}
-          <button onClick={laeuft ? onResume : onNew}
+          <button className="rs-startsignal" aria-label={(laeuft ? "WEITER SPIELEN ab Seite " : "NEUE LAUFBAHN ab Seite ")+(laeuft ? RESSORT.laufbahn.s : RESSORT.anlegen.s)} onClick={laeuft ? onResume : onNew}
             style={{ position: "absolute", right: 8, top: 8, width: 92, height: 92, borderRadius: "50%",
               border: "none", background: "var(--stoerer)", color: "#fff", cursor: "pointer",
               transform: "rotate(-11deg)", display: "flex", flexDirection: "column",
@@ -15082,7 +15069,7 @@ function CreateScreen({ onStart, onBack, meta }) {
   useEffect(() => { setClub(jugend.length ? jugend[jugend.length - 1].n : null); }, [jugend]);
   return (
     <Shell blatt="anlegen">
-      <div className="fade">
+      <div className="fade" style={{paddingBottom:"calc(100px + env(safe-area-inset-bottom,0px))"}}>
         <div className="d" style={{ fontSize: 26 }}>Spielerpass anlegen</div>
         {/* Der Vorschaublock bleibt beim Blättern oben hängen. Sonst stellt man
             unten Feinheiten ein, ohne zu sehen, was sie am Gesicht bewirken —
@@ -15314,8 +15301,9 @@ function CreateScreen({ onStart, onBack, meta }) {
               ? (() => { const v = VORSAETZE.find(v => v.id === vorsatz); return v.t + " Belohnung: " + v.lohn + ". Sind alle Bonuswerte ausgeschöpft: stattdessen 25.000 €. Am Karriereende: +" + v.punkte + " Vermächtnispunkte bei gehaltenem Vorsatz."; })()
               : "Freiwillig: Erreiche deinen Vorsatz für eine einmalige Spielerbelohnung und zusätzliche Vermächtnispunkte."}</p>
 
-        <div style={{ display: "flex", gap: 8, marginTop: 20 }}>
-          <button className="btn pri" style={{ maxWidth: 200 }}
+      </div>
+        <div className="rs-abschlussleiste"><div className="rs-abschlussleiste-in" style={{display:"grid",gridTemplateColumns:"1fr auto",gap:8}}>
+          <button className={"btn pri"+(RUHE?"":" rs-pochen")}
             onClick={() => onStart({
               /* Das Feld darf jetzt leer bleiben — vorher hat der Vorschlag es
                  sofort wieder gefüllt. Ohne diesen Rückfall startete die
@@ -15326,8 +15314,7 @@ function CreateScreen({ onStart, onBack, meta }) {
             <span className="d" style={{ fontSize: 17 }}>Los geht's</span>
           </button>
           <button className="btn" style={{ maxWidth: 120 }} onClick={onBack}>Zurück</button>
-        </div>
-      </div>
+        </div></div>
     </Shell>
   );
 }

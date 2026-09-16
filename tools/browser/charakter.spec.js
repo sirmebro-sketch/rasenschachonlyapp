@@ -7,6 +7,10 @@ test('Spielerpass: kompakte Ansicht, feste Merkmale, Karriere starten',async({pa
  await page.getByRole('button',{name:'NEUE LAUFBAHN ab Seite 3'}).click();
  const details=page.getByRole('button',{name:'Feinheiten',exact:true});
  await expect(details).toHaveAttribute('aria-expanded','false');
+ const start=page.getByRole('button',{name:"Los geht's",exact:true});
+ const startBox=await start.boundingBox();
+ expect(startBox.y+startBox.height).toBeLessThanOrEqual(page.viewportSize().height);
+ await expect(start).toBeInViewport();
  const dice=page.getByRole('button',{name:'Freie Merkmale würfeln'});
  const a=await dice.boundingBox(),b=await details.boundingBox();
  expect(Math.abs(a.y-b.y)).toBeLessThan(1);
