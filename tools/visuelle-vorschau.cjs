@@ -25,5 +25,6 @@ createRoot(document.getElementById('root')).render(<Sichtprobe/>);
 `;
  const result=await build({stdin:{contents:source+demo,resolveDir:root,loader:'jsx'},bundle:true,format:'iife',platform:'browser',write:false,minify:true,define:{'process.env.NODE_ENV':'"production"'},plugins:[{name:'isolated-storage',setup(b){b.onLoad({filter:/[/\\]storage\.js$/},()=>({contents:'export const store={get:async()=>null,set:async()=>{},delete:async()=>{}};',loader:'js'}))}}]});
  const out=path.join(root,'.preview');fs.mkdirSync(out,{recursive:true});
+ fs.copyFileSync(path.join(__dirname,'browser-rahmen.html'),path.join(out,'bildschirm.html'));
  fs.writeFileSync(path.join(out,'sichtprobe.html'),'<!doctype html><html lang="de"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Rasenschach Sichtprobe</title><body><div id="root"></div><script>'+result.outputFiles[0].text.replace(/<\/script/gi,'<\\/script')+'</script></body></html>');console.log(path.join(out,'sichtprobe.html'));
 })();

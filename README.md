@@ -199,9 +199,9 @@ Im Entwicklungsvermerk Quell- und Zielcommit sowie die Entscheidung nennen.
 
 ### Versionsschema
 
-`package.json` führt die Version als `major.minor.patch` (derzeit 35.186.0).
+`package.json` führt die Version als `major.minor.patch` (derzeit 35.187.0).
 Daraus rechnet `tools/android-version.cjs` den `versionCode`
-(`major*100000 + minor*100 + patch`, also 3518600) und schreibt ihn zusammen mit
+(`major*100000 + minor*100 + patch`, also 3518700) und schreibt ihn zusammen mit
 dem `versionName` nach `android/app/build.gradle`. Beide Felder sollen nie von
 Hand auseinanderlaufen. Die Version wird erhöht, wenn eine neue APK entsteht —
 reine Werkzeug- oder Dokumentationsänderungen erhöhen sie nicht.
@@ -307,3 +307,10 @@ liefert Screenshots, Fehler-Traces, HTML-Bericht und die isolierte Einzeldatei
 als Artefakt `Rasenschach-Browsertest`. Fehlerberichte ansehen, nicht nur den
 Exitcode. Browser-Smokes prüfen Bedienung und Rendering, ersetzen keine
 ästhetische Sichtprüfung und keine Android-Leistungs-/Touchprüfung.
+
+`/.preview/bildschirm.html` bietet zusätzlich einen umschaltbaren iframe für
+320 × 720, 390 × 844, 844 × 390 und 1280 × 900. Dadurch stimmen auch vw/vh und
+Media Queries, wenn der Cloud-Browser seine Fenstergröße nicht ändern kann.
+Zwischen echtem Spiel und isolierter Galerie umschalten. Der Rahmen ist kein
+Android-Emulator. Wildcard-Browsertests decken alle sieben Seltenheiten mit
+und ohne Bewegung ab, einschließlich Abschlussbutton und Text im Sichtbereich.

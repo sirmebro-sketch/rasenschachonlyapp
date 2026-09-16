@@ -712,3 +712,24 @@ Accessoire-Freischaltungen, kompakten Einstieg und festgehaltenen Bart beim
 Würfeln sowie Karrierestart. CI speichert Screenshots und Traces. README und
 Startdatei halten den reproduzierbaren Browserzugang fest. Android-Animationen
 und native Bedienung bleiben Geräteprüfung. Version 35.186.0 / 3518600.
+
+## Sichtprüfung nach 35.186 – Codex, 16.09.2026
+
+Basis 847b90e, Remote und offene PRs geprüft, keine fremden Änderungen.
+GOAT-Aufdeckung im echten Browser auf Desktop und 320 × 720 angesehen:
+Text lesbar, Weiter erreichbar, kein zweiter alter Lichtstreifen sichtbar.
+Kompakter Spielerpass der Galerie auf 320 Pixeln mit langem Namen angesehen;
+Name wird gekürzt, Metadaten einzeilig, beide Buttons bleiben nebeneinander.
+Keine vollständige Android-Animationsabnahme daraus abgeleitet.
+
+Bildschirmrahmen für die verwaltete Vorschau ergänzt, damit vw/vh und
+Media Queries der tatsächlichen Testbreite folgen. Zusätzliche Browsertests
+für alle Seltenheiten, Ruhemodus, Lesbarkeit und Abschluss der Aufdeckung.
+Bei der DOM-Stilprüfung im Ruhemodus tatsächlich einen laufenden rs-schimmer
+auf der Rückseite gefunden. Rückseitenband wird nun bei RUHE und nach dem
+Aufdecken nicht mehr gerendert; System-reduced-motion zusätzlich im CSS
+berücksichtigt. Deshalb App-Korrektur als 35.187.0 / 3518700.
+
+Nach Korrektur im Browser-Ruhemodus keine animierten Nachfahren mehr;
+HSV-Sonderkarte auch bei 844 × 390 vollständig samt Weiter sichtbar.
+105 Node-Tests, Web-Build und Capacitor-Sync erfolgreich.

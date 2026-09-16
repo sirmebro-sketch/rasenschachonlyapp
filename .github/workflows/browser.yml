@@ -28,5 +28,6 @@ jobs:
             playwright-report/
             test-results/
             .preview/sichtprobe.html
+            .preview/bildschirm.html
           include-hidden-files: true
           retention-days: 14

@@ -1,0 +1,12 @@
+<!doctype html>
+<html lang="de"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Rasenschach · Bildschirmprüfung</title>
+<style>
+body{margin:0;padding:16px;background:#141410;color:#eeeade;font:14px system-ui}header{display:flex;gap:16px;flex-wrap:wrap;align-items:center;margin-bottom:16px}select{font:inherit;padding:8px}iframe{display:block;border:1px solid #777;max-width:none;background:#191813}p{max-width:70ch;color:#aaa}
+</style>
+<header><label>Bildschirm <select id="size"><option value="320,720">Schmal · 320 × 720</option><option value="390,844" selected>Handy · 390 × 844</option><option value="844,390">Querformat · 844 × 390</option><option value="1280,900">Desktop · 1280 × 900</option></select></label><label>Ansicht <select id="page"><option value="sichtprobe.html">Isolierte Galerie</option><option value="/">Spiel</option></select></label></header>
+<p>Der Rahmen hat einen eigenen Bildschirmbereich: vw, vh und Media Queries entsprechen der gewählten Größe. Das Spiel verwendet den lokalen Browser-Spielstand; die Galerie speichert nichts. Keine Android-Emulation.</p>
+<iframe title="Rasenschach Testbildschirm" src="sichtprobe.html" width="390" height="844"></iframe>
+<script>
+const frame=document.querySelector('iframe');document.querySelector('#size').addEventListener('change',e=>{const [w,h]=e.target.value.split(',');frame.width=w;frame.height=h;});document.querySelector('#page').addEventListener('change',e=>{frame.src=e.target.value;});
+</script></html>

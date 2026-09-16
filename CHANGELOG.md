@@ -1,5 +1,10 @@
 # Änderungen
 
+## 35.187.0 – Ruhemodus bei Wildcards
+
+- Rückseitenschimmer läuft im Ruhemodus nicht mehr und endet beim Aufdecken.
+- Sicht- und Bedienprüfung der Aufdeckungen für alle Seltenheiten erweitert.
+
 ## 35.186.0 – Mehr Gesicht und verlässliche Sichtprüfung
 
 - Moderne Bärte neu gezeichnet, lange Bärte nicht mehr am Kinn abgeschnitten; Ankerbart, spitzer und breiter Vollbart ergänzt.

@@ -30,8 +30,8 @@ import { machAkademie } from "./akademie.js";
    ================================================================ */
 
 const NAME = "Rasenschach XI";
-const VERSION = "35.186";
-const VERSION_INFO = "Überarbeitete Bärte, zusätzliche Gesichtsmerkmale und Accessoires; echte Browserprüfung der Charaktererstellung.";
+const VERSION = "35.187";
+const VERSION_INFO = "Wildcard-Rückseiten respektieren den Ruhemodus; Aufdeckungen auf schmalen Bildschirmen geprüft.";
 
 /* Fester Zufallsstrom aus einer Zeichenkette — damit Angebote des eigenen
    Vereins nicht bei jedem Klick anders aussehen.                        */
@@ -8045,6 +8045,7 @@ html,body{overscroll-behavior:none;}
 .rs-kreis{width:74px;height:74px;border-radius:50%;border:4px solid var(--ln2);
   border-top-color:var(--ac);border-right-color:var(--ac);animation:rs-dreh .85s linear infinite;}
 .rs-still .rs-kreis{animation-duration:2.4s;}
+@media(prefers-reduced-motion:reduce){.rs-band>i{animation:none!important;}}
 .rs-band{position:absolute;inset:0;overflow:hidden;border-radius:inherit;pointer-events:none;}
 .rs-band>i{position:absolute;top:0;bottom:0;width:38%;display:block;
   background:linear-gradient(100deg,transparent,rgba(255,255,255,.22),transparent);
@@ -12221,7 +12222,7 @@ function WildcardEnthuellung({ card, onFertig }) {
               boxShadow: !RUHE && gross ? "0 0 " + Math.round(14 + pomp * 46) + "px " + r.col + "55" : "none" }}>
               <span className="d" style={{ fontSize: 40, color: gross ? r.col : "var(--ln2)",
                 animation: !RUHE && gross ? "rs-glanz 1.1s ease-in-out infinite" : "none" }}>?</span>
-              <span className="rs-band"><i /></span>
+              {!RUHE && !auf && <span className="rs-band"><i /></span>}
             </div>
 
             {/* Vorderseite. Die Einblendung der Zeilen hängt an „auf" und
