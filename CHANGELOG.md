@@ -1,5 +1,13 @@
 # Änderungen
 
+## 35.186.0 – Mehr Gesicht und verlässliche Sichtprüfung
+
+- Moderne Bärte neu gezeichnet, lange Bärte nicht mehr am Kinn abgeschnitten; Ankerbart, spitzer und breiter Vollbart ergänzt.
+- Zusätzliche Augen-, Brauen-, Nasen-, Mund-, Ohren- und Wangenformen, Make-up und besondere Merkmale. Iris bleibt innerhalb der Augenform.
+- Stirnbänder weicher geformt; Sportbrille und Creolen ergänzen die freischaltbaren Accessoires. Bestehende Kennungen und Freischaltungen bleiben erhalten.
+- Aussagekräftige Variantenbezeichnungen; unpassender Wunschverein wird beim Wechsel zwischen Männer- und Frauenfußball zurückgesetzt.
+- Spielbare Browserprüfung und vollständige Merkmalgalerie; automatische Bedienprüfungen in drei Bildschirmgrößen.
+
 ## 35.185.0 – Aufdeckbühne und sauberere Haarformen
 
 - Größere Wildcards mit besser lesbarer Wirkung; kurze Lichtbühne je Seltenheit statt Vollbildblitz und Dauerpartikeln.

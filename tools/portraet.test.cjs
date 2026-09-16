@@ -11,7 +11,7 @@ test('Festgehaltene Merkmale bleiben beim Würfeln und JSON-Wiederladen erhalten
 });
 test('Würfeln erreicht neue Varianten und bleibt innerhalb gültiger Optionen',async()=>{
  const {portraetOptionen:f,portraetWuerfeln:w}=await import('../portraet.js');const a=f(basis,'m');const z=w({},a,{},()=>.99999);
- for(const [k,werte] of Object.entries(a))assert(werte.includes(z[k]));assert.equal(z.frisur,21);assert.equal(z.details,4);assert.equal(z.bart,12);
+ for(const [k,werte] of Object.entries(a))assert(werte.includes(z[k]));assert.equal(z.frisur,21);assert.equal(z.details,6);assert.equal(z.bart,15);
 });
 
 test('Frisurenfreischaltung bewahrt alle alten Bonusformen und neue Kennungen',async()=>{
@@ -20,4 +20,12 @@ test('Frisurenfreischaltung bewahrt alle alten Bonusformen und neue Kennungen',a
   const opts=f({...basis,frisur:n},g).frisur;
   assert.deepEqual(opts,Array.from({length:ende+1},(_,i)=>i));
  }
+});
+
+test('Accessoires bleiben gesperrt, alle Erweiterungen sind eindeutig',async()=>{
+ const {portraetOptionen:f,PORTRAET_NAMEN:n}=await import('../portraet.js');
+ const base={...basis,brauen:5,augen:5,nase:8,mund:7,ohren:3,wangen:3,schminke:5};
+ assert.deepEqual(f({...base,schmuck:2},'m').schmuck,[0,1]);
+ const a=f({...base,schmuck:6},'w');assert.deepEqual(a.schmuck,[0,1,2,3,4,5,6,7]);
+ for(const [k,werte] of Object.entries(a)){assert.equal(werte.length,new Set(werte).size,k);if(n[k])for(const i of werte)assert(n[k][i],k+':'+i);}
 });

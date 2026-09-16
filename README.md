@@ -199,9 +199,9 @@ Im Entwicklungsvermerk Quell- und Zielcommit sowie die Entscheidung nennen.
 
 ### Versionsschema
 
-`package.json` führt die Version als `major.minor.patch` (derzeit 35.185.0).
+`package.json` führt die Version als `major.minor.patch` (derzeit 35.186.0).
 Daraus rechnet `tools/android-version.cjs` den `versionCode`
-(`major*100000 + minor*100 + patch`, also 3518500) und schreibt ihn zusammen mit
+(`major*100000 + minor*100 + patch`, also 3518600) und schreibt ihn zusammen mit
 dem `versionName` nach `android/app/build.gradle`. Beide Felder sollen nie von
 Hand auseinanderlaufen. Die Version wird erhöht, wenn eine neue APK entsteht —
 reine Werkzeug- oder Dokumentationsänderungen erhöhen sie nicht.
@@ -286,8 +286,24 @@ neu erzeugen. Vorschau ist ein Prüfwerkzeug, kein vollständiger Spieltest.
 oder aus `CODEX_PRIMARY_RUNTIME_NODE_MODULES`. Ergebnisse sind temporär und
 werden nicht committed. Damit lassen sich Konturen auch ohne Browser prüfen.
 
-Der Cloud-Browser dieser Runde blockierte sowohl localhost als auch lokale
-Datei-URLs ausdrücklich. Diese Grenze nicht umgehen. Ein verfügbarer Browser
-in einer anderen autorisierten Arbeitsumgebung kann die erzeugte Vorschau
-normal öffnen; Android-Aufnahmen des Eigentümers bleiben eine weitere Quelle.
-Statische Porträtbögen sind kein Nachweis für flüssige Animationen oder Touch.
+Seit 35.186 funktioniert die autorisierte verwaltete Browservorschau:
+`npm ci`, `npm run preview:gallery`, dann in ChatGPT Work mit vorhandener
+Sites-Vorschau `sites-preview start <absoluter Repositorypfad>`. Browser-Skill
+lesen, Cloud-Browser verbinden und die vom Werkzeug gemeldete Vorschauadresse
+öffnen. `/` ist das echte Spiel; `/.preview/sichtprobe.html` ist die isolierte
+Merkmal- und Effektgalerie. Die interne Vorschauadresse nicht als Download-Link
+an Nutzer ausgeben. Nach der Prüfung `sites-preview stop` ausführen.
+
+Ohne diese verwaltete Umgebung: `npm run dev` und einen verfügbaren lokalen
+Browser verwenden. Explizite Browser-Sperren nicht umgehen. Diese Vorschau
+braucht keine öffentliche Veröffentlichung und keine produktiven Spielstände.
+Alle Merkmalkategorien, Haut-/Haarfarben, Kopfformen und Freischaltungen lassen
+sich in der Galerie vergleichen. Bei Codeänderungen Galerie neu erzeugen.
+
+`npm run test:browser` führt Playwright-Prüfungen bei 320, 390 und 1280 Pixeln
+Breite aus. Einmalig `npx playwright install --with-deps chromium` installieren.
+GitHub führt sie bei Push/PR automatisch aus; der Workflow „Visuelle Browsertests“
+liefert Screenshots, Fehler-Traces, HTML-Bericht und die isolierte Einzeldatei
+als Artefakt `Rasenschach-Browsertest`. Fehlerberichte ansehen, nicht nur den
+Exitcode. Browser-Smokes prüfen Bedienung und Rendering, ersetzen keine
+ästhetische Sichtprüfung und keine Android-Leistungs-/Touchprüfung.

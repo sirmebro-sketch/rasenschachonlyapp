@@ -1,3 +1,4 @@
+import { Bartform } from "./bartformen.jsx";
 import { AufdeckLicht, AUFDECK_CSS } from "./aufdeckeffekte.jsx";
 import { Haarform } from "./haarformen.jsx";
 import { KartenEffekt } from "./karteneffekte.jsx";
@@ -29,8 +30,8 @@ import { machAkademie } from "./akademie.js";
    ================================================================ */
 
 const NAME = "Rasenschach XI";
-const VERSION = "35.185";
-const VERSION_INFO = "Neue Aufdeckbühne für seltene Karten, überarbeitete Haarformen und zwei zusätzliche Frisuren je Auswahl.";
+const VERSION = "35.186";
+const VERSION_INFO = "Überarbeitete Bärte, zusätzliche Gesichtsmerkmale und Accessoires; echte Browserprüfung der Charaktererstellung.";
 
 /* Fester Zufallsstrom aus einer Zeichenkette — damit Angebote des eigenen
    Vereins nicht bei jedem Klick anders aussehen.                        */
@@ -2865,7 +2866,7 @@ function Avatar({ seed = 1, zuege, club, size = 72, ring, g, nat, meta }) {
   const grundTief  = shade(grundHell, -52);
 
   const augenY = 46 + (z.augen === 3 ? 1.5 : 0);
-  const lidH = z.augen === 1 ? 2.6 : z.augen === 4 ? 4.2 : 3.4;   /* Lidspalt */
+  const lidH = z.augen === 1 ? 2.6 : z.augen === 4 ? 4.2 : z.augen === 5 ? 3.9 : z.augen === 6 ? 2.9 : 3.4;   /* Lidspalt */
   const kinnY = kopf.kinn;
   const kj = kinnBreite(kopf);   /* Kieferbreite am Kinn — siehe kinnBreite */
   /* Lidschatten nimmt einen Ton aus der Haut auf, statt eine feste Farbe zu
@@ -2939,7 +2940,7 @@ function Avatar({ seed = 1, zuege, club, size = 72, ring, g, nat, meta }) {
 
         {modern && <Haarform index={z.frisur} weiblich={w} breite={kopf.b} farbe={haar} hell={haarHell} ebene="hinten"/>}
         {/* Ohren */}
-        {(() => { const ry = 5.6 + z.ohren * 1.2, cy = 47, ex = kopf.b - 1;
+        {(() => { const ry = [5.6,6.8,8,5.8,6.2][z.ohren] || 5.6, cy = 47, ex = kopf.b - (z.ohren === 3 ? 2.6 : 1);
           return (<g fill={haut}>
             <ellipse cx={50 - ex} cy={cy} rx={3.6} ry={ry} />
             <ellipse cx={50 + ex} cy={cy} rx={3.6} ry={ry} />
@@ -3156,6 +3157,8 @@ function Avatar({ seed = 1, zuege, club, size = 72, ring, g, nat, meta }) {
             <path d="M67,39.6 L54,41.4 L54,43.6 L67,42 Z" /></>}
           {z.brauen === 3 && <><rect x="34.5" y="40" width="10.5" height="1.9" rx="1" />
             <rect x="55" y="40" width="10.5" height="1.9" rx="1" /></>}
+          {z.brauen === 5 && <path d="M33 42 Q39 39 46 41 M54 41 Q61 39 67 42" fill="none" stroke={haar} strokeWidth="1.8" strokeLinecap="round"/>}
+          {z.brauen === 6 && <path d="M33 41 Q38 37 46 40 M54 40 Q62 37 67 41" fill="none" stroke={haar} strokeWidth="2.1" strokeLinecap="round"/>}
           {z.brauen === 4 && <><path d="M32.5,42.4 Q39.5,36.8 46.5,41 L46.5,43.6 Q39.5,39.4 32.5,44.6 Z" />
             <path d="M67.5,42.4 Q60.5,36.8 53.5,41 L53.5,43.6 Q60.5,39.4 67.5,44.6 Z" /></>}
         </g>
@@ -3163,17 +3166,24 @@ function Avatar({ seed = 1, zuege, club, size = 72, ring, g, nat, meta }) {
         {z.details > 0 && <g fill={shade(haut,-46)} opacity=".55">
           {(z.details===1||z.details===2)&&Array.from({length:z.details===1?12:28},(_,i)=><circle key={i} cx={29+(i*7%41)} cy={52+(i*3%7)*.55} r={.38+(i%3)*.12}/>)}
           {z.details===3&&<path d="M62,38 l-2,6" stroke={shade(haut,30)} strokeWidth="1.1"/>}
+          {z.details===5&&<circle cx="62" cy="57" r=".85"/>}
+          {z.details===6&&<path d="M32 52 q-2 2 -1 4 M68 52 q2 2 1 4" fill="none" stroke={shade(haut,-35)} strokeWidth=".6"/>}
           {z.details===4&&<path d="M65,54 l-3,6" stroke={shade(haut,30)} strokeWidth=".9"/>}
         </g>}
+        {modern && z.wangen===3 && <path d="M29 53 Q34 59 40 58 M71 53 Q66 59 60 58" fill="none" stroke={schatten} strokeWidth="1" opacity=".28"/>}
+        {modern && z.wangen===4 && <path d="M35 58 q-2 2 0 3 M65 58 q2 2 0 3" fill="none" stroke={schatten} strokeWidth=".9" opacity=".5"/>}
         {/* ---- Augen: Lidspalt, Iris in der gewählten Farbe, Pupille, Glanz ----
             Vorher waren es zwei weiße Ellipsen mit einem Punkt darin. */}
         {[40, 60].map((cx) => (
           <g key={cx} transform={modern ? `translate(${cx},${augenY}) scale(.87,.8) translate(${-cx},${-augenY})` : undefined}>
             <path d={"M" + (cx - 6) + "," + augenY + " q6," + (-lidH - 1.6) + " 12,0 q-6," + (lidH + 1.6) + " -12,0 Z"}
               fill="#F2F4F1" />
+            {modern && <clipPath id={'eye'+kennung+cx}><path d={'M'+(cx-6)+','+augenY+' q6,'+(-lidH-1.6)+' 12,0 q-6,'+(lidH+1.6)+' -12,0 Z'}/></clipPath>}
+            <g clipPath={modern?'url(#eye'+kennung+cx+')':undefined}>
             <circle cx={cx} cy={augenY - .3} r={Math.min(3.1, lidH + .5)} fill={iris} />
             <circle cx={cx} cy={augenY - .3} r={Math.min(1.5, lidH * .45)} fill="#120E0B" />
             <circle cx={cx - 1.1} cy={augenY - 1.5} r=".8" fill="#FFFFFF" opacity=".85" />
+            </g>
             <path d={"M" + (cx - 6) + "," + augenY + " q6," + (-lidH - 1.8) + " 12,0"} fill="none"
               stroke={shade(haut, -62)} strokeWidth={z.augen === 2 ? 1.5 : 1} strokeLinecap="round" />
             {z.augen === 4 && <path d={"M" + (cx - 6.4) + "," + (augenY + 1.6) + " q6,2.4 12.8,0"} fill="none"
@@ -3185,9 +3195,9 @@ function Avatar({ seed = 1, zuege, club, size = 72, ring, g, nat, meta }) {
                 Porträt weiblich lesen liess. Beides ist zurückhaltend
                 gehalten — es soll feminin wirken können, nicht geschminkt
                 aussehen müssen. `schminke` 0 lässt alles weg. */}
-            {w && (z.schminke === 1 || z.schminke === 3 || z.schminke === 4) && (
+            {w && (z.schminke === 1 || z.schminke === 3 || z.schminke === 4 || z.schminke === 5) && (
               <path d={"M" + (cx - 6.2) + "," + (augenY - .4) + " q6.2," + (-lidH - 3.4) + " 12.4,0"}
-                fill="none" stroke={lidfarbe} strokeWidth={z.schminke === 4 ? 1.4 : 2.2}
+                fill="none" stroke={lidfarbe} strokeWidth={z.schminke === 5 ? .8 : z.schminke === 4 ? 1.4 : 2.2}
                 strokeLinecap="round" opacity={z.schminke === 4 ? .38 : .55} />)}
             {w && (
               <g stroke={shade(haut, -78)} strokeWidth=".85" strokeLinecap="round" fill="none"
@@ -3201,10 +3211,10 @@ function Avatar({ seed = 1, zuege, club, size = 72, ring, g, nat, meta }) {
 
         {/* ---- Nase ---- */}
         {(() => {
-          const y0 = 49, y1 = 56 + (z.nase === 3 ? 1.5 : 0);
+          const y0 = z.nase===8?51:49, y1 = 56 + (z.nase === 3 ? 1.5 : z.nase===8?-1:0);
           /* Ab Index 5 angehaengt (34.29) — nie umsortieren, der Index steckt
              in jedem gespeicherten Gesicht. */
-          const br = [2.5, 3.2, 2, 2.9, 2.7, 3.7, 4.3, 2.2][z.nase] || 2.5;
+          const br = [2.5, 3.2, 2, 2.9, 2.7, 3.7, 4.3, 2.2,3.1,1.7][z.nase] || 2.5;
           return (<g>
             <path d={"M50," + y0 + " C" + (50 - br * .5) + "," + (y0 + 6) + " " + (50 - br) + "," + (y1 - 3)
               + " " + (50 - br) + "," + y1 + " q" + br + ",2 " + (br * 2) + ",0 C" + (50 + br) + "," + (y1 - 3)
@@ -3219,10 +3229,12 @@ function Avatar({ seed = 1, zuege, club, size = 72, ring, g, nat, meta }) {
           /* Lippenstift verschiebt den Lippenton ins Warme, statt ihn durch
              eine Signalfarbe zu ersetzen — das Heft kennt keine Neontöne. */
           const lippe = w
-            ? (z.schminke === 2 || z.schminke === 3 ? mischFarbe(shade(haut, -52), "#9C3242", .55)
+            ? (z.schminke === 2 || z.schminke === 3 || z.schminke === 6 ? mischFarbe(shade(haut, -52), "#9C3242", z.schminke === 6 ? .3 : .55)
               : z.schminke === 4 ? mischFarbe(shade(haut, -50), "#9C3242", .28)
               : shade(haut, -48))
             : shade(haut, -58);
+          if(z.mund===7)return <path d={`M43 ${y} Q50 ${y+2} 57 ${y-.8}`} fill="none" stroke={lippe} strokeWidth="1.4" strokeLinecap="round"/>;
+          if(z.mund===8)return <><path d={`M42 ${y-1} Q50 ${y+1} 58 ${y-1} Q50 ${y+8} 42 ${y-1} Z`} fill={lippe}/><path d={`M44 ${y} Q50 ${y+1} 56 ${y} Q50 ${y+3} 44 ${y} Z`} fill="#EFE4D6"/></>;
           if (z.mund === 0) return <path d={"M43," + y + " Q50," + (y + 4) + " 57," + y}
             fill="none" stroke={lippe} strokeWidth="2" strokeLinecap="round" />;
           if (z.mund === 1) return <rect x="43" y={y - 1} width="14" height="2.4" rx="1.2" fill={lippe} />;
@@ -3247,7 +3259,7 @@ function Avatar({ seed = 1, zuege, club, size = 72, ring, g, nat, meta }) {
             0 keiner · 1 Stoppeln · 2 Drei-Tage · 3 Schnauzer · 4 Kinnbart
             5 Ziegenbart · 6 Vollbart kurz · 7 Vollbart lang · 8 Kinnriemen
             9 Backenbart */}
-        {!w && z.bart > 0 && (() => {
+        {!modern && !w && z.bart > 0 && (() => {
           const y = kinnY, jl = 50 - kj - 2, jr = 50 + kj + 2;
           const rahmen = "M" + (50 - kopf.b + 1) + ",44 C" + (50 - kopf.b + 2) + "," + (y - 8) + " " + jl + ","
             + (y + 2) + " 50," + (y + 2) + " C" + jr + "," + (y + 2) + " " + (50 + kopf.b - 2) + ","
@@ -3289,16 +3301,19 @@ function Avatar({ seed = 1, zuege, club, size = 72, ring, g, nat, meta }) {
               <path d={"M" + (50 + kopf.b - 7) + ",37 h11 l-8.4," + (y - 49) + " h-2.6 Z"} /></>}
           </g>); })()}
 
+        {modern && !w && z.bart>0 && <Bartform index={z.bart} kopf={kopf} farbe={haar} hell={haarHell} clipId={'kf'+kennung}/>}
         {/* ---- Schmuck ---- */}
         {z.schmuck === 1 && <><circle cx={50 - kopf.b + 1} cy="52" r="1.8" fill="#C8A24B" />
           <circle cx={50 + kopf.b - 1} cy="52" r="1.8" fill="#C8A24B" /></>}
-        {z.schmuck === 2 && <rect x={50 - kopf.b} y="31" width={kopf.b * 2} height="5.5" fill={c1} />}
+        {z.schmuck === 2 && (modern?<path d={`M${hl} 32 Q50 27 ${hr} 32 L${hr} 37 Q50 32 ${hl} 37 Z`} fill={c1}/>:<rect x={hl} y="31" width={kopf.b*2} height="5.5" fill={c1}/>)}
         {z.schmuck === 3 && <><circle cx="39" cy={augenY} r="8.4" fill="none" stroke="#243026" strokeWidth="1.5" />
           <circle cx="61" cy={augenY} r="8.4" fill="none" stroke="#243026" strokeWidth="1.5" />
           <path d={"M47.4," + augenY + " H52.6"} stroke="#243026" strokeWidth="1.5" /></>}
         {z.schmuck === 4 && <><path d="M43,88 Q50,93 57,88" fill="none" stroke="#C7A24B" strokeWidth="1.8" />
           <circle cx="50" cy="91.4" r="2.2" fill="#C7A24B" /></>}
-        {z.schmuck === 5 && <path d={"M" + (50 - kopf.b + 3) + ",30 h" + (kopf.b * 2 - 6) + " v3 h-"
+        {modern && z.schmuck===6 && <g fill="#30464D" stroke="#A6BAC0" strokeWidth="1"><path d={`M30 ${augenY-4} Q39 ${augenY-6} 47 ${augenY-3} L45 ${augenY+4} Q36 ${augenY+6} 31 ${augenY+2} Z M53 ${augenY-3} Q61 ${augenY-6} 70 ${augenY-4} L69 ${augenY+2} Q64 ${augenY+6} 55 ${augenY+4} Z`}/><path d={`M47 ${augenY-1} Q50 ${augenY-3} 53 ${augenY-1}`} fill="none"/></g>}
+        {modern && z.schmuck===7 && <g fill="none" stroke="#D9BB69" strokeWidth="1.2"><ellipse cx={hl+1} cy="54" rx="2.7" ry="3.6"/><ellipse cx={hr-1} cy="54" rx="2.7" ry="3.6"/></g>}
+        {z.schmuck === 5 && <path d={modern ? `M${hl+3} 31 Q50 28 ${hr-3} 31 L${hr-3} 34 Q50 31 ${hl+3} 34 Z` : "M" + (50 - kopf.b + 3) + ",30 h" + (kopf.b * 2 - 6) + " v3 h-"
           + (kopf.b * 2 - 6) + " Z"} fill={shade(c2, 20)} />}
       </g>
     </svg>
@@ -15014,6 +15029,7 @@ function CreateScreen({ onStart, onBack, meta }) {
       return n;
     });
   }, [nation, gender]);
+  useEffect(()=>{if(traum && !CLUBS.some(c=>c.n===traum&&c.g===gender)){setTraum(null);setSuche("");}},[gender,traum]);
   const [fein, setFein] = useState(false);
   const [merkmal,setMerkmal] = useState("frisur");
   const [fest,setFest] = useState({});

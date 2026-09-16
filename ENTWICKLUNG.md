@@ -684,3 +684,31 @@ Bedienung. Cloud-Browser verbunden, aber localhost und Datei-URLs ausdrücklich
 blockiert; keine Umgehung. Daher kein Live-/Touch-/Animationstest. Nutzer kann
 weiter Android-Screenshots liefern; Aufdeck-Timing und Landschaftsmodus bleiben
 als Geräteprüfung offen. Version 35.185.0 / 3518500.
+
+## 35.186.0 – Charaktermerkmale und echter Browserzugriff, Codex, 16.09.2026
+
+Basis main 950e0ed (35.185), keine offenen PRs oder zusätzlichen Remote-Übergaben.
+Alle Einstellgruppen im Code geprüft: Porträtvarianten einschließlich mk_haar/
+mk_acc; Name, Nummer, Fuß, Nation, Position, Geschlecht, Jugend-/Wunschverein,
+Typ, Statur, freigeschaltete Beinamen und Vorsatz. Neue Varianten ausschließlich
+angehängt; Zufalls-Basiszahlen alter Porträts unverändert. Haut-/Haarfarben,
+Kopfformen und Gameplay-Auswahl bewusst nicht beliebig vermehrt.
+
+Moderner Bart in bartformen.jsx folgt der Kopfkontur und lässt Längen außerhalb
+der Kinnmaske zu. Zusätzliche Gesichtsformen und Make-up; Accessoire-Namen an
+die tatsächlich gespeicherten Zeichnungen angepasst. mk_acc bleibt Zugang zu
+Bonusaccessoires, mk_haar zu Bonusfrisuren. Augen-Iris moderner Figuren geclippt.
+Wunschverein wird zurückgesetzt, wenn er nicht zur neuen Spielklasse passt.
+
+105 Node-Tests erfolgreich. Verwaltete Browservorschau tatsächlich erreichbar:
+Willkommen übersprungen, Laufbahn erstellt, Ankerbart ausgewählt/festgehalten,
+Würfeln erhielt Auswahl, Wildcard abgeschlossen und Techniktraining bis zum
+Ereignis gespielt. Bärte, Schmuck und Augen auf Beispielköpfen visuell angesehen;
+keine Prüfung sämtlicher kombinatorischen Varianten behauptet. Galerie bekam
+fehlenden fl-Stilrahmen, vorher fehlten dort echte Farben/Typografie.
+
+Neue Playwright-Smokes prüfen drei Breiten, Merkmalgruppen beider Auswahlen,
+Accessoire-Freischaltungen, kompakten Einstieg und festgehaltenen Bart beim
+Würfeln sowie Karrierestart. CI speichert Screenshots und Traces. README und
+Startdatei halten den reproduzierbaren Browserzugang fest. Android-Animationen
+und native Bedienung bleiben Geräteprüfung. Version 35.186.0 / 3518600.

@@ -12,3 +12,7 @@ android/app/src/main/assets/
 .DS_Store
 
 .preview/
+
+# Browser-Prüfberichte
+playwright-report/
+test-results/

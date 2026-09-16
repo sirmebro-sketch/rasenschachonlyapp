@@ -103,3 +103,12 @@ Noch offen: Android-Sicht-/Touchprüfung der Charaktergalerie aus 35.180 und
 der Karten-/Packeffekte aus 35.181. Danach Optik und Individualisierung anhand
 konkreter Rückmeldungen verbessern und die Karriereinhalte weiter vertiefen.
 Keine vollständige Spielabnahme oder allgemeine Fehlerfreiheit behauptet.
+
+## Visueller Arbeitsweg ab 35.186 (16.09.2026)
+
+Die echte Webfassung ist im verwalteten Browser erreichbar und bedienbar.
+Vor visuellen Änderungen README „Visuelle Arbeit“ lesen. Dort stehen Start,
+Galerie, Browserprüfung und Aufräumen. Frühere Notizen über einen blockierten
+localhost-Zugriff bedeuten nicht, dass die verwaltete Vorschau ebenfalls
+blockiert ist. Tatsächlich verfügbaren Zugang jeweils prüfen. Keine
+Android-Sichtprüfung behaupten, wenn nur der Browser geprüft wurde.
