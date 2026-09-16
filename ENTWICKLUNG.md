@@ -737,3 +737,8 @@ HSV-Sonderkarte auch bei 844 × 390 vollständig samt Weiter sichtbar.
 CI-Nachprüfung: APK erfolgreich, neun Browserfälle bestanden; drei Ruhefälle
 melden eine laufende Animation. Diagnose um Name, Übergangseigenschaft und
 Zielelement erweitert; Freigabe bis zur Klärung offen.
+
+Diagnose bestätigt: die verbleibende Meldung ist ausschließlich der
+background-color-Übergang des Weiter-Buttons (keine Kartenbewegung). Der Test
+erlaubt deshalb Farb-Transitions als Bedienfeedback, prüft aber weiterhin
+alle CSS-Animationen und sonstigen Transitions. Kein App-Code geändert.
