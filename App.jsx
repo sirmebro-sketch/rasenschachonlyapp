@@ -1,3 +1,5 @@
+import { AufdeckLicht, AUFDECK_CSS } from "./aufdeckeffekte.jsx";
+import { Haarform } from "./haarformen.jsx";
 import { KartenEffekt } from "./karteneffekte.jsx";
 import { portraetOptionen, portraetWuerfeln, PORTRAET_NAMEN, NEUE_FRISUREN, FRISUR_NAMEN } from "./portraet.js";
 import { persoenlicherRueckblick } from "./karrieregeschichten.js";
@@ -27,8 +29,8 @@ import { machAkademie } from "./akademie.js";
    ================================================================ */
 
 const NAME = "Rasenschach XI";
-const VERSION = "35.184";
-const VERSION_INFO = "Kompakter Spielerpass: Feinheiten zunächst geschlossen, einheitliche Buttons und einzeilige Angaben.";
+const VERSION = "35.185";
+const VERSION_INFO = "Neue Aufdeckbühne für seltene Karten, überarbeitete Haarformen und zwei zusätzliche Frisuren je Auswahl.";
 
 /* Fester Zufallsstrom aus einer Zeichenkette — damit Angebote des eigenen
    Vereins nicht bei jedem Klick anders aussehen.                        */
@@ -2935,6 +2937,7 @@ function Avatar({ seed = 1, zuege, club, size = 72, ring, g, nat, meta }) {
         <path d={"M43," + (kinnY - 10) + " h14 v14 c0,4 -14,4 -14,0 Z"} fill={schatten} />
         <path d={"M43," + (kinnY - 10) + " h14 v4 c-4,3 -10,3 -14,0 Z"} fill={tief} />
 
+        {modern && <Haarform index={z.frisur} weiblich={w} breite={kopf.b} farbe={haar} hell={haarHell} ebene="hinten"/>}
         {/* Ohren */}
         {(() => { const ry = 5.6 + z.ohren * 1.2, cy = 47, ex = kopf.b - 1;
           return (<g fill={haut}>
@@ -2969,6 +2972,7 @@ function Avatar({ seed = 1, zuege, club, size = 72, ring, g, nat, meta }) {
           <path d={"M" + (50 + kopf.j + 1) + "," + (kinnY - 16) + " q-4,7 -7,10"} fill="none"
             stroke={schatten} strokeWidth="1.4" strokeLinecap="round" opacity=".6" /></>}
 
+        {!modern && <>
         {/* ---- Haare hinter dem Kopf ---- */}
         {!w && z.frisur === 5 && <ellipse cx="50" cy="30" rx={kopf.b + 9} ry="25" fill={haar} />}
         {!w && z.frisur === 8 && <g fill={haar}>
@@ -3138,6 +3142,9 @@ function Avatar({ seed = 1, zuege, club, size = 72, ring, g, nat, meta }) {
           {f===2&&<g clipPath={"url(#"+kid+")"} fill="none" stroke={haarHell} strokeWidth="2">{[-15,-9,-3,3,9,15].map(x=><path key={x} d={`M${50+x},12 Q${50+x-7},26 ${50+x},41`} />)}</g>}
           {f===3&&Array.from({length:13},(_,i)=><path key={i} d={`M${hl+3+i*3.4},${23+Math.sin(i)*4} q-4,-8 2,-9 q7,1 2,7`} fill={haar} stroke={shade(haar,18)} strokeWidth=".8"/>)}
         </g>;})()}
+
+        </>}
+        {modern && <Haarform index={z.frisur} weiblich={w} breite={kopf.b} farbe={haar} hell={haarHell}/>}
 
         {/* ---- Augenbrauen ---- */}
         <g fill={shade(haar, -12)}>
@@ -7236,7 +7243,7 @@ function useSchriftBefund() {
   return befund;
 }
 
-const CSS = SCHRIFTEN + `
+const CSS = SCHRIFTEN + AUFDECK_CSS + `
 .fl{
  /* Grund: dunkles Zeitungspapier — die Nachtausgabe. Vorher Rasen bei Nacht,
     davor ein Blauschwarz. Warm, weil der Karton der Sammelkarten (#E9E2D3)
@@ -7450,9 +7457,9 @@ table.led td.r,table.led th.r{text-align:right;}
    nicht im Bauteil: wer Bewegung abgestellt hat, soll sie NIRGENDS bekommen,
    und eine Ausnahme in einem Bauteil vergisst man beim naechsten. */
 @keyframes rs-kartenjubel{
-  0%{transform:scale(.86) rotate(-2deg);opacity:.2}
-  55%{transform:scale(1.05) rotate(1deg);opacity:1}
-  75%{transform:scale(.985) rotate(0deg)}
+  0%{transform:translateY(12px) scale(.96);opacity:.2}
+  55%{transform:translateY(-2px) scale(1.015);opacity:1}
+  75%{transform:translateY(0) scale(.998)}
   100%{transform:none;opacity:1}
 }
 @keyframes rs-kartenglanz{
@@ -12169,27 +12176,8 @@ function WildcardEnthuellung({ card, onFertig }) {
       style={{ cursor: bereit ? "pointer" : "default", overflow: "hidden", background: "#04050A",
         backdropFilter: "none", WebkitBackdropFilter: "none", zIndex: 100 }}>
 
-      {/* Blitz im Moment des Umschlags */}
-      {!RUHE && stufe === 1 && gross && (
-        <div aria-hidden style={{ position: "absolute", inset: 0, zIndex: 1, background: r.col,
-          animation: "rs-blitz .45s ease-out forwards", pointerEvents: "none" }} />)}
-
-      {/* Licht, das sich vor dem Umschlag sammelt */}
-      {!RUHE && !auf && gross && (
-        <div aria-hidden style={{ position: "absolute", width: "min(80vw,340px)", height: "min(80vw,340px)",
-          borderRadius: "50%", border: "2px solid " + r.col, zIndex: 1, pointerEvents: "none",
-          animation: "rs-sog " + T[1] + "ms ease-in forwards" }} />)}
-
-      {/* Druckwelle beim Umschlag */}
-      {!RUHE && auf && pomp >= .35 && (
-        <div aria-hidden style={{ position: "absolute", width: "min(70vw,300px)", height: "min(70vw,300px)",
-          borderRadius: "50%", border: (2 + Math.round(pomp * 3)) + "px solid " + r.col,
-          zIndex: 1, pointerEvents: "none", animation: "rs-welle .9s cubic-bezier(.15,.7,.3,1) forwards" }} />)}
-
-      {auf && gross && <Strahlen farbe={r.col} staerke={pomp} />}
-      {auf && pomp >= .5 && <Konfetti farben={[r.col, "#DCE3D8", r.col, "#F2F5FA"]}
-        staerke={.5 + pomp} dauer={2200 + Math.round(pomp * 1400)} />}
-
+      {/* 35.185: Bühne um die Karte statt Blitz, Dauerkonfetti und Funken.
+          Ein ruhiger Lichtabschluss lässt die seltene Karte selbst wirken. */}
       <div className="eb rs-auf" style={{ color: "var(--mu)", letterSpacing: ".2em", zIndex: 3 }}>
         {auf ? (pomp >= .8 ? "DAS GIBT ES FAST NIE" : gross ? "DAS IST SELTEN" : "DEINE KARTE") : "DEINE KARTE"}
       </div>
@@ -12197,13 +12185,13 @@ function WildcardEnthuellung({ card, onFertig }) {
       {/* Drei getrennte Ebenen: Perspektive · Bewegung · Drehung.
           Beben und Schweben verschieben nur, gedreht wird eine Ebene
           tiefer — so streiten sich nie zwei Vorschriften um „transform". */}
-      <div style={{ perspective: 1000, zIndex: 3, position: "relative" }}>
-        {stufe >= 2 && gross && <Funken farbe={r.col} anzahl={Math.round(5 + pomp * 7)} />}
+      <div className="rs-enthuellungsraum" style={{ perspective: 1000, zIndex: 3, position: "relative", margin: "12px 0" }}>
+        {auf && pomp >= .2 && <AufdeckLicht farbe={r.col} stark={pomp >= .8} still={RUHE}/>}
+
         <div style={{ animation: RUHE ? "none"
-            : !auf && gross ? "rs-beben .42s ease-in-out infinite"
-            : stufe >= 2 && pomp >= .35 ? "rs-schweben 3.4s ease-in-out infinite" : "none",
+            : !auf && gross ? "rs-beben .65s ease-in-out infinite" : "none",
           willChange: RUHE ? "auto" : "transform" }}>
-          <div style={{ position: "relative", width: "min(78vw,320px)", height: "min(46vw,190px)",
+          <div style={{ position: "relative", width: "min(86vw,380px)", height: "min(60vh,250px)",
             transformStyle: "preserve-3d", WebkitTransformStyle: "preserve-3d",
             transition: RUHE ? "none" : "transform .7s cubic-bezier(.2,.85,.25,1)",
             transform: auf ? "rotateY(180deg)" : "rotateY(0deg)",
@@ -12230,7 +12218,7 @@ function WildcardEnthuellung({ card, onFertig }) {
               transform: "rotateY(180deg)", borderRadius: 0, overflow: "hidden",
               border: (1 + Math.round(pomp * 3)) + "px solid " + r.col,
               background: "linear-gradient(140deg," + r.col + (gross ? "4E" : "38") + " 0%,var(--pan) 62%)",
-              boxShadow: pomp >= .5 ? "0 0 " + Math.round(24 + pomp * 80) + "px " + r.col + "80" : "none",
+              boxShadow: pomp >= .2 ? "0 12px 40px #0008, 0 0 24px " + r.col + "35" : "0 12px 40px #0008",
               padding: "16px 18px", display: "flex", flexDirection: "column", justifyContent: "center" }}>
               {/* Folie für die obersten Stufen. Liegt INNERHALB der Vorderseite und
                   fasst kein transform an — die drei Bewegungsebenen bleiben unberührt. */}
@@ -12243,10 +12231,10 @@ function WildcardEnthuellung({ card, onFertig }) {
                   position: "relative", zIndex: 1 }}>
                 {auf ? r.name.toUpperCase() : null}</div>
               <div className={auf && !RUHE ? "d rs-auf" : "d"}
-                style={{ fontSize: "clamp(20px,5.6vw,30px)", lineHeight: 1.08, marginTop: 4,
+                style={{ fontSize: "clamp(25px,6.4vw,34px)", lineHeight: 1.08, marginTop: 4,
                   animationDelay: "390ms" }}>{auf ? card.n : null}</div>
               <p className={auf && !RUHE ? "rs-auf" : ""}
-                style={{ fontSize: 11.5, color: "var(--mu)", marginTop: 6,
+                style={{ fontSize: 14, color: "var(--tx)", marginTop: 10, lineHeight: 1.5,
                   animationDelay: "480ms" }}>{auf ? card.t : null}</p>
             </div>
           </div>
@@ -12987,6 +12975,7 @@ function Spielerkarte({ karte, gross, aufgedeckt = true, onTippen, jubel }) {
           und Silber wäre er kein Merkmal mehr, sondern Dekoration — und
           Dekoration, die überall ist, sagt nichts. */}
       {holo && <KartenEffekt stark={karte.stufe === "legende"} />}
+      {feiern && <AufdeckLicht farbe={st.farbe} stark={karte.stufe === "legende" || !!karte.sonderkarte} kompakt/>}
       {/* 35.181: Keine Vollflächenfolie über Porträt und Text mehr. */}
 
       <div style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>

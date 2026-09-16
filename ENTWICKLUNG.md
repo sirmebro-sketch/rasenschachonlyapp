@@ -653,3 +653,34 @@ aria-expanded und aria-controls bilden den Zustand ab.
 an den ausdrücklich gewünschten geschlossenen Startzustand angepasst.
 Android-Sichtprüfung, besonders schmale Anzeige und große Schrift, bleibt offen.
 Version 35.184.0 / 3518400; keine Änderungen an Spielständen oder Spielregeln.
+
+## 35.185.0 – Aufdeckungen und Haarformen, Codex, 16.09.2026
+
+Basis bd3fbd2 (35.184); keine offenen PRs oder nicht integrierten Branches.
+Wildcards erhalten eine größere Bühne (bis 380 × 250 px), größere Wirkungs-
+schrift und einen kurzen Lichtakzent ab selten. Höchste Stufen mit vier statt
+zwei Sternakzenten und stärkerem Lichtbett. Kein zusätzlicher Folienzug.
+Vollbildblitz, Dauerkonfetti, Dauerschweben und Funken der Wildcard entfernt;
+Aufdeckzeitplan und Abschlussbedienung erhalten. Gold/Legenden-Spielerkarten
+bekommen denselben kurzen Akzent im Hintergrund und einen sanfteren Auftritt.
+Reduzierte Bewegung wird berücksichtigt. Animationen noch nicht visuell geprüft.
+
+Moderner Haar-Renderer separat in haarformen.jsx; Front- und Hinterhaar mit
+zusammenhängenden Silhouetten und kopfbreitenabhängiger Skalierung. Keine
+versetzten Kappenduplikate oder hart abgeschnittenen Strukturstreifen mehr.
+Alle bestehenden Bonusfrisuren einbezogen; deren Kennungen und Zugang bleiben.
+Zwei neue Formen je Auswahl (m20/21, w18/19), alte Zusatzformen unverändert
+adressierbar. 32 Altporträts ohne stil:2 gegen Basis zeichengleich gerendert.
+
+104 Tests bestanden; Freischaltungsprüfung erweitert. Web-Build und Capacitor-
+Sync erfolgreich. Echte Avatar-SVGs mit Sharp gerastert und Bildbögen für Oval,
+Schmal und Vollmond angesehen, einschließlich aller freischaltbaren Formen.
+Dabei flachen Schnitt nachkorrigiert (Kopfhaut oberhalb Haarfläche sichtbar).
+Keine vollständige Prüfung jeder Haar-/Hautfarbkombination behauptet.
+
+Visueller Arbeitsweg: tools/visuelle-vorschau.cjs erzeugt isolierte Einzel-HTML
+mit echten Komponenten; tools/portraet-bogen.cjs erzeugt PNG-Bögen. README enthält
+Bedienung. Cloud-Browser verbunden, aber localhost und Datei-URLs ausdrücklich
+blockiert; keine Umgehung. Daher kein Live-/Touch-/Animationstest. Nutzer kann
+weiter Android-Screenshots liefern; Aufdeck-Timing und Landschaftsmodus bleiben
+als Geräteprüfung offen. Version 35.185.0 / 3518500.

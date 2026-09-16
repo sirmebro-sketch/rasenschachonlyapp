@@ -1,5 +1,12 @@
 # Änderungen
 
+## 35.185.0 – Aufdeckbühne und sauberere Haarformen
+
+- Größere Wildcards mit besser lesbarer Wirkung; kurze Lichtbühne je Seltenheit statt Vollbildblitz und Dauerpartikeln.
+- Gold- und legendäre Spielerkarten mit sanfterem Auftritt und kurzem Lichtakzent; bestehende Holo-Folie bleibt erhalten.
+- Haarformen moderner Porträts neu gezeichnet: verbundene Silhouetten, dezente Struktur, kopfbreitenabhängige Konturen; freischaltbare Formen einbezogen.
+- Mittelscheitel mit Fall und kurzer Fade zusätzlich für beide Auswahlen. Bestehende Frisurkennungen und Freischaltungen bleiben erhalten.
+
 ## 35.184.0 – Kompakter Spielerpass
 
 - Feinheiten beim Start der Charaktererstellung eingeklappt.

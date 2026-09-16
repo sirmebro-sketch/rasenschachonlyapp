@@ -10,3 +10,5 @@ android/app/src/main/assets/
 *.keystore
 *.jks
 .DS_Store
+
+.preview/

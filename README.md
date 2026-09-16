@@ -199,9 +199,9 @@ Im Entwicklungsvermerk Quell- und Zielcommit sowie die Entscheidung nennen.
 
 ### Versionsschema
 
-`package.json` führt die Version als `major.minor.patch` (derzeit 35.184.0).
+`package.json` führt die Version als `major.minor.patch` (derzeit 35.185.0).
 Daraus rechnet `tools/android-version.cjs` den `versionCode`
-(`major*100000 + minor*100 + patch`, also 3518400) und schreibt ihn zusammen mit
+(`major*100000 + minor*100 + patch`, also 3518500) und schreibt ihn zusammen mit
 dem `versionName` nach `android/app/build.gradle`. Beide Felder sollen nie von
 Hand auseinanderlaufen. Die Version wird erhöht, wenn eine neue APK entsteht —
 reine Werkzeug- oder Dokumentationsänderungen erhöhen sie nicht.
@@ -271,3 +271,23 @@ eigenen Branch vorbereiten. Maßgeblich ist der Quellstand im Repository.
 Vollständiger Vorsatzvergleich: `node tools/langzeit.cjs --vorsatzvergleich`.
 1.152 Karrieren: acht Positionen × zwei Geschlechter × drei Modi × vier
 Auswahlstrategien × sechs Vorsätze. Feste Seeds, keine Spielerprognose.
+
+### Visuelle Arbeit (35.185)
+
+`node tools/visuelle-vorschau.cjs` erzeugt `.preview/sichtprobe.html`, eine
+lokal im Browser öffnungsfähige Einzeldatei mit den echten React-Komponenten:
+Frisuren einschließlich Freischaltungen, Wildcards aller Stufen, Spielerkarten
+und Charaktererstellung. Testdaten und Speicheradapter sind isoliert; sie
+schreiben keine Spielstände. Nicht Teil des Android-Bündels. Bei Codeänderungen
+neu erzeugen. Vorschau ist ein Prüfwerkzeug, kein vollständiger Spieltest.
+
+`node tools/portraet-bogen.cjs <Suffix> <Kopfform>` erzeugt PNG-Bögen in
+`.preview/` aus dem echten Avatar-Renderer. Benötigt `sharp`, entweder installiert
+oder aus `CODEX_PRIMARY_RUNTIME_NODE_MODULES`. Ergebnisse sind temporär und
+werden nicht committed. Damit lassen sich Konturen auch ohne Browser prüfen.
+
+Der Cloud-Browser dieser Runde blockierte sowohl localhost als auch lokale
+Datei-URLs ausdrücklich. Diese Grenze nicht umgehen. Ein verfügbarer Browser
+in einer anderen autorisierten Arbeitsumgebung kann die erzeugte Vorschau
+normal öffnen; Android-Aufnahmen des Eigentümers bleiben eine weitere Quelle.
+Statische Porträtbögen sind kein Nachweis für flüssige Animationen oder Touch.
