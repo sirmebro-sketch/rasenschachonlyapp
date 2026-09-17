@@ -68,11 +68,14 @@ test('Ligastufe trägt die Grössenordnung: erste Liga verdient mehr als vierte'
   assert(erste > vierte * 1.8, 'erste Liga deutlich über vierter, nicht nur ein bisschen');
 });
 
-test('Abrechnung: Kasse ändert sich genau um Einnahmen minus Kosten', () => {
+test('Abrechnung: Kasse ändert sich genau um das ausgewiesene Ergebnis', () => {
   const v = verein({ kasse: 5, ausbau: { stadion: 3, gastro: 2, sortiment: 2, reichweite: 2, training: 2, medizin: 2 } });
   const { v: neu, beleg } = W.saisonAbrechnung(v, erg());
   assert.equal(beleg.kasseVorher, 5);
-  assert(Math.abs(beleg.ergebnis - (beleg.summeEin - beleg.summeAus)) < 0.02);
+  /* Das Ergebnis ist Einnahmen − Kosten + Ereignisse + Vorstandsprämie.
+     Jeder Teil steht einzeln im Beleg, damit nichts unerklärt auftaucht. */
+  const ereignisGeld = beleg.ereignisse.reduce((a, e) => a + e.geld, 0);
+  assert(Math.abs(beleg.ergebnis - (beleg.summeEin - beleg.summeAus + ereignisGeld + beleg.ziel.praemie)) < 0.02);
   assert(Math.abs(neu.kasse - (5 + beleg.ergebnis)) < 0.02);
   assert.equal(neu.kasse, beleg.kasse, 'Beleg und Buchung nennen dieselbe Kasse');
   assert(beleg.ausgaben.length >= 2 && beleg.summeAus > 0, 'Kosten sind nicht null');
@@ -205,5 +208,196 @@ test('Alles bleibt endlich: keine NaN, keine Unendlichkeiten in Grenzlagen', () 
     for (const k of ['summeEin', 'summeAus', 'ergebnis', 'kasse'])
       assert(Number.isFinite(beleg[k]), k + ' ist keine Zahl bei ' + JSON.stringify(v).slice(0, 40));
     assert(beleg.zuschauer >= 0 && Number.isFinite(beleg.zuschauer));
+  }
+});
+
+/* ===================== Runde 2: die fünf Vereinsführungs-Systeme ===================== */
+
+test('Bauprojekte: Geld sofort weg, Stufe erst nach 1 bis 3 Saisons', () => {
+  assert.equal(W.bauSaisons(0.8), 1);
+  assert.equal(W.bauSaisons(9), 2);
+  assert.equal(W.bauSaisons(55), 3);
+  for (const a of W.AUSBAU) for (const k of a.kosten.slice(1)) {
+    const d = W.bauSaisons(k);
+    assert(d >= 1 && d <= 3, a.id + ' Stufe für ' + k + ' Mio ergibt ' + d + ' Saisons');
+  }
+
+  const v = verein({ kasse: 20 });
+  const start = W.bauStart(v, 'stadion');                 /* 4 Mio, also 2 Saisons */
+  assert.equal(start.fehler, null);
+  assert.equal(start.kosten, 4);
+  assert.equal(start.dauer, 2);
+  assert.equal(start.v.kasse, 16, 'sofort bezahlt');
+  assert.equal(W.ausbauStufe(start.v, 'stadion'), 1, 'die Stufe steigt noch nicht');
+  assert(W.baustelleText(start.v).includes('Stadion'));
+
+  /* Nur eine Baustelle gleichzeitig. */
+  assert(W.bauStart(start.v, 'gastro').fehler.includes('Es wird schon gebaut'));
+  assert(W.bauStart(verein({ kasse: 1 }), 'stadion').fehler.includes('fehlen'));
+
+  /* Erste Saison: noch nicht fertig. Zweite: fertig. */
+  const nach1 = W.saisonAbrechnung(start.v, erg(), 1);
+  assert.equal(W.ausbauStufe(nach1.v, 'stadion'), 1);
+  assert.equal(nach1.v.baustelle.rest, 1);
+  assert.equal(nach1.beleg.bau.fertig, null);
+  const nach2 = W.saisonAbrechnung(nach1.v, erg(), 2);
+  assert.equal(W.ausbauStufe(nach2.v, 'stadion'), 2, 'nach zwei Saisons steht das Stadion');
+  assert.equal(nach2.v.baustelle, null);
+  assert.equal(nach2.beleg.bau.fertig.n, 'Stadion');
+});
+
+test('Preise: wer nichts zu bieten hat, kann nicht erhöhen', () => {
+  const stark = verein({ ligastufe: 1, bilanz: { meister: 3, aufstiege: 2, abstiege: 0 } });
+  const schwach = verein({ ligastufe: 5, bilanz: { abstiege: 2 } });
+  /* Kevins erstes Beispiel: der schwache Verein hat sein Ertragsmaximum bei
+     oder unter Normalpreis, der starke deutlich darüber. */
+  assert(W.bestPreis(stark, 'ticket') > W.bestPreis(schwach, 'ticket') + 0.15,
+    'Ansehen entscheidet, wie viel man verlangen darf');
+  assert(W.bestPreis(schwach, 'ticket') <= 1.05, 'ein schwacher Verein kann kaum erhöhen');
+
+  /* Kevins zweites Beispiel: schlechte Gastro verträgt keine hohen Preise. */
+  const gastroMies = verein({ ausbau: { gastro: 1 } });
+  const gastroGut = verein({ ausbau: { gastro: 6 } });
+  assert(W.bestPreis(gastroMies, 'gastro') < 1, 'Stufe 1 muss unter Normalpreis bleiben');
+  assert(W.bestPreis(gastroGut, 'gastro') > 1.25, 'Stufe 6 darf deutlich zulangen');
+
+  /* Merch hängt an Sortiment UND Vertrieb. */
+  assert(W.bestPreis(verein({ ausbau: { sortiment: 6, reichweite: 6 } }), 'merch')
+       > W.bestPreis(verein({ ausbau: { sortiment: 1, reichweite: 1 } }), 'merch'));
+});
+
+test('Preise: am Optimum bringt der Regler am meisten, darüber weniger', () => {
+  const v = verein({ ligastufe: 2, ausbau: { stadion: 4, gastro: 3, sortiment: 3, reichweite: 3, training: 1, medizin: 1 } });
+  /* `bestPreis` ist ein Versprechen an den Spieler: kein anderer Reglerwert
+     bringt mehr. Genau das wird geprüft — über das ganze Band, für alle drei
+     Preise, und nicht nur gegen den Normalpreis. */
+  for (const feld of ['ticket', 'gastro', 'merch']) {
+    const opt = W.bestPreis(v, feld);
+    const ertrag = (f) => W.saisonEinnahmen({ ...v, preise: { [feld]: f } }, erg()).summe;
+    const beste = ertrag(opt);
+    for (let f = W.PREIS_MIN; f <= W.PREIS_MAX + 1e-9; f = Math.round((f + 0.05) * 100) / 100)
+      assert(ertrag(f) <= beste + 0.02,
+        feld + ': Faktor ' + f.toFixed(2) + ' bringt ' + ertrag(f).toFixed(2)
+        + ' und schlägt damit das angezeigte Optimum ' + opt + ' (' + beste.toFixed(2) + ')');
+    assert(ertrag(W.PREIS_MAX) < beste, feld + ': der teuerste Preis ist nicht der beste');
+    assert(ertrag(W.PREIS_MIN) < beste, feld + ': verschenken lohnt auch nicht');
+  }
+  /* Zu hohe Preise kosten zusätzlich Stimmung — der Schaden wirkt weiter. */
+  const gierig = W.saisonAbrechnung({ ...v, preise: { ticket: 1.6, gastro: 1.6, merch: 1.6 } }, erg(), 5);
+  const fair = W.saisonAbrechnung({ ...v, preise: { ticket: 1, gastro: 1, merch: 1 } }, erg(), 5);
+  assert(gierig.v.stimmung < fair.v.stimmung, 'Überteuerung verprellt die Fans');
+});
+
+test('Stimmung bewegt sich träge und wirkt auf Zuschauer', () => {
+  const v = verein({ ausbau: { stadion: 4 }, stimmung: 60 });
+  const froh = W.saisonEinnahmen({ ...v, stimmung: 95 }, erg()).zuschauer;
+  const sauer = W.saisonEinnahmen({ ...v, stimmung: 15 }, erg()).zuschauer;
+  assert(froh > sauer, 'gute Stimmung füllt das Stadion');
+  /* Höchstens gut zehn Punkte je Saison, in beide Richtungen. */
+  for (const e of [erg({ rang: 1, aufstieg: true }), erg({ rang: 18, abstieg: true })]) {
+    const n = W.saisonAbrechnung(v, e, 3).v.stimmung;
+    assert(Math.abs(n - 60) <= 14, 'Stimmungssprung zu gross: ' + n);
+    assert(n >= 0 && n <= 100);
+  }
+});
+
+test('Vorstandsziel: aus der Ausgangslage abgeleitet, Prämie nur bei Erfolg', () => {
+  const v = verein({ ligastufe: 2 });
+  assert.equal(W.zielSetzen(v, 17, 18).id, 'halt', 'wer unten stand, soll die Liga halten');
+  assert.equal(W.zielSetzen(v, 9, 18).id, 'mitte');
+  assert.equal(W.zielSetzen(v, 5, 18).id, 'oben');
+  assert.equal(W.zielSetzen(v, 2, 18).id, 'titel');
+  const z = W.zielSetzen(v, 9, 18);
+  assert(z.praemie > 0 && z.soll >= 1);
+
+  const mitZiel = { ...v, ziel: z };
+  assert.equal(W.zielPruefen(mitZiel, erg({ rang: z.soll })).erfuellt, true);
+  assert.equal(W.zielPruefen(mitZiel, erg({ rang: z.soll })).praemie, z.praemie);
+  assert.equal(W.zielPruefen(mitZiel, erg({ rang: z.soll + 1 })).erfuellt, false);
+  assert.equal(W.zielPruefen(mitZiel, erg({ rang: z.soll + 1 })).praemie, 0, 'verfehlt kostet nichts');
+  assert.equal(W.zielPruefen(v, erg()).gesetzt, false, 'ohne Ziel passiert nichts');
+
+  /* Eine AG erwartet mehr als ein e.V. */
+  const evZiel = W.zielSetzen({ ...v, rechtsform: 'ev' }, 9, 18);
+  const agZiel = W.zielSetzen({ ...v, rechtsform: 'ag' }, 9, 18);
+  assert(agZiel.soll <= evZiel.soll, 'die AG verlangt mindestens denselben Platz');
+});
+
+test('Wirtschaftsereignisse: 0 bis 2 je Saison in Kevins Verteilung', () => {
+  /* Die Verteilung 30/50/20 direkt an der Funktion geprüft. */
+  const zahl = { 0: 0, 1: 0, 2: 0 };
+  for (let i = 0; i < 6000; i++) {
+    let x = (i + 0.5) / 6000;                              /* gleichverteilt über [0,1) */
+    zahl[W.ereignisAnzahl(() => x)]++;
+  }
+  assert(Math.abs(zahl[0] / 6000 - .30) < .01, 'keins: ' + (zahl[0] / 6000));
+  assert(Math.abs(zahl[1] / 6000 - .50) < .01, 'eins: ' + (zahl[1] / 6000));
+  assert(Math.abs(zahl[2] / 6000 - .20) < .01, 'zwei: ' + (zahl[2] / 6000));
+
+  /* Reproduzierbar, positiv wie negativ möglich, Beträge skalieren mit der Liga. */
+  const v = verein();
+  assert.deepEqual(W.ereignisseZiehen(v, 12), W.ereignisseZiehen(v, 12));
+  let plus = 0, minus = 0, gross = 0, klein = 0;
+  for (let s = 0; s < 400; s++) {
+    for (const e of W.ereignisseZiehen(verein({ ligastufe: 1 }), s)) { if (e.geld > 0) plus++; else minus++; gross += Math.abs(e.geld); }
+    for (const e of W.ereignisseZiehen(verein({ ligastufe: 5 }), s)) klein += Math.abs(e.geld);
+  }
+  assert(plus > 0 && minus > 0, 'es gibt gute und schlechte Nachrichten');
+  assert(gross > klein * 3, 'ein Erstligist erlebt grössere Beträge als ein Fünftligist');
+  assert(W.WIRTSCHAFTSEREIGNISSE.every((e) => e.n && e.t && (e.art === 'plus' || e.art === 'minus')));
+});
+
+test('Rechtsform: nur nach vorn, nur ab Grösse, mit Einlage und Stimmungskosten', () => {
+  const klein = verein({ ligastufe: 5, kasse: 50 });
+  assert(W.rechtsformWechseln(klein, 'ag').fehler.includes('zu klein'));
+  assert.equal(W.rechtsform(klein).id, 'ev', 'Voreinstellung ist der e.V.');
+
+  const gross = verein({ ligastufe: 1, kasse: 50, stimmung: 70 });
+  const zurGmbH = W.rechtsformWechseln(gross, 'gmbh');
+  assert.equal(zurGmbH.fehler, null);
+  assert.equal(zurGmbH.v.rechtsform, 'gmbh');
+  assert.equal(zurGmbH.v.kasse, 50 - 2 + 15, 'Kosten ab, Einlage drauf');
+  assert.equal(zurGmbH.v.stimmung, 62, 'der Wechsel kostet Rückhalt');
+
+  assert(W.rechtsformWechseln(zurGmbH.v, 'ev').fehler.includes('nur nach vorn'));
+  assert(W.rechtsformWechseln(zurGmbH.v, 'gmbh').fehler.includes('nur nach vorn'));
+  assert(W.rechtsformWechseln(verein({ ligastufe: 1, kasse: 1 }), 'gmbh').fehler.includes('kostet'));
+  assert.equal(W.rechtsformWechseln(gross, 'sarl').fehler, 'Unbekannte Rechtsform.');
+});
+
+test('Rechtsform: mehr Kapital gegen weniger Rückhalt', () => {
+  const bau = { stadion: 5, gastro: 4, sortiment: 4, reichweite: 4, training: 1, medizin: 1 };
+  const je = (id) => verein({ ligastufe: 1, rechtsform: id, ausbau: bau,
+    sponsoren: [{ id: 'aurex', n: 'Aurex Bank', betrag: 8, rest: 2, fx: null }] });
+  const ev = W.saisonEinnahmen(je('ev'), erg()).summe;
+  const ag = W.saisonEinnahmen(je('ag'), erg()).summe;
+  assert(ag > ev, 'die AG vermarktet besser');
+  assert(W.bestPreis(je('ev'), 'ticket') > W.bestPreis(je('ag'), 'ticket'),
+    'dafür ertragen die Fans des e.V. höhere Preise');
+  /* Mitgliedsbeiträge sind beim e.V. eine Säule, bei der AG ein Rest. */
+  const beitrag = (id) => (W.saisonEinnahmen(je(id), erg()).posten
+    .find((p) => p.k.startsWith('Mitgliedsbeiträge')) || { v: 0 }).v;
+  assert(beitrag('ev') > beitrag('ag') * 5);
+  /* Aufsteigende Reihe: jede Form vermarktet besser als die vorige. */
+  const reihe = W.RECHTSFORMEN.map((r) => W.saisonEinnahmen(je(r.id), erg()).summe);
+  for (let i = 1; i < reihe.length; i++) assert(reihe[i] > reihe[i - 1], 'Reihenfolge der Rechtsformen');
+});
+
+test('Alles bleibt endlich, auch mit allen neuen Systemen', () => {
+  const faelle = [
+    verein({ ligastufe: 1, rechtsform: 'ag', stimmung: 100, preise: { ticket: 1.6, gastro: 1.6, merch: 1.6 },
+             ausbau: { stadion: 6, gastro: 6, sortiment: 6, reichweite: 6, training: 6, medizin: 6 },
+             baustelle: { id: 'stadion', stufe: 6, dauer: 3, rest: 1 },
+             ziel: { id: 'titel', n: 'Titel', soll: 1, praemie: 9 } }),
+    verein({ ligastufe: 9, stimmung: 0, preise: { ticket: 0.6, gastro: 0.6, merch: 0.6 }, ausbau: {} }),
+    { land: 'JPN' }, {},
+  ];
+  for (const v of faelle) for (const e of [erg(), erg({ rang: 1, N: 2 }), erg({ rang: 20, N: 20, abstieg: true })]) {
+    const { v: neu, beleg } = W.saisonAbrechnung(v, e, 9);
+    for (const k of ['summeEin', 'summeAus', 'ergebnis', 'kasse', 'stimmung'])
+      assert(Number.isFinite(beleg[k]), k + ' ist keine Zahl');
+    assert(neu.stimmung >= 0 && neu.stimmung <= 100);
+    assert(beleg.zuschauer >= 0 && Number.isFinite(beleg.zuschauer));
+    assert(beleg.ereignisse.length <= 2);
   }
 });

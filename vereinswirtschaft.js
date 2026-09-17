@@ -238,6 +238,145 @@ export function wirkung(v) {
   return a;
 }
 
+/* ----------------------------------------------------------- Rechtsform
+   Kevin, 17.09.2026: „Ich fände es noch cool wenn man im Laufe des Spiel die
+   Körperschaft der Profimannschaft ändern kann um so die Finanziellen
+   Möglichkeiten zu ändern und sich Vor- und Nachteile zur verschaffen."
+
+   Die Reihe ist eine Einbahnstrasse von der Mitgliederhand zum Kapitalmarkt.
+   Jede Stufe bringt mehr kommerzielle Einnahmen und eine Einlage, kostet aber
+   Rückhalt: Fans ertragen weniger Preiserhöhungen, und der Vorstand erwartet
+   mehr. Kein Weg ist richtig — ein e.V. mit treuen Fans kann hohe Preise
+   verlangen, wo eine AG schon Pfiffe erntet.
+
+   `toleranz` verschiebt, wie weit man mit Preisen über die Norm gehen darf,
+   `kommerz` skaliert Merchandising und Sponsoren, `beitrag` sind die
+   Mitgliedsbeiträge (nur der e.V. hat sie in nennenswerter Höhe). */
+export const RECHTSFORMEN = [
+  { id: "ev",   n: "e.V.",  lang: "Eingetragener Verein", kommerz: 0.92, toleranz: +0.18, beitrag: 0.9,
+    einlage: 0,  wechselKosten: 0,  zielHaerte: 0.85, mindestStufe: 9,
+    t: "Die Mitglieder entscheiden. Wenig Kapital, viel Rückhalt." },
+  { id: "gmbh", n: "GmbH",  lang: "Gesellschaft mit beschränkter Haftung", kommerz: 1.00, toleranz: 0, beitrag: 0.3,
+    einlage: 15, wechselKosten: 2, zielHaerte: 1.00, mindestStufe: 4,
+    t: "Ein Investor steigt ein. Mehr Geld, etwas weniger Geduld." },
+  { id: "kgaa", n: "KGaA",  lang: "Kommanditgesellschaft auf Aktien", kommerz: 1.09, toleranz: -0.09, beitrag: 0.15,
+    einlage: 45, wechselKosten: 6, zielHaerte: 1.12, mindestStufe: 2,
+    t: "Kapital von aussen, Führung bleibt beim Verein." },
+  { id: "ag",   n: "AG",    lang: "Aktiengesellschaft", kommerz: 1.20, toleranz: -0.20, beitrag: 0.05,
+    einlage: 110, wechselKosten: 14, zielHaerte: 1.28, mindestStufe: 1,
+    t: "Der Kapitalmarkt zahlt — und schaut jede Saison genau hin." },
+];
+export const rechtsform = (v) => RECHTSFORMEN.find((r) => r.id === (v?.rechtsform || "ev")) || RECHTSFORMEN[0];
+const rfIndex = (id) => RECHTSFORMEN.findIndex((r) => r.id === id);
+
+/* Wechseln geht nur nach vorne und nur, wenn der Verein gross genug ist:
+   niemand bringt einen Fünftligisten an die Börse. Der Wechsel kostet Geld
+   und Stimmung, bringt dafür die Einlage. */
+export function rechtsformWechseln(v, zielId) {
+  const jetzt = rechtsform(v);
+  const ziel = RECHTSFORMEN.find((r) => r.id === zielId);
+  if (!ziel) return { v, fehler: "Unbekannte Rechtsform." };
+  if (rfIndex(ziel.id) <= rfIndex(jetzt.id)) return { v, fehler: "Der Weg führt nur nach vorn." };
+  const stufe = v?.ligastufe || 3;
+  if (stufe > ziel.mindestStufe) return { v, fehler:
+    "Dafür ist der Verein zu klein — nötig ist mindestens Liga " + ziel.mindestStufe + "." };
+  const kasse = Number(v?.kasse) || 0;
+  if (kasse < ziel.wechselKosten) return { v, fehler:
+    "Die Umwandlung kostet " + geldText(ziel.wechselKosten, v?.land) + "." };
+  return { v: { ...v, rechtsform: ziel.id,
+                kasse: Math.round((kasse - ziel.wechselKosten + ziel.einlage) * 100) / 100,
+                stimmung: Math.max(0, (v?.stimmung ?? 60) - 8) },
+           einlage: ziel.einlage, kosten: ziel.wechselKosten, fehler: null };
+}
+
+/* ------------------------------------------------------- Preise und Stimmung
+   Kevin: „Ticketpreise einstellbar, Gastro Preise einstellbar und Merch Preise
+   einstellbar. Alles mit vor und nachteilen. (Ein schlecht dahstenhender
+   Verein mit wenig Bekanntheit kann keine Hohen Preise verlangen ohne
+   nachteile. Ein Verein mit schlechter Gastro kann keine Hohen Preise
+   verlangen ohne Nachteile.)"
+
+   UMGESETZT ÜBER DIE ELASTIZITÄT, nicht über ein Verbot. Der Preis ist ein
+   Faktor auf den Normalpreis (0,6 bis 1,6). Wer ihn anhebt, nimmt je Einheit
+   mehr ein und verkauft weniger. Wie viel weniger, hängt davon ab, was der
+   Verein zu bieten hat:
+
+     Tickets  — am Ansehen. Ein Erstligist mit Ansehen 1,9 hat Elastizität
+                0,68 und sein Ertragsmaximum bei Faktor 1,24: er DARF 24 %
+                über Normalpreis gehen. Ein Fünftligist mit Ansehen 0,7 hat
+                1,04 und sein Maximum bei 0,98 — er kann nicht erhöhen, ohne
+                draufzuzahlen. Genau Kevins erstes Beispiel.
+     Gastro   — an der Gastrostufe. Stufe 1 verträgt nichts (Maximum 0,92),
+                Stufe 6 verträgt viel (Maximum 1,36). Kevins zweites Beispiel.
+     Merch    — an Sortiment und Vertrieb zusammen.
+
+   Die Rechtsform verschiebt jede dieser Toleranzen: ein e.V. darf mehr, eine
+   AG weniger. Wer über das Maximum hinausgeht, verliert zusätzlich Stimmung —
+   der Schaden ist also doppelt und wirkt in die nächste Saison hinein. */
+export const PREIS_MIN = 0.6, PREIS_MAX = 1.6;
+export const preisFaktor = (v, feld) => {
+  const x = Number((v?.preise || {})[feld]);
+  return Number.isFinite(x) ? Math.max(PREIS_MIN, Math.min(PREIS_MAX, x)) : 1;
+};
+
+/* Elastizität: je höher, desto schneller bricht die Nachfrage weg. */
+export function elastizitaet(v, feld) {
+  const rf = rechtsform(v);
+  const tol = rf.toleranz + (((v?.stimmung ?? 60) - 60) / 400);   /* gute Stimmung verträgt mehr */
+  let e;
+  if (feld === "ticket") e = 1.25 - ansehen(v, v?.ligastufe || 3) * 0.30;
+  else if (feld === "gastro") e = 1.30 - stufeVon(v, "gastro") * 0.12;
+  else e = 1.25 - (stufeVon(v, "sortiment") + stufeVon(v, "reichweite")) / 2 * 0.10;
+  return Math.max(0.35, e - tol * 0.55);
+}
+
+/* Der Preis, der am meisten einbringt — als Hinweis für die Oberfläche, damit
+   der Regler nicht blind bedient wird.
+
+   Für Gastro und Merch ist das die Schulformel: der Ertrag f · (1 − e(f−1))
+   hat sein Maximum bei (1+e)/(2e).
+
+   BEIM TICKETPREIS REICHT DAS NICHT (gemerkt beim Nachrechnen, 17.09.2026).
+   Wer die Karten teurer macht, lässt weniger Leute ins Stadion — und die
+   fehlen auch an der Wurst- und Bierbude. Die Gastronomie hängt an der
+   BESUCHERZAHL, nicht am Ticketpreis. Isoliert lag das Optimum bei Faktor
+   1,14, in Wahrheit bei 0,98: ein Hinweis, der 14 % danebenlag und den
+   Spieler in ein Minusgeschäft geschickt hätte.
+
+   Mit dem Gastro-Anteil r je Besucher verschiebt sich das Maximum um r/2
+   nach unten. Ein Verein mit starker Gastronomie muss seine Tickets also
+   billiger halten — ein Zusammenhang, der sich von selbst ergibt und den
+   niemand erfinden musste.
+
+   UND AUCH DAS WAR NOCH ZU EINFACH. Über 10.935 Vereinskonfigurationen
+   nachgerechnet lag die Formel in 558 Fällen daneben — 5,1 %. Der Grund sind
+   die Deckelungen: die Auslastung kann nicht über 99 % und nicht unter 35 %,
+   die Menge nicht unter 5 %. Ein ausverkauftes Stadion verliert bei einer
+   Preiserhöhung zunächst gar keine Besucher, also liegt sein Optimum HÖHER
+   als jede Parabel es vorhersagt. Man könnte die Formel um jede Deckelung
+   erweitern — oder den Ertrag einfach ausrechnen. Letzteres ist kürzer,
+   immer richtig und kostet einundfünfzig Multiplikationen.
+
+   Der Hinweis ist damit keine Schätzung mehr, sondern ein Versprechen: kein
+   anderer Reglerwert bringt mehr. Genau das prüft die Regression. */
+export function bestPreis(v, feld, erg = { rang: 10, N: 18 }) {
+  let bester = PREIS_MIN, hoechster = -Infinity;
+  for (let f = PREIS_MIN; f <= PREIS_MAX + 1e-9; f = Math.round((f + .02) * 100) / 100) {
+    const s = saisonEinnahmen({ ...v, preise: { ...(v?.preise || {}), [feld]: f } }, erg).summe;
+    if (s > hoechster) { hoechster = s; bester = f; }
+  }
+  return bester;
+}
+
+/* Mengenwirkung eines Preisfaktors: 1 bei Normalpreis, weniger darüber. */
+const menge = (v, feld) => Math.max(0.05, 1 - (preisFaktor(v, feld) - 1) * elastizitaet(v, feld));
+
+/* Wie weit der Preis über dem ertragreichsten liegt — daraus entsteht der
+   Stimmungsschaden. Unterhalb des Optimums gibt es keinen Ärger, nur weniger
+   Geld; wer Fans billig reinlässt, wird nicht bestraft. */
+const ueberzogen = (v) => ["ticket", "gastro", "merch"]
+  .reduce((a, f) => a + Math.max(0, preisFaktor(v, f) - bestPreis(v, f)), 0);
+
 /* ------------------------------------------------------------- Einnahmen */
 const stufeVon = (v, id) => Math.max(1, Math.min(AUSBAU_MAX, ((v?.ausbau || {})[id]) || 1));
 
@@ -271,33 +410,65 @@ export function saisonEinnahmen(v, erg = {}) {
      anhäufte. */
   const preis = Math.max(9, 34 / Math.pow(stufe, .55));
   const ticketFaktor = 1 + (w.ticketFaktor || 0);
-  dazu("Zuschauer · " + Math.round(plaetze(v) * auslastung).toLocaleString("de-DE")
-       + " × " + heimspiele + " Heimspiele",
-       plaetze(v) * auslastung * preis * heimspiele / 1e6 * ticketFaktor);
+  /* Die Stimmung bewegt die Auslastung um ±10 %: begeisterte Fans füllen das
+     Haus auch bei mässiger Platzierung, verprellte bleiben trotz Erfolg weg. */
+  const stimmung = Math.max(0, Math.min(100, v?.stimmung ?? 60));
+  const stimmungsFaktor = 1 + (stimmung - 60) / 400;
+  const besucher = Math.round(plaetze(v) * Math.min(.99, auslastung * stimmungsFaktor * menge(v, "ticket")));
+  dazu("Zuschauer · " + besucher.toLocaleString("de-DE") + " × " + heimspiele + " Heimspiele"
+       + (preisFaktor(v, "ticket") !== 1 ? " · Preis " + Math.round(preisFaktor(v, "ticket") * 100) + " %" : ""),
+       besucher * preis * preisFaktor(v, "ticket") * heimspiele / 1e6 * ticketFaktor);
 
   /* Gastronomie: Umsatz je Besucher, abhängig von der Gastrostufe. */
   const gastroStufe = stufeVon(v, "gastro");
   const jeBesucher = 2.2 + (gastroStufe - 1) * 2.6;
-  dazu("Gastronomie · Stufe " + gastroStufe,
-       plaetze(v) * auslastung * jeBesucher * heimspiele / 1e6 * (1 + (w.gastroFaktor || 0)));
+  dazu("Gastronomie · Stufe " + gastroStufe
+       + (preisFaktor(v, "gastro") !== 1 ? " · Preis " + Math.round(preisFaktor(v, "gastro") * 100) + " %" : ""),
+       besucher * jeBesucher * preisFaktor(v, "gastro") * menge(v, "gastro") * heimspiele / 1e6
+       * (1 + (w.gastroFaktor || 0)));
 
   /* Merchandising: Sortiment mal Reichweite mal Bekanntheit. Ohne Reichweite
-     bringt das beste Sortiment wenig — deshalb Produkt, nicht Summe. */
+     bringt das beste Sortiment wenig — deshalb Produkt, nicht Summe.
+
+     ABER GEDÄMPFT (korrigiert 17.09.2026). Das reine Produkt wächst
+     quadratisch: bei Stufe 6/6 waren es 59,7 Mio und damit die GRÖSSTE
+     Einnahmequelle eines Erstligisten — mehr als alle Ticketverkäufe
+     zusammen (36,6). Das ist weder realistisch noch gut fürs Spiel, weil
+     „beides auf 6" damit die einzig richtige Strategie war. Die Wurzel
+     erhält die Aussage „beides zusammen wirkt", nimmt ihr aber die
+     Explosion: 6/6 bringt jetzt das Sechsfache von 1/1, nicht das
+     Sechsunddreissigfache. */
   const sortiment = stufeVon(v, "sortiment");
   const reichweite = Math.min(AUSBAU_MAX, stufeVon(v, "reichweite") + (w.reichweite || 0));
-  dazu("Merchandising · Sortiment " + sortiment + " · Vertrieb " + reichweite,
-       sortiment * reichweite * ruf * .55 * (1 + (w.merchFaktor || 0)));
+  const rf = rechtsform(v);
+  dazu("Merchandising · Sortiment " + sortiment + " · Vertrieb " + reichweite
+       + (preisFaktor(v, "merch") !== 1 ? " · Preis " + Math.round(preisFaktor(v, "merch") * 100) + " %" : ""),
+       Math.sqrt(sortiment * reichweite) * (sortiment + reichweite) * ruf * .55
+       * preisFaktor(v, "merch") * menge(v, "merch") * stimmungsFaktor
+       * rf.kommerz * (1 + (w.merchFaktor || 0)));
 
-  /* Prämien: Grundbetrag der Ligastufe plus Platzierung, Aufstieg, Titel. */
-  const grund = 26 / Math.pow(stufe, 1.15);
+  /* Prämien: Grundbetrag der Ligastufe plus Platzierung, Aufstieg, Titel.
+
+     EXPONENT 1,6 STATT 1,15 (korrigiert 17.09.2026). Mit 1,15 bekam ein
+     Drittligist 7,87 Mio Fernsehgeld gegen 2,66 Mio aus Zuschauern,
+     Gastronomie und Merchandising zusammen. Sein eigener Ausbau war damit
+     fast gleichgültig — genau das Gegenteil dessen, was dieses System
+     erreichen soll. Fernsehgeld ist jetzt ein Oberhaus-Privileg: Liga 1
+     bekommt 26, Liga 3 noch 4,2, Liga 5 nur 1,8. */
+  const grund = 26 / Math.pow(stufe, 1.6);
   dazu("Fernsehgeld und Prämien · Liga " + stufe, grund * (.6 + platzTeil * .8));
   if (erg.aufstieg) dazu("Aufstiegsprämie", grund * .9);
   if (rang === 1) dazu("Meisterprämie", grund * .7);
 
-  (v?.sponsoren || []).forEach((s) => dazu("Sponsor · " + s.n + " (noch " + s.rest + ")", s.betrag));
+  (v?.sponsoren || []).forEach((s) => dazu("Sponsor · " + s.n + " (noch " + s.rest + ")", s.betrag * rf.kommerz));
+
+  /* Mitgliedsbeiträge. Für den e.V. eine echte Säule, für die AG ein Rest.
+     Sie hängen an Ansehen und Stimmung, nicht am Ausbau: Mitglieder gewinnt
+     man durch Erfolg und Anstand, nicht durch ein grösseres Stadion. */
+  dazu("Mitgliedsbeiträge · " + rf.n, rf.beitrag * ruf * (stimmung / 60));
 
   const summe = Math.round(posten.reduce((a, x) => a + x.v, 0) * 100) / 100;
-  return { posten, summe, auslastung, zuschauer: Math.round(plaetze(v) * auslastung) };
+  return { posten, summe, auslastung: besucher / Math.max(1, plaetze(v)), zuschauer: besucher };
 }
 
 /* Laufende Kosten. Ohne sie wäre jede Kasse nach drei Saisons voll und jeder
@@ -338,20 +509,168 @@ export function saisonKosten(v) {
 /* Die vollständige Abrechnung einer Saison: Einnahmen minus Kosten auf die
    Kasse, Sponsorenverträge um ein Jahr weiter. Ein Beleg, den Buchung und
    Anzeige gemeinsam benutzen. */
-export function saisonAbrechnung(v, erg = {}) {
+export function saisonAbrechnung(v, erg = {}, saat = 0) {
   const ein = saisonEinnahmen(v, erg);
   const aus = saisonKosten(v);
   const { sponsoren, ausgelaufen } = sponsorenTicken(v);
+
+  /* Reihenfolge ist Absicht: Ereignisse und Prämie gehören zur abgelaufenen
+     Saison und werden mitgebucht; der Bau schreitet danach voran, damit ein
+     Projekt, das in dieser Saison fertig wird, erst ab der nächsten wirkt. */
+  const ereignisse = ereignisseZiehen(v, saat);
+  const ereignisGeld = ereignisse.reduce((a, e) => a + (e.geld || 0), 0);
+  const ziel = zielPruefen(v, erg);
+  const bau = bauTicken(v);
+
   const kasseVorher = Math.round((Number(v?.kasse) || 0) * 100) / 100;
-  const kasse = Math.round((kasseVorher + ein.summe - aus.summe) * 100) / 100;
+  const ergebnis = Math.round((ein.summe - aus.summe + ereignisGeld + (ziel.praemie || 0)) * 100) / 100;
+  const kasse = Math.round((kasseVorher + ergebnis) * 100) / 100;
+
+  /* Stimmung: Erfolg hebt, Überteuerung senkt, ein fertiges Bauprojekt freut.
+     Sie bewegt sich träge — höchstens gut zehn Punkte je Saison, damit eine
+     einzelne Saison die Fans nicht umdreht. */
+  const N = Number(erg.N) || 18;
+  const platzTeil = 1 - ((Number(erg.rang) || 10) - 1) / Math.max(1, N - 1);
+  const stimmungNeu = Math.max(0, Math.min(100, Math.round(
+      (v?.stimmung ?? 60)
+    + (platzTeil - .5) * 9
+    + (erg.aufstieg ? 6 : 0) - (erg.abstieg ? 8 : 0)
+    - ueberzogen(v) * 22
+    + (bau.fertig ? 3 : 0)
+    + ereignisse.reduce((a, e) => a + (e.stimmung || 0), 0))));
+
   return {
-    v: { ...v, kasse, sponsoren },
+    v: { ...v, kasse, sponsoren, stimmung: stimmungNeu,
+         ausbau: bau.ausbau, baustelle: bau.baustelle, ziel: null },
     beleg: { kasseVorher, einnahmen: ein.posten, ausgaben: aus.posten,
-             summeEin: ein.summe, summeAus: aus.summe,
-             ergebnis: Math.round((ein.summe - aus.summe) * 100) / 100,
-             kasse, zuschauer: ein.zuschauer, auslastung: ein.auslastung,
-             ausgelaufen: ausgelaufen.map((s) => s.n) },
+             summeEin: ein.summe, summeAus: aus.summe, ergebnis, kasse,
+             zuschauer: ein.zuschauer, auslastung: ein.auslastung,
+             ausgelaufen: ausgelaufen.map((s) => s.n),
+             ereignisse, ziel, bau, stimmung: stimmungNeu,
+             stimmungVorher: v?.stimmung ?? 60 },
   };
+}
+
+/* ---------------------------------------------------------- Bauprojekte
+   Kevin: „Eine Range von 1-max. 3 Saison Dauer."
+
+   Bezahlt wird sofort und vollständig, gebaut wird über Saisons. Aus Kaufen
+   wird damit Planen: wer im Sommer vor dem Aufstieg anfängt, steht zur
+   richtigen Zeit im grösseren Stadion. Nur EINE Baustelle gleichzeitig —
+   sonst wäre die Entscheidung keine, sondern eine Einkaufsliste. */
+export const bauSaisons = (kosten) => (kosten <= 3 ? 1 : kosten <= 12 ? 2 : 3);
+
+export function bauStart(v, id) {
+  if (v?.baustelle) return { v, fehler: "Es wird schon gebaut: " + baustelleText(v) + "." };
+  const k = ausbauKosten(v, id);
+  if (k == null) return { v, fehler: "Schon voll ausgebaut." };
+  const kasse = Number(v?.kasse) || 0;
+  if (kasse < k) return { v, fehler: "Dafür fehlen " + geldText(k - kasse, v?.land) + "." };
+  const dauer = bauSaisons(k);
+  return { v: { ...v, kasse: Math.round((kasse - k) * 100) / 100,
+                baustelle: { id, stufe: stufeVon(v, id) + 1, dauer, rest: dauer } },
+           kosten: k, dauer, fehler: null };
+}
+
+export function baustelleText(v) {
+  const b = v?.baustelle;
+  if (!b) return "";
+  const a = AUSBAU.find((x) => x.id === b.id);
+  return (a ? a.n : b.id) + " Stufe " + b.stufe + " · noch "
+       + b.rest + (b.rest === 1 ? " Saison" : " Saisons");
+}
+
+/* Eine Saison weiterbauen. Wird das Projekt fertig, steigt die Stufe. */
+export function bauTicken(v) {
+  const b = v?.baustelle;
+  const ausbau = { ...(v?.ausbau || {}) };
+  if (!b) return { ausbau, baustelle: null, fertig: null };
+  const rest = (b.rest || 0) - 1;
+  if (rest > 0) return { ausbau, baustelle: { ...b, rest }, fertig: null };
+  ausbau[b.id] = Math.min(AUSBAU_MAX, b.stufe);
+  return { ausbau, baustelle: null,
+           fertig: { id: b.id, stufe: ausbau[b.id],
+                     n: (AUSBAU.find((x) => x.id === b.id) || {}).n || b.id } };
+}
+
+/* ------------------------------------------------------- Vorstandsziel
+   Ein Ziel je Saison, aus der Ausgangslage abgeleitet — wie das freiwillige
+   Saisonziel des Spielers. Erfüllt bringt es eine Prämie, verfehlt kostet es
+   nichts: der Verein soll etwas zu erreichen haben, keine Strafe fürchten.
+   Die Härte hängt an der Rechtsform: eine AG erwartet mehr als ein e.V. */
+export function zielSetzen(v, letzterRang, N = 18) {
+  const stufe = v?.ligastufe || 3;
+  const rang = Number(letzterRang) || Math.round(N / 2);
+  const rf = rechtsform(v);
+  const grund = 26 / Math.pow(stufe, 1.6);
+  const drittel = Math.max(3, Math.round(N / 3));
+  let z;
+  if (rang > N - drittel) z = { id: "halt", n: "Klassenerhalt", soll: N - drittel, lohn: .35 };
+  else if (rang > drittel) z = { id: "mitte", n: "Gesicherte Mitte", soll: Math.round(N / 2), lohn: .45 };
+  else if (rang > 3) z = { id: "oben", n: "Vorne angreifen", soll: 3, lohn: .70 };
+  else z = { id: "titel", n: "Um den Titel spielen", soll: 1, lohn: 1.10 };
+  return { ...z, soll: Math.max(1, Math.round(z.soll / rf.zielHaerte)),
+           praemie: Math.round(grund * z.lohn * 100) / 100 };
+}
+
+/* Am Saisonende prüfen. Ohne gesetztes Ziel passiert nichts — alte
+   Spielstände ohne `ziel` laufen unverändert weiter. */
+export function zielPruefen(v, erg = {}) {
+  const z = v?.ziel;
+  if (!z) return { gesetzt: false, erfuellt: false, praemie: 0 };
+  const erfuellt = (Number(erg.rang) || 99) <= z.soll;
+  return { gesetzt: true, n: z.n, soll: z.soll, rang: Number(erg.rang) || null,
+           erfuellt, praemie: erfuellt ? (z.praemie || 0) : 0 };
+}
+
+/* --------------------------------------------------- Wirtschaftsereignisse
+   Kevin: „0-2 (0=30 % Wahrscheinlichkeit, 1=50%, 2=20%) Ereignisse pro Saison
+   die Wirtschaftlichen Einfluss haben positiv wie negativ möglich."
+
+   Die Beträge sind ANTEILE der Vereinsgrösse, keine festen Summen: 2 Mio sind
+   für einen Fünftligisten eine Katastrophe und für einen Erstligisten
+   Kleingeld. Bezugsgrösse ist der Grundbetrag der Ligastufe. */
+export const WIRTSCHAFTSEREIGNISSE = [
+  { id: "sturm",     n: "Sturmschaden am Dach",        art: "minus", anteil: -.55, stimmung: -2,
+    t: "Eine Novembernacht kostet die Nordtribüne ihr halbes Dach." },
+  { id: "steuer",    n: "Steuernachzahlung",           art: "minus", anteil: -.40, stimmung: 0,
+    t: "Das Finanzamt sieht drei Jahre anders als der Verein." },
+  { id: "ausfall",   n: "Geisterspiel",                art: "minus", anteil: -.30, stimmung: -3,
+    t: "Ein Heimspiel ohne Zuschauer. Die Kosten bleiben, die Einnahmen nicht." },
+  { id: "strafe",    n: "Verbandsstrafe",              art: "minus", anteil: -.25, stimmung: -4,
+    t: "Pyrotechnik im Gästeblock, und der Verband schickt die Rechnung." },
+  { id: "abgang",    n: "Sponsor springt ab",          art: "minus", anteil: -.35, stimmung: -2,
+    t: "Der Partner zieht sich zurück, das Logo verschwindet von der Brust." },
+  { id: "pokal",     n: "Pokalüberraschung",           art: "plus",  anteil: .60,  stimmung: +5,
+    t: "Eine Runde weiter als alle dachten — ausverkauftes Haus inklusive." },
+  { id: "transfer",  n: "Weiterverkaufsbeteiligung",   art: "plus",  anteil: .50,  stimmung: 0,
+    t: "Ein früherer Eigengewächs wechselt teuer, und der Verein verdient mit." },
+  { id: "spende",    n: "Nachlass eines Mitglieds",    art: "plus",  anteil: .35,  stimmung: +2,
+    t: "Sechzig Jahre Dauerkarte, und am Ende ein Vermächtnis." },
+  { id: "tv",        n: "Nachzahlung der Liga",        art: "plus",  anteil: .30,  stimmung: 0,
+    t: "Der Vermarktungserlös fiel höher aus als geplant." },
+  { id: "jubilaeum", n: "Jubiläumsspiel",              art: "plus",  anteil: .25,  stimmung: +4,
+    t: "Ein Freundschaftsspiel gegen alte Helden füllt Stadion und Kasse." },
+];
+
+/* Anzahl nach Kevins Verteilung: 30 % keins, 50 % eins, 20 % zwei. */
+export function ereignisAnzahl(zufall) {
+  const x = zufall();
+  return x < .30 ? 0 : x < .80 ? 1 : 2;
+}
+
+export function ereignisseZiehen(v, saat = 0) {
+  const r = streuung((Number(saat) || 0) + 77);
+  const anzahl = ereignisAnzahl(r);
+  if (!anzahl) return [];
+  const stufe = v?.ligastufe || 3;
+  const grund = 26 / Math.pow(stufe, 1.6);
+  const gemischt = WIRTSCHAFTSEREIGNISSE.map((e) => ({ e, k: r() }))
+    .sort((a, b) => a.k - b.k).map((x) => x.e);
+  return gemischt.slice(0, anzahl).map((e) => ({
+    id: e.id, n: e.n, t: e.t, art: e.art, stimmung: e.stimmung,
+    geld: Math.round(grund * e.anteil * (.8 + r() * .4) * 100) / 100,
+  }));
 }
 
 /* ------------------------------------------------------------ Kaufen */

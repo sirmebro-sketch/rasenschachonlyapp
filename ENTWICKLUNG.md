@@ -966,3 +966,115 @@ keine NaN entstehen.
 
 Keine Versionserhöhung und kein CHANGELOG-Eintrag: für Spielende ändert sich in
 dieser Runde nichts.
+
+
+## WIRT-P0-05 – Vereinsführung: fünf Systeme (Claude, 17.09.2026)
+
+Basis: derselbe Branch `claude/vereinswirtschaft`, aufgesetzt auf WIRT-P0-01.
+Der Eigentümer hat die fünf Vorschläge einzeln bestätigt und einen ergänzt.
+
+**1. Bauzeit 1–3 Saisons.** Bezahlt wird sofort und vollständig, gebaut über
+Saisons; eine Baustelle gleichzeitig. Dauer aus den Kosten: bis 3 Mio eine
+Saison, bis 12 Mio zwei, darüber drei.
+
+**2. Preise für Tickets, Gastronomie und Fanartikel.** Faktor 0,6 bis 1,6.
+Umgesetzt über Elastizität, nicht über ein Verbot — Kevins Beispiele sind
+damit eine Folge der Rechnung, keine Sonderregel:
+
+- *Tickets am Ansehen.* Ein Erstligist mit Ansehen 1,9 darf über Normalpreis
+  gehen; ein Fünftligist mit Ansehen 0,7 zahlt bei jeder Erhöhung drauf.
+- *Gastronomie an der Gastrostufe.* Stufe 1 muss unter Normalpreis bleiben,
+  Stufe 6 darf deutlich zulangen.
+- *Fanartikel an Sortiment und Vertrieb.*
+
+Wer über das ertragreichste Niveau hinausgeht, verliert zusätzlich Stimmung —
+der Schaden ist doppelt und wirkt in die nächste Saison.
+
+**3. Vorstandsziel je Saison**, aus der Ausgangslage abgeleitet (Klassenerhalt
+/ Gesicherte Mitte / Vorne angreifen / Um den Titel spielen). Prämie nur bei
+Erfolg, Verfehlen kostet nichts. Die Härte hängt an der Rechtsform.
+
+**4. Null bis zwei Wirtschaftsereignisse je Saison** in Kevins Verteilung
+30 % / 50 % / 20 %, fünf positive und fünf negative. Die Beträge sind Anteile
+der Vereinsgrösse, keine festen Summen: 2 Mio sind für einen Fünftligisten eine
+Katastrophe und für einen Erstligisten Kleingeld.
+
+**5. Rechtsform e.V. → GmbH → KGaA → AG.** Nur nach vorn und nur ab Grösse
+(die AG braucht die erste Liga). Jede Stufe bringt Einlage und bessere
+Vermarktung, kostet aber Fan-Toleranz und verschärft das Vorstandsziel. Ein
+e.V. darf höhere Preise verlangen als eine AG — die Mitgliedsbeiträge sind bei
+ihm eine Säule, bei der AG ein Rest.
+
+Dazu **Stimmung** (0–100) als einziger neuer sichtbarer Wert. Sie bewegt sich
+träge (höchstens rund zehn Punkte je Saison), wächst mit Erfolg und fertigen
+Bauprojekten, sinkt bei Überteuerung, und wirkt auf Auslastung und
+Merchandising.
+
+**Zwei Korrekturen am Kern aus P0-01**, beide durch den Durchrechnungslauf
+aufgedeckt und im vorigen Vermerk bereits als Schwäche benannt:
+
+1. *Merchandising wuchs quadratisch* und war bei Vollausbau mit 59,7 Mio die
+   grösste Einnahmequelle — mehr als alle Ticketverkäufe zusammen. Jetzt über
+   die Wurzel gedämpft: 6/6 bringt das Sechsfache von 1/1, nicht das
+   Sechsunddreissigfache.
+2. *Fernsehgeld erdrückte das Unterhaus.* Ein Drittligist bekam 7,87 Mio
+   Prämien gegen 2,66 Mio aus eigener Arbeit; sein Ausbau war fast
+   gleichgültig. Exponent von 1,15 auf 1,6 — Liga 1 bekommt 26, Liga 3 noch
+   4,2, Liga 5 nur 1,8.
+
+**Ein Befund beim Nachrechnen der Preisregler.** Der angezeigte „beste Preis"
+ist ein Versprechen an den Spieler, und die erste Fassung hat es gebrochen.
+Zuerst rechnete sie die Schulformel (1+e)/(2e) — beim Ticketpreis 14 % daneben,
+weil höhere Kartenpreise auch den Gastro-Umsatz kosten: wer nicht kommt, kauft
+auch keine Bratwurst. Nach Einrechnen dieser Kopplung lag sie über 10.935
+Vereinskonfigurationen immer noch in 558 Fällen falsch (5,1 %) — Ursache sind
+die Deckelungen (Auslastung höchstens 99 %, Menge mindestens 5 %): ein
+ausverkauftes Stadion verliert bei einer Preiserhöhung zunächst gar keine
+Besucher, sein Optimum liegt also höher als jede Parabel vorhersagt. Der
+Hinweis wird jetzt **numerisch am echten Ertrag** bestimmt, einundfünfzig
+Auswertungen über das Reglerband. Gegenprobe: dieselben 10.935 Konfigurationen,
+**null** Abweichungen.
+
+**Kalibrierung mit allen Systemen.** Verfahren: fünfzehn Vereinsjahre, Preise
+jede Saison auf das Optimum gesetzt, jede zweite Saison das wertvollste
+Sponsorenangebot, Baustart sobald bezahlbar, Rechtsformwechsel sobald möglich.
+
+| Liga | Rang | Form am Ende | Ø Ein | Ø Aus | Kasse | Stimmung | Ausbau | Minusjahre |
+|---:|---:|---|---:|---:|---:|---:|---:|---:|
+| 1 | 3 | AG | 68,5 | 32,9 | 674,5 | 100 | 11/30 | 0 |
+| 2 | 5 | KGaA | 31,6 | 18,9 | 222,2 | 100 | 11/30 | 0 |
+| 3 | 8 | e.V. | 20,4 | 15,2 | 84,3 | 100 | 11/30 | 0 |
+| 4 | 10 | e.V. | 15,4 | 13,6 | 22,4 | 85 | 11/30 | 2 |
+| 5 | 12 | e.V. | 8,8 | 9,1 | −4,7 | 43 | 2/30 | 9 |
+
+Kluge Preise und der Rechtsformwechsel sind spürbar, aber kein Freifahrtschein:
+in Liga 1 steigen die Ø-Einnahmen von 64,8 auf 68,5, in Liga 3 von 19,1 auf
+20,4 — und vor allem hält der Verein seine Stimmung (100 statt 45).
+
+**Geprüft:** 24 Regressionen im Modul (9 neue), `npm test` 133/133 (vorher 124),
+`npm run build` erfolgreich. Die neuen Prüfungen decken ab: Bauzeiten für jede
+Ausbaustufe, nur eine Baustelle, Fertigstellung genau nach Ablauf; Kevins beide
+Preisbeispiele; das Optimum-Versprechen über das ganze Reglerband für alle drei
+Preise; Stimmungsgrenzen und -trägheit; alle vier Zielstufen mit und ohne
+Erfüllung; die 30/50/20-Verteilung über 6.000 Ziehungen; Rechtsform nur nach
+vorn, nur ab Grösse, mit Einlage und Stimmungskosten, und die aufsteigende
+Vermarktungsreihe.
+
+**Ausdrücklich offen:**
+
+- **Die Bauzeit ist jetzt die eigentliche Grenze, nicht das Geld.** Höchstens
+  elf der dreissig Ausbaustufen sind in fünfzehn Jahren zu schaffen, auch mit
+  voller Kasse. Das ist eine Eigenschaft — ein Verein wird nie fertig, man
+  spezialisiert sich —, aber der Eigentümer sollte sie kennen und
+  entscheiden, ob sie so bleiben soll.
+- **Geld sammelt sich ohne Verwendung**, in Liga 1 rund 674 Mio. Zwei
+  Abhilfen offen: Spielergehälter (WIRT-P1-03) und die Restkasse am Ende in
+  Abschlusspunkte (WIRT-P1-05).
+- **Wer immer Dritter wird, bekommt dauerhaft „Um den Titel spielen"** und
+  verdient nie eine Prämie. Ob die Schwelle bei Platz 2 besser läge, sagt der
+  Gerätetest.
+- **Weiterhin an nichts angeschlossen** und kein Gerätetest: es gibt nichts zu
+  sehen. Anschluss ist WIRT-P0-02 bis P0-04.
+
+Keine Versionserhöhung, kein CHANGELOG-Eintrag: für Spielende ändert sich
+nichts, solange das Modul nicht angeschlossen ist.

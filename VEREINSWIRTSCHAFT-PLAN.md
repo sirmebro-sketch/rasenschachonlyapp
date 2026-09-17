@@ -67,6 +67,26 @@ und Laufzeiten, Einnahmen aus Zuschauern, Gastronomie, Merchandising, Prämien
 und Sponsoren, laufenden Kosten und einer Saisonabrechnung mit Beleg.
 15 Regressionen. **Noch nicht an Spielablauf oder Oberfläche angeschlossen.**
 
+### WIRT-P0-05 – Vereinsführung: Bauzeit, Preise, Ziel, Ereignisse, Rechtsform — VORGELEGT (Claude, 17.09.2026)
+
+Fünf Systeme, vom Eigentümer am 17.09.2026 einzeln bestätigt:
+
+1. **Bauzeit 1–3 Saisons.** Bezahlt wird sofort, gebaut über Saisons; eine
+   Baustelle gleichzeitig. Aus Kaufen wird Planen.
+2. **Preise für Tickets, Gastronomie und Fanartikel einstellbar** (Faktor 0,6
+   bis 1,6), jeweils mit Elastizität: Tickets am Ansehen, Gastro an der
+   Gastrostufe, Merch an Sortiment und Vertrieb. Wer nichts zu bieten hat,
+   kann nicht erhöhen, ohne draufzuzahlen.
+3. **Vorstandsziel je Saison** aus der Ausgangslage, Prämie nur bei Erfolg,
+   Härte nach Rechtsform.
+4. **0–2 Wirtschaftsereignisse je Saison** (30 % / 50 % / 20 %), positiv wie
+   negativ, Beträge als Anteil der Vereinsgrösse.
+5. **Rechtsform e.V. → GmbH → KGaA → AG**, nur nach vorn und nur ab Grösse.
+   Mehr Kapital und Vermarktung gegen weniger Fan-Toleranz und härtere Ziele.
+
+Dazu **Stimmung** (0–100) als einziger neuer sichtbarer Wert: sie wächst mit
+Erfolg, sinkt bei Überteuerung, und wirkt auf Auslastung und Merchandising.
+
 ### WIRT-P0-02 – Anschluss an den Spielablauf — BEREIT
 
 `leererVerein` um `kasse`, `sponsoren`, `extras`, `ligastufe` erweitern;
@@ -120,9 +140,20 @@ in die Abschlusspunkte? Das VC-Extra „Vermächtnisplakette" setzt bereits eine
 
 ## 6. Offene Balance-Fragen
 
-Nachgerechnet am 17.09.2026 über fünfzehn Vereinsjahre (Verfahren im
-Entwicklungsvermerk): Ein erfolgreicher Erstligist baut alles aus und hat
-danach noch rund 429 Mio übrig. Das ist zu viel, um eine Entscheidung zu
-bleiben — es fehlt der größte Ausgabenposten eines echten Vereins, die
-Spielergehälter (WIRT-P1-03). Bis dahin ist der Überschuss bekannt und
-dokumentiert, nicht übersehen.
+**Die Bauzeit ist die eigentliche Grenze, nicht das Geld.** Mit einer Baustelle
+und 1–3 Saisons je Projekt sind in fünfzehn Jahren höchstens elf der dreissig
+Ausbaustufen zu schaffen — auch mit voller Kasse. Das ist eine Eigenschaft,
+keine Panne: ein Verein wird in einem Durchlauf **nie fertig**, man
+spezialisiert sich. Wer das anders will, erlaubt zwei parallele Baustellen
+(naheliegend an die Rechtsform gekoppelt) oder verkürzt die Bauzeiten.
+
+**Geld sammelt sich ohne Verwendung.** Ein erfolgreicher Erstligist hat nach
+fünfzehn Jahren rund 674 Mio in der Kasse, die nichts mehr kaufen können.
+Zwei Abhilfen, beide noch offen: die Spielergehälter als grosser Posten
+(WIRT-P1-03), und eine Verwendung am Ende — die Restkasse könnte in
+Abschlusspunkte fliessen (WIRT-P1-05). Dann wäre Wirtschaften bis zur letzten
+Saison sinnvoll, statt ab Jahr zehn gleichgültig zu werden.
+
+**Ein Verein, der immer Dritter wird, bekommt dauerhaft „Um den Titel
+spielen" und verdient nie eine Prämie.** Die Schwelle für das härteste Ziel
+liegt bei Platz 3; ob sie bei Platz 2 besser läge, sagt erst der Gerätetest.
