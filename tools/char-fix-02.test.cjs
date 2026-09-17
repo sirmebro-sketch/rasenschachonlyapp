@@ -19,12 +19,14 @@ test('CHAR-FIX-02: Hals liegt hinter Trikot und Kragen',()=>{
   assert(kragen>trikot,'Kragen muss als vorderste der drei Ebenen gerendert werden');
 });
 
-test('CHAR-FIX-02: zwischen Trikot und Kragen wird keine Hautschicht erneut aufgetragen',()=>{
+test('CHAR-FIX-02: offener V-Ausschnitt zeigt Kopf-Hautfarbe vor dem Trikot',()=>{
   const trikot=avatar.indexOf('Schultern und Trikot: feste Lage');
+  const ausschnitt=avatar.indexOf('Offener V-Ausschnitt: die Innenflaeche zeigt Kopf-Hautfarbe');
   const kragen=avatar.indexOf('Kragen liegt zuletzt auf dem Hals');
-  assert(trikot>=0 && kragen>trikot,'Layerbereich muss eindeutig sein');
+  assert(trikot>=0 && ausschnitt>trikot && kragen>ausschnitt,'Layerfolge Trikot -> Hautausschnitt -> Kragen muss eindeutig sein');
   const zwischen=avatar.slice(trikot,kragen);
-  assert.doesNotMatch(zwischen,/fill=\{(?:schatten|tief|haut)\}/,'Haut/Halsschatten darf nicht wieder vor dem Trikot liegen');
+  assert.equal((zwischen.match(/fill=\{haut\}/g)||[]).length,1,'Genau eine Hautflaeche darf den offenen V-Ausschnitt bilden');
+  assert.match(zwischen,/M44,\$\{KRAGEN_Y-1\} L50,\$\{KRAGEN_Y\+8\} L56,\$\{KRAGEN_Y-1\} Z/);
 });
 
 test('CHAR-FIX-02: feste Hals- und Kragenanker aus CHAR-FIX-01 bleiben erhalten',()=>{

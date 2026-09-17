@@ -2970,6 +2970,8 @@ function Avatar({ seed = 1, zuege, club, size = 72, ring, g, nat, meta }) {
         {/* Schultern und Trikot: feste Lage, unabhaengig von der Kopfform. */}
         <path d={`M2,100 C4,82 22,${KRAGEN_Y} 50,${KRAGEN_Y} C78,${KRAGEN_Y} 96,82 98,100 Z`} fill={c1} />
         <path d={`M2,100 C4,82 22,${KRAGEN_Y} 34,${KRAGEN_Y} L40,100 Z`} fill={shade(c1, -16)} />
+        {/* Offener V-Ausschnitt: die Innenflaeche zeigt Kopf-Hautfarbe statt Trikotfarbe. */}
+        <path d={`M44,${KRAGEN_Y-1} L50,${KRAGEN_Y+8} L56,${KRAGEN_Y-1} Z`} fill={haut} />
         {/* Kragen liegt zuletzt auf dem Hals und sitzt damit sichtbar sauber. */}
         <path d={`M40,${KRAGEN_Y} L50,${KRAGEN_Y+13} L60,${KRAGEN_Y} L56,${KRAGEN_Y-1} L50,${KRAGEN_Y+8} L44,${KRAGEN_Y-1} Z`} fill={c2} />
 
