@@ -862,3 +862,107 @@ kein Browsererfolg daraus abgeleitet. GitHub-Browser-CI bleibt Release-Gate.
 Die automatische Freigabeprüfung lehnte den ersten main-Push ab. Kevin bestätigte
 daraufhin ausdrücklich die dauerhafte Freigabe für Updates und APK-Builds sowie
 sein letztes Wort; Wortlaut in README. Veröffentlichung wird damit fortgesetzt.
+
+
+## WIRT-P0-01 – Wirtschaftskern der Profimannschaft (Claude, 17.09.2026)
+
+Basis: `main` 8e4eeec (35.192.0), vor Beginn abgerufen. Branch
+`claude/vereinswirtschaft`.
+
+**Auftrag des Eigentümers:** Der Vereinsausbau soll mit Geld bezahlt werden,
+nicht mit VC — „das man keine VC in etwas versenkt was nach 15 Saison eh
+verschwindet". Einnahmen aus Werbedeals, sportlichem Erfolg, Ticketverkäufen
+(Stadion, Gastronomie) und Merchandising. VC nur noch für wenige Extras.
+Dauerhafter Rahmen dazu in `VEREINSWIRTSCHAFT-PLAN.md`.
+
+**Nicht übernommen:** Der offene Branch `codex/char-p0-02-identitaet` wurde
+bewusst nicht in die Arbeitsbasis geholt. Er ist Codex' laufende Arbeit an der
+Porträt-Identitätskette, berührt diese Runde inhaltlich nicht, und ein
+Zusammenführen vor seinem Abschluss würde beim nächsten Rebase Konflikte
+erzeugen. Begründung hier, wie die Übergaberegel es verlangt.
+
+**Neu: `vereinswirtschaft.js`.** Reine Rechnung, kein React, keine Zufallsquelle
+aus `App.jsx` — die Sponsorenwürfel bekommen ihre Saat von außen, damit
+dieselbe Saison reproduzierbar dieselben Angebote zeigt.
+
+- **Währung.** 42 Länder mit Code, Symbol und Kurs; alles andere fällt auf Euro
+  zurück. Gerechnet wird ausschließlich in Millionen Euro, wie `p.money` beim
+  Spieler; die Landeswährung ist reine Anzeige. Andersherum — je Land rechnen —
+  bräche jeden Vergleich zwischen zwei Ligen und zwänge dazu, die Ausbaukosten
+  je Land zu pflegen.
+- **Ausbau, sechs Abteilungen auf Geldbasis.** Die drei alten Kennungen
+  (`training`, `stadion`, `medizin`) behalten Namen und Wirkung — laufende
+  Vereine hängen daran, `ausbauStufe` liest sie in `verein.js` an vier Stellen.
+  Neu sind die drei Geldquellen: Gastronomie, Fanartikel, Vertrieb.
+  Vollausbau aller sechs kostet 319 Mio.
+- **Vier VC-Extras**, jedes einmal je Durchlauf: Gründungskapital,
+  Scoutnetz, Namensrecht am Stadion, Vermächtnisplakette. Bedingung für jedes:
+  es überdauert den Verein oder ermöglicht etwas, das mit Geld allein nicht
+  geht. Preise zwischen einer halben und anderthalb Laufbahnen.
+- **Zwölf erfundene Sponsoren**, keine echten Marken. Pro Saison drei Angebote,
+  Laufzeit ein bis vier Saisons, Betrag skaliert mit Ligastufe und Erfolg;
+  lange Bindung zahlt je Saison weniger. Sechs haben einen Vorteil
+  (Merchandising, Gastronomie, Medizin, Vertrieb, Nachwuchs).
+- **Einnahmen** aus Zuschauern (Plätze × Auslastung × Preis × Heimspiele),
+  Gastronomie, Merchandising (Sortiment × Vertrieb × Ansehen, als Produkt: ohne
+  Vertrieb bringt das beste Sortiment wenig), Prämien und Sponsoren.
+- **Laufende Kosten** und eine **Saisonabrechnung mit Beleg** — dieselbe Bauart
+  wie `abschlussBeleg` in `belohnungen.js`, damit Buchung und Anzeige dieselbe
+  Quelle haben.
+
+**Balance, nachgerechnet statt geschätzt.** Verfahren: fünfzehn Vereinsjahre,
+jede zweite Saison das wertvollste Sponsorenangebot angenommen, jede Saison der
+billigste offene Ausbau gekauft, solange die Kasse reicht. Ø-Einnahmen je
+Saison und erreichte Ausbaustufen von 30:
+
+| Liga | Rang | Ø Einnahmen | Ø Kosten | Ausbau | Minusjahre |
+|---:|---:|---:|---:|---:|---:|
+| 1 | 3 | 110,0 | 60,2 | 30/30 | 0 |
+| 1 | 10 | 86,8 | 53,8 | 30/30 | 0 |
+| 2 | 5 | 44,2 | 31,2 | 26/30 | 0 |
+| 2 | 14 | 29,3 | 24,4 | 18/30 | 1 |
+| 3 | 8 | 21,9 | 19,1 | 13/30 | 1 |
+| 4 | 10 | 14,0 | 13,3 | 7/30 | 5 |
+| 5 | 12 | 10,4 | 10,4 | 4/30 | 7 |
+
+Zwei Zwischenstände mussten korrigiert werden, beide durch diesen Lauf
+aufgedeckt und nicht durch Hinsehen:
+
+1. **Erster Entwurf:** Ein Erstligist nahm 1.908 Mio ein, gab 440 aus und hatte
+   nach Vollausbau **1.148 Mio** in der Kasse. Oben war damit keine Entscheidung
+   mehr zu treffen. Ursachen: Ticketpreis 42 € in der ersten Liga (mehr als eine
+   Bundesligakarte im Schnitt kostet) und laufende Kosten, die nicht mit der
+   Vereinsgröße wuchsen. Es fehlte der größte Posten eines echten Vereins, das
+   Personal.
+2. **Zweiter Entwurf:** Personalkosten mit Exponent 0,85 nach Ligastufe — jetzt
+   stand ein Fünftligist fünfzehn Jahre im Minus und erreichte **null**
+   Ausbaustufen. Aus „sich hocharbeiten" war „nichts geht" geworden. Mit
+   Exponent 1,5 zahlt er 1,8 Mio statt 7,3, ein Erstligist zahlt 20.
+
+**Geprüft:** 15 neue Regressionen, `npm test` 124/124 (vorher 109),
+`npm run build` erfolgreich. Die Regressionen prüfen Verhalten, nicht
+Kalibrierung: dass Geld nur über belegte Posten entsteht, dass die Summe die
+Summe der Posten ist, dass ein Kauf ohne Deckung gar nichts ändert, dass
+Sponsorenangebote bei gleicher Saat gleich bleiben und Verträge genau nach
+ihrer Laufzeit enden, und dass in Grenzlagen (leerer Verein, Liga 9, Rang 20)
+keine NaN entstehen.
+
+**Ausdrücklich offen:**
+
+- **Das Modul ist noch an nichts angeschlossen.** Weder `verein.js` noch die
+  Oberfläche rufen es auf; der alte VC-Ausbau läuft unverändert weiter. Das ist
+  der Zuschnitt dieser Runde, kein Versehen: Anschluss (WIRT-P0-02),
+  Umstellung des Ausbaus (P0-03) und Sponsorenwahl (P0-04) sind eigene Pakete,
+  und der Aufrufer für P0-03 liegt in `App.jsx`, wo Codex parallel arbeitet.
+- **Ein erfolgreicher Erstligist hat nach Vollausbau noch rund 429 Mio übrig.**
+  Zu viel, um eine Entscheidung zu bleiben. Es fehlen die Spielergehälter
+  (WIRT-P1-03); bis dahin ist der Überschuss bekannt, nicht übersehen.
+- **Eine leere Kasse hat keine Folgen.** Der Verein kann ins Minus laufen, ohne
+  dass etwas passiert (WIRT-P1-04) — bewusst, weil es die Schwierigkeit spürbar
+  verschöbe.
+- **Kein Gerätetest, keine Oberflächenprüfung.** Es gibt noch nichts zu sehen.
+- **Die Kurse sind gerundete Größenordnungen**, keine Tageskurse. Sie sollen
+  die Zahl vertraut aussehen lassen, nicht eine Wechselstube nachbilden.
+
+Keine Versionserhöhung und kein CHANGELOG-Eintrag: für Spielende ändert sich in
+dieser Runde nichts.
