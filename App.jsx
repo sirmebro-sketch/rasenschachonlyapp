@@ -2883,8 +2883,13 @@ function Avatar({ seed = 1, zuege, club, size = 72, ring, g, nat, meta }) {
   const grundMitte = shade(grundHell, -26);
   const grundTief  = shade(grundHell, -52);
 
+  /* CHAR-P1-02 / ChatGPT-Codex: perzeptiv tragfähige Gesichtszüge.
+     Bestehende IDs bleiben geometrisch unverändert. Die neuen Formen werden
+     ausschließlich hinten angehängt; alte Seed-Ableitungen behalten damit
+     ihre bisherigen Augen-/Nasen-/Wangen-IDs. */
   const augenY = 46 + (z.augen === 3 ? 1.5 : 0);
-  const lidH = z.augen === 1 ? 2.6 : z.augen === 4 ? 4.2 : z.augen === 5 ? 3.9 : z.augen === 6 ? 2.9 : 3.4;   /* Lidspalt */
+  const lidH = z.augen === 1 ? 2.6 : z.augen === 4 ? 4.2 : z.augen === 5 ? 3.9 : z.augen === 6 ? 2.9
+    : z.augen === 7 ? 4.25 : z.augen === 8 ? 3.15 : 3.4;   /* Lidspalt */
   const kinnY = kopf.kinn;
   const kj = kinnBreite(kopf);   /* Kieferbreite am Kinn — siehe kinnBreite */
   /* Lidschatten nimmt einen Ton aus der Haut auf, statt eine feste Farbe zu
@@ -3188,8 +3193,17 @@ function Avatar({ seed = 1, zuege, club, size = 72, ring, g, nat, meta }) {
           {z.details===6&&<path d="M32 52 q-2 2 -1 4 M68 52 q2 2 1 4" fill="none" stroke={shade(haut,-35)} strokeWidth=".6"/>}
           {z.details===4&&<path d="M65,54 l-3,6" stroke={shade(haut,30)} strokeWidth=".9"/>}
         </g>}
+        {z.details===7 && <path d={"M34,"+(augenY+5)+" Q40,"+(augenY+7)+" 46,"+(augenY+5)
+          +" M54,"+(augenY+5)+" Q60,"+(augenY+7)+" 66,"+(augenY+5)} fill="none"
+          stroke={shade(haut,-34)} strokeWidth=".8" opacity=".42" />}
+        {z.details===8 && <path d={"M47,"+(kinnY-4)+" l6,2"} fill="none" stroke={shade(haut,-48)}
+          strokeWidth="1" strokeLinecap="round" opacity=".65" />}
         {modern && z.wangen===3 && <path d="M29 53 Q34 59 40 58 M71 53 Q66 59 60 58" fill="none" stroke={schatten} strokeWidth="1" opacity=".28"/>}
         {modern && z.wangen===4 && <path d="M35 58 q-2 2 0 3 M65 58 q2 2 0 3" fill="none" stroke={schatten} strokeWidth=".9" opacity=".5"/>}
+        {modern && z.wangen===5 && <path d="M29 53 Q35 49 41 52 M71 53 Q65 49 59 52" fill="none"
+          stroke={schatten} strokeWidth="1.25" strokeLinecap="round" opacity=".55"/>}
+        {modern && z.wangen===6 && <path d="M30 56 Q35 61 42 59 M70 56 Q65 61 58 59" fill="none"
+          stroke={schatten} strokeWidth="1.35" strokeLinecap="round" opacity=".5"/>}
         {/* ---- Augen: Lidspalt, Iris in der gewählten Farbe, Pupille, Glanz ----
             Vorher waren es zwei weiße Ellipsen mit einem Punkt darin. */}
         {[40, 60].map((cx) => (
@@ -3206,6 +3220,14 @@ function Avatar({ seed = 1, zuege, club, size = 72, ring, g, nat, meta }) {
               stroke={shade(haut, -62)} strokeWidth={z.augen === 2 ? 1.5 : 1} strokeLinecap="round" />
             {z.augen === 4 && <path d={"M" + (cx - 6.4) + "," + (augenY + 1.6) + " q6,2.4 12.8,0"} fill="none"
               stroke={shade(haut, -30)} strokeWidth=".9" opacity=".7" />}
+
+            {/* CHAR-P1-02: echte Außenkanten statt weiterer 1–2-px-Lidspalte. */}
+            {z.augen === 7 && <path d={"M" + (cx + (cx < 50 ? -6 : 6)) + "," + (augenY + .35)
+              + " l" + (cx < 50 ? -2.2 : 2.2) + ",-1.9"} fill="none" stroke={shade(haut, -62)}
+              strokeWidth="1.15" strokeLinecap="round" />}
+            {z.augen === 8 && <path d={"M" + (cx + (cx < 50 ? -6 : 6)) + "," + (augenY - .25)
+              + " l" + (cx < 50 ? -2.2 : 2.2) + ",1.9"} fill="none" stroke={shade(haut, -62)}
+              strokeWidth="1.15" strokeLinecap="round" />}
 
             {/* ---- Weiblich: Lidschatten und Wimpern (34.29) ----
                 Der eigentliche Mangel war nicht die Frisur, sondern das
@@ -3233,6 +3255,23 @@ function Avatar({ seed = 1, zuege, club, size = 72, ring, g, nat, meta }) {
           /* Ab Index 5 angehaengt (34.29) — nie umsortieren, der Index steckt
              in jedem gespeicherten Gesicht. */
           const br = [2.5, 3.2, 2, 2.9, 2.7, 3.7, 4.3, 2.2,3.1,1.7][z.nase] || 2.5;
+          /* IDs 10/11 sind bewusst eigene Formsprachen. Die gemessenen
+             Alt-Dubletten 0/4 und 2/7 bleiben für Spielstände erhalten,
+             werden aber in portraetOptionen nicht mehr neu angeboten. */
+          if (z.nase === 10) return (<g>
+            <path d={"M49.2,51 C48.2,53.6 45.3,55.4 45.5,57.4 Q50,61 54.5,57.4 C54.7,55.4 51.8,53.6 50.8,51 Z"}
+              fill={schatten} opacity=".5" />
+            <path d="M46.4,55.9 Q50,54.1 53.6,55.9" fill="none" stroke={tief} strokeWidth=".85" opacity=".6" />
+            <ellipse cx="47" cy="57.2" rx="1.25" ry=".78" fill={tief} />
+            <ellipse cx="53" cy="57.2" rx="1.25" ry=".78" fill={tief} />
+          </g>);
+          if (z.nase === 11) return (<g>
+            <path d="M49.2,47 C48.4,50.2 48.2,54.6 47.2,58 Q50,59.7 52.8,58 C51.8,54.6 51.6,50.2 50.8,47 Z"
+              fill={schatten} opacity=".48" />
+            <path d="M50,47.6 V55.3" fill="none" stroke={shade(haut, 24)} strokeWidth=".8" opacity=".55" />
+            <ellipse cx="48.1" cy="57.6" rx=".85" ry=".68" fill={tief} />
+            <ellipse cx="51.9" cy="57.6" rx=".85" ry=".68" fill={tief} />
+          </g>);
           return (<g>
             <path d={"M50," + y0 + " C" + (50 - br * .5) + "," + (y0 + 6) + " " + (50 - br) + "," + (y1 - 3)
               + " " + (50 - br) + "," + y1 + " q" + br + ",2 " + (br * 2) + ",0 C" + (50 + br) + "," + (y1 - 3)
