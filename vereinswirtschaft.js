@@ -132,9 +132,15 @@ export const VC_EXTRAS = [
   { id: "startkapital", n: "Gründungskapital", vc: 45, einmalig: true,
     t: "Ein Investor steigt zum Start ein.", wirkt: "+12 Mio in die Kasse",
     fx: { kasse: 12 } },
-  { id: "scoutnetz", n: "Scoutnetz", vc: 70, einmalig: true,
-    t: "Späher in drei Ländern, die auch nach dem Verein weiterarbeiten.",
-    wirkt: "Bleibt der Akademie erhalten", fx: { akademieAufnahmen: 1 } },
+  /* „Scoutnetz" stand hier und versprach für 70 VC „Bleibt der Akademie
+     erhalten" über ein Feld `akademieAufnahmen`, das NIEMAND liest. Beim
+     Gegenlesen aufgefallen: der Spieler hätte eine gute Laufbahn Ersparnis
+     für nichts ausgegeben. Es ist ersatzlos entfernt statt notdürftig
+     verdrahtet — der naheliegende Anker wäre `bonus.aufnahmen` aus den
+     Abschluss-BONI gewesen, und der wird ebenfalls nur ANGEZEIGT und nie
+     gelesen (App.jsx:9483). An etwas anzudocken, das selbst nichts tut, wäre
+     derselbe Fehler mit mehr Zeilen. Kommt zurück, sobald die Akademie einen
+     Haken für ihre Aufnahmen hat. */
   { id: "namensrecht", n: "Namensrecht am Stadion", vc: 90, einmalig: true,
     t: "Der Name gehört dir, nicht dem Sponsor.",
     wirkt: "+25 % Ticketeinnahmen, dauerhaft", fx: { ticketFaktor: .25 } },
@@ -371,11 +377,26 @@ export function bestPreis(v, feld, erg = { rang: 10, N: 18 }) {
 /* Mengenwirkung eines Preisfaktors: 1 bei Normalpreis, weniger darüber. */
 const menge = (v, feld) => Math.max(0.05, 1 - (preisFaktor(v, feld) - 1) * elastizitaet(v, feld));
 
-/* Wie weit der Preis über dem ertragreichsten liegt — daraus entsteht der
-   Stimmungsschaden. Unterhalb des Optimums gibt es keinen Ärger, nur weniger
-   Geld; wer Fans billig reinlässt, wird nicht bestraft. */
-const ueberzogen = (v) => ["ticket", "gastro", "merch"]
-  .reduce((a, f) => a + Math.max(0, preisFaktor(v, f) - bestPreis(v, f)), 0);
+/* Wie weit der Preis über dem liegt, was der Verein rechtfertigen kann —
+   daraus entsteht der Stimmungsschaden. Unterhalb gibt es keinen Ärger, nur
+   weniger Geld; wer Fans billig reinlässt, wird nicht bestraft.
+
+   DIE GRENZE IST NIE KLEINER ALS 1, UND DAS IST DIE KORREKTUR EINES FEHLERS.
+   Der erste Entwurf maß den Abstand allein zum ertragreichsten Preis. Der
+   liegt aber fast überall UNTER 1 (gemessen: Liga 1 0,22, Liga 3 0,24, selbst
+   ein voll ausgebauter Drittligist 0,34) — und der Voreinstellung 1,0 fehlt
+   jede Absicht des Spielers. Ergebnis: jeder Verein verlor jede Saison fünf
+   bis zehn Stimmungspunkte, ohne dass jemand etwas getan hatte. Gemessen an
+   einem Drittligisten auf Platz 9: 60 → 55 → 54 → 47 → 42 → 37 → 31 → 23 in
+   acht Saisons, danach weiter gegen null. Und weil die Stimmung auf
+   Auslastung und Merchandising wirkt, war es eine Abwärtsspirale ohne Hebel —
+   eine Preisoberfläche gibt es noch nicht.
+
+   Der Normalpreis ist kein Übergriff. Ärger entsteht erst, wenn der Spieler
+   ÜBER den Normalpreis geht und der Verein nichts zu bieten hat, was ihn
+   trägt. Deshalb `Math.max(1, bestPreis(...))`. */
+const ueberzogen = (v, erg) => ["ticket", "gastro", "merch"]
+  .reduce((a, f) => a + Math.max(0, preisFaktor(v, f) - Math.max(1, bestPreis(v, f, erg))), 0);
 
 /* ------------------------------------------------------------- Einnahmen */
 const stufeVon = (v, id) => Math.max(1, Math.min(AUSBAU_MAX, ((v?.ausbau || {})[id]) || 1));
@@ -618,7 +639,7 @@ export function saisonAbrechnung(v, erg = {}, saat = 0) {
       (v?.stimmung ?? 60)
     + (platzTeil - .5) * 9
     + (erg.aufstieg ? 6 : 0) - (erg.abstieg ? 8 : 0)
-    - ueberzogen(v) * 22
+    - ueberzogen(v, erg) * 22
     + bau.fertig.length * 3
     + ereignisse.reduce((a, e) => a + (e.stimmung || 0), 0))));
 
@@ -715,7 +736,11 @@ export function abschlussWirtschaft(v) {
   const kasse = Math.round((Number(v?.kasse) || 0) * 100) / 100;
   const roh = Math.max(0, kasse) * PUNKTE_JE_MIO;
   const faktor = 1 + (wirkung(v).punkteFaktor || 0);
-  return { kasse, punkte: Math.round(Math.min(PUNKTE_DECKEL, roh) * faktor), faktor };
+  /* ERST RECHNEN, DANN DECKELN. Andersherum hob die Vermächtnisplakette den
+     Deckel selbst an: aus 250 wurden 288, während zwei Kommentare und der
+     Arbeitsplan „gedeckelt bei 250" behaupteten. Der Deckel ist die Aussage,
+     der Faktor ein Vorteil darunter. */
+  return { kasse, punkte: Math.min(PUNKTE_DECKEL, Math.round(roh * faktor)), faktor };
 }
 
 /* ------------------------------------------------------- Vorstandsziel

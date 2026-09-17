@@ -1233,3 +1233,47 @@ schliessen. Beide Dateien stehen jetzt auf dieser Fassung.
   bestmögliche Verlauf, nicht der mittlere; ein normaler Verlauf liegt
   darunter. Nachschärfen ginge über die Obergrenze des Niveaus (2,00) oder
   das Tempo nach oben (halber Abstand).
+
+## Nachbesserung nach Gegenlesen — Wirtschaftskern (Claude, 17.09.2026)
+
+Nach dem Bau der ganzen Kette habe ich den eigenen Diff systematisch
+gegengelesen. Drei Befunde betreffen diesen Zweig; keiner davon ist von den
+Regressionen gefunden worden, weil sie prüfen, dass die Rechnung **in sich**
+stimmt — nicht, ob sie das **Richtige** rechnet.
+
+**1. Die Stimmung fiel jede Saison, ohne dass jemand etwas tat.** Der
+Stimmungsschaden mass den Abstand zum ertragreichsten Preis. Der liegt fast
+überall UNTER 1 (gemessen: Liga 1 0,22, Liga 3 0,24, selbst ein voll
+ausgebauter Drittligist 0,34) — und 1 ist die Voreinstellung, hinter der keine
+Entscheidung steht. Gemessen an einem Drittligisten auf Platz 9: 60 → 55 → 54
+→ 47 → 42 → 37 → 31 → 23 in acht Saisons, danach gegen null. Da die Stimmung
+auf Auslastung und Merchandising wirkt, war es eine Abwärtsspirale — und eine
+Preisoberfläche, mit der man hätte gegensteuern können, gibt es nicht.
+**Der Normalpreis ist kein Übergriff:** die Grenze ist jetzt nie kleiner als 1.
+Derselbe Lauf endet nun bei 67 statt 23. Überteuerung kostet weiterhin.
+
+**2. Die Vermächtnisplakette hob den Punktedeckel an.** Der Faktor wurde NACH
+der Deckelung angewandt: aus 250 wurden 288, während drei Stellen „gedeckelt
+bei 250" behaupteten. Jetzt wird erst gerechnet, dann gedeckelt.
+
+**3. „Scoutnetz" war ein Placebo für 70 VC.** Das Extra versprach „Bleibt der
+Akademie erhalten" über ein Feld `akademieAufnahmen`, das niemand liest. Es ist
+**ersatzlos entfernt** statt notdürftig verdrahtet: der naheliegende Anker
+`bonus.aufnahmen` aus den Abschluss-BONI wird ebenfalls nur ANGEZEIGT und nie
+gelesen (App.jsx:9483, bestehender Code, nicht aus dieser Runde). An etwas
+anzudocken, das selbst nichts tut, wäre derselbe Fehler mit mehr Zeilen.
+
+**Dazu zwei Prüfungen, die nichts geprüft haben:**
+`assert.equal(e.zuschauer, Math.round(plaetze * auslastung))` war tautologisch —
+`auslastung` wird aus `zuschauer` berechnet, die Gleichung gilt für jede
+Umsetzung. Und der Grenzfall setzte `baustelle` im Singular, ein Rest des
+verworfenen Entwurfs, den kein Code liest; die halbfertige Baustelle, die der
+Testname verspricht, kam nie vor.
+
+**Geprüft:** `npm test` 147/147 (vorher 144). Drei neue Regressionen: die
+Stimmung fällt bei Voreinstellung in keiner Ligastufe, der Deckel hält auch mit
+Plakette, und **jedes VC-Extra muss über einen Schlüssel wirken, den jemand
+liest** — die Prüfung, die „Scoutnetz" verhindert hätte.
+
+**Offen für Codex:** `bonus.aufnahmen` in den Abschluss-BONI hat keinen Leser.
+Das ist bestehender Code, nicht aus dieser Runde — deshalb nur vermerkt.
