@@ -62,11 +62,20 @@ export function Bartform({index=0,kopf={},farbe='#38241B',hell='#E7C19F',clipId}
   case 3: // Klassischer Schnurrbart.
    form=<g {...clip}>{moustache(11,0,0)}</g>;
    break;
-  case 4: // Kinnbart – kompakt und stumpfer als der spitze Ziegenbart.
-   form=<g {...clip}><path data-bart-part="kinnbart" d={kinnPfad(k,6,3,false)}/><path d={`M47 ${k-11} Q50 ${k-13} 53 ${k-11} L52 ${k-8} Q50 ${k-9} 48 ${k-8} Z`} opacity=".88"/></g>;
+  case 4: // Kinnbart – breiter, kompakter Kinnblock mit stumpfem Abschluss.
+   form=<g {...clip}>
+    <path data-bart-part="kinnbart" d={`M42 ${k-8} Q50 ${k-11} 58 ${k-8} L57 ${k-3} Q50 ${k+1} 43 ${k-3} Z`}/>
+    <path d={`M46 ${k-12} Q50 ${k-14} 54 ${k-12} L53 ${k-9} Q50 ${k-10} 47 ${k-9} Z`} opacity=".82"/>
+   </g>;
    break;
-  case 5: // Ziegenbart – schmal, deutlich länger und spitz zulaufend.
-   form=<g {...clip}><path data-bart-part="ziegenbart" d={kinnPfad(k,5,8,true)}/><path d={`M48 ${k-13} Q50 ${k-15} 52 ${k-13} L52 ${k-10} Q50 ${k-11} 48 ${k-10} Z`}/></g>;
+  case 5: // Ziegenbart – bewusst schmaler und sichtbar unter das Kinn verlängert.
+   form=<>
+    <g {...clip}>
+     <path data-bart-part="ziegenbart-basis" d={`M46 ${k-8} Q50 ${k-10} 54 ${k-8} Q53 ${k-2} 50 ${k} Q47 ${k-2} 46 ${k-8} Z`}/>
+     <path d={`M48 ${k-13} Q50 ${k-15} 52 ${k-13} L52 ${k-10} Q50 ${k-11} 48 ${k-10} Z`}/>
+    </g>
+    <path data-bart-part="ziegenbart-spitze" d={`M47 ${k-4} Q50 ${k-1} 53 ${k-4} Q52 ${k+4} 50 ${k+9} Q48 ${k+4} 47 ${k-4} Z`}/>
+   </>;
    break;
   case 6: // Kurzer Vollbart – niedrige Wangenlinie, kurzer sauberer Abschluss.
    form=<g {...clip}>
