@@ -536,12 +536,12 @@ export function saisonAbrechnung(v, erg = {}, saat = 0) {
     + (platzTeil - .5) * 9
     + (erg.aufstieg ? 6 : 0) - (erg.abstieg ? 8 : 0)
     - ueberzogen(v) * 22
-    + (bau.fertig ? 3 : 0)
+    + bau.fertig.length * 3
     + ereignisse.reduce((a, e) => a + (e.stimmung || 0), 0))));
 
   return {
     v: { ...v, kasse, sponsoren, stimmung: stimmungNeu,
-         ausbau: bau.ausbau, baustelle: bau.baustelle, ziel: null },
+         ausbau: bau.ausbau, baustellen: bau.baustellen, ziel: null },
     beleg: { kasseVorher, einnahmen: ein.posten, ausgaben: aus.posten,
              summeEin: ein.summe, summeAus: aus.summe, ergebnis, kasse,
              zuschauer: ein.zuschauer, auslastung: ein.auslastung,
@@ -552,45 +552,86 @@ export function saisonAbrechnung(v, erg = {}, saat = 0) {
 }
 
 /* ---------------------------------------------------------- Bauprojekte
-   Kevin: „Eine Range von 1-max. 3 Saison Dauer."
+   Kevin, zunächst: „Eine Range von 1-max. 3 Saison Dauer."
+   Nach der ersten Kalibrierung: „Man sollte schon alles schaffen, wenn man
+   genug Geld hat. Die Bauzeit sollte also einen nicht begrenzen. Limitieren
+   wir die Bauzeit auf max 2 Jahre […]. Aber wie du sagst, eine gewisse
+   Spezialisierung sollte bleiben."
 
-   Bezahlt wird sofort und vollständig, gebaut wird über Saisons. Aus Kaufen
-   wird damit Planen: wer im Sommer vor dem Aufstieg anfängt, steht zur
-   richtigen Zeit im grösseren Stadion. Nur EINE Baustelle gleichzeitig —
-   sonst wäre die Entscheidung keine, sondern eine Einkaufsliste. */
-export const bauSaisons = (kosten) => (kosten <= 3 ? 1 : kosten <= 12 ? 2 : 3);
+   WARUM EINE BAUSTELLE JE ABTEILUNG, NICHT EINE INSGESAMT. Der erste Entwurf
+   liess nur ein Projekt gleichzeitig zu. Nachgerechnet: höchstens elf der
+   dreissig Ausbaustufen waren in fünfzehn Jahren zu schaffen — die ZEIT war
+   die Grenze, nicht das Geld, und ein Erstligist sass auf 674 Mio, die nichts
+   mehr kaufen konnten. Auch mit zwei Jahren Höchstdauer bliebe es dabei:
+   dreissig Projekte nacheinander sind nie unter sechzig Saisons zu schaffen.
+
+   Jede Abteilung baut deshalb für sich. Stadion und Gastronomie gleichzeitig:
+   ja. Stadion Stufe 3 und Stufe 4 gleichzeitig: nein — man kann dieselbe
+   Tribüne nicht zweimal auf einmal erweitern. Damit ist der volle Ausbau
+   zeitlich möglich (jede Abteilung braucht höchstens zehn Saisons, und sie
+   laufen parallel), und die Grenze ist wieder das Geld. Genau so wollte Kevin
+   es: alles schaffbar, wenn man es sich leisten kann — und weil man es sich
+   meist nicht leisten kann, bleibt die Spezialisierung. */
+export const BAU_MAX_SAISONS = 2;
+export const bauSaisons = (kosten) => (kosten <= 3 ? 1 : BAU_MAX_SAISONS);
+
+const baustellen = (v) => (v?.baustellen && typeof v.baustellen === "object") ? v.baustellen : {};
 
 export function bauStart(v, id) {
-  if (v?.baustelle) return { v, fehler: "Es wird schon gebaut: " + baustelleText(v) + "." };
+  const offen = baustellen(v);
+  if (offen[id]) return { v, fehler: "An dieser Abteilung wird schon gebaut." };
   const k = ausbauKosten(v, id);
   if (k == null) return { v, fehler: "Schon voll ausgebaut." };
   const kasse = Number(v?.kasse) || 0;
   if (kasse < k) return { v, fehler: "Dafür fehlen " + geldText(k - kasse, v?.land) + "." };
   const dauer = bauSaisons(k);
   return { v: { ...v, kasse: Math.round((kasse - k) * 100) / 100,
-                baustelle: { id, stufe: stufeVon(v, id) + 1, dauer, rest: dauer } },
+                baustellen: { ...offen, [id]: { stufe: stufeVon(v, id) + 1, dauer, rest: dauer } } },
            kosten: k, dauer, fehler: null };
 }
 
-export function baustelleText(v) {
-  const b = v?.baustelle;
-  if (!b) return "";
-  const a = AUSBAU.find((x) => x.id === b.id);
-  return (a ? a.n : b.id) + " Stufe " + b.stufe + " · noch "
-       + b.rest + (b.rest === 1 ? " Saison" : " Saisons");
+/* Alle laufenden Projekte als Text, für die Oberfläche. */
+export function baustellenText(v) {
+  return Object.entries(baustellen(v)).map(([id, b]) => {
+    const a = AUSBAU.find((x) => x.id === id);
+    return (a ? a.n : id) + " Stufe " + b.stufe + " · noch "
+         + b.rest + (b.rest === 1 ? " Saison" : " Saisons");
+  });
 }
 
-/* Eine Saison weiterbauen. Wird das Projekt fertig, steigt die Stufe. */
+/* Eine Saison weiterbauen — alle Abteilungen zugleich. Fertige Projekte
+   heben ihre Stufe und werden gemeldet. */
 export function bauTicken(v) {
-  const b = v?.baustelle;
   const ausbau = { ...(v?.ausbau || {}) };
-  if (!b) return { ausbau, baustelle: null, fertig: null };
-  const rest = (b.rest || 0) - 1;
-  if (rest > 0) return { ausbau, baustelle: { ...b, rest }, fertig: null };
-  ausbau[b.id] = Math.min(AUSBAU_MAX, b.stufe);
-  return { ausbau, baustelle: null,
-           fertig: { id: b.id, stufe: ausbau[b.id],
-                     n: (AUSBAU.find((x) => x.id === b.id) || {}).n || b.id } };
+  const weiter = {}, fertig = [];
+  for (const [id, b] of Object.entries(baustellen(v))) {
+    const rest = (b.rest || 0) - 1;
+    if (rest > 0) { weiter[id] = { ...b, rest }; continue; }
+    ausbau[id] = Math.min(AUSBAU_MAX, b.stufe);
+    fertig.push({ id, stufe: ausbau[id], n: (AUSBAU.find((x) => x.id === id) || {}).n || id });
+  }
+  return { ausbau, baustellen: weiter, fertig };
+}
+
+/* ------------------------------------------------- Abschluss nach 15 Jahren
+   Kevin zur Restkasse: „Das finde ich gut was du mit dem Restgeld vorhast."
+
+   Was übrig bleibt, war bis dahin verloren — und damit war Wirtschaften ab
+   dem Jahr, in dem alles gebaut war, gleichgültig. Jetzt zählt es als
+   Vermächtnis: vier Millionen ergeben einen Abschlusspunkt.
+
+   DIE DECKELUNG BEI 250 PUNKTEN IST ABSICHT. Zum Vergleich wiegt ein Aufstieg
+   120 Punkte und eine Meisterschaft 90 (`punkte` in verein.js). Ohne Deckel
+   wären 674 Mio Restkasse 168 Punkte — noch vertretbar; aber eine Kasse, die
+   nie ausgegeben wurde, darf kein Ersatz für sportlichen Erfolg werden.
+   Schulden zählen nicht negativ: der Abschluss soll nicht zweimal bestrafen. */
+export const PUNKTE_JE_MIO = 0.25;
+export const PUNKTE_DECKEL = 250;
+export function abschlussWirtschaft(v) {
+  const kasse = Math.round((Number(v?.kasse) || 0) * 100) / 100;
+  const roh = Math.max(0, kasse) * PUNKTE_JE_MIO;
+  const faktor = 1 + (wirkung(v).punkteFaktor || 0);
+  return { kasse, punkte: Math.round(Math.min(PUNKTE_DECKEL, roh) * faktor), faktor };
 }
 
 /* ------------------------------------------------------- Vorstandsziel
@@ -607,7 +648,10 @@ export function zielSetzen(v, letzterRang, N = 18) {
   let z;
   if (rang > N - drittel) z = { id: "halt", n: "Klassenerhalt", soll: N - drittel, lohn: .35 };
   else if (rang > drittel) z = { id: "mitte", n: "Gesicherte Mitte", soll: Math.round(N / 2), lohn: .45 };
-  else if (rang > 3) z = { id: "oben", n: "Vorne angreifen", soll: 3, lohn: .70 };
+  /* Schwelle bei Platz 2 statt 3 (Kevin, 17.09.2026). Vorher bekam ein
+     Verein, der jedes Jahr Dritter wurde, dauerhaft „Um den Titel spielen"
+     mit Soll 1 — und verdiente nie eine Prämie. */
+  else if (rang > 2) z = { id: "oben", n: "Vorne angreifen", soll: 3, lohn: .70 };
   else z = { id: "titel", n: "Um den Titel spielen", soll: 1, lohn: 1.10 };
   return { ...z, soll: Math.max(1, Math.round(z.soll / rf.zielHaerte)),
            praemie: Math.round(grund * z.lohn * 100) / 100 };

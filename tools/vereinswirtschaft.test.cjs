@@ -213,14 +213,14 @@ test('Alles bleibt endlich: keine NaN, keine Unendlichkeiten in Grenzlagen', () 
 
 /* ===================== Runde 2: die fünf Vereinsführungs-Systeme ===================== */
 
-test('Bauprojekte: Geld sofort weg, Stufe erst nach 1 bis 3 Saisons', () => {
+test('Bauprojekte: Geld sofort weg, Stufe nach höchstens zwei Saisons', () => {
+  assert.equal(W.BAU_MAX_SAISONS, 2);
   assert.equal(W.bauSaisons(0.8), 1);
-  assert.equal(W.bauSaisons(9), 2);
-  assert.equal(W.bauSaisons(55), 3);
-  for (const a of W.AUSBAU) for (const k of a.kosten.slice(1)) {
-    const d = W.bauSaisons(k);
-    assert(d >= 1 && d <= 3, a.id + ' Stufe für ' + k + ' Mio ergibt ' + d + ' Saisons');
-  }
+  assert.equal(W.bauSaisons(3), 1);
+  assert.equal(W.bauSaisons(4), 2);
+  assert.equal(W.bauSaisons(55), 2, 'auch das teuerste Projekt dauert höchstens zwei Saisons');
+  for (const a of W.AUSBAU) for (const k of a.kosten.slice(1))
+    assert(W.bauSaisons(k) >= 1 && W.bauSaisons(k) <= W.BAU_MAX_SAISONS, a.id + ' bei ' + k + ' Mio');
 
   const v = verein({ kasse: 20 });
   const start = W.bauStart(v, 'stadion');                 /* 4 Mio, also 2 Saisons */
@@ -229,21 +229,56 @@ test('Bauprojekte: Geld sofort weg, Stufe erst nach 1 bis 3 Saisons', () => {
   assert.equal(start.dauer, 2);
   assert.equal(start.v.kasse, 16, 'sofort bezahlt');
   assert.equal(W.ausbauStufe(start.v, 'stadion'), 1, 'die Stufe steigt noch nicht');
-  assert(W.baustelleText(start.v).includes('Stadion'));
+  assert(W.baustellenText(start.v)[0].includes('Stadion'));
 
-  /* Nur eine Baustelle gleichzeitig. */
-  assert(W.bauStart(start.v, 'gastro').fehler.includes('Es wird schon gebaut'));
+  /* Dieselbe Abteilung nicht zweimal, eine andere sehr wohl. */
+  assert.equal(W.bauStart(start.v, 'stadion').fehler, 'An dieser Abteilung wird schon gebaut.');
+  const zwei = W.bauStart(start.v, 'gastro');
+  assert.equal(zwei.fehler, null, 'zwei Abteilungen dürfen gleichzeitig bauen');
+  assert.equal(W.baustellenText(zwei.v).length, 2);
   assert(W.bauStart(verein({ kasse: 1 }), 'stadion').fehler.includes('fehlen'));
 
-  /* Erste Saison: noch nicht fertig. Zweite: fertig. */
-  const nach1 = W.saisonAbrechnung(start.v, erg(), 1);
-  assert.equal(W.ausbauStufe(nach1.v, 'stadion'), 1);
-  assert.equal(nach1.v.baustelle.rest, 1);
-  assert.equal(nach1.beleg.bau.fertig, null);
+  /* Gastro (1 Mio) ist nach einer Saison fertig, Stadion erst nach zweien. */
+  const nach1 = W.saisonAbrechnung(zwei.v, erg(), 1);
+  assert.equal(W.ausbauStufe(nach1.v, 'gastro'), 2, 'das kurze Projekt steht');
+  assert.equal(W.ausbauStufe(nach1.v, 'stadion'), 1, 'das lange noch nicht');
+  assert.equal(nach1.beleg.bau.fertig.length, 1);
   const nach2 = W.saisonAbrechnung(nach1.v, erg(), 2);
-  assert.equal(W.ausbauStufe(nach2.v, 'stadion'), 2, 'nach zwei Saisons steht das Stadion');
-  assert.equal(nach2.v.baustelle, null);
-  assert.equal(nach2.beleg.bau.fertig.n, 'Stadion');
+  assert.equal(W.ausbauStufe(nach2.v, 'stadion'), 2);
+  assert.equal(W.baustellenText(nach2.v).length, 0, 'keine Baustelle mehr offen');
+});
+
+test('Mit genug Geld ist der Vollausbau zeitlich erreichbar', () => {
+  /* Kevins Vorgabe: „Man sollte schon alles schaffen, wenn man genug Geld
+     hat. Die Bauzeit sollte also einen nicht begrenzen." Geprüft mit einer
+     Kasse, die nie leer wird — dann darf nur die Bauzeit bremsen. */
+  let v = verein({ kasse: 10000 });
+  let saisons = 0;
+  while (saisons < 15) {
+    for (const a of W.AUSBAU) if (W.ausbauKosten(v, a.id) != null) {
+      const r = W.bauStart(v, a.id);
+      if (!r.fehler) v = r.v;
+    }
+    v = W.saisonAbrechnung({ ...v, kasse: 10000 }, erg(), saisons).v;
+    saisons++;
+    if (W.AUSBAU.every((a) => W.ausbauStufe(v, a.id) === W.AUSBAU_MAX)) break;
+  }
+  const stufen = W.AUSBAU.reduce((a, x) => a + (W.ausbauStufe(v, x.id) - 1), 0);
+  assert.equal(stufen, 30, 'alle dreissig Stufen erreicht, nicht nur elf');
+  assert(saisons <= 12, 'und zwar in ' + saisons + ' Saisons, also innerhalb der fünfzehn');
+});
+
+test('Restkasse wird am Abschluss zu Vermächtnispunkten', () => {
+  assert.equal(W.abschlussWirtschaft(verein({ kasse: 0 })).punkte, 0);
+  assert.equal(W.abschlussWirtschaft(verein({ kasse: 100 })).punkte, 25, '4 Mio je Punkt');
+  assert.equal(W.abschlussWirtschaft(verein({ kasse: -50 })).punkte, 0, 'Schulden zählen nicht negativ');
+  /* Der Deckel verhindert, dass eine nie ausgegebene Kasse den Sport ersetzt. */
+  assert.equal(W.abschlussWirtschaft(verein({ kasse: 99999 })).punkte, W.PUNKTE_DECKEL);
+  /* Das VC-Extra „Vermächtnisplakette" wirkt hier — und nur hier. */
+  const mit = W.abschlussWirtschaft(verein({ kasse: 100, extras: ['ewigkeit'] }));
+  assert.equal(mit.faktor, 1.15);
+  assert.equal(mit.punkte, Math.round(25 * 1.15));
+  assert.equal(W.abschlussWirtschaft(verein({ kasse: 100 })).faktor, 1);
 });
 
 test('Preise: wer nichts zu bieten hat, kann nicht erhöhen', () => {

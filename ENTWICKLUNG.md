@@ -1078,3 +1078,59 @@ Vermarktungsreihe.
 
 Keine Versionserhöhung, kein CHANGELOG-Eintrag: für Spielende ändert sich
 nichts, solange das Modul nicht angeschlossen ist.
+
+
+## WIRT-P0-05 Nachtrag – drei Entscheidungen des Eigentümers (Claude, 17.09.2026)
+
+Nach der Kalibrierung hat der Eigentümer drei Punkte entschieden.
+
+**1. „Man sollte schon alles schaffen, wenn man genug Geld hat. Die Bauzeit
+sollte also einen nicht begrenzen. Limitieren wir die Bauzeit auf max 2 Jahre
+[…]. Aber wie du sagst, eine gewisse Spezialisierung sollte bleiben."**
+
+Die Höchstdauer allein hätte das nicht gelöst: dreissig Projekte nacheinander
+sind auch bei zwei Jahren nie unter sechzig Saisons zu schaffen. Die Änderung
+liegt deshalb woanders — **jede Abteilung baut für sich**. Stadion und
+Gastronomie gleichzeitig: ja. Stadion Stufe 3 und Stufe 4 gleichzeitig: nein,
+man kann dieselbe Tribüne nicht zweimal auf einmal erweitern. Damit braucht
+jede Abteilung höchstens zehn Saisons, und sie laufen parallel.
+
+Neu gerechnet, gleiches Verfahren wie zuvor:
+
+| Liga | Rang | Form am Ende | Ø Einnahmen | Kasse | Ausbau | Punkte aus Kasse |
+|---:|---:|---|---:|---:|---:|---:|
+| 1 | 3 | AG | 142,6 | 1.248,2 | **30/30** | 250 (Deckel) |
+| 1 | 10 | AG | 132,9 | 1.052,2 | **30/30** | 250 (Deckel) |
+| 2 | 5 | KGaA | 73,1 | 294,6 | **30/30** | 74 |
+| 3 | 8 | GmbH | 38,2 | 43,3 | 25/30 | 11 |
+| 4 | 10 | GmbH | 20,6 | 6,6 | 14/30 | 2 |
+| 5 | 12 | e.V. | 8,8 | −4,7 | 2/30 | 0 |
+
+Alles schaffbar, wenn das Geld reicht; ab Liga 3 entscheidet man, was man
+weglässt. Genau die gewünschte Mischung.
+
+**2. Restkasse zu Vermächtnispunkten.** Vier Millionen ergeben einen
+Abschlusspunkt, gedeckelt bei 250. Zum Vergleich wiegt ein Aufstieg 120 Punkte
+und eine Meisterschaft 90 — eine nie ausgegebene Kasse darf sportlichen Erfolg
+nicht ersetzen. Schulden zählen nicht negativ; der Abschluss soll nicht zweimal
+bestrafen. Das VC-Extra „Vermächtnisplakette" wirkt hier, und nur hier: sein
+`punkteFaktor` hatte bis jetzt keinen Leser.
+
+**3. Zielschwelle verschoben.** Das härteste Vorstandsziel beginnt jetzt ab
+Platz 2 statt ab Platz 3. Vorher bekam ein Verein, der jedes Jahr Dritter
+wurde, dauerhaft „Um den Titel spielen" mit Soll 1 und verdiente nie eine
+Prämie.
+
+**Geprüft:** 26 Regressionen im Modul (2 neue), `npm test` 135/135 (vorher 133),
+`npm run build` erfolgreich. Die neuen Prüfungen decken ab: Höchstdauer zwei
+Saisons für jede Ausbaustufe, dieselbe Abteilung nicht zweimal gleichzeitig,
+zwei Abteilungen gleichzeitig erlaubt, unterschiedlich lange Projekte werden
+zu unterschiedlichen Zeitpunkten fertig — und ein Lauf mit unerschöpflicher
+Kasse, der belegt, dass **alle dreissig** Stufen innerhalb der fünfzehn Jahre
+erreichbar sind. Dazu Restkasse-Umrechnung mit Deckel, Schuldenfall und
+Plakettenfaktor.
+
+**Offen bleibt:** der Überschuss oben (rund 1.250 Mio in Liga 1, der den
+Punktedeckel reisst) — das ist der fehlende Posten Spielergehälter
+(WIRT-P1-03). Anschluss an Spielablauf und Oberfläche unverändert offen
+(WIRT-P0-02 bis P0-04), kein Gerätetest.

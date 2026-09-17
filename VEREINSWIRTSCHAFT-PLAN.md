@@ -140,20 +140,21 @@ in die Abschlusspunkte? Das VC-Extra „Vermächtnisplakette" setzt bereits eine
 
 ## 6. Offene Balance-Fragen
 
-**Die Bauzeit ist die eigentliche Grenze, nicht das Geld.** Mit einer Baustelle
-und 1–3 Saisons je Projekt sind in fünfzehn Jahren höchstens elf der dreissig
-Ausbaustufen zu schaffen — auch mit voller Kasse. Das ist eine Eigenschaft,
-keine Panne: ein Verein wird in einem Durchlauf **nie fertig**, man
-spezialisiert sich. Wer das anders will, erlaubt zwei parallele Baustellen
-(naheliegend an die Rechtsform gekoppelt) oder verkürzt die Bauzeiten.
+**Gelöst (17.09.2026): die Bauzeit begrenzt nicht mehr.** Der erste Entwurf
+liess eine Baustelle insgesamt zu — damit waren in fünfzehn Jahren höchstens
+elf der dreissig Stufen zu schaffen, die Zeit war die Grenze statt des Geldes.
+Jetzt baut **jede Abteilung für sich** (Stadion und Gastronomie gleichzeitig
+ja, Stadion Stufe 3 und 4 gleichzeitig nein), Höchstdauer zwei Saisons.
+Nachgerechnet: Liga 1 und 2 erreichen 30/30, Liga 3 kommt auf 25, Liga 4 auf
+14, Liga 5 auf 2. Alles schaffbar, wenn man es sich leisten kann — und weil
+man es sich meist nicht leisten kann, bleibt die Spezialisierung.
 
-**Geld sammelt sich ohne Verwendung.** Ein erfolgreicher Erstligist hat nach
-fünfzehn Jahren rund 674 Mio in der Kasse, die nichts mehr kaufen können.
-Zwei Abhilfen, beide noch offen: die Spielergehälter als grosser Posten
-(WIRT-P1-03), und eine Verwendung am Ende — die Restkasse könnte in
-Abschlusspunkte fliessen (WIRT-P1-05). Dann wäre Wirtschaften bis zur letzten
-Saison sinnvoll, statt ab Jahr zehn gleichgültig zu werden.
+**Gelöst: die Restkasse verfällt nicht mehr.** Vier Millionen ergeben einen
+Abschlusspunkt, gedeckelt bei 250 (ein Aufstieg wiegt 120). Wirtschaften lohnt
+damit bis zur letzten Saison. Die Verdrahtung in `verein.js` steht noch aus
+(WIRT-P1-05); die Funktion `abschlussWirtschaft` ist fertig und geprüft.
 
-**Ein Verein, der immer Dritter wird, bekommt dauerhaft „Um den Titel
-spielen" und verdient nie eine Prämie.** Die Schwelle für das härteste Ziel
-liegt bei Platz 3; ob sie bei Platz 2 besser läge, sagt erst der Gerätetest.
+**Weiterhin offen: der Überschuss oben.** Ein Erstligist hat nach Vollausbau
+rund 1.250 Mio in der Kasse und reisst den Punktedeckel. Das ist der fehlende
+grosse Ausgabenposten, die Spielergehälter (WIRT-P1-03). Bis dahin bekannt und
+dokumentiert, nicht übersehen.
