@@ -154,6 +154,18 @@ Die Reihenfolge ist eine Qualitäts-/Risikoreihenfolge. Der letzte Nutzerauftrag
 
 **Abnahme:** echter Browserklickweg auf schmalen Größen; kein verdeckter Pflichtbutton; gespeicherte Auswahl nach Start identisch.
 
+### CHAR-FIX-02 – Hals/Kragen sauber maskieren — BEREIT
+
+**Einordnung:** gezielter Korrekturschritt nach CHAR-P1-05 und vor dem nächsten Karten-/Effektpaket. Der sichtbare Porträtfehler soll zuerst bereinigt werden, ohne die bestehende Charakteridentität oder gespeicherte Kennungen zu verändern.
+
+**Ziel:** Der Hals liegt geometrisch korrekt im Trikotausschnitt. Der Kragen wird vor dem unteren Hals gerendert bzw. maskiert; Haut darf nicht durch geschlossene Kragenflächen oder über deren Vorderkante scheinen.
+
+**Technik:** Ursache im gemeinsamen Avatar-/Porträt-Renderer beheben und eine belastbare Layer-/Maskenlösung verwenden. Keine Sonderfälle pro Porträtindex und keine Umnummerierung vorhandener Kopf-, Haar-, Bart- oder sonstiger Porträt-IDs.
+
+**Prüfung:** beide Geschlechter/Typen, mehrere breite/schmale Kopfformen und repräsentative Porträtkombinationen; große Charaktervorschau sowie kleine Spieler-/Vereinskarten; helle und dunkle Haut-/Trikotkontraste. Vorher/Nachher visuell vergleichen und eine Regression für die Rendering-Reihenfolge bzw. relevante Struktur ergänzen, soweit sinnvoll automatisierbar.
+
+**Abnahme:** kein Hals-/Hautdurchscheinen außerhalb der vorgesehenen Kragenöffnung, keine neuen Hals-/Kragen-Clippings oder sichtbaren Spalten, Porträt-IDs und gespeicherte Charaktere bleiben kompatibel, kleine und große Darstellung sind sichtbar geprüft.
+
 ### CARD-P0-01 – Schichtenvertrag für Spielerkarten — BEREIT
 
 **Ziel:** Kartenmaterial wirkt hochwertig, ohne Porträt/Text/Werte zu überdecken.
