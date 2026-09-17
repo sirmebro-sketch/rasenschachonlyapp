@@ -18,17 +18,17 @@ async function rasterAbstand(page){
    }finally{URL.revokeObjectURL(url);}
   };
   const rasters=await Promise.all(nodes.map(render));
-  let min=null;
+  const paare=[];
   for(let a=0;a<rasters.length;a++)for(let b=a+1;b<rasters.length;b++){
    const A=rasters[a],B=rasters[b],n=A.size*A.size;let delta=0,geaendert=0,maxDelta=0;
    for(let p=0;p<n;p++){
     const i=p*4,d=Math.abs(A.px[i]-B.px[i])+Math.abs(A.px[i+1]-B.px[i+1])+Math.abs(A.px[i+2]-B.px[i+2]);
     delta+=d;if(d>12)geaendert++;if(d>maxDelta)maxDelta=d;
    }
-   const x={a:A.id,b:B.id,changedPixels:geaendert,changedRatio:geaendert/n,meanRgbDelta:delta/(n*3*255),maxRgbDelta:maxDelta/3};
-   if(!min||x.meanRgbDelta<min.meanRgbDelta)min=x;
+   paare.push({a:A.id,b:B.id,changedPixels:geaendert,changedRatio:geaendert/n,meanRgbDelta:delta/(n*3*255),maxRgbDelta:maxDelta/3});
   }
-  return {count:rasters.length,min};
+  paare.sort((a,b)=>a.meanRgbDelta-b.meanRgbDelta||a.changedPixels-b.changedPixels);
+  return {count:rasters.length,min:paare[0]||null,nearest:paare.slice(0,5),exact:paare.filter(x=>x.changedPixels===0)};
  });
 }
 
@@ -49,13 +49,14 @@ test('CHAR-P1-02: echte Gesichtszüge bleiben in Spielgrößen rasterseitig unte
      await page.getByRole('combobox',{name:'Merkmal'}).selectOption(merkmal);
      const m=await rasterAbstand(page);
      expect(m.count,`${geschlecht}/${haut}/${groesse}/${merkmal}`).toBeGreaterThan(1);
-     expect(m.min.changedPixels,`Raster-Dublette ${geschlecht}/${haut}/${groesse}/${merkmal}`).toBeGreaterThan(0);
      messung.push({geschlecht,haut:Number(haut),groesse:Number(groesse),merkmal,...m});
     }
    }
   }
  }
  await testInfo.attach('gesichtszuege-rastermetrik.json',{body:Buffer.from(JSON.stringify(messung,null,2)),contentType:'application/json'});
+ const dubletten=messung.flatMap(m=>m.exact.map(p=>({geschlecht:m.geschlecht,haut:m.haut,groesse:m.groesse,merkmal:m.merkmal,...p})));
+ expect(dubletten,'Pixelidentische Varianten im echten 72/96-px-Renderer:\n'+JSON.stringify(dubletten,null,2)).toEqual([]);
  expect(errors).toEqual([]);
 });
 
