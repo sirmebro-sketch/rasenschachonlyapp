@@ -1,7 +1,7 @@
 /* Stabile gespeicherte Indizes: neue Formen nur anhängen, alte Freischaltungen behalten. */
 export function portraetOptionen(basis,g){
  const a=Object.fromEntries(Object.entries(basis).map(([k,n])=>[k,Array.from({length:n},(_,i)=>i)]));
- a.frisur=[...a.frisur,...Array.from({length:6},(_,i)=>(g==='w'?14:16)+i)];
+ a.frisur=[...a.frisur,...Array.from({length:10},(_,i)=>(g==='w'?14:16)+i)];
  if(g!=='w')a.bart=[...a.bart,10,11,12,13,14,15];
  for(const [k,neu] of Object.entries({brauen:[5,6],augen:[5,6],nase:[8,9],mund:[7,8],ohren:[3,4],wangen:[3,4]}))if(a[k])a[k]=[...a[k],...neu];
  if(g==='w'&&a.schminke)a.schminke=[...a.schminke,5,6];
@@ -27,6 +27,6 @@ export const PORTRAET_NAMEN={
  schmuck:['Ohne','Ohrstecker','Breites Stirnband','Runde Brille','Kette','Schmales Stirnband','Sportbrille','Creolen'],
  schminke:['Ohne','Augen betonen','Lippen betonen','Augen und Lippen','Dezent','Feiner Lidstrich','Warmer Lippenakzent'],
 };
-export const NEUE_FRISUREN=['Weiche Wellen','Kurze Naturkrause','Geflochtener Ansatz','Locken mit Seitenscheitel','Mittelscheitel mit Fall','Kurzer Fade'];
+export const NEUE_FRISUREN=['Weiche Wellen','Kurze Naturkrause','Geflochtener Ansatz','Locken mit Seitenscheitel','Mittelscheitel mit Fall','Kurzer Fade','Lange Locs','Irokesenschnitt','Schulterlang glatt','Flechtkranz'];
 
 export const FRISUR_NAMEN={m:['Rasiert','Kurz','Seitenscheitel','Undercut','Locken','Afro','Igel','Halbglatze','Zöpfe','Knoten','Vokuhila','Glatze','Zurückgekämmt','Strukturierter Kurzschnitt','Flacher Schnitt','Seitlicher Ansatz'],w:['Kurz','Lang offen','Voluminös','Bob','Knoten','Seitenzopf','Lang mit Scheitel','Pixie','Locken','Kurzer Ansatz','Hoher Pferdeschwanz','Geflochtene Zöpfe','Hochgesteckt','Naturvolumen']};
