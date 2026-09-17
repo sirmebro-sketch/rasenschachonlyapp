@@ -17336,6 +17336,65 @@ function EndScreen({ p, onNew }) {
                   {b.abgaenge > 0 ? b.abgaenge + " Abgänge — die Akademie muss nachliefern." : ""}
                   {b.vorbei ? (b.abgaenge > 0 ? " " : "") + "Die fünfzehn Jahre sind um." : ""}
                 </div>)}
+
+              {/* WIRT-P1-01: woher das Geld kam und wohin es ging. Ohne diese
+                  Seite sah der Spieler nur einen Kassenstand, der sich
+                  veraendert hatte — ohne zu wissen, warum. Dieselbe Bauart wie
+                  der Coinbeleg: Posten links, Betrag rechts, Summe darunter.
+                  Der Beleg ist gebucht worden; hier wird er nur gelesen. */}
+              {b.wirtschaft && (() => {
+                const w = b.wirtschaft;
+                const geld = (x) => VEREIN.geldText(x, w.land);
+                const zeile = (k, wert, farbe) => (
+                  <div key={k} style={{ display: "flex", justifyContent: "space-between",
+                    gap: 10, fontSize: 11.5, padding: "2px 0" }}>
+                    <span style={{ color: "var(--mu)", flex: 1, minWidth: 0, overflow: "hidden",
+                      textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{k}</span>
+                    <span style={{ color: farbe || "inherit", whiteSpace: "nowrap" }}>{wert}</span>
+                  </div>);
+                return (
+                  <div style={{ marginTop: 10, paddingTop: 9, borderTop: "1px solid var(--ln)" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
+                      <span className="eb" style={{ fontSize: 11 }}>Saisonabrechnung</span>
+                      <span className="d" style={{ fontSize: 17,
+                        color: w.kasse < 0 ? "var(--bad)" : "var(--ok)" }}>{geld(w.kasse)}</span>
+                    </div>
+                    {w.zuschauer > 0 && (
+                      <div className="m" style={{ fontSize: 10, color: "var(--mu)", marginBottom: 4 }}>
+                        Ø {Math.round(w.zuschauer).toLocaleString("de-DE")} Zuschauer
+                        {w.auslastung ? " · " + Math.round(w.auslastung * 100) + " % ausgelastet" : ""}</div>)}
+
+                    <div style={{ marginTop: 6 }}>
+                      {(w.einnahmen || []).map((x) => zeile(x.k, "+" + geld(x.v), "var(--ok)"))}
+                      {(w.ausgaben || []).map((x) => zeile(x.k, "−" + geld(x.v), "var(--bad)"))}
+                      {(w.ereignisse || []).filter((e) => e.geld).map((e) =>
+                        zeile(e.n, (e.geld > 0 ? "+" : "−") + geld(Math.abs(e.geld)),
+                          e.geld > 0 ? "var(--ok)" : "var(--bad)"))}
+                      {w.ziel && w.ziel.erfuellt && w.ziel.praemie > 0 &&
+                        zeile("Vorstandsziel erfüllt · " + w.ziel.n, "+" + geld(w.ziel.praemie), "var(--ok)")}
+                    </div>
+
+                    <div style={{ display: "flex", justifyContent: "space-between", gap: 10,
+                      marginTop: 6, paddingTop: 6, borderTop: "1px solid var(--ln)", fontSize: 12.5 }}>
+                      <span className="d">Ergebnis</span>
+                      <span className="d" style={{ color: w.ergebnis < 0 ? "var(--bad)" : "var(--ok)" }}>
+                        {(w.ergebnis > 0 ? "+" : "") + geld(w.ergebnis)}</span>
+                    </div>
+
+                    {w.ziel && !w.ziel.erfuellt && (
+                      <div className="m" style={{ fontSize: 11, marginTop: 5, color: "var(--mu)" }}>
+                        Vorstandsziel verfehlt: {w.ziel.n} — keine Prämie.</div>)}
+                    {!!(w.fertig || []).length && (
+                      <div className="m" style={{ fontSize: 11, marginTop: 5 }}>
+                        Fertig geworden: {w.fertig.join(", ")}</div>)}
+                    {!!(w.ausgelaufen || []).length && (
+                      <div className="m" style={{ fontSize: 11, marginTop: 3, color: "var(--mu)" }}>
+                        Vertrag ausgelaufen: {w.ausgelaufen.join(", ")}</div>)}
+                    {(w.ereignisse || []).map((e, i) => (
+                      <div key={i} className="m" style={{ fontSize: 11, marginTop: 3, color: "var(--mu)" }}>
+                        {e.n}{e.t ? " — " + e.t : ""}</div>))}
+                  </div>);
+              })()}
             </div>);
         })()}
         {p.hausFortschritt === false && <p style={{ marginTop: 12, color: "var(--mu)" }}>
@@ -17998,6 +18057,26 @@ function FlutlichtApp() {
           punkte: VS.punkte, aufstieg: !!VS.aufstieg, abstieg: !!VS.abstieg,
           meister: VS.rang === 1, vorbei: !!VS.vorbei,
           abgaenge: (VS.abgaenge || []).length,
+          /* WIRT-P1-01: die Saisonabrechnung wandert mit in den Bericht.
+             DIESELBE QUELLE wie die Buchung — der Beleg aus `vereinSaison`,
+             nicht eine zweite Rechnung daneben. Genau wie beim Coinbeleg am
+             Karriereende: zwei Rechnungen laufen frueher oder spaeter
+             auseinander, und dann glaubt der Spieler der falschen.
+             Mitgenommen wird der Beleg EINER Saison, nicht die Chronik —
+             fuenfzehn davon gehoerten nicht in einen Karrierebericht. */
+          wirtschaft: VS.beleg ? {
+            land: verein.land,
+            einnahmen: VS.beleg.einnahmen, ausgaben: VS.beleg.ausgaben,
+            summeEin: VS.beleg.summeEin, summeAus: VS.beleg.summeAus,
+            ergebnis: VS.beleg.ergebnis, kasse: VS.beleg.kasse,
+            zuschauer: VS.beleg.zuschauer, auslastung: VS.beleg.auslastung,
+            ereignisse: (VS.beleg.ereignisse || []).map((e) => ({ n: e.n, t: e.t, geld: e.geld })),
+            ziel: VS.beleg.ziel && VS.beleg.ziel.gesetzt
+              ? { n: VS.beleg.ziel.n, erfuellt: VS.beleg.ziel.erfuellt, praemie: VS.beleg.ziel.praemie }
+              : null,
+            fertig: ((VS.beleg.bau || {}).fertig || []).map((f) => f.n + " Stufe " + f.stufe),
+            ausgelaufen: VS.beleg.ausgelaufen || [],
+          } : null,
         };
         /* DEN ABSCHLUSS AM VEREIN SPEICHERN (35.73, von Kevin gemeldet:
            „die Bonis werden nicht uebernommen").

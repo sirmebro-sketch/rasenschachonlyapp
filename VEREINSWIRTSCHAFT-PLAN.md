@@ -130,11 +130,21 @@ Zu Saisonbeginn drei Angebote zur Auswahl, mit Betrag, Laufzeit und Vorteil.
 Auslaufende Verträge werden gemeldet. Die Angebote sind über die Saat
 reproduzierbar; ein Neuladen darf keine neuen Angebote würfeln.
 
-### WIRT-P1-01 – Saisonabrechnung sichtbar machen — OFFEN
+### WIRT-P1-01 – Saisonabrechnung sichtbar machen — VORGELEGT (Claude, 17.09.2026)
 
-Der Beleg existiert bereits. Eine Seite im Saisonrückblick, die zeigt, woher
-das Geld kam und wohin es ging — dieselbe Bauart wie der Coinbeleg beim
-Karriereabschluss.
+Der Beleg wandert in `p.vereinBericht.wirtschaft` und wird im Abschluss-
+bildschirm unter der bestehenden Vereinskachel gezeigt: jeder Einnahme- und
+Ausgabeposten einzeln, Wirtschaftsereignisse mit Betrag **und Text**, die
+Vorstandsprämie als Posten, darunter Ergebnis und neuer Kassenstand. Dazu
+Zuschauerschnitt und Auslastung, fertig gewordene Bauprojekte und ausgelaufene
+Werbeverträge.
+
+**Dieselbe Quelle wie die Buchung**, nicht eine zweite Rechnung daneben —
+dieselbe Regel wie beim Coinbeleg. Eine Regression prüft, dass **jeder**
+gebuchte Posten auch angezeigt wird; lässt man die Ausgaben weg, wird sie rot.
+
+Ein Bericht ohne Wirtschaftsteil (alter Spielstand) bleibt unverändert
+lesbar — auch das ist geprüft.
 
 ### WIRT-P1-02 – Stadionausbau spürbar machen — OFFEN
 
