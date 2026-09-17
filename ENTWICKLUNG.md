@@ -1210,10 +1210,15 @@ nicht, weil ein Branch-Push sie nicht auslöst.
 
 **Zusätzlich, weil die Regel sonst in der nächsten Sitzung wieder falsch
 gilt:** `CLAUDE.md` und `README.md` sagten „ein Pull Request ist der
-bevorzugte Weg". Kevin am 17.09.2026: „Pull requests macht nur Astra, nach
-Gegenprobe und Kontrolle! Außer ich sage explizit was anderes!" Beide Stellen
-sind entsprechend korrigiert, samt der in Kauf genommenen Folge, dass die CI
-damit erst an Codex' Pull Request läuft.
+bevorzugte Weg" und ließen damit offen, wer ihn eröffnet. Kevin hat das am
+17.09.2026 in zwei Schritten geklärt — erst „Pull requests macht nur Astra",
+dann, nachdem der Unterschied zwischen Eröffnen und Zusammenführen auf dem
+Tisch lag, die endgültige Fassung: **Claude eröffnet, Codex entscheidet.**
+Das Eröffnen ändert an `main` nichts und lässt die CI am Vorschlag laufen,
+was ein reiner Branch-Push nicht tut; Abnahme, Prüfung, Gegenprobe und der
+Merge-Knopf bleiben bei Codex. Ausdrücklich ausgenommen bleibt für Claude:
+zusammenführen, freigeben, Auto-Merge einschalten, fremde Pull Requests
+schliessen. Beide Dateien stehen jetzt auf dieser Fassung.
 
 **Offen bleibt:**
 
