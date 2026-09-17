@@ -21,9 +21,9 @@ function GesichtProbe(){
   {augen:1,brauen:4,nase:1,mund:5,wangen:2,details:1},
   {augen:2,brauen:2,nase:6,mund:6,wangen:3,details:3},
   {augen:3,brauen:3,nase:3,mund:3,wangen:1,details:6},
-  {augen:4,brauen:1,nase:7,mund:4,wangen:4,details:5},
+  {augen:7,brauen:1,nase:10,mund:4,wangen:5,details:7},
   {augen:5,brauen:5,nase:8,mund:7,wangen:2,details:2},
-  {augen:6,brauen:6,nase:9,mund:8,wangen:4,details:4},
+  {augen:8,brauen:6,nase:11,mund:8,wangen:6,details:8},
  ];
  return <div className="fl"><style>{CSS}</style><main style={{maxWidth:1240,margin:'auto',padding:18}}>
   <h1>CHAR-P1-02 · Gesichtszüge</h1>
