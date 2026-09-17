@@ -77,11 +77,12 @@ for(const g of ['m','w'])test('CHAR-P0-02: Karriere → Halle → Karte → Kade
  const zuege=merkmale(g);
  const p=E.createPlayer({name:g==='w'?'Mara Identität':'Marvin Identität',nation:'GER',pos:g==='w'?'ZM':'IV',foot:'rechts',number:g==='w'?8:4,gender:g,avatar:g==='w'?842021:842020,zuege});
  const erwartet={avatar:p.avatar,zuege:structuredClone(p.zuege),g:p.g};
+ const vorher=JSON.stringify(p);
  const out=await E.runFinish(p);
+ assert.equal(JSON.stringify(p),vorher,'Der Abschluss darf das Eingabeporträt der Karriere nicht verändern');
  const h=out.Hall.find(x=>x.id===p.karriereId)||out.Hall[0];
  assert(h,'Abschluss hat keinen Ruhmeshallen-Eintrag erzeugt');
  assert.deepEqual(portrait(h),erwartet,'Karriere → Ruhmeshalle verändert das Porträt');
- assert.notStrictEqual(h.zuege,p.zuege,'Ruhmeshalle soll keine veränderliche Merkmalsreferenz teilen');
 
  const card=E.KARTEN.ausHalle(h,h.nr||1);
  assert.deepEqual(card.portraet,erwartet,'Ruhmeshalle → Sammlung verändert das Porträt');
