@@ -1,0 +1,846 @@
+
+
+===== const KOPFFORM = [ :: [152528] =====
+Strom
+   zieht; Überlappung kann es dort ebenfalls nicht geben.
+
+   ACHTUNG: Alte Spielstände tragen nur die Zahl. Ihre Gesichter sehen nach
+   diesem Umbau ANDERS aus als vorher — bei einer Neuzeichnung aller Teile
+   ließe sich das ohnehin nicht vermeiden. Der Spielstand bleibt gültig.
+   ========================================================================== */
+
+/* Ein eigener Zufallsstrom je Merkmal. xorshift auf Kennung ⊕ Merkmalsnummer:
+   gleiche Kennung ⇒ gleiches Gesicht, aber kein Merkmal hängt am anderen. */
+function mische(kennung, i) {
+  let x = ((kennung | 0) ^ ((i + 1) * 0x9E3779B1)) >>> 0;
+  x ^= x << 13; x >>>= 0;
+  x ^= x >>> 17;
+  x ^= x << 5;  x >>>= 0;
+  return x >>> 0;
+}
+
+/* Augenfarben. Bis 33.16 wurde `eyeC` berechnet und NIE benutzt — die Augen
+   waren immer #2A2118. Der Regler „Augen" in der Feineinstellung hat deshalb
+   sichtbar nichts getan. Jetzt trägt die Iris die Farbe wirklich. */
+const AUGENFARBE = [
+  { n: "Dunkelbraun", c: "#3B2416" }, { n: "Braun", c: "#6B4423" },
+  { n: "Bernstein",   c: "#9C6B24" }, { n: "Haselnuss", c: "#7A6A34" },
+  { n: "Grün",        c: "#4A6B45" }, { n: "Graublau",  c: "#5A7183" },
+  { n: "Blau",        c: "#3E6C8E" },
+];
+
+/* Kopfformen. Wange (b) und Kiefer (j) als Zahlen, damit Haare und Bart
+   sich danach richten können, statt vier Mal von Hand nachgezeichnet zu
+   werden. kinn ist die Höhe der Kinnspitze. */
+const KOPFFORM = [
+  { n: "Oval",   b: 25, j: 15, kinn: 71 },
+  { n: "Rund",   b: 27, j: 19, kinn: 69 },
+  { n: "Kantig", b: 26, j: 21, kinn: 70 },
+  { n: "Schmal", b: 23, j: 12, kinn: 73 },
+  { n: "Herz",   b: 26, j: 11, kinn: 72 },
+  /* Ab hier ANGEHÄNGT (34.27) — die Reihenfolge oben darf nie wechseln, ihr
+     Index steckt in jedem gespeicherten Gesicht.
+
+     Warum überhaupt: „Rund“ war mit j:19 kaum runder als „Oval“ mit j:15 —
+     der Unterschied lag fast nur in der Breite, nicht in der Kieferpartie.
+     Rund wird ein Kopf über einen BREITEN KIEFER (j) und ein KURZES Gesicht
+     (kinn), nicht über mehr Breite allein. */
+  { n: "Vollmond", b: 28,   j: 24, kinn: 66 },   // breit, sehr breiter Kiefer, kurz
+  { n: "Breit",    b: 29,   j: 22, kinn: 69 },   // ausladend, kräftige Wangen
+  { n: "Weich",    b: 25.5, j: 21, kinn: 67 },   // schmaler, aber ohne Kanten
+  /* Zwei Formen OHNE markantes Kinn (34.28). Bei allen bisherigen läuft der
+     Kiefer senkrecht bis kurz vors Kinn und knickt dann ab — unten stehen
+     dadurch sichtbare Ecken seitlich heraus. `kv` zieht die Kieferlinie zum
+     Kinn hin ein, sie läuft weich aus statt eckig. Eine schmale, eine breite. */
+  { n: "Zart",     b: 24,   j: 15, kinn: 70, kv: .58 },
+  { n: "Rundlich", b: 27.5, j: 21, kinn: 68, kv: .58 },
+  /* CHAR-P1-01 / ChatGPT-Codex: nur angehängt. IDs 0–9 sind gespeicherter
+     Vertrag und werden weder umsortiert noch geometrisch umgedeutet. */
+  { n: "Trapez",     b: 26, j: 23, kinn: 72, profil: "trapez" },
+  { n: "Langkantig", b: 24, j: 19, kinn: 78, profil: "lang" },
+  { n: "Diamant",    b: 29, j: 17, kinn: 73, kv: .72, profil: "diamant" },
+  { n: "Kurzbreit",  b: 30, j: 27, kinn: 64, profil: "kurzbreit" },
+];
+/* Die historische Seed-Ableitung darf durch neue Editorformen nicht wandern.
+   Seed-only/Altporträts bleiben deshalb auf genau den bisherigen IDs 0–9. */
+const KOPFFORM_HISTORISCH = 10;
+/* Kieferbreite AM KINN. Ohne `kv` ist sie gleich der Kieferbreite oben — damit
+   bleiben alle acht bestehenden Formen bitgleich. Nur Formen MIT `kv` laufen
+   nach unten schmaler zu.
+
+   Sie muss überall gelten, wo im Kinnbereich gezeichnet wird: Hülle,
+   Schattenseite und Bärte. Ve
+-----
+
+
+===== const kopfPfad = (k) => { :: [155436] =====
+apez" },
+  { n: "Langkantig", b: 24, j: 19, kinn: 78, profil: "lang" },
+  { n: "Diamant",    b: 29, j: 17, kinn: 73, kv: .72, profil: "diamant" },
+  { n: "Kurzbreit",  b: 30, j: 27, kinn: 64, profil: "kurzbreit" },
+];
+/* Die historische Seed-Ableitung darf durch neue Editorformen nicht wandern.
+   Seed-only/Altporträts bleiben deshalb auf genau den bisherigen IDs 0–9. */
+const KOPFFORM_HISTORISCH = 10;
+/* Kieferbreite AM KINN. Ohne `kv` ist sie gleich der Kieferbreite oben — damit
+   bleiben alle acht bestehenden Formen bitgleich. Nur Formen MIT `kv` laufen
+   nach unten schmaler zu.
+
+   Sie muss überall gelten, wo im Kinnbereich gezeichnet wird: Hülle,
+   Schattenseite und Bärte. Verjüngt man nur die Hülle, zeichnet der Bart
+   darüber hinaus — genau der Fehler, der in 34.1 vier Frisuren betraf. */
+const kinnBreite = (k) => k.j * (k.kv == null ? 1 : k.kv);
+
+/* Das harte Ende der Laufbahn. Stand bis 34.29 viermal als nackte Zahl im
+   Spielablauf — einmal als 40 (vor dem Hochzählen des Alters) und dreimal als
+   41 (danach). Wer eine davon ändert und die anderen übersieht, bekommt zwei
+   verschiedene Karrierelängen, je nachdem ob man normal spielt oder vorspult.
+
+   Die WEICHEN Bedingungen daneben (ab 33 bei schwacher Stärke, ab 35, ab 34
+   mit Zufall) bleiben absichtlich verschieden: sie beschreiben verschiedene
+   Lagen, nicht dasselbe zweimal. */
+const LAUFBAHN_MAX = 40;
+
+const kopfPfad = (k) => {
+  const l = 50 - k.b, r = 50 + k.b;
+  const ku = kinnBreite(k), kul = 50 - ku, kur = 50 + ku;
+  /* IDs 0–9 laufen weiterhin exakt durch den historischen Standardpfad.
+     Nur angehängte Profile bekommen eine bewusst andere Außen-Silhouette. */
+  if (k.profil === "trapez") return `M${l},42 C${l+1},30 ${l+8},17 36,13 C43,10 57,10 64,13 C${r-8},17 ${r-1},30 ${r},42 C${r},52 ${kur},${k.kinn-8} ${kur},${k.kinn-6} C${kur},${k.kinn-1} ${50+ku*.45},${k.kinn} 50,${k.kinn} C${50-ku*.45},${k.kinn} ${kul},${k.kinn-1} ${kul},${k.kinn-6} C${kul},${k.kinn-8} ${l},52 ${l},42 Z`;
+  if (k.profil === "lang") return `M${l+1},40 L${l+2},27 Q${l+6},13 50,11 Q${r-6},13 ${r-2},27 L${r-1},52 C${r-1},62 ${kur},${k.kinn-8} ${kur},${k.kinn-6} C${kur},${k.kinn-1} ${50+ku*.45},${k.kinn} 50,${k.kinn} C${50-ku*.45},${k.kinn} ${kul},${k.kinn-1} ${kul},${k.kinn-6} C${kul},${k.kinn-8} ${l+1},62 ${l+1},52 Z`;
+  if (k.profil === "diamant") return `M31,18 Q41,10 50,11 Q59,10 69,18 Q76,30 ${r},44 Q${r-3},54 ${kur+3},63 Q${kur},${k.kinn-2} 50,${k.kinn} Q${kul},${k.kinn-2} ${kul-3},63 Q${l+3},54 ${l},44 Q24,30 31,18 Z`;
+  if (k.profil === "kurzbreit") return `M${l},39 Q${l},21 32,13 Q50,8 68,13 Q${r},21 ${r},39 L${r},48 Q${r-1},55 ${kur},58 Q${kur},${k.kinn-1} 50,${k.kinn} Q${kul},${k.kinn-1} ${kul},58 Q${l+1},55 ${l},48 Z`;
+  return "M" + l + ",40 C" + l + ",21 " + (l + 9) + ",12 50,12 C" + (r - 9) + ",12 " + r + ",21 " + r + ",40"
+    /* Beide Stützpunkte auf der verjüngten Kieferlinie. In 34.28 stand hier
+       rechts noch `jr` (die Kieferbreite OBEN), links dagegen schon der
+       verjüngte Wert — die rechte Seite beulte dadurch bei jeder Form mit
+       `kv` sichtbar aus. Symmetrie wird jetzt im Prüfstand nachgerechnet. */
+    + " C" + r + ",52 " + kur + "," + (k.kinn - 8) + " " + kur + "," + (k.kinn - 6)
+    + " C" + kur + "," + (k.kinn - 1) + " " + (50 + ku * .45) + "," + k.kinn + " 50," + k.kinn
+    + " C" + (50 - ku * .45) + "," + k.kinn + " " + kul + "," + (k.kinn - 1) + " " + kul + "," + (k.kinn - 6)
+    + " C" + kul + "," + (k.kinn - 8) + " " + l + ",52 " + l + ",40 Z";
+};
+
+/* Zahl der Auswahlmöglichkeiten je Merkmal. `mk_haar` und `mk_acc` schalten
+   zusätzlic
+-----
+
+
+===== function Avatar({ :: [161024] =====
+  = ausSpanne(NASE_RANG,  naseSpanne(nat),  z.nase);
+  z.mund  = ausSpanne(MUND_RANG,  mundSpanne(nat),  z.mund);
+  z.augen = ausSpanne(AUGEN_RANG, augenSpanne(nat), z.augen);
+
+  /* Frauen: vollere Lippen und feinere Brauen im Mittel. Die Spanne wird nach
+     oben verschoben, nicht festgesetzt — es soll weiter Bandbreite geben. */
+  if (w) {
+    const ms = mundSpanne(nat);
+    z.mund = ausSpanne(MUND_RANG, [Math.min(ms[0] + 2, MUND_RANG.length - 1), MUND_RANG.length - 1],
+      mische(h, 8));
+    z.brauen = mische(h, 4) % 3;              // die drei feineren der fünf
+    z.bart = 0;
+  } else {
+    z.schminke = 0;
+  }
+
+  /* Die Statur zieht den Kopf schmal oder breit. */
+  const SK = staturKopf(statur);
+  if (SK) z.kopf = SK[mische(h, 12) % SK.length];
+  return z;
+}
+
+/* Ein Merkmal weiterdrehen — genau eines. Ersetzt `bitDrehen`. */
+function zugDrehen(zuege, feld, richtung, g, nat, meta) {
+  const A = ZUEGE_ANZAHL(meta, g === "w");
+  const z = { ...zuege };
+  if (feld === "haut" || feld === "haar") {
+    const R = [0, (feld === "haut" ? SKIN_EDIT.length : HAIRC_EDIT.length)-1];
+    const spanne = R[1] - R[0] + 1;
+    const rel = ((z[feld] - R[0]) % spanne + spanne) % spanne;
+    z[feld] = R[0] + ((rel + richtung) % spanne + spanne) % spanne;
+    return z;
+  }
+  const n = A[feld] || 1;
+  if (n <= 1) return z;
+  z[feld] = (((z[feld] || 0) + richtung) % n + n) % n;
+  return z;
+}
+
+function Avatar({ seed = 1, zuege, club, size = 72, ring, g, nat, meta }) {
+  const K = meta || {};
+  const w = g === "w";
+  /* EIN LEERES OBJEKT ZAEHLT WIE KEINES (35.69). `zuege || …` faengt `null`
+     ab, aber `{}` ist wahr — dann sind alle Felder undefined, und was daraus
+     entsteht, ist je nach Stelle eine Ersatzfarbe, ein NaN im SVG-Attribut
+     oder ein Absturz in `shade`. Beim Bauen der Ruhmeshallenprobe passiert,
+     und der erste Anlauf flickte nur `haut` und `haar` — die Pruefung meldete
+     danach weiter „Received NaN for the attribute". EINE Stelle flicken, wo
+     zehn betroffen sind, ist keine Behebung, sondern eine Verlagerung.
+     Im Spiel entsteht `{}` heute nicht. Ein beschaedigter Spielstand oder ein
+     aelteres Format reichen aber, und der Spieler saehe statt eines
+     Portraets einen Fehlerbildschirm. */
+  const z = (zuege && Object.keys(zuege).length) ? zuege
+    : zuegeAusKennung(seed, g, nat, K);
+  // Jede Galerie-Kachel braucht eigene SVG-IDs, auch bei derselben Spielerkennung.
+  const kennung = React.useId().replace(/[^a-zA-Z0-9_-]/g, "");
+  const modern = z.stil === 2;
+
+  const kopf = KOPFFORM[z.kopf % KOPFFORM.length] || KOPFFORM[0];
+  /* `|| 0` GEGEN LEERE ZUGLISTEN (35.69). `zuege || zuegeAusKennung(...)`
+     faengt `null` ab, aber NICHT ein leeres Objekt: `{}` ist wahr, also
+     greift der Rueckfall nicht, `z.haut` ist undefined, `clamp` liefert NaN,
+     `SKIN[NaN]` ist undefined — und `shade` stuerzt an einer Farbe ab, die es
+     nicht gibt. Beim Bauen der Ruhmeshallenprobe genau so passiert.
+     Im Spiel entsteht `{}` heute nicht. Aber ein beschaedigter Spielstand
+     oder ein aelteres Format reichen, und der Absturz waere fuer den Spieler
+     ein weisser Bildschirm statt eines Portraets. */
+  const hautPalette=modern?SKIN_EDIT:SKIN;
+  const haarPalette=modern?HAIRC_EDIT:HAIRC;
+  const haut = hautPalette[clamp(z.haut || 0, 0, hautPalette.length - 1)];
+  const schatten = shade(haut, -26);      /* Flächenschatten, keine Verläufe */
+  const tief = shade(haut, -46);
+  const haar = haarPalette[clamp(z.haar || 0, 0, haarPalette.length - 1)];
+  const haarHell = shade(haar, 26);
+  const iris = (AUGENFARBE[z.augenfarbe 
+-----
+
+
+===== const kinnY = kopf.kinn :: [164976] =====
+er Ton hinter dem Kopf und muss hell genug bleiben, dass
+     schwarzes Haar dagegen steht; er ist deshalb nach unten begrenzt und
+     nicht einfach „Rahmenfarbe mal 0,3". */
+  const grundBasis = R ? R.c : "#2A4433";
+  /* UNTERGRENZE STATT AUGENMASS. Der erste Entwurf nahm die Rahmenfarbe,
+     dunkelte sie ab und sah gut aus — gemessen kam OHNE Rahmen ein Kontrast
+     von 1,02 gegen schwarzes Haar heraus, also genau Kevins Befund. Farben
+     nach Gefühl zu wählen löst ein Kontrastproblem nicht, es verschiebt es.
+     Der Ton hinter dem Kopf wird deshalb so lange aufgehellt, bis er gegen
+     das dunkelste Haar der Palette das Verhältnis GRUND_MIN erreicht — die
+     Silhouette ist damit garantiert, auch ganz ohne Rahmen. */
+  const grundHell  = grundAufhellen(mischFarbe(grundBasis, "#2E3A2E", .35));
+  const grundMitte = shade(grundHell, -26);
+  const grundTief  = shade(grundHell, -52);
+
+  /* CHAR-P1-02 / ChatGPT-Codex: perzeptiv tragfähige Gesichtszüge.
+     Bestehende IDs bleiben geometrisch unverändert. Die neuen Formen werden
+     ausschließlich hinten angehängt; alte Seed-Ableitungen behalten damit
+     ihre bisherigen Augen-/Nasen-/Wangen-IDs. */
+  const augenY = 46 + (z.augen === 3 ? 1.5 : 0);
+  const lidH = z.augen === 1 ? 2.6 : z.augen === 4 ? 4.2 : z.augen === 5 ? 3.9 : z.augen === 6 ? 2.9
+    : z.augen === 7 ? 4.25 : z.augen === 8 ? 3.15 : 3.4;   /* Lidspalt */
+  const kinnY = kopf.kinn;
+  const kj = kinnBreite(kopf);   /* Kieferbreite am Kinn — siehe kinnBreite */
+  /* Lidschatten nimmt einen Ton aus der Haut auf, statt eine feste Farbe zu
+     setzen — sonst passt er auf hellen und dunklen Tönen nie zugleich. */
+  const lidfarbe = shade(haut, -34);
+  const kopfD = kopfPfad(kopf);
+
+  /* Haaransatz folgt der Kopfbreite, damit keine Frisur neben dem Kopf sitzt. */
+  const hl = 50 - kopf.b, hr = 50 + kopf.b;
+  const dach = (tiefe) => "M" + hl + "," + (40 - tiefe) + " C" + hl + ",20 " + (hl + 9) + ",11 50,11 C"
+    + (hr - 9) + ",11 " + hr + ",20 " + hr + "," + (40 - tiefe);
+  /* Die geschlossene Kappe. Alle Verzierungen — Scheitel, Stacheln, Zöpfe —
+     werden darauf BESCHNITTEN. Ohne das ragen sie über den Kopf hinaus und
+     sehen aus wie eine Krone; genau das zeigte der erste Musterbogen. */
+  const kappe = dach(1) + " C" + (hr - 4) + ",25 " + (hl + 4) + ",25 " + hl + ",39 Z";
+  const kid = "hk" + kennung;
+
+  return (
+    <svg width={size} height={size} viewBox="0 0 100 100" role="img" aria-label="Spielerporträt"
+      style={{ display: "block", flexShrink: 0, borderRadius: 0, background: "#0B120E",
+        border: ring ? (R ? R.w + "px solid " + R.c : "1px solid " + ring) : "none",
+        boxShadow: R ? "0 0 12px -2px " + R.c : undefined }}>
+      <clipPath id={"av" + kennung}><rect width="100" height="100" /></clipPath>
+      <clipPath id={kid}><path d={kappe} /></clipPath>
+      {/* Beschnitt auf die Kopfhülle. Bärte werden aus geraden Streifen und
+          Bögen gebaut, der Kopf läuft aber nach unten ein — die Koteletten
+          standen dadurch bei JEDER Form unten seitlich über, am stärksten bei
+          den schmalen. Jeden Bart einzeln nachzuziehen hiesse zehn Bärte mal
+          zehn Kopfformen von Hand abzugleichen und beim elften wieder von
+          vorn. Der Beschnitt erledigt es ein für alle Mal. */}
+      <clipPath id={"kf" + kennung}><path d={kopfD} /></clipPath>
+      <g clipPath={"url(#av" + kennung + ")"}>
+        {/* KARTENOPTIK (35.63), Kevins Wahl. Bis 35.62 standen hier zwei
+            flache, sehr dunkle Töne (#0B120E / #0E1712). Auf dem Gerät war
+            das Ergebnis: dunkles Haar vers
+-----
+
+
+===== <Haarform :: [169208, 184745] =====
+ie Schultern unten stehen gegen den dunklen
+            Fuß. Ein Verlauf andersherum hätte hübsch ausgesehen und das
+            Problem nicht gelöst. */}
+        <defs>
+          <linearGradient id={"bg" + kennung} x1="0" y1="0" x2="0.35" y2="1">
+            <stop offset="0" stopColor={grundHell} />
+            <stop offset="0.62" stopColor={grundMitte} />
+            <stop offset="1" stopColor={grundTief} />
+          </linearGradient>
+        </defs>
+        <rect width="100" height="100" fill={"url(#bg" + kennung + ")"} />
+        {/* Zwei Strahlen wie auf einer Karte — sehr schwach, damit sie das
+            Gesicht nicht stören. */}
+        <path d="M-10,74 L46,-8 L62,-8 L4,78 Z" fill="#FFFFFF" opacity=".045" />
+        <path d="M18,86 L74,-8 L82,-8 L28,88 Z" fill="#FFFFFF" opacity=".03" />
+        <path d="M0,72 H100 V100 H0 Z" fill={grundTief} opacity=".55" />
+
+        {/* Schultern und Trikot */}
+        <path d="M2,100 C4,82 22,74 50,74 C78,74 96,82 98,100 Z" fill={c1} />
+        <path d="M2,100 C4,82 22,74 34,74 L40,100 Z" fill={shade(c1, -16)} />
+        <path d="M40,74 L50,87 L60,74 L56,73 L50,82 L44,73 Z" fill={c2} />
+
+        {/* Hals mit Schatten unter dem Kiefer */}
+        <path d={"M43," + (kinnY - 10) + " h14 v14 c0,4 -14,4 -14,0 Z"} fill={schatten} />
+        <path d={"M43," + (kinnY - 10) + " h14 v4 c-4,3 -10,3 -14,0 Z"} fill={tief} />
+
+        {modern && <Haarform index={z.frisur} weiblich={w} breite={kopf.b} farbe={haar} hell={haarHell} ebene="hinten"/>}
+        {/* Ohren */}
+        {(() => { const ry = [5.6,6.8,8,5.8,6.2][z.ohren] || 5.6, cy = 47, ex = kopf.b - (z.ohren === 3 ? 2.6 : 1);
+          return (<g fill={haut}>
+            <ellipse cx={50 - ex} cy={cy} rx={3.6} ry={ry} />
+            <ellipse cx={50 + ex} cy={cy} rx={3.6} ry={ry} />
+            <ellipse cx={50 - ex + .8} cy={cy} rx={1.1} ry={ry - 3.2} fill={schatten} opacity=".7" />
+            <ellipse cx={50 + ex - .8} cy={cy} rx={1.1} ry={ry - 3.2} fill={schatten} opacity=".7" />
+          </g>); })()}
+
+        {/* Kopf, dazu eine Schattenseite — Volumen ohne Verlauf */}
+        <path d={kopfD} fill={haut} />
+        {modern && <g clipPath={"url(#kf" + kennung + ")"}>
+          <defs><radialGradient id={"skin"+kennung} cx=".34" cy=".3" r=".72"><stop offset="0" stopColor={shade(haut,18)}/><stop offset=".65" stopColor={haut}/><stop offset="1" stopColor={shade(haut,-30)}/></radialGradient></defs>
+          <path d={kopfD} fill={"url(#skin"+kennung+")"}/>
+          <path d="M30,53 Q36,50 43,54 M57,54 Q64,50 70,53" fill="none" stroke={shade(haut,-25)} strokeWidth=".7" opacity=".4"/>
+        </g>}
+
+        {/* Schattenseite NUR an der aeusseren Wange. Ein Schatten bis zur Mitte
+            hinterlaesst eine harte Naht mitten im Gesicht — das sah aus wie ein
+            Riss und war der groesste Makel des ersten Wurfs. */}
+        <path d={"M" + (50 + kopf.b - 10) + ",16 C" + (50 + kopf.b - 2) + ",20 " + (50 + kopf.b) + ",28 "
+          + (50 + kopf.b) + ",40 C" + (50 + kopf.b) + ",52 " + (50 + kopf.j) + "," + (kinnY - 8) + " "
+          + (50 + kj) + "," + (kinnY - 6) + " C" + (50 + kj) + "," + (kinnY - 3) + " "
+          + (50 + kj * .7) + "," + (kinnY - 1) + " " + (50 + kj * .5) + "," + (kinnY - 1)
+          + " C" + (50 + kj * .8) + "," + (kinnY - 9) + " " + (50 + kopf.b - 7) + ",30 "
+          + (50 + kopf.b - 10) + ",16 Z"} clipPath={modern ? "url(#kf"+kennung+")" : undefined} fill={schatten} opacity=".2" />
+
+        {/* Wangenknochen / Kinngrübchen */}
+        {z.wangen === 1 && <ellipse cx="50" cy={kinnY - 6} rx="3.6" ry="2" fill={schatten} opac
+-----
+.8,9 L51.2,9 L50.7,30 L49.3,30 Z" fill={haut} opacity=".30" />}
+          {z.frisur === 12 && <path d={dach(1) + " C" + (hr - 4) + ",25 " + (hl + 4) + ",25 " + hl + ",39 Z"}
+            fill={haarHell} opacity=".38" transform="translate(0,-2) scale(1,0.95)" />}
+          {z.frisur === 13 && <g fill={haar}>{[0, 1, 2, 3].map((i) =>
+            <circle key={i} cx={50 - kopf.b + 5 + i * ((kopf.b * 2 - 10) / 3)} cy="17" r="7" />)}</g>}
+        </>}
+
+        {z.frisur >= (w?14:16) && (()=>{const f=z.frisur-(w?14:16);return <g>
+          <path d={kappe} fill={haar}/>
+          {f===0&&<><path d={`M${hl},34 Q${hl-2},14 42,13 Q63,6 ${hr},27 Q61,19 50,27 Q38,34 ${hl},34`} fill={haar}/><path d="M31,24 Q46,11 67,20 M35,27 Q49,17 62,22" fill="none" stroke={haarHell} strokeWidth="1.2" opacity=".6"/></>}
+          {f===1&&Array.from({length:24},(_,i)=><circle key={i} cx={hl+4+(i%8)*(kopf.b*2-8)/7} cy={19+Math.floor(i/8)*5+Math.sin(i)*2} r="3.4" fill={i%3?haar:shade(haar,12)}/>)}
+          {f===2&&<g clipPath={"url(#"+kid+")"} fill="none" stroke={haarHell} strokeWidth="2">{[-15,-9,-3,3,9,15].map(x=><path key={x} d={`M${50+x},12 Q${50+x-7},26 ${50+x},41`} />)}</g>}
+          {f===3&&Array.from({length:13},(_,i)=><path key={i} d={`M${hl+3+i*3.4},${23+Math.sin(i)*4} q-4,-8 2,-9 q7,1 2,7`} fill={haar} stroke={shade(haar,18)} strokeWidth=".8"/>)}
+        </g>;})()}
+
+        </>}
+        {modern && <Haarform index={z.frisur} weiblich={w} breite={kopf.b} farbe={haar} hell={haarHell}/>}
+
+        {/* ---- Augenbrauen ---- */}
+        <g fill={shade(haar, -12)}>
+          {z.brauen === 0 && <><rect x="33" y="39.5" width="13" height="2.6" rx="1.3" />
+            <rect x="54" y="39.5" width="13" height="2.6" rx="1.3" /></>}
+          {z.brauen === 1 && <><path d="M33,41.5 Q39.5,37.6 46,40.4 L46,42.6 Q39.5,40.2 33,43.4 Z" />
+            <path d="M67,41.5 Q60.5,37.6 54,40.4 L54,42.6 Q60.5,40.2 67,43.4 Z" /></>}
+          {z.brauen === 2 && <><path d="M33,39.6 L46,41.4 L46,43.6 L33,42 Z" />
+            <path d="M67,39.6 L54,41.4 L54,43.6 L67,42 Z" /></>}
+          {z.brauen === 3 && <><rect x="34.5" y="40" width="10.5" height="1.9" rx="1" />
+            <rect x="55" y="40" width="10.5" height="1.9" rx="1" /></>}
+          {z.brauen === 5 && <path d="M33 42 Q39 39 46 41 M54 41 Q61 39 67 42" fill="none" stroke={haar} strokeWidth="1.8" strokeLinecap="round"/>}
+          {z.brauen === 6 && <path d="M33 41 Q38 37 46 40 M54 40 Q62 37 67 41" fill="none" stroke={haar} strokeWidth="2.1" strokeLinecap="round"/>}
+          {z.brauen === 4 && <><path d="M32.5,42.4 Q39.5,36.8 46.5,41 L46.5,43.6 Q39.5,39.4 32.5,44.6 Z" />
+            <path d="M67.5,42.4 Q60.5,36.8 53.5,41 L53.5,43.6 Q60.5,39.4 67.5,44.6 Z" /></>}
+        </g>
+
+        {z.details > 0 && <g fill={shade(haut,-46)} opacity=".55">
+          {(z.details===1||z.details===2)&&Array.from({length:z.details===1?12:28},(_,i)=><circle key={i} cx={29+(i*7%41)} cy={52+(i*3%7)*.55} r={.38+(i%3)*.12}/>)}
+          {z.details===3&&<path d="M62,38 l-2,6" stroke={shade(haut,30)} strokeWidth="1.1"/>}
+          {z.details===5&&<circle cx="62" cy="57" r=".85"/>}
+          {z.details===6&&<path d="M32 52 q-2 2 -1 4 M68 52 q2 2 1 4" fill="none" stroke={shade(haut,-35)} strokeWidth=".6"/>}
+          {z.details===4&&<path d="M65,54 l-3,6" stroke={shade(haut,30)} strokeWidth=".9"/>}
+        </g>}
+        {z.details===7 && <path d={"M34,"+(augenY+5)+" Q40,"+(augenY+7)+" 46,"+(augenY+5)
+          +" M54,"+(augenY+5)+" Q60,"+(augenY+7)+" 66,"+(augenY+5)} fill="none"
+          stroke={shade(haut,-34)} strokeWidth=".8" opacity=".42" />}
+       
+-----
+
+
+===== M43, :: [169028, 169119, 194074, 195534, 195691, 200429] =====
+         DIE HELLIGKEIT IST DAS EIGENTLICHE. Der Verlauf geht oben hell,
+            unten dunkel: der Kopf sitzt oben und hebt sich damit auch mit
+            schwarzem Haar ab, die Schultern unten stehen gegen den dunklen
+            Fuß. Ein Verlauf andersherum hätte hübsch ausgesehen und das
+            Problem nicht gelöst. */}
+        <defs>
+          <linearGradient id={"bg" + kennung} x1="0" y1="0" x2="0.35" y2="1">
+            <stop offset="0" stopColor={grundHell} />
+            <stop offset="0.62" stopColor={grundMitte} />
+            <stop offset="1" stopColor={grundTief} />
+          </linearGradient>
+        </defs>
+        <rect width="100" height="100" fill={"url(#bg" + kennung + ")"} />
+        {/* Zwei Strahlen wie auf einer Karte — sehr schwach, damit sie das
+            Gesicht nicht stören. */}
+        <path d="M-10,74 L46,-8 L62,-8 L4,78 Z" fill="#FFFFFF" opacity=".045" />
+        <path d="M18,86 L74,-8 L82,-8 L28,88 Z" fill="#FFFFFF" opacity=".03" />
+        <path d="M0,72 H100 V100 H0 Z" fill={grundTief} opacity=".55" />
+
+        {/* Schultern und Trikot */}
+        <path d="M2,100 C4,82 22,74 50,74 C78,74 96,82 98,100 Z" fill={c1} />
+        <path d="M2,100 C4,82 22,74 34,74 L40,100 Z" fill={shade(c1, -16)} />
+        <path d="M40,74 L50,87 L60,74 L56,73 L50,82 L44,73 Z" fill={c2} />
+
+        {/* Hals mit Schatten unter dem Kiefer */}
+        <path d={"M43," + (kinnY - 10) + " h14 v14 c0,4 -14,4 -14,0 Z"} fill={schatten} />
+        <path d={"M43," + (kinnY - 10) + " h14 v4 c-4,3 -10,3 -14,0 Z"} fill={tief} />
+
+        {modern && <Haarform index={z.frisur} weiblich={w} breite={kopf.b} farbe={haar} hell={haarHell} ebene="hinten"/>}
+        {/* Ohren */}
+        {(() => { const ry = [5.6,6.8,8,5.8,6.2][z.ohren] || 5.6, cy = 47, ex = kopf.b - (z.ohren === 3 ? 2.6 : 1);
+          return (<g fill={haut}>
+            <ellipse cx={50 - ex} cy={cy} rx={3.6} ry={ry} />
+            <ellipse cx={50 + ex} cy={cy} rx={3.6} ry={ry} />
+            <ellipse cx={50 - ex + .8} cy={cy} rx={1.1} ry={ry - 3.2} fill={schatten} opacity=".7" />
+            <ellipse cx={50 + ex - .8} cy={cy} rx={1.1} ry={ry - 3.2} fill={schatten} opacity=".7" />
+          </g>); })()}
+
+        {/* Kopf, dazu eine Schattenseite — Volumen ohne Verlauf */}
+        <path d={kopfD} fill={haut} />
+        {modern && <g clipPath={"url(#kf" + kennung + ")"}>
+          <defs><radialGradient id={"skin"+kennung} cx=".34" cy=".3" r=".72"><stop offset="0" stopColor={shade(haut,18)}/><stop offset=".65" stopColor={haut}/><stop offset="1" stopColor={shade(haut,-30)}/></radialGradient></defs>
+          <path d={kopfD} fill={"url(#skin"+kennung+")"}/>
+          <path d="M30,53 Q36,50 43,54 M57,54 Q64,50 70,53" fill="none" stroke={shade(haut,-25)} strokeWidth=".7" opacity=".4"/>
+        </g>}
+
+        {/* Schattenseite NUR an der aeusseren Wange. Ein Schatten bis zur Mitte
+            hinterlaesst eine harte Naht mitten im Gesicht — das sah aus wie ein
+            Riss und war der groesste Makel des ersten Wurfs. */}
+        <path d={"M" + (50 + kopf.b - 10) + ",16 C" + (50 + kopf.b - 2) + ",20 " + (50 + kopf.b) + ",28 "
+          + (50 + kopf.b) + ",40 C" + (50 + kopf.b) + ",52 " + (50 + kopf.j) + "," + (kinnY - 8) + " "
+          + (50 + kj) + "," + (kinnY - 6) + " C" + (50 + kj) + "," + (kinnY - 3) + " "
+          + (50 + kj * .7) + "," + (kinnY - 1) + " " + (50 + kj * .5) + "," + (kinnY - 1)
+          + " C" + (50 + kj * .8) + "," + (kinnY - 9) + " " + (50 + kopf.b - 7) + ",30 "
+          + (50 + kopf.b - 10) + ",16 Z"} clipPath={modern ? "url(#kf"+kennung+")" : unde
+-----
+dunkel: der Kopf sitzt oben und hebt sich damit auch mit
+            schwarzem Haar ab, die Schultern unten stehen gegen den dunklen
+            Fuß. Ein Verlauf andersherum hätte hübsch ausgesehen und das
+            Problem nicht gelöst. */}
+        <defs>
+          <linearGradient id={"bg" + kennung} x1="0" y1="0" x2="0.35" y2="1">
+            <stop offset="0" stopColor={grundHell} />
+            <stop offset="0.62" stopColor={grundMitte} />
+            <stop offset="1" stopColor={grundTief} />
+          </linearGradient>
+        </defs>
+        <rect width="100" height="100" fill={"url(#bg" + kennung + ")"} />
+        {/* Zwei Strahlen wie auf einer Karte — sehr schwach, damit sie das
+            Gesicht nicht stören. */}
+        <path d="M-10,74 L46,-8 L62,-8 L4,78 Z" fill="#FFFFFF" opacity=".045" />
+        <path d="M18,86 L74,-8 L82,-8 L28,88 Z" fill="#FFFFFF" opacity=".03" />
+        <path d="M0,72 H100 V100 H0 Z" fill={grundTief} opacity=".55" />
+
+        {/* Schultern und Trikot */}
+        <path d="M2,100 C4,82 22,74 50,74 C78,74 96,82 98,100 Z" fill={c1} />
+        <path d="M2,100 C4,82 22,74 34,74 L40,100 Z" fill={shade(c1, -16)} />
+        <path d="M40,74 L50,87 L60,74 L56,73 L50,82 L44,73 Z" fill={c2} />
+
+        {/* Hals mit Schatten unter dem Kiefer */}
+        <path d={"M43," + (kinnY - 10) + " h14 v14 c0,4 -14,4 -14,0 Z"} fill={schatten} />
+        <path d={"M43," + (kinnY - 10) + " h14 v4 c-4,3 -10,3 -14,0 Z"} fill={tief} />
+
+        {modern && <Haarform index={z.frisur} weiblich={w} breite={kopf.b} farbe={haar} hell={haarHell} ebene="hinten"/>}
+        {/* Ohren */}
+        {(() => { const ry = [5.6,6.8,8,5.8,6.2][z.ohren] || 5.6, cy = 47, ex = kopf.b - (z.ohren === 3 ? 2.6 : 1);
+          return (<g fill={haut}>
+            <ellipse cx={50 - ex} cy={cy} rx={3.6} ry={ry} />
+            <ellipse cx={50 + ex} cy={cy} rx={3.6} ry={ry} />
+            <ellipse cx={50 - ex + .8} cy={cy} rx={1.1} ry={ry - 3.2} fill={schatten} opacity=".7" />
+            <ellipse cx={50 + ex - .8} cy={cy} rx={1.1} ry={ry - 3.2} fill={schatten} opacity=".7" />
+          </g>); })()}
+
+        {/* Kopf, dazu eine Schattenseite — Volumen ohne Verlauf */}
+        <path d={kopfD} fill={haut} />
+        {modern && <g clipPath={"url(#kf" + kennung + ")"}>
+          <defs><radialGradient id={"skin"+kennung} cx=".34" cy=".3" r=".72"><stop offset="0" stopColor={shade(haut,18)}/><stop offset=".65" stopColor={haut}/><stop offset="1" stopColor={shade(haut,-30)}/></radialGradient></defs>
+          <path d={kopfD} fill={"url(#skin"+kennung+")"}/>
+          <path d="M30,53 Q36,50 43,54 M57,54 Q64,50 70,53" fill="none" stroke={shade(haut,-25)} strokeWidth=".7" opacity=".4"/>
+        </g>}
+
+        {/* Schattenseite NUR an der aeusseren Wange. Ein Schatten bis zur Mitte
+            hinterlaesst eine harte Naht mitten im Gesicht — das sah aus wie ein
+            Riss und war der groesste Makel des ersten Wurfs. */}
+        <path d={"M" + (50 + kopf.b - 10) + ",16 C" + (50 + kopf.b - 2) + ",20 " + (50 + kopf.b) + ",28 "
+          + (50 + kopf.b) + ",40 C" + (50 + kopf.b) + ",52 " + (50 + kopf.j) + "," + (kinnY - 8) + " "
+          + (50 + kj) + "," + (kinnY - 6) + " C" + (50 + kj) + "," + (kinnY - 3) + " "
+          + (50 + kj * .7) + "," + (kinnY - 1) + " " + (50 + kj * .5) + "," + (kinnY - 1)
+          + " C" + (50 + kj * .8) + "," + (kinnY - 9) + " " + (50 + kopf.b - 7) + ",30 "
+          + (50 + kopf.b - 10) + ",16 Z"} clipPath={modern ? "url(#kf"+kennung+")" : undefined} fill={schatten} opacity=".2" />
+
+        {/* Wangenknochen / Kinngrübchen */}
+      
+-----
++ "," + (y0 + 6) + " " + (50 - br) + "," + (y1 - 3)
+              + " " + (50 - br) + "," + y1 + " q" + br + ",2 " + (br * 2) + ",0 C" + (50 + br) + "," + (y1 - 3)
+              + " " + (50 + br * .5) + "," + (y0 + 6) + " 50," + y0 + " Z"} fill={schatten} opacity=".45" />
+            <ellipse cx={50 - br * .75} cy={y1 - .4} rx=".9" ry=".7" fill={tief} />
+            <ellipse cx={50 + br * .75} cy={y1 - .4} rx=".9" ry=".7" fill={tief} />
+          </g>); })()}
+
+        {/* ---- Mund ---- */}
+        {(() => {
+          const y = kinnY - 8;
+          /* Lippenstift verschiebt den Lippenton ins Warme, statt ihn durch
+             eine Signalfarbe zu ersetzen — das Heft kennt keine Neontöne. */
+          const lippe = w
+            ? (z.schminke === 2 || z.schminke === 3 || z.schminke === 6 ? mischFarbe(shade(haut, -52), "#9C3242", z.schminke === 6 ? .3 : .55)
+              : z.schminke === 4 ? mischFarbe(shade(haut, -50), "#9C3242", .28)
+              : shade(haut, -48))
+            : shade(haut, -58);
+          if(z.mund===7)return <path d={`M43 ${y} Q50 ${y+2} 57 ${y-.8}`} fill="none" stroke={lippe} strokeWidth="1.4" strokeLinecap="round"/>;
+          if(z.mund===8)return <><path d={`M42 ${y-1} Q50 ${y+1} 58 ${y-1} Q50 ${y+8} 42 ${y-1} Z`} fill={lippe}/><path d={`M44 ${y} Q50 ${y+1} 56 ${y} Q50 ${y+3} 44 ${y} Z`} fill="#EFE4D6"/></>;
+          if (z.mund === 0) return <path d={"M43," + y + " Q50," + (y + 4) + " 57," + y}
+            fill="none" stroke={lippe} strokeWidth="2" strokeLinecap="round" />;
+          if (z.mund === 1) return <rect x="43" y={y - 1} width="14" height="2.4" rx="1.2" fill={lippe} />;
+          if (z.mund === 2) return <path d={"M42.5," + (y + 1) + " Q50," + (y - 2.6) + " 57.5," + (y + 1)
+            + " Q50," + (y + 2) + " 42.5," + (y + 1) + " Z"} fill={lippe} />;
+          if (z.mund === 3) return <><path d={"M43.5," + y + " q6.5,3.4 13,0 q-6.5,2.4 -13,0 Z"} fill={shade(haut, -70)} />
+            <path d={"M43.5," + y + " q6.5,-1 13,0"} fill="none" stroke={lippe} strokeWidth="1.5" strokeLinecap="round" /></>;
+          if (z.mund === 5) return <><path d={"M42," + (y - 1) + " Q50," + (y - 4.2) + " 58," + (y - 1)
+            + " Q50," + (y + 4.4) + " 42," + (y - 1) + " Z"} fill={lippe} />
+            <path d={"M42," + (y - 1) + " q8,1.5 16,0"} fill="none" stroke={tief} strokeWidth=".8" opacity=".55" /></>;
+          if (z.mund === 6) return <><path d={"M41.2," + (y - 1.2) + " Q50," + (y - 5) + " 58.8," + (y - 1.2)
+            + " Q50," + (y + 5.2) + " 41.2," + (y - 1.2) + " Z"} fill={lippe} />
+            <path d={"M41.2," + (y - 1.2) + " q8.8,1.7 17.6,0"} fill="none" stroke={tief} strokeWidth=".9" opacity=".55" />
+            <path d={"M46," + (y - 2.6) + " q4,-1.4 8,0"} fill="none" stroke={shade(haut, -20)}
+              strokeWidth=".7" opacity=".5" /></>;
+          return <><path d={"M43," + (y - .6) + " Q50," + (y - 3) + " 57," + (y - .6) + " Q50," + (y + 3.4)
+            + " 43," + (y - .6) + " Z"} fill={lippe} />
+            <path d={"M43," + (y - .6) + " q7,1.2 14,0"} fill="none" stroke={tief} strokeWidth=".7" opacity=".6" /></>;
+        })()}
+
+        {/* ---- Bartwuchs ----
+            0 keiner · 1 Stoppeln · 2 Drei-Tage · 3 Schnauzer · 4 Kinnbart
+            5 Ziegenbart · 6 Vollbart kurz · 7 Vollbart lang · 8 Kinnriemen
+            9 Backenbart */}
+        {!modern && !w && z.bart > 0 && (() => {
+          const y = kinnY, jl = 50 - kj - 2, jr = 50 + kj + 2;
+          const rahmen = "M" + (50 - kopf.b + 1) + ",44 C" + (50 - kopf.b + 2) + "," + (y - 8) + " " + jl + ","
+            + (y + 2) + " 50," + (
+-----
+="none" stroke={lippe} strokeWidth="2" strokeLinecap="round" />;
+          if (z.mund === 1) return <rect x="43" y={y - 1} width="14" height="2.4" rx="1.2" fill={lippe} />;
+          if (z.mund === 2) return <path d={"M42.5," + (y + 1) + " Q50," + (y - 2.6) + " 57.5," + (y + 1)
+            + " Q50," + (y + 2) + " 42.5," + (y + 1) + " Z"} fill={lippe} />;
+          if (z.mund === 3) return <><path d={"M43.5," + y + " q6.5,3.4 13,0 q-6.5,2.4 -13,0 Z"} fill={shade(haut, -70)} />
+            <path d={"M43.5," + y + " q6.5,-1 13,0"} fill="none" stroke={lippe} strokeWidth="1.5" strokeLinecap="round" /></>;
+          if (z.mund === 5) return <><path d={"M42," + (y - 1) + " Q50," + (y - 4.2) + " 58," + (y - 1)
+            + " Q50," + (y + 4.4) + " 42," + (y - 1) + " Z"} fill={lippe} />
+            <path d={"M42," + (y - 1) + " q8,1.5 16,0"} fill="none" stroke={tief} strokeWidth=".8" opacity=".55" /></>;
+          if (z.mund === 6) return <><path d={"M41.2," + (y - 1.2) + " Q50," + (y - 5) + " 58.8," + (y - 1.2)
+            + " Q50," + (y + 5.2) + " 41.2," + (y - 1.2) + " Z"} fill={lippe} />
+            <path d={"M41.2," + (y - 1.2) + " q8.8,1.7 17.6,0"} fill="none" stroke={tief} strokeWidth=".9" opacity=".55" />
+            <path d={"M46," + (y - 2.6) + " q4,-1.4 8,0"} fill="none" stroke={shade(haut, -20)}
+              strokeWidth=".7" opacity=".5" /></>;
+          return <><path d={"M43," + (y - .6) + " Q50," + (y - 3) + " 57," + (y - .6) + " Q50," + (y + 3.4)
+            + " 43," + (y - .6) + " Z"} fill={lippe} />
+            <path d={"M43," + (y - .6) + " q7,1.2 14,0"} fill="none" stroke={tief} strokeWidth=".7" opacity=".6" /></>;
+        })()}
+
+        {/* ---- Bartwuchs ----
+            0 keiner · 1 Stoppeln · 2 Drei-Tage · 3 Schnauzer · 4 Kinnbart
+            5 Ziegenbart · 6 Vollbart kurz · 7 Vollbart lang · 8 Kinnriemen
+            9 Backenbart */}
+        {!modern && !w && z.bart > 0 && (() => {
+          const y = kinnY, jl = 50 - kj - 2, jr = 50 + kj + 2;
+          const rahmen = "M" + (50 - kopf.b + 1) + ",44 C" + (50 - kopf.b + 2) + "," + (y - 8) + " " + jl + ","
+            + (y + 2) + " 50," + (y + 2) + " C" + jr + "," + (y + 2) + " " + (50 + kopf.b - 2) + ","
+            + (y - 8) + " " + (50 + kopf.b - 1) + ",44 C" + (50 + kopf.b - 5) + "," + (y - 10) + " "
+            + (50 + 8) + "," + (y - 5) + " 50," + (y - 5) + " C" + (50 - 8) + "," + (y - 5) + " "
+            + (50 - kopf.b + 5) + "," + (y - 10) + " " + (50 - kopf.b + 1) + ",44 Z";
+          return (<g fill={haar} clipPath={"url(#kf" + kennung + ")"}>
+            {z.bart === 10 && <><path d={rahmen} opacity=".3"/><path d={`M41,${kinnY-13} q9,-4 18,0 l-2,2 q-7,-2 -14,0 Z`}/></>}
+            {z.bart === 11 && <path d={`M39,${kinnY-13} q11,-5 22,0 l-2,4 q-9,-3 -18,0 Z`}/>}
+            {z.bart === 12 && <><path d={rahmen} opacity=".85"/><path d={`M44,${kinnY-3} h12 l-3,5 h-6 Z`}/></>}
+            {z.bart === 1 && <path d={rahmen} opacity=".22" />}
+            {z.bart === 2 && <path d={rahmen} opacity=".45" />}
+            {z.bart === 3 && <path d={"M41," + (kinnY - 13.5) + " q9,-3.4 18,0 q-2.5,3 -5.5,3 q-3.5,0 -3.5,-1.4 q0,1.4 -3.5,1.4 q-3,0 -5.5,-3 Z"} />}
+            {z.bart === 4 && <path d={"M44," + (kinnY - 3.5) + " q6,-1.6 12,0 q-1,5.5 -6,5.5 q-5,0 -6,-5.5 Z"} />}
+            {(z.bart === 5) && <><path d={"M41," + (kinnY - 13.5) + " q9,-3.4 18,0 q-2.5,3 -5.5,3 q-3.5,0 -3.5,-1.4 q0,1.4 -3.5,1.4 q-3,0 -5.5,-3 Z"} />
+              <path d={"M45," + (kinnY - 3.5) + " q5,-1.4 10,0 q-1,5.5 -5,5.5 q-4,0 -5,-5.5 Z"} /></>}
+            {z.bart === 6 && <path d={rahmen} />}
+  
+-----
+ill={lippe} />;
+          if (z.mund === 2) return <path d={"M42.5," + (y + 1) + " Q50," + (y - 2.6) + " 57.5," + (y + 1)
+            + " Q50," + (y + 2) + " 42.5," + (y + 1) + " Z"} fill={lippe} />;
+          if (z.mund === 3) return <><path d={"M43.5," + y + " q6.5,3.4 13,0 q-6.5,2.4 -13,0 Z"} fill={shade(haut, -70)} />
+            <path d={"M43.5," + y + " q6.5,-1 13,0"} fill="none" stroke={lippe} strokeWidth="1.5" strokeLinecap="round" /></>;
+          if (z.mund === 5) return <><path d={"M42," + (y - 1) + " Q50," + (y - 4.2) + " 58," + (y - 1)
+            + " Q50," + (y + 4.4) + " 42," + (y - 1) + " Z"} fill={lippe} />
+            <path d={"M42," + (y - 1) + " q8,1.5 16,0"} fill="none" stroke={tief} strokeWidth=".8" opacity=".55" /></>;
+          if (z.mund === 6) return <><path d={"M41.2," + (y - 1.2) + " Q50," + (y - 5) + " 58.8," + (y - 1.2)
+            + " Q50," + (y + 5.2) + " 41.2," + (y - 1.2) + " Z"} fill={lippe} />
+            <path d={"M41.2," + (y - 1.2) + " q8.8,1.7 17.6,0"} fill="none" stroke={tief} strokeWidth=".9" opacity=".55" />
+            <path d={"M46," + (y - 2.6) + " q4,-1.4 8,0"} fill="none" stroke={shade(haut, -20)}
+              strokeWidth=".7" opacity=".5" /></>;
+          return <><path d={"M43," + (y - .6) + " Q50," + (y - 3) + " 57," + (y - .6) + " Q50," + (y + 3.4)
+            + " 43," + (y - .6) + " Z"} fill={lippe} />
+            <path d={"M43," + (y - .6) + " q7,1.2 14,0"} fill="none" stroke={tief} strokeWidth=".7" opacity=".6" /></>;
+        })()}
+
+        {/* ---- Bartwuchs ----
+            0 keiner · 1 Stoppeln · 2 Drei-Tage · 3 Schnauzer · 4 Kinnbart
+            5 Ziegenbart · 6 Vollbart kurz · 7 Vollbart lang · 8 Kinnriemen
+            9 Backenbart */}
+        {!modern && !w && z.bart > 0 && (() => {
+          const y = kinnY, jl = 50 - kj - 2, jr = 50 + kj + 2;
+          const rahmen = "M" + (50 - kopf.b + 1) + ",44 C" + (50 - kopf.b + 2) + "," + (y - 8) + " " + jl + ","
+            + (y + 2) + " 50," + (y + 2) + " C" + jr + "," + (y + 2) + " " + (50 + kopf.b - 2) + ","
+            + (y - 8) + " " + (50 + kopf.b - 1) + ",44 C" + (50 + kopf.b - 5) + "," + (y - 10) + " "
+            + (50 + 8) + "," + (y - 5) + " 50," + (y - 5) + " C" + (50 - 8) + "," + (y - 5) + " "
+            + (50 - kopf.b + 5) + "," + (y - 10) + " " + (50 - kopf.b + 1) + ",44 Z";
+          return (<g fill={haar} clipPath={"url(#kf" + kennung + ")"}>
+            {z.bart === 10 && <><path d={rahmen} opacity=".3"/><path d={`M41,${kinnY-13} q9,-4 18,0 l-2,2 q-7,-2 -14,0 Z`}/></>}
+            {z.bart === 11 && <path d={`M39,${kinnY-13} q11,-5 22,0 l-2,4 q-9,-3 -18,0 Z`}/>}
+            {z.bart === 12 && <><path d={rahmen} opacity=".85"/><path d={`M44,${kinnY-3} h12 l-3,5 h-6 Z`}/></>}
+            {z.bart === 1 && <path d={rahmen} opacity=".22" />}
+            {z.bart === 2 && <path d={rahmen} opacity=".45" />}
+            {z.bart === 3 && <path d={"M41," + (kinnY - 13.5) + " q9,-3.4 18,0 q-2.5,3 -5.5,3 q-3.5,0 -3.5,-1.4 q0,1.4 -3.5,1.4 q-3,0 -5.5,-3 Z"} />}
+            {z.bart === 4 && <path d={"M44," + (kinnY - 3.5) + " q6,-1.6 12,0 q-1,5.5 -6,5.5 q-5,0 -6,-5.5 Z"} />}
+            {(z.bart === 5) && <><path d={"M41," + (kinnY - 13.5) + " q9,-3.4 18,0 q-2.5,3 -5.5,3 q-3.5,0 -3.5,-1.4 q0,1.4 -3.5,1.4 q-3,0 -5.5,-3 Z"} />
+              <path d={"M45," + (kinnY - 3.5) + " q5,-1.4 10,0 q-1,5.5 -5,5.5 q-4,0 -5,-5.5 Z"} /></>}
+            {z.bart === 6 && <path d={rahmen} />}
+            {z.bart === 7 && <><path d={rahmen} />
+              <path d={"M" + (50 - kj) + "," + (y - 3) + " q" + kj + ",14 " + (kj * 2) + ",0 q-"
+           
+-----
+ichnet: der Beschnitt auf
+                die Kopfhülle schneidet sie exakt an der Kante ab, damit die
+                Aussenseite der Koteletten der Rundung folgt. Als freistehende
+                Streifen lasen sie sich als angeklemmte Balken, weil eine gerade
+                Kante neben einer runden steht. */}
+            {z.bart === 9 && <><path d={"M" + (50 - kopf.b - 4) + ",37 h11 l-2.6," + (y - 49) + " h-8.4 Z"} />
+              <path d={"M" + (50 + kopf.b - 7) + ",37 h11 l-8.4," + (y - 49) + " h-2.6 Z"} /></>}
+          </g>); })()}
+
+        {modern && !w && z.bart>0 && <Bartform index={z.bart} kopf={kopf} farbe={haar} hell={haarHell} clipId={'kf'+kennung}/>}
+        {/* ---- Schmuck ---- */}
+        {z.schmuck === 1 && <><circle cx={50 - kopf.b + 1} cy="52" r="1.8" fill="#C8A24B" />
+          <circle cx={50 + kopf.b - 1} cy="52" r="1.8" fill="#C8A24B" /></>}
+        {z.schmuck === 2 && (modern?<path d={`M${hl} 32 Q50 27 ${hr} 32 L${hr} 37 Q50 32 ${hl} 37 Z`} fill={c1}/>:<rect x={hl} y="31" width={kopf.b*2} height="5.5" fill={c1}/>)}
+        {z.schmuck === 3 && <><circle cx="39" cy={augenY} r="8.4" fill="none" stroke="#243026" strokeWidth="1.5" />
+          <circle cx="61" cy={augenY} r="8.4" fill="none" stroke="#243026" strokeWidth="1.5" />
+          <path d={"M47.4," + augenY + " H52.6"} stroke="#243026" strokeWidth="1.5" /></>}
+        {z.schmuck === 4 && <><path d="M43,88 Q50,93 57,88" fill="none" stroke="#C7A24B" strokeWidth="1.8" />
+          <circle cx="50" cy="91.4" r="2.2" fill="#C7A24B" /></>}
+        {modern && z.schmuck===6 && <g fill="#30464D" stroke="#A6BAC0" strokeWidth="1"><path d={`M30 ${augenY-4} Q39 ${augenY-6} 47 ${augenY-3} L45 ${augenY+4} Q36 ${augenY+6} 31 ${augenY+2} Z M53 ${augenY-3} Q61 ${augenY-6} 70 ${augenY-4} L69 ${augenY+2} Q64 ${augenY+6} 55 ${augenY+4} Z`}/><path d={`M47 ${augenY-1} Q50 ${augenY-3} 53 ${augenY-1}`} fill="none"/></g>}
+        {modern && z.schmuck===7 && <g fill="none" stroke="#D9BB69" strokeWidth="1.2"><ellipse cx={hl+1} cy="54" rx="2.7" ry="3.6"/><ellipse cx={hr-1} cy="54" rx="2.7" ry="3.6"/></g>}
+        {z.schmuck === 5 && <path d={modern ? `M${hl+3} 31 Q50 28 ${hr-3} 31 L${hr-3} 34 Q50 31 ${hl+3} 34 Z` : "M" + (50 - kopf.b + 3) + ",30 h" + (kopf.b * 2 - 6) + " v3 h-"
+          + (kopf.b * 2 - 6) + " Z"} fill={shade(c2, 20)} />}
+      </g>
+    </svg>
+  );
+}
+
+/* ---------------- Namen ---------------- */
+const NP = {
+  de:[["Lukas","Jonas","Niklas","Felix","Maximilian","Tim","Leon","Moritz","Julian","Fabian","Kai","Nico","Jannik","Sven","Marlon","Til"],
+      ["Brandt","Keller","Hofmann","Weigl","Sander","Reuter","Vogt","Krämer","Lindner","Stach","Ehlers","Nowak","Rieder","Schuster","Baumgart","Kienle"]],
+  en:[["Harry","Callum","Reece","Ollie","Declan","Jude","Marcus","Kyle","Tyler","Aaron","Josh","Elliot","Freddie","Curtis","Rhys","Nathan"],
+      ["Whitmore","Hazeldine","Barclay","Ferris","Nolan","Kendrick","Alcock","Marsden","Prewitt","Bagshaw","Doyle","Trent","Ashworth","Sowerby","Lockhart","Rennie"]],
+  es:[["Álvaro","Iker","Sergio","Rubén","Nacho","Pablo","Aitor","Javi","Unai","Diego","Manu","Gonzalo","Bruno","Marcos","Hugo","Iván"],
+      ["Berruezo","Cañizares","Elorza","Larrea","Mendizábal","Ochoa","Quintanilla","Sarabia","Zubeldía","Arrieta","Calvo","Requena","Talavera","Vergara","Otxoa","Barrios"]],
+  it:[["Matteo","Lorenzo","Andrea","Davide","Simone","Nicolò","Federico","Giacomo","Alessio","Riccardo","Tommaso","Emanuele","Gianluca","Pietro","Samuele","Cristian"],
+      ["Bertolussi","Chiavari","Della Rocca","Fanelli","Grimaldi","Lombardi","Mazzanti","Palladino","R
+-----
+
+
+===== M2,100 :: [168744, 168822] =====
+".
+
+            Der Verlauf nimmt die Farbe des GEWÄHLTEN Rahmens auf, wie eine
+            Karte ihre Seltenheitsfarbe trägt. Ohne Rahmen bleibt es beim
+            Rasenton, nur heller — kein Spieler soll schlechter dastehen, weil
+            er noch nichts freigeschaltet hat.
+
+            DIE HELLIGKEIT IST DAS EIGENTLICHE. Der Verlauf geht oben hell,
+            unten dunkel: der Kopf sitzt oben und hebt sich damit auch mit
+            schwarzem Haar ab, die Schultern unten stehen gegen den dunklen
+            Fuß. Ein Verlauf andersherum hätte hübsch ausgesehen und das
+            Problem nicht gelöst. */}
+        <defs>
+          <linearGradient id={"bg" + kennung} x1="0" y1="0" x2="0.35" y2="1">
+            <stop offset="0" stopColor={grundHell} />
+            <stop offset="0.62" stopColor={grundMitte} />
+            <stop offset="1" stopColor={grundTief} />
+          </linearGradient>
+        </defs>
+        <rect width="100" height="100" fill={"url(#bg" + kennung + ")"} />
+        {/* Zwei Strahlen wie auf einer Karte — sehr schwach, damit sie das
+            Gesicht nicht stören. */}
+        <path d="M-10,74 L46,-8 L62,-8 L4,78 Z" fill="#FFFFFF" opacity=".045" />
+        <path d="M18,86 L74,-8 L82,-8 L28,88 Z" fill="#FFFFFF" opacity=".03" />
+        <path d="M0,72 H100 V100 H0 Z" fill={grundTief} opacity=".55" />
+
+        {/* Schultern und Trikot */}
+        <path d="M2,100 C4,82 22,74 50,74 C78,74 96,82 98,100 Z" fill={c1} />
+        <path d="M2,100 C4,82 22,74 34,74 L40,100 Z" fill={shade(c1, -16)} />
+        <path d="M40,74 L50,87 L60,74 L56,73 L50,82 L44,73 Z" fill={c2} />
+
+        {/* Hals mit Schatten unter dem Kiefer */}
+        <path d={"M43," + (kinnY - 10) + " h14 v14 c0,4 -14,4 -14,0 Z"} fill={schatten} />
+        <path d={"M43," + (kinnY - 10) + " h14 v4 c-4,3 -10,3 -14,0 Z"} fill={tief} />
+
+        {modern && <Haarform index={z.frisur} weiblich={w} breite={kopf.b} farbe={haar} hell={haarHell} ebene="hinten"/>}
+        {/* Ohren */}
+        {(() => { const ry = [5.6,6.8,8,5.8,6.2][z.ohren] || 5.6, cy = 47, ex = kopf.b - (z.ohren === 3 ? 2.6 : 1);
+          return (<g fill={haut}>
+            <ellipse cx={50 - ex} cy={cy} rx={3.6} ry={ry} />
+            <ellipse cx={50 + ex} cy={cy} rx={3.6} ry={ry} />
+            <ellipse cx={50 - ex + .8} cy={cy} rx={1.1} ry={ry - 3.2} fill={schatten} opacity=".7" />
+            <ellipse cx={50 + ex - .8} cy={cy} rx={1.1} ry={ry - 3.2} fill={schatten} opacity=".7" />
+          </g>); })()}
+
+        {/* Kopf, dazu eine Schattenseite — Volumen ohne Verlauf */}
+        <path d={kopfD} fill={haut} />
+        {modern && <g clipPath={"url(#kf" + kennung + ")"}>
+          <defs><radialGradient id={"skin"+kennung} cx=".34" cy=".3" r=".72"><stop offset="0" stopColor={shade(haut,18)}/><stop offset=".65" stopColor={haut}/><stop offset="1" stopColor={shade(haut,-30)}/></radialGradient></defs>
+          <path d={kopfD} fill={"url(#skin"+kennung+")"}/>
+          <path d="M30,53 Q36,50 43,54 M57,54 Q64,50 70,53" fill="none" stroke={shade(haut,-25)} strokeWidth=".7" opacity=".4"/>
+        </g>}
+
+        {/* Schattenseite NUR an der aeusseren Wange. Ein Schatten bis zur Mitte
+            hinterlaesst eine harte Naht mitten im Gesicht — das sah aus wie ein
+            Riss und war der groesste Makel des ersten Wurfs. */}
+        <path d={"M" + (50 + kopf.b - 10) + ",16 C" + (50 + kopf.b - 2) + ",20 " + (50 + kopf.b) + ",28 "
+          + (50 + kopf.b) + ",40 C" + (50 + kopf.b) + ",52 " + (50 + kopf.j) + "," + (kinnY - 8) + " "
+          + (50 + kj) + "," + (kinnY - 6) + " C" + (50 + kj) + "," + (k
+-----
+e
+            Karte ihre Seltenheitsfarbe trägt. Ohne Rahmen bleibt es beim
+            Rasenton, nur heller — kein Spieler soll schlechter dastehen, weil
+            er noch nichts freigeschaltet hat.
+
+            DIE HELLIGKEIT IST DAS EIGENTLICHE. Der Verlauf geht oben hell,
+            unten dunkel: der Kopf sitzt oben und hebt sich damit auch mit
+            schwarzem Haar ab, die Schultern unten stehen gegen den dunklen
+            Fuß. Ein Verlauf andersherum hätte hübsch ausgesehen und das
+            Problem nicht gelöst. */}
+        <defs>
+          <linearGradient id={"bg" + kennung} x1="0" y1="0" x2="0.35" y2="1">
+            <stop offset="0" stopColor={grundHell} />
+            <stop offset="0.62" stopColor={grundMitte} />
+            <stop offset="1" stopColor={grundTief} />
+          </linearGradient>
+        </defs>
+        <rect width="100" height="100" fill={"url(#bg" + kennung + ")"} />
+        {/* Zwei Strahlen wie auf einer Karte — sehr schwach, damit sie das
+            Gesicht nicht stören. */}
+        <path d="M-10,74 L46,-8 L62,-8 L4,78 Z" fill="#FFFFFF" opacity=".045" />
+        <path d="M18,86 L74,-8 L82,-8 L28,88 Z" fill="#FFFFFF" opacity=".03" />
+        <path d="M0,72 H100 V100 H0 Z" fill={grundTief} opacity=".55" />
+
+        {/* Schultern und Trikot */}
+        <path d="M2,100 C4,82 22,74 50,74 C78,74 96,82 98,100 Z" fill={c1} />
+        <path d="M2,100 C4,82 22,74 34,74 L40,100 Z" fill={shade(c1, -16)} />
+        <path d="M40,74 L50,87 L60,74 L56,73 L50,82 L44,73 Z" fill={c2} />
+
+        {/* Hals mit Schatten unter dem Kiefer */}
+        <path d={"M43," + (kinnY - 10) + " h14 v14 c0,4 -14,4 -14,0 Z"} fill={schatten} />
+        <path d={"M43," + (kinnY - 10) + " h14 v4 c-4,3 -10,3 -14,0 Z"} fill={tief} />
+
+        {modern && <Haarform index={z.frisur} weiblich={w} breite={kopf.b} farbe={haar} hell={haarHell} ebene="hinten"/>}
+        {/* Ohren */}
+        {(() => { const ry = [5.6,6.8,8,5.8,6.2][z.ohren] || 5.6, cy = 47, ex = kopf.b - (z.ohren === 3 ? 2.6 : 1);
+          return (<g fill={haut}>
+            <ellipse cx={50 - ex} cy={cy} rx={3.6} ry={ry} />
+            <ellipse cx={50 + ex} cy={cy} rx={3.6} ry={ry} />
+            <ellipse cx={50 - ex + .8} cy={cy} rx={1.1} ry={ry - 3.2} fill={schatten} opacity=".7" />
+            <ellipse cx={50 + ex - .8} cy={cy} rx={1.1} ry={ry - 3.2} fill={schatten} opacity=".7" />
+          </g>); })()}
+
+        {/* Kopf, dazu eine Schattenseite — Volumen ohne Verlauf */}
+        <path d={kopfD} fill={haut} />
+        {modern && <g clipPath={"url(#kf" + kennung + ")"}>
+          <defs><radialGradient id={"skin"+kennung} cx=".34" cy=".3" r=".72"><stop offset="0" stopColor={shade(haut,18)}/><stop offset=".65" stopColor={haut}/><stop offset="1" stopColor={shade(haut,-30)}/></radialGradient></defs>
+          <path d={kopfD} fill={"url(#skin"+kennung+")"}/>
+          <path d="M30,53 Q36,50 43,54 M57,54 Q64,50 70,53" fill="none" stroke={shade(haut,-25)} strokeWidth=".7" opacity=".4"/>
+        </g>}
+
+        {/* Schattenseite NUR an der aeusseren Wange. Ein Schatten bis zur Mitte
+            hinterlaesst eine harte Naht mitten im Gesicht — das sah aus wie ein
+            Riss und war der groesste Makel des ersten Wurfs. */}
+        <path d={"M" + (50 + kopf.b - 10) + ",16 C" + (50 + kopf.b - 2) + ",20 " + (50 + kopf.b) + ",28 "
+          + (50 + kopf.b) + ",40 C" + (50 + kopf.b) + ",52 " + (50 + kopf.j) + "," + (kinnY - 8) + " "
+          + (50 + kj) + "," + (kinnY - 6) + " C" + (50 + kj) + "," + (kinnY - 3) + " "
+          + (50 + kj * .7) + "," + (kinnY - 1) + " " + (50 + k
+-----
+
+
+===== M40,74 :: [168900] =====
+          Rasenton, nur heller — kein Spieler soll schlechter dastehen, weil
+            er noch nichts freigeschaltet hat.
+
+            DIE HELLIGKEIT IST DAS EIGENTLICHE. Der Verlauf geht oben hell,
+            unten dunkel: der Kopf sitzt oben und hebt sich damit auch mit
+            schwarzem Haar ab, die Schultern unten stehen gegen den dunklen
+            Fuß. Ein Verlauf andersherum hätte hübsch ausgesehen und das
+            Problem nicht gelöst. */}
+        <defs>
+          <linearGradient id={"bg" + kennung} x1="0" y1="0" x2="0.35" y2="1">
+            <stop offset="0" stopColor={grundHell} />
+            <stop offset="0.62" stopColor={grundMitte} />
+            <stop offset="1" stopColor={grundTief} />
+          </linearGradient>
+        </defs>
+        <rect width="100" height="100" fill={"url(#bg" + kennung + ")"} />
+        {/* Zwei Strahlen wie auf einer Karte — sehr schwach, damit sie das
+            Gesicht nicht stören. */}
+        <path d="M-10,74 L46,-8 L62,-8 L4,78 Z" fill="#FFFFFF" opacity=".045" />
+        <path d="M18,86 L74,-8 L82,-8 L28,88 Z" fill="#FFFFFF" opacity=".03" />
+        <path d="M0,72 H100 V100 H0 Z" fill={grundTief} opacity=".55" />
+
+        {/* Schultern und Trikot */}
+        <path d="M2,100 C4,82 22,74 50,74 C78,74 96,82 98,100 Z" fill={c1} />
+        <path d="M2,100 C4,82 22,74 34,74 L40,100 Z" fill={shade(c1, -16)} />
+        <path d="M40,74 L50,87 L60,74 L56,73 L50,82 L44,73 Z" fill={c2} />
+
+        {/* Hals mit Schatten unter dem Kiefer */}
+        <path d={"M43," + (kinnY - 10) + " h14 v14 c0,4 -14,4 -14,0 Z"} fill={schatten} />
+        <path d={"M43," + (kinnY - 10) + " h14 v4 c-4,3 -10,3 -14,0 Z"} fill={tief} />
+
+        {modern && <Haarform index={z.frisur} weiblich={w} breite={kopf.b} farbe={haar} hell={haarHell} ebene="hinten"/>}
+        {/* Ohren */}
+        {(() => { const ry = [5.6,6.8,8,5.8,6.2][z.ohren] || 5.6, cy = 47, ex = kopf.b - (z.ohren === 3 ? 2.6 : 1);
+          return (<g fill={haut}>
+            <ellipse cx={50 - ex} cy={cy} rx={3.6} ry={ry} />
+            <ellipse cx={50 + ex} cy={cy} rx={3.6} ry={ry} />
+            <ellipse cx={50 - ex + .8} cy={cy} rx={1.1} ry={ry - 3.2} fill={schatten} opacity=".7" />
+            <ellipse cx={50 + ex - .8} cy={cy} rx={1.1} ry={ry - 3.2} fill={schatten} opacity=".7" />
+          </g>); })()}
+
+        {/* Kopf, dazu eine Schattenseite — Volumen ohne Verlauf */}
+        <path d={kopfD} fill={haut} />
+        {modern && <g clipPath={"url(#kf" + kennung + ")"}>
+          <defs><radialGradient id={"skin"+kennung} cx=".34" cy=".3" r=".72"><stop offset="0" stopColor={shade(haut,18)}/><stop offset=".65" stopColor={haut}/><stop offset="1" stopColor={shade(haut,-30)}/></radialGradient></defs>
+          <path d={kopfD} fill={"url(#skin"+kennung+")"}/>
+          <path d="M30,53 Q36,50 43,54 M57,54 Q64,50 70,53" fill="none" stroke={shade(haut,-25)} strokeWidth=".7" opacity=".4"/>
+        </g>}
+
+        {/* Schattenseite NUR an der aeusseren Wange. Ein Schatten bis zur Mitte
+            hinterlaesst eine harte Naht mitten im Gesicht — das sah aus wie ein
+            Riss und war der groesste Makel des ersten Wurfs. */}
+        <path d={"M" + (50 + kopf.b - 10) + ",16 C" + (50 + kopf.b - 2) + ",20 " + (50 + kopf.b) + ",28 "
+          + (50 + kopf.b) + ",40 C" + (50 + kopf.b) + ",52 " + (50 + kopf.j) + "," + (kinnY - 8) + " "
+          + (50 + kj) + "," + (kinnY - 6) + " C" + (50 + kj) + "," + (kinnY - 3) + " "
+          + (50 + kj * .7) + "," + (kinnY - 1) + " " + (50 + kj * .5) + "," + (kinnY - 1)
+          + " C" + (50 + kj * .8) + "," + (kinnY -
+-----
