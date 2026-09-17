@@ -29,7 +29,7 @@ test('CHAR-P1-05: Feineinstellung bleibt bei 320/390 px bedienbar und speichert 
  // bewusst ihre eigene horizontale Wischspur. Der Container wird ueber einen
  // stabil benannten echten Knopf verankert statt ueber einen :has-Locator.
  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth+1)).toBe(true);
- const hautKat=page.getByRole('button',{name:'Hautton',exact:true});
+ const hautKat=page.getByRole('button',{name:/^Hautton(?: · fest)?$/});
  const rail=hautKat.locator('..');
  const railMass=await rail.evaluate(el=>({scrollWidth:el.scrollWidth,clientWidth:el.clientWidth}));
  expect(railMass.scrollWidth).toBeGreaterThan(railMass.clientWidth);
@@ -44,12 +44,14 @@ test('CHAR-P1-05: Feineinstellung bleibt bei 320/390 px bedienbar und speichert 
  await haut.click();
  await expect(haut).toHaveAttribute('aria-pressed','true');
  await page.getByRole('button',{name:'Hautton festhalten',exact:true}).click();
+ await expect(hautKat).toHaveAccessibleName('Hautton · fest');
 
- const bartKat=page.getByRole('button',{name:'Bartwuchs',exact:true});
+ const bartKat=page.getByRole('button',{name:/^Bartwuchs(?: · fest)?$/});
  await bartKat.click();
  const bart=page.getByRole('button',{name:'Ankerbart',exact:true});
  await bart.click();
  await page.getByRole('button',{name:'Bartwuchs festhalten',exact:true}).click();
+ await expect(bartKat).toHaveAccessibleName('Bartwuchs · fest');
  await page.getByRole('button',{name:'Freie Merkmale würfeln'}).click();
  await bartKat.click();
  await expect(bart).toHaveAttribute('aria-pressed','true');
