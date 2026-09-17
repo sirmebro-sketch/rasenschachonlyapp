@@ -21,6 +21,11 @@ Der aktuelle Repository-Stand ist die Arbeitsbasis. Frühere Chats, Erinnerungen
 
 Niemals einen älteren Gesamtstand ungeprüft über `main` kopieren.
 
+Für gezielte Änderungen an großen oder konfliktanfälligen Dateien steht die
+[`PATCH-BRUECKE.md`](PATCH-BRUECKE.md) zur Verfügung. Neue Arbeitsumgebungen,
+die keine sichere partielle Dateibearbeitung anbieten, sollen diesen Weg nutzen,
+statt eine komplette ältere `App.jsx` zurückzuschreiben.
+
 Lokale Pfade aus früheren Sitzungen wie `/workspace/scratch/...` sind temporär und dürfen nicht als dauerhafter Zugriffspfad vorausgesetzt werden. Wenn die alte Arbeitsumgebung nicht mehr existiert, Repository neu abrufen.
 
 ---
