@@ -26,15 +26,16 @@ test('CHAR-P1-05: Feineinstellung bleibt bei 320/390 px bedienbar und speichert 
  await expect(panel).toBeVisible();
 
  // Die Seite selbst darf nicht seitlich weglaufen. Nur die Kategorien haben
- // bewusst ihre eigene horizontale Wischspur.
+ // bewusst ihre eigene horizontale Wischspur. Der Container wird ueber einen
+ // stabil benannten echten Knopf verankert statt ueber einen :has-Locator.
  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth+1)).toBe(true);
- const rail=panel.locator(':scope > div:has(> .btn.sm[aria-pressed])');
+ const hautKat=page.getByRole('button',{name:'Hautton',exact:true});
+ const rail=hautKat.locator('..');
  const railMass=await rail.evaluate(el=>({scrollWidth:el.scrollWidth,clientWidth:el.clientWidth}));
  expect(railMass.scrollWidth).toBeGreaterThan(railMass.clientWidth);
 
  // Sichtbare aktuelle Auswahl plus Festhalten: zwei Merkmale festlegen, dann
  // wuerfeln. Beide muessen unveraendert markiert bleiben.
- const hautKat=page.getByRole('button',{name:'Hautton',exact:true});
  const hautKatBox=await hautKat.boundingBox();
  expect(hautKatBox.height).toBeGreaterThanOrEqual(44);
  await hautKat.click();
@@ -61,7 +62,7 @@ test('CHAR-P1-05: Feineinstellung bleibt bei 320/390 px bedienbar und speichert 
  const details=page.getByRole('button',{name:'Besondere Merkmale',exact:true});
  await details.click();
  await expect(details).toHaveAttribute('aria-pressed','true');
- await expect(panel.locator(':scope > div:has(> .btn:not(.sm)[aria-pressed]) > .btn').first()).toBeVisible();
+ await expect(panel.locator('button.btn[aria-pressed]:not(.sm)').first()).toBeVisible();
 
  // Pflichtaktionen bleiben trotz Sticky-Vorschau und geoeffnetem Panel frei.
  const start=page.getByRole('button',{name:"Los geht's",exact:true});
