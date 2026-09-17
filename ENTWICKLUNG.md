@@ -1324,3 +1324,87 @@ Vereinsbildschirm die Kasse nicht anzeigt.
 - **Folgen einer leeren Kasse** gibt es weiterhin keine (WIRT-P1-04). Die Kasse
   läuft ins Minus, ohne dass etwas passiert — bewusst, aber jetzt sichtbarer.
 - **Kein Gerätetest**, keine Oberfläche. Der Spieler sieht von all dem nichts.
+
+## WIRT-P0-03 — Ausbau kostet Geld, VC nur noch vier Extras (Claude, 17.09.2026)
+
+**Basis-Commit:** `9ad335a` (Zweig `claude/wirt-p0-02`, Pull Request #9).
+**Branch:** `claude/wirt-p0-03`. **Vorgelegt zur Abnahme, nicht zusammengeführt.**
+Die Kette ist `claude/vereinswirtschaft` → `claude/wirt-p0-02` → dieser Zweig.
+
+**Auftrag.** Kevins ursprüngliche Vorgabe, jetzt eingelöst: „Das man keine VC in
+etwas versenkt was nach 15 Saison eh verschwindet. Lediglich gewisse extra Bonis
+und Ausbauten sollen mit VC möglich sein."
+
+**Was geändert wurde:**
+
+1. **`VEREIN.ausbauen` (VC) ist gelöscht, nicht stillgelegt.** Eine unbenutzte
+   Funktion, die noch dasteht, wird in der nächsten Runde wieder aufgerufen.
+   Eine eigene Regression hält fest, dass es sie nicht mehr gibt.
+2. **Ein Katalog statt zwei.** Der alte `VEREIN_AUSBAU` in `verein.js` ist weg;
+   `VEREIN_AUSBAU` zeigt jetzt auf `WIRT.AUSBAU`. Zwei Listen mit denselben
+   Kennungen und verschiedenen Preisen wären genau die Doppelung, die dieses
+   Projekt schon einmal Geld gekostet hat.
+3. **Aus Kaufen wird Planen.** `bauStarten` bezahlt sofort und baut über bis zu
+   zwei Saisons. Der Name verschweigt nicht, dass die Stufe erst später wirkt.
+4. **Die Oberfläche trennt die Währungen sichtbar.** Oben die Kasse in der
+   Landeswährung samt laufender Baustellen, darunter die sechs Abteilungen mit
+   Geldpreisen, und erst danach — eigener Abschnitt — die vier VC-Extras. Keine
+   Zeile, in der beides nebeneinander steht. Fehlt Geld, nennt der Bildschirm
+   die Lücke, statt den Knopf wortlos zu sperren.
+5. **`startReiter` am `VereinScreen`**, wie ihn der `Packladen` schon hatte:
+   der Prüfstand soll einen Reiter aufschlagen können, ohne einen Klick
+   nachzubauen. Im Spiel wird er nicht gesetzt.
+
+**Geprüft:** `npm test` **154/154** (vorher 149), `npm run build` erfolgreich.
+Fünf neue Regressionen: die alte VC-Funktion ist nachweislich verschwunden und
+der Katalog einer; Bauen prüft vor dem Schreiben, bucht genau einmal ab, sperrt
+dieselbe Abteilung und erlaubt eine andere; VC-Extras nur einmal, mit Prüfung
+vor der Buchung; die Ausbauwirkungen im Spiel hängen weiter an denselben
+Kennungen (sonst hätte ein ausgebautes Trainingszentrum stumm aufgehört zu
+wirken); und der Ausbaureiter rendert Geld und VC getrennt, ohne NaN.
+
+**DIE FRAGE AUS P0-02 IST BEANTWORTET — teilweise, und unbequem.**
+
+Gleicher Lauf wie dort, einmal ohne und einmal mit Ausbau:
+
+| Kaderstärke | ohne Bauen | mit Bauen | erreichter Ausbau |
+|---:|---:|---:|---:|
+| 48 | +27 | −8 | 9/30 |
+| 55 | −10 | −19 | 5/30 |
+| 62 | **−55** | **+11** | 18/30 |
+| 70 | −289 | −183 | 8/30 |
+| 78 | −556 | −539 | 1/30 |
+
+**Bauen rettet die Mitte, nicht die Spitze.** Stärke 62 dreht das Minus in ein
+Plus und erreicht 18 von 30 Stufen — genau der Verlauf, den das System erzeugen
+soll. Stärke 78 erreicht **eine** Stufe: die Gehälter fressen den Ertrag, bevor
+gebaut werden kann, und wer einmal hinten liegt, baut sich nicht mehr heraus.
+
+Die Ursache ist der Exponent 4 auf die Spielerstärke. Bei der Kalibrierung
+rechnete er gegen eine GESCHÄTZTE Stärke von 74 in der ersten Liga; ein Spieler,
+der seine Akademie ausreizt, kommt darüber, und (78/60)^4 ist ein Viertel teurer
+als (74/60)^4 — bei jedem Spieler, in jeder Saison.
+
+**Ich habe das nicht geändert.** Es ist eine Balance-Entscheidung, sie gehört
+Kevin, und sie ungefragt zu treffen hiesse, seinen ausdrücklichen Auftrag
+(„Gehälter steigen bei langanhaltendem Erfolg") nach eigenem Gutdünken wieder
+abzuschwächen. Drei Wege, absteigend nach Eingriffstiefe:
+
+1. **Exponent 4 → 3 oder 3,5.** Trifft genau die Spitze, lässt die Mitte fast
+   unberührt. Am zielgenauesten, meine Empfehlung.
+2. **Obergrenze des Gehaltsniveaus von 2,00 auf etwa 1,6.** Einfach, nimmt aber
+   auch dem mittleren Verein Druck.
+3. **Einnahmen der ersten Liga anheben.** Löst es auch, macht den Aufstieg aber
+   wieder zum Selbstläufer — vermutlich falsch.
+
+**Offen bleibt:**
+
+- **Die Balance-Entscheidung oben.** Bis dahin ist die Spitze unspielbar.
+- **WIRT-P0-04** (Sponsorenwahl) und **P1-01** (Saisonabrechnung sichtbar): der
+  Spieler sieht bis jetzt nicht, WOHER das Geld kam. Er sieht nur den Stand.
+- **Preise, Rechtsform und Vorstandsziel haben keine Oberfläche.** Sie rechnen
+  mit den Vorgabewerten mit; einstellen kann man sie nicht.
+- **Die Versionsnummer bleibt 35.192.0.** Diese Runde ändert Spielverhalten und
+  müsste sie bei einer neuen APK erhöhen — das entscheidet Codex beim Ausliefern,
+  nicht ich auf dem Zweig.
+- **Kein Gerätetest.**

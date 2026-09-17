@@ -39,7 +39,7 @@ export {simTable, LEAGUES, karriereZeitraum, verdict, vorsatzBelohnen, vorsatzPu
 export const renderCreate=()=>renderToStaticMarkup(<CreateScreen meta={{}} onStart={()=>{}} onBack={()=>{}}/>);
 export const renderPortraits=()=>renderToStaticMarkup(<>{['m','w'].flatMap(g=>Array.from({length:4},(_,i)=><Avatar key={g+i} seed={1} g={g} zuege={{...zuegeAusKennung(1,g,'GER',{}),stil:2,haut:10+i,haar:9+i,frisur:(g==='w'?14:16)+i,details:i,bart:g==='w'?0:10+i%3}}/>))}</>);
 export const renderEnd=p=>renderToStaticMarkup(<EndScreen p={p} onNew={()=>{}}/>);
-export const renderVerein=(v,aka)=>renderToStaticMarkup(<VereinScreen v={v} aka={aka} onAendern={()=>{}} onZurueck={()=>{}} onAbschluss={()=>{}}/>);
+export const renderVerein=(v,aka,reiter)=>renderToStaticMarkup(<VereinScreen v={v} aka={aka} startReiter={reiter} onAendern={()=>{}} onZurueck={()=>{}} onAbschluss={()=>{}}/>);
 export const renderPacks=(pool,reiter='laden',verein=null)=>renderToStaticMarkup(<Packladen vc={100} pool={pool} verein={verein} gratis={1} startpaket={false} startReiter={reiter} onKauf={()=>{}} onGratis={()=>{}} onStartpaket={()=>{}} onEinsetzen={()=>{}} onEntfernen={()=>{}} onVerkauf={()=>{}} onZurueck={()=>{}}/>);
 export const renderPortraitCard=k=>renderToStaticMarkup(<Spielerkarte karte={k}/>);
 export const renderPortraitOriginal=h=>renderToStaticMarkup(<Avatar seed={h.avatar} zuege={h.zuege} g={h.g} nat={h.natId} size={54}/>);
@@ -425,6 +425,84 @@ const spielbereiterVerein=(zu={})=>{
  /* autoAufstellen gibt den ganzen Verein zurück, nicht nur die Aufstellung. */
  return E.VEREIN.autoAufstellen({...r.v,kader,...zu});
 };
+
+test('Ausbau kostet Geld: die alte VC-Funktion ist weg, ein Katalog statt zwei',()=>{
+ /* Kevins Vorgabe: „Das man keine VC in etwas versenkt was nach 15 Saison eh
+    verschwindet." Die alte Funktion muss VERSCHWUNDEN sein, nicht nur
+    unbenutzt — sonst baut sie jemand in der nächsten Runde wieder ein. */
+ assert.equal(typeof E.VEREIN.ausbauen,'undefined','VEREIN.ausbauen (VC) ist ersetzt, nicht ergänzt');
+ assert.equal(typeof E.VEREIN.bauStarten,'function');
+ /* Ein Katalog: sechs Abteilungen, die drei alten Kennungen unverändert. */
+ const ids=E.VEREIN.VEREIN_AUSBAU.map(a=>a.id);
+ assert.equal(ids.length,6);
+ for(const alt of ['training','stadion','medizin'])assert(ids.includes(alt),alt+' bleibt Vertrag');
+ for(const neu of ['gastro','sortiment','reichweite'])assert(ids.includes(neu));
+ /* Die Preise sind Geld, nicht VC: eine Stufe kostet Millionen, keine
+    dreistellige VC-Summe wie früher (Stadion Stufe 2 kostete 45 VC). */
+ assert.equal(E.VEREIN.ausbauKosten({},'stadion'),4);
+ assert.equal(E.VEREIN.ausbauKosten({ausbau:{stadion:6}},'stadion'),null,'voll ausgebaut');
+});
+
+test('Bauen: prüft vor dem Schreiben, bucht genau einmal ab und dauert an',()=>{
+ const arm={land:'GER',kasse:1,ausbau:{},baustellen:{}};
+ const r0=E.VEREIN.bauStarten(arm,'stadion');
+ assert(r0.fehler,'ohne Geld kein Bau');
+ assert.equal(r0.v.kasse,1,'ein abgelehnter Bau ändert gar nichts');
+ assert.deepEqual(r0.v.baustellen||{},{});
+ const reich={...arm,kasse:20};
+ const r1=E.VEREIN.bauStarten(reich,'stadion');
+ assert(!r1.fehler,r1.fehler);
+ assert.equal(r1.v.kasse,16,'4 Mio sofort abgebucht');
+ assert.equal(E.VEREIN.ausbauStufe(r1.v,'stadion'),1,'die Stufe steigt erst, wenn gebaut ist');
+ assert(r1.v.baustellen.stadion.rest>=1);
+ /* Dieselbe Abteilung nicht zweimal gleichzeitig, eine andere schon. */
+ assert(E.VEREIN.bauStarten(r1.v,'stadion').fehler);
+ assert(!E.VEREIN.bauStarten(r1.v,'gastro').fehler);
+ /* Der laufende Bau steht als Text für die Oberfläche bereit. */
+ const txt=E.VEREIN.baustellenText(r1.v);
+ assert.equal(txt.length,1);assert(txt[0].includes('Stadion'));assert(txt[0].includes('Saison'));
+});
+
+test('VC kaufen nur noch die vier Extras, jedes einmal',()=>{
+ const ids=E.VEREIN.VC_EXTRAS.map(x=>x.id);
+ assert.equal(ids.length,4,'bewusst wenige');
+ const v={land:'GER',kasse:0,extras:[]};
+ assert(E.VEREIN.extraKaufen(v,'startkapital',10).fehler,'zu wenig VC');
+ assert.equal(E.VEREIN.extraKaufen(v,'startkapital',10).v.kasse,0,'abgelehnt heisst unverändert');
+ const r=E.VEREIN.extraKaufen(v,'startkapital',100);
+ assert(!r.fehler);assert.equal(r.kosten,45);
+ assert.equal(r.v.kasse,12,'Gründungskapital fliesst in die Kasse');
+ assert(r.v.extras.includes('startkapital'));
+ assert(E.VEREIN.extraKaufen(r.v,'startkapital',100).fehler,'nur einmal');
+ assert(E.VEREIN.extraKaufen(v,'gibtesnicht',100).fehler);
+});
+
+test('Die Ausbauwirkungen im Spiel hängen weiter an denselben Kennungen',()=>{
+ /* Wäre die Umstellung an dieser Stelle schiefgegangen, hätte ein
+    ausgebautes Trainingszentrum stumm aufgehört zu wirken. */
+ const bauen=(id,stufe)=>spielbereiterVerein({ausbau:{[id]:stufe}});
+ const schwach=E.VEREIN.staerke(bauen('stadion',1)).gesamt;
+ const stark=E.VEREIN.staerke(bauen('stadion',6)).gesamt;
+ assert(stark>schwach,'das Stadion trägt weiter zur Mannschaftsstärke bei');
+ assert.equal(E.VEREIN.ausbauStufe(bauen('training',4),'training'),4);
+ assert.equal(E.VEREIN.ausbauStufe({},'training'),1,'ohne Angabe Stufe 1');
+});
+
+test('Der Ausbaureiter zeigt Geld und VC getrennt, ohne NaN',()=>{
+ const v=E.VEREIN.mitWirtschaft(spielbereiterVerein({kasse:25.5,extras:[]}));
+ const html=E.renderVerein(v,{...E.leereAkademie(),vc:100},'ausbau');
+ assert(!html.includes('NaN'),'keine kaputte Zahl');
+ assert(html.includes('Vereinskasse'));
+ assert(html.includes('Bauen'),'Geldknopf');
+ assert(html.includes('Gastronomie'),'die neuen Abteilungen sind da');
+ assert(html.includes('Gründungskapital'),'die VC-Extras stehen im eigenen Abschnitt');
+ /* Kein Ausbau darf mehr mit VC ausgezeichnet sein. */
+ assert(!html.includes('Ausbauen ·'),'die alte VC-Beschriftung ist weg');
+ /* Eine leere Kasse macht den Knopf nicht kaputt, sondern nennt die Lücke. */
+ const arm=E.renderVerein(E.VEREIN.mitWirtschaft(spielbereiterVerein({kasse:0})),
+   {...E.leereAkademie(),vc:0},'ausbau');
+ assert(arm.includes('Dafür fehlen'));assert(!arm.includes('NaN'));
+});
 
 test('Vereinswirtschaft: die Saison rechnet ab und schreibt den Spielstand fort',()=>{
  const v0=E.VEREIN.einschreiben(spielbereiterVerein()).v;
