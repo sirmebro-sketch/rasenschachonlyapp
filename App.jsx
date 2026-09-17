@@ -2693,7 +2693,16 @@ const KOPFFORM = [
      Kinn hin ein, sie läuft weich aus statt eckig. Eine schmale, eine breite. */
   { n: "Zart",     b: 24,   j: 15, kinn: 70, kv: .58 },
   { n: "Rundlich", b: 27.5, j: 21, kinn: 68, kv: .58 },
+  /* CHAR-P1-01 / ChatGPT-Codex: nur angehängt. IDs 0–9 sind gespeicherter
+     Vertrag und werden weder umsortiert noch geometrisch umgedeutet. */
+  { n: "Trapez",     b: 26, j: 23, kinn: 72, profil: "trapez" },
+  { n: "Langkantig", b: 24, j: 19, kinn: 78, profil: "lang" },
+  { n: "Diamant",    b: 29, j: 17, kinn: 73, kv: .72, profil: "diamant" },
+  { n: "Kurzbreit",  b: 30, j: 27, kinn: 64, profil: "kurzbreit" },
 ];
+/* Die historische Seed-Ableitung darf durch neue Editorformen nicht wandern.
+   Seed-only/Altporträts bleiben deshalb auf genau den bisherigen IDs 0–9. */
+const KOPFFORM_HISTORISCH = 10;
 /* Kieferbreite AM KINN. Ohne `kv` ist sie gleich der Kieferbreite oben — damit
    bleiben alle acht bestehenden Formen bitgleich. Nur Formen MIT `kv` laufen
    nach unten schmaler zu.
@@ -2716,6 +2725,12 @@ const LAUFBAHN_MAX = 40;
 const kopfPfad = (k) => {
   const l = 50 - k.b, r = 50 + k.b;
   const ku = kinnBreite(k), kul = 50 - ku, kur = 50 + ku;
+  /* IDs 0–9 laufen weiterhin exakt durch den historischen Standardpfad.
+     Nur angehängte Profile bekommen eine bewusst andere Außen-Silhouette. */
+  if (k.profil === "trapez") return `M${l},42 C${l+1},30 ${l+8},17 36,13 C43,10 57,10 64,13 C${r-8},17 ${r-1},30 ${r},42 C${r},52 ${kur},${k.kinn-8} ${kur},${k.kinn-6} C${kur},${k.kinn-1} ${50+ku*.45},${k.kinn} 50,${k.kinn} C${50-ku*.45},${k.kinn} ${kul},${k.kinn-1} ${kul},${k.kinn-6} C${kul},${k.kinn-8} ${l},52 ${l},42 Z`;
+  if (k.profil === "lang") return `M${l+1},40 L${l+2},27 Q${l+6},13 50,11 Q${r-6},13 ${r-2},27 L${r-1},52 C${r-1},62 ${kur},${k.kinn-8} ${kur},${k.kinn-6} C${kur},${k.kinn-1} ${50+ku*.45},${k.kinn} 50,${k.kinn} C${50-ku*.45},${k.kinn} ${kul},${k.kinn-1} ${kul},${k.kinn-6} C${kul},${k.kinn-8} ${l+1},62 ${l+1},52 Z`;
+  if (k.profil === "diamant") return `M31,18 Q41,10 50,11 Q59,10 69,18 Q76,30 ${r},44 Q${r-3},54 ${kur+3},63 Q${kur},${k.kinn-2} 50,${k.kinn} Q${kul},${k.kinn-2} ${kul-3},63 Q${l+3},54 ${l},44 Q24,30 31,18 Z`;
+  if (k.profil === "kurzbreit") return `M${l},39 Q${l},21 32,13 Q50,8 68,13 Q${r},21 ${r},39 L${r},48 Q${r-1},55 ${kur},58 Q${kur},${k.kinn-1} 50,${k.kinn} Q${kul},${k.kinn-1} ${kul},58 Q${l+1},55 ${l},48 Z`;
   return "M" + l + ",40 C" + l + ",21 " + (l + 9) + ",12 50,12 C" + (r - 9) + ",12 " + r + ",21 " + r + ",40"
     /* Beide Stützpunkte auf der verjüngten Kieferlinie. In 34.28 stand hier
        rechts noch `jr` (die Kieferbreite OBEN), links dagegen schon der
@@ -2761,7 +2776,9 @@ const ZUEGE_ORDNUNG = ["haut", "haar", "frisur", "bart", "brauen", "augen", "aug
    im Rahmen der Herkunft — das war vorher so und bleibt so. */
 function zuegeAusKennung(kennung, g, nat, meta, statur) {
   const h = Math.abs(kennung | 0), w = g === "w";
-  const A = ZUEGE_ANZAHL(meta, w);
+  /* Neue Editor-Kopfformen dürfen die deterministische Ableitung alter
+     Porträts nicht verändern: historisch waren hier genau zehn Kopf-IDs. */
+  const A = { ...ZUEGE_ANZAHL(meta, w), kopf: KOPFFORM_HISTORISCH };
   const z = {};
   ZUEGE_ORDNUNG.forEach((k, i) => { z[k] = mische(h, i) % A[k]; });
   const TONE = hautBereich(nat), HAAR = haarBereich(nat);
