@@ -2,7 +2,7 @@ name: Android-App bauen
 on:
   workflow_dispatch:
   push:
-    branches: [main]
+    branches: [main, codex/char-fix-01-kopf-hals-frisur]
     paths:
       - '.github/workflows/apk.yml'
       - '*.js'
