@@ -1,17 +1,30 @@
 diff --git a/App.jsx b/App.jsx
 --- a/App.jsx
 +++ b/App.jsx
-@@ -2,1 +2,2 @@
+@@ -1,6 +1,7 @@
+ import { WildcardPraegung, WildcardBuehne, WILDCARD_CSS } from "./wildcardoptik.jsx";
  import { Bartform } from "./bartformen.jsx";
 +import { gesichtsAnker } from "./gesichtsanker.js";
-@@ -22412,2 +22413,3 @@
+ import { AufdeckLicht, AUFDECK_CSS } from "./aufdeckeffekte.jsx";
+ import { Haarform } from "./haarformen.jsx";
+ import { KartenEffekt } from "./karteneffekte.jsx";
+ import { portraetOptionen, portraetWuerfeln, PORTRAET_NAMEN, NEUE_FRISUREN, FRISUR_NAMEN } from "./portraet.js";
+@@ -22409,6 +22410,7 @@
+   const lidH = z.augen === 1 ? 2.6 : z.augen === 4 ? 4.2 : z.augen === 5 ? 3.9 : z.augen === 6 ? 2.9
+     : z.augen === 7 ? 4.25 : z.augen === 8 ? 3.15 : 3.4;   /* Lidspalt */
    const kinnY = kopf.kinn;
 +  const gesicht = gesichtsAnker(kopf,z.nase,z.mund);
    const kj = kinnBreite(kopf);   /* Kieferbreite am Kinn — siehe kinnBreite */
-@@ -22790,2 +22792,3 @@
+   /* Lidschatten nimmt einen Ton aus der Haut auf, statt eine feste Farbe zu
+      setzen — sonst passt er auf hellen und dunklen Tönen nie zugleich. */
+@@ -22788,6 +22790,7 @@
+           </g>))}
+ 
          {/* ---- Nase ---- */}
 +        <g transform={`translate(0 ${gesicht.naseDy})`}>
          {(() => {
+           const y0 = z.nase===8?51:49, y1 = 56 + (z.nase === 3 ? 1.5 : z.nase===8?-1:0);
+           /* Ab Index 5 angehaengt (34.29) — nie umsortieren, der Index steckt
 @@ -22797,14 +22800,14 @@
            if (z.nase === 10) return (<g>
 -            <path d={"M49.2,51 C48.2,53.6 45.3,55.4 45.5,57.4 Q50,61 54.5,57.4 C54.7,55.4 51.8,53.6 50.8,51 Z"}
@@ -35,7 +48,11 @@ diff --git a/App.jsx b/App.jsx
 +            <ellipse cx="48.1" cy="56.8" rx=".85" ry=".68" fill={tief} />
 +            <ellipse cx="51.9" cy="56.8" rx=".85" ry=".68" fill={tief} />
            </g>);
-@@ -22817,6 +22820,8 @@
+@@ -22816,8 +22819,11 @@
+             <path d={"M50," + y0 + " C" + (50 - br * .5) + "," + (y0 + 6) + " " + (50 - br) + "," + (y1 - 3)
+               + " " + (50 - br) + "," + y1 + " q" + br + ",2 " + (br * 2) + ",0 C" + (50 + br) + "," + (y1 - 3)
+               + " " + (50 + br * .5) + "," + (y0 + 6) + " 50," + y0 + " Z"} fill={schatten} opacity=".45" />
+             <ellipse cx={50 - br * .75} cy={y1 - .4} rx=".9" ry=".7" fill={tief} />
              <ellipse cx={50 + br * .75} cy={y1 - .4} rx=".9" ry=".7" fill={tief} />
            </g>); })()}
 +        </g>
@@ -45,11 +62,11 @@ diff --git a/App.jsx b/App.jsx
          {(() => {
 -          const y = kinnY - 8;
 +          const y = gesicht.mundY;
-@@ -22829,2 +22834,2 @@
+@@ -22829,2 +22835,2 @@
            if(z.mund===7)return <path d={`M43 ${y} Q50 ${y+2} 57 ${y-.8}`} fill="none" stroke={lippe} strokeWidth="1.4" strokeLinecap="round"/>;
 -          if(z.mund===8)return <><path d={`M42 ${y-1} Q50 ${y+1} 58 ${y-1} Q50 ${y+8} 42 ${y-1} Z`} fill={lippe}/><path d={`M44 ${y} Q50 ${y+1} 56 ${y} Q50 ${y+3} 44 ${y} Z`} fill="#EFE4D6"/></>;
 +          if(z.mund===8)return <><path d={`M42 ${y-1} Q50 ${y+1} 58 ${y-1} Q50 ${y+5.5} 42 ${y-1} Z`} fill={lippe}/><path d={`M44 ${y} Q50 ${y+1} 56 ${y} Q50 ${y+2.4} 44 ${y} Z`} fill="#EFE4D6"/></>;
-@@ -22839,7 +22844,7 @@
+@@ -22839,7 +22845,7 @@
            if (z.mund === 3) return <><path d={"M43.5," + y + " q6.5,3.4 13,0 q-6.5,2.4 -13,0 Z"} fill={shade(haut, -70)} />
              <path d={"M43.5," + y + " q6.5,-1 13,0"} fill="none" stroke={lippe} strokeWidth="1.5" strokeLinecap="round" /></>;
 -          if (z.mund === 5) return <><path d={"M42," + (y - 1) + " Q50," + (y - 4.2) + " 58," + (y - 1)
@@ -61,10 +78,18 @@ diff --git a/App.jsx b/App.jsx
 -            + " Q50," + (y + 5.2) + " 41.2," + (y - 1.2) + " Z"} fill={lippe} />
 +          if (z.mund === 6) return <><path d={"M41.2," + (y - 1.2) + " Q50," + (y - 3.8) + " 58.8," + (y - 1.2)
 +            + " Q50," + (y + 4.2) + " 41.2," + (y - 1.2) + " Z"} fill={lippe} />
-@@ -22851,2 +22856,3 @@
+@@ -22849,6 +22855,7 @@
+               strokeWidth=".7" opacity=".5" /></>;
+           return <><path d={"M43," + (y - .6) + " Q50," + (y - 3) + " 57," + (y - .6) + " Q50," + (y + 3.4)
+             + " 43," + (y - .6) + " Z"} fill={lippe} />
              <path d={"M43," + (y - .6) + " q7,1.2 14,0"} fill="none" stroke={tief} strokeWidth=".7" opacity=".6" /></>;
          })()}
 +        </g>
-@@ -22904,1 +22910,1 @@
+ 
+         {/* ---- Bartwuchs ----
+@@ -22901,3 +22908,3 @@
+           </g>); })()}
+ 
 -        {modern && !w && z.bart>0 && <Bartform index={z.bart} kopf={kopf} farbe={haar} hell={haarHell} clipId={'kf'+kennung}/>}
 +        {modern && !w && z.bart>0 && <Bartform index={z.bart} kopf={kopf} nase={z.nase} mund={z.mund} farbe={haar} hell={haarHell} clipId={'kf'+kennung}/>}
+         {/* ---- Schmuck ---- */}
