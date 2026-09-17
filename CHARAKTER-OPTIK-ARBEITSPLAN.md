@@ -154,7 +154,7 @@ Die Reihenfolge ist eine Qualitäts-/Risikoreihenfolge. Der letzte Nutzerauftrag
 
 **Abnahme:** echter Browserklickweg auf schmalen Größen; kein verdeckter Pflichtbutton; gespeicherte Auswahl nach Start identisch.
 
-### CHAR-FIX-02 – Hals/Kragen sauber maskieren — BEREIT
+### CHAR-FIX-02 – Hals/Kragen sauber maskieren — ERLEDIGT
 
 **Einordnung:** gezielter Korrekturschritt nach CHAR-P1-05 und vor dem nächsten Karten-/Effektpaket. Der sichtbare Porträtfehler soll zuerst bereinigt werden, ohne die bestehende Charakteridentität oder gespeicherte Kennungen zu verändern.
 
