@@ -410,6 +410,121 @@ test('Vereinsansicht rendert frisch gegründeten Verein ohne erfundene Kaderspie
  const r=E.VEREIN.gruenden(E.VEREIN.leererVerein(),{name:'Testverein',stadt:'Hamburg',land:'GER',weltjahr:2026});assert(!r.fehler);
  const html=E.renderVerein(r.v,E.leereAkademie());assert(html.includes('Testverein'));assert(!html.includes('NaN'));
 });
+/* ------------------------------------------------ Vereinswirtschaft P0-02
+   Der Anschluss des Rechenkerns an den Spielablauf. Geprüft wird hier NICHT
+   die Kalibrierung (das tut tools/vereinswirtschaft.test.cjs), sondern dass
+   die Abrechnung überhaupt läuft, dass sie den Spielstand fortschreibt und
+   dass ein alter Spielstand ohne die neuen Felder nicht stolpert. */
+const spielbereiterVerein=(zu={})=>{
+ const r=E.VEREIN.gruenden(E.VEREIN.leererVerein(),{name:'Testverein',stadt:'Hamburg',land:'GER',weltjahr:2026});
+ assert(!r.fehler,'Gründung: '+r.fehler);
+ /* Positionen aus GUETE in verein.js, nicht erfunden: TW IV AV ZDM ZM ZOM AF ST. */
+ const pos=['TW','IV','IV','AV','AV','ZDM','ZM','ZM','AF','AF','ST','TW','IV','ZM','ST','AV','ZOM','AF'];
+ const kader=pos.map((p,i)=>({id:'t'+i,name:'Spieler '+i,nat:'GER',flag:'🇩🇪',pos:p,
+   ovr:60,pot:70,alter:24,form:50,fitness:80,spiele:0,tore:0,jahreImVerein:1}));
+ /* autoAufstellen gibt den ganzen Verein zurück, nicht nur die Aufstellung. */
+ return E.VEREIN.autoAufstellen({...r.v,kader,...zu});
+};
+
+test('Vereinswirtschaft: die Saison rechnet ab und schreibt den Spielstand fort',()=>{
+ const v0=E.VEREIN.einschreiben(spielbereiterVerein()).v;
+ assert(v0.ziel,'mit der Einschreibung steht ein Vorstandsziel');
+ assert.equal(v0.kasse,0);assert.equal(v0.gehaltsniveau,1);
+ const r=E.VEREIN.vereinSaison(v0);
+ assert(!r.fehler,'Saison: '+r.fehler);
+ /* Der Beleg ist da, und die Kasse ändert sich um genau das, was er ausweist. */
+ assert(r.beleg,'die Saison liefert einen Beleg');
+ assert.equal(r.v.kasse,Math.round((v0.kasse+r.beleg.ergebnis)*100)/100);
+ assert(Number.isFinite(r.beleg.summeEin)&&r.beleg.summeEin>0);
+ assert(Number.isFinite(r.beleg.summeAus)&&r.beleg.summeAus>0);
+ assert(r.beleg.ausgaben.some(x=>x.k.startsWith('Spielergehälter')),'Gehälter stehen im Beleg');
+ /* Das Ziel der KOMMENDEN Saison ist gesetzt, nicht das verbrauchte. */
+ assert(r.v.ziel&&r.v.ziel.soll>=1,'neues Vorstandsziel');
+ assert.equal(r.ziel.n,r.v.ziel.n);
+ /* Die Kurzfassung liegt in der Chronik, der volle Beleg nicht. */
+ const c=r.v.chronik[r.v.chronik.length-1];
+ assert(c.wirtschaft,'Chronik führt die Wirtschaft');
+ assert.equal(c.wirtschaft.kasse,r.v.kasse);
+ assert.equal(c.wirtschaft.ausgaben,undefined,'keine vollen Posten im Spielstand');
+});
+
+test('Vereinswirtschaft: die Ligastufe wird abgeleitet und folgt dem Auf- und Abstieg',()=>{
+ const v=E.VEREIN.mitWirtschaft(spielbereiterVerein());
+ assert(v.ligastufe>=1&&v.ligastufe<=9,'Stufe im sinnvollen Bereich, war '+v.ligastufe);
+ /* Von oben gezählt: die höchste Liga des Landes ist Stufe 1. */
+ const oben=E.VEREIN.ligastufe('GER','Bundesliga');
+ const unten=E.VEREIN.ligastufe('GER','3. Liga');
+ assert(oben<unten,'Bundesliga ('+oben+') liegt über der 3. Liga ('+unten+')');
+ assert.equal(oben,1);
+ /* Kein gespeicherter Wert: eine geänderte Liga ändert die Stufe sofort mit. */
+ assert.notEqual(E.VEREIN.mitWirtschaft({...v,liga:'3. Liga'}).ligastufe,
+                 E.VEREIN.mitWirtschaft({...v,liga:'Bundesliga'}).ligastufe);
+ assert.equal(E.VEREIN.ligastufe('GER','Gibt es nicht'),3,'unbekannte Liga fällt auf die Mitte zurück');
+});
+
+test('Vereinswirtschaft: alte Spielstände ohne Wirtschaftsfelder laufen weiter',()=>{
+ /* Genau der Fall aus 35.192: gegründet, eingeschrieben, mitten im Durchlauf
+    — und ohne jedes der neuen Felder. Er darf weder stolpern noch etwas
+    erfinden, was der Spieler nie hatte. */
+ const alt=spielbereiterVerein({jahr:7,eingeschrieben:true});
+ for(const k of ['kasse','sponsoren','extras','stimmung','rechtsform','preise','baustellen','gehaltsniveau','ziel'])
+  delete alt[k];
+ const r=E.VEREIN.vereinSaison(alt);
+ assert(!r.fehler,'alter Spielstand: '+r.fehler);
+ assert(Number.isFinite(r.v.kasse)&&Number.isFinite(r.v.stimmung));
+ assert.equal(r.beleg.kasseVorher,0,'eine fehlende Kasse ist leer, nicht NaN');
+ assert.equal(r.beleg.ziel.gesetzt,false,'ohne gesetztes Ziel gibt es keine Prämie');
+ assert.equal(r.beleg.ziel.praemie,0);
+ /* Die alten Ausbaukennungen bleiben unberührt — sie sind Vertrag. */
+ assert.equal(r.v.ausbau.training,1);assert.equal(r.v.ausbau.stadion,1);assert.equal(r.v.ausbau.medizin,1);
+ /* Eine gespeicherte 0 ist keine fehlende Zahl. */
+ assert.equal(E.VEREIN.mitWirtschaft({kasse:0,stimmung:0}).kasse,0);
+ assert.equal(E.VEREIN.mitWirtschaft({kasse:0,stimmung:0}).stimmung,0);
+ assert.equal(E.VEREIN.mitWirtschaft({}).stimmung,60,'fehlende Stimmung beginnt in der Mitte');
+});
+
+test('Vereinswirtschaft: dieselbe Saison zweimal ergibt dasselbe Geld',()=>{
+ /* Ein Neuladen darf keine neuen Sponsorenangebote und keine anderen
+    Ereignisse würfeln. Die Saat kommt deshalb aus dem Verein selbst, nicht
+    aus rnd() — geprüft wird das hier an den Ereignissen, weil sie die
+    einzige Stelle mit Zufall in der Abrechnung sind. */
+ const v0=E.VEREIN.einschreiben(spielbereiterVerein()).v;
+ /* Der SPORTLICHE Teil würfelt weiter — eine Saison wird gespielt, nicht
+    festgelegt. Geprüft wird hier der wirtschaftliche Zufall: dieselben
+    Ereignisse trotz verschiedener Spielverläufe. */
+ const a=E.VEREIN.vereinSaison(v0),b=E.VEREIN.vereinSaison(v0);
+ assert.deepEqual(a.beleg.ereignisse.map(e=>e.id),b.beleg.ereignisse.map(e=>e.id),
+  'die Ereignisse hängen am Verein, nicht am Spielverlauf');
+ /* Mit festgehaltenem Würfel muss dann ALLES gleich sein — sonst steckt
+    irgendwo in der Abrechnung doch noch ein rnd(). */
+ try{
+  E.zufallSetzen(4711);const x=E.VEREIN.vereinSaison(v0);
+  E.zufallSetzen(4711);const y=E.VEREIN.vereinSaison(v0);
+  assert.equal(x.rang,y.rang,'gleicher Würfel, gleiche Tabelle');
+  assert.equal(x.beleg.summeEin,y.beleg.summeEin);
+  assert.equal(x.beleg.summeAus,y.beleg.summeAus);
+  assert.equal(x.beleg.ergebnis,y.beleg.ergebnis);
+ }finally{E.zufallSetzen(null);}
+ /* Ein anderer Verein bekommt andere Angebote und Ereignisse. */
+ const c=E.VEREIN.vereinSaison({...v0,name:'Ganz anderer Verein'});
+ assert(Number.isFinite(c.beleg.ergebnis));
+});
+
+test('Vereinswirtschaft: fünfzehn Jahre am Stück bleiben endlich',()=>{
+ let v=E.VEREIN.einschreiben(spielbereiterVerein()).v;
+ for(let i=0;i<15;i++){
+  const r=E.VEREIN.vereinSaison(v);
+  if(r.fehler)break;                      /* Kader kann unter das Minimum fallen */
+  for(const k of ['kasse','stimmung','gehaltsniveau'])
+   assert(Number.isFinite(r.v[k]),k+' ist in Jahr '+(i+1)+' keine Zahl: '+r.v[k]);
+  assert(r.v.stimmung>=0&&r.v.stimmung<=100);
+  assert(r.v.gehaltsniveau>=0.75&&r.v.gehaltsniveau<=2);
+  v=r.v;
+ }
+ assert(v.chronik.length>=1);
+ assert(v.chronik.every(c=>!c.wirtschaft||Number.isFinite(c.wirtschaft.kasse)));
+});
+
 test('Packladen und Sammlung rendern leeren sowie gefüllten Fundus',()=>{
  const leer=E.KARTEN.leererPool();
  for(const tab of ['laden','sammlung'])assert(E.renderPacks(leer,tab).length>100);
