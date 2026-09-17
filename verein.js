@@ -1063,10 +1063,15 @@ export const machVerein = (H) => {
       gehaltsniveau: beleg.gehalt.neu,
       ziel: beleg.ziel.gesetzt ? { n: beleg.ziel.n, erfuellt: beleg.ziel.erfuellt } : null,
       ereignisse: beleg.ereignisse.map((e) => e.n),
+      ausgelaufen: beleg.ausgelaufen,
     };
 
+    /* Neue Angebote fuer die KOMMENDE Saison. Die Saat haengt am Jahr, also
+       muss das neue Jahr schon drinstehen — deshalb hier und nicht oben. */
+    const mitNeuenAngeboten = (nv) => ({ ...nv, angebote: sponsorAngebote(nv) });
+
     return {
-      v: { ...v, jahr: v.jahr + 1, liga: neueLiga, kader: noch, aufstellung: gesaeubert,
+      v: mitNeuenAngeboten({ ...v, jahr: v.jahr + 1, liga: neueLiga, kader: noch, aufstellung: gesaeubert,
            /* Wirtschaft: was die Abrechnung fortgeschrieben hat, einzeln
               uebernommen statt den ganzen Zwischenstand einzustreuen — sonst
               schleppte der Spielstand `wVor.bilanz` und den Kader doppelt. */
@@ -1074,7 +1079,7 @@ export const machVerein = (H) => {
            stimmung: wNach.stimmung, rechtsform: wNach.rechtsform,
            preise: wNach.preise, baustellen: wNach.baustellen,
            ausbau: wNach.ausbau, gehaltsniveau: wNach.gehaltsniveau,
-           ziel: zielNeu,
+           ziel: zielNeu, angebote: null,          /* gleich unten neu gewuerfelt */
            faelle: faelleNeu, offeneAbschiede: [],
            bilanz: neueBilanz,
            /* DAS ARCHIV (35.52). Kevins Wunsch: alle Jahre nachschlagbar.
@@ -1092,7 +1097,7 @@ export const machVerein = (H) => {
              tabelle: erg.tabelle, spieler: erg.spieler,
              abgaenge: weg.map((s) => s.name + " (" + s.alter + ")"),
              abschiede, wirtschaft: wKurz }],
-           spiele: erg.spiele },
+           spiele: erg.spiele }),
       beleg, ziel: zielNeu,
       tabelle, rang, N, aufstieg, abstieg, staerke: st, abgaenge: weg,
       spiele: erg.spiele, spieler: erg.spieler, abschiede, faelle: faelleNeu,
@@ -1164,6 +1169,52 @@ export const machVerein = (H) => {
      Abbuchung geschieht draussen, genau wie beim Packkauf. */
   const VC_EXTRAS = WIRT.VC_EXTRAS;
   const extraKaufen = (v, id, vcVorrat) => WIRT.extraKaufen(mitWirtschaft(v), id, vcVorrat);
+
+  /* ============================== Sponsoren ============================== */
+  /* WIRT-P0-04. Kevin: Geld „durch Werbedeals (die man pro Saison aus einer
+     Auswahl von fiktiven Firmen und Unternehmen mit unterschiedlichen
+     Vorteilen und Beträgen und Laufzeit auswählen kann)".
+
+     DIE ANGEBOTE LIEGEN IM SPIELSTAND, NICHT IM AUGENBLICK. Wuerden sie beim
+     Zeichnen erzeugt, bekaeme man bei jedem Aufschlagen des Bildschirms neue
+     — und damit waere die Auswahl keine Entscheidung, sondern ein Automat,
+     den man so lange druckt, bis das beste Angebot erscheint. Sie werden
+     deshalb EINMAL je Saison gewuerfelt, aus der Saat des Vereins, und
+     bleiben stehen, bis sie angenommen sind oder die Saison vorbei ist.
+
+     DREI PARTNER GLEICHZEITIG. Ohne Obergrenze nimmt man jedes Angebot an,
+     und aus der Wahl wird Einsammeln. Mit drei Plaetzen muss man abwaegen:
+     ein langer Vertrag zahlt je Saison weniger, bindet aber einen Platz —
+     wer aufsteigt, haette neu verhandeln koennen. Die Zahl ist gesetzt, nicht
+     gemessen; sie ist der Vorschlag zur Abnahme, nicht das Ergebnis eines
+     Laufs. */
+  const SPONSOR_MAX = 3;
+
+  /* Frische Angebote fuer die laufende Saison. Idempotent: derselbe Verein im
+     selben Jahr bekommt dieselben drei. */
+  const sponsorAngebote = (v) => WIRT.sponsorAngebote(mitWirtschaft(v), wSaat(v));
+
+  /* Angebote nachlegen, falls keine daliegen. Alte Spielstaende und der
+     Augenblick direkt nach der Einschreibung kommen so zu ihrer Auswahl,
+     ohne dass irgendwo ein Sonderfall steht. */
+  const mitAngeboten = (v) => {
+    const vw = mitWirtschaft(v);
+    return Array.isArray(vw.angebote) && vw.angebote.length
+      ? vw : { ...vw, angebote: sponsorAngebote(vw) };
+  };
+
+  /* Einen Vertrag schliessen. Prueft VOR dem Schreiben: Platz frei, Angebot
+     liegt wirklich vor, Firma nicht schon Partner. */
+  const sponsorAnnehmen = (v, id) => {
+    const vw = mitAngeboten(v);
+    if ((vw.sponsoren || []).length >= SPONSOR_MAX)
+      return { v, fehler: "Mehr als " + SPONSOR_MAX + " Partner tragen sich nicht." };
+    const a = (vw.angebote || []).find((x) => x.id === id);
+    if (!a) return { v, fehler: "Dieses Angebot liegt nicht vor." };
+    const r = WIRT.sponsorAnnehmen(vw, a);
+    if (r.fehler) return { v, fehler: r.fehler };
+    return { v: { ...r.v, angebote: vw.angebote.filter((x) => x.id !== id) }, fehler: null };
+  };
 
   /* Geld in der Waehrung des Landes anzeigen. Gerechnet wird immer in
      Millionen Euro; die Landeswaehrung ist eine reine Anzeigefrage. */
@@ -1255,7 +1306,7 @@ export const machVerein = (H) => {
        Laufbahn eine Saison, und die erste braucht ein Ziel. Ohne Vorsaison
        gibt es keine Platzierung, `zielSetzen` nimmt dann die Tabellenmitte
        an — die ehrlichste Annahme fuer einen Verein, den noch niemand kennt. */
-    const vw = mitWirtschaft(v);
+    const vw = mitAngeboten(v);
     return { v: { ...vw, eingeschrieben: true, ziel: vw.ziel || WIRT.zielSetzen(vw, null) } };
   };
 
@@ -1533,5 +1584,6 @@ export const machVerein = (H) => {
            FREI_AKADEMIE, FREI_VEREIN, freigeschaltet,
            VEREIN_AUSBAU, AUSBAU_MAX, ausbauStufe, ausbauKosten,
            bauStarten, baustellenText, VC_EXTRAS, extraKaufen, geldText, kasse,
+           SPONSOR_MAX, sponsorAngebote, sponsorAnnehmen, mitAngeboten,
            BONI, punkte, abschluss, neuerVerein };
 };

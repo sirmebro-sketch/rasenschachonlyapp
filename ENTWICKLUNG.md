@@ -1408,3 +1408,99 @@ abzuschwächen. Drei Wege, absteigend nach Eingriffstiefe:
   müsste sie bei einer neuen APK erhöhen — das entscheidet Codex beim Ausliefern,
   nicht ich auf dem Zweig.
 - **Kein Gerätetest.**
+
+## WIRT-P0-04 — Sponsorenwahl, und eine Korrektur an mir selbst (Claude, 17.09.2026)
+
+**Basis-Commit:** Stand des Zweigs `claude/wirt-p0-03` (Pull Request #11).
+**Branch:** `claude/wirt-p0-04`. **Vorgelegt zur Abnahme.**
+Kette: `claude/vereinswirtschaft` → `wirt-p0-02` → `wirt-p0-03` → dieser.
+
+### Zuerst die Korrektur, weil sie das Wichtigere ist
+
+Beim Aufräumen für dieses Paket ist aufgefallen, dass `sponsorAngebote` und
+`sponsorAnnehmen` **null Aufrufer** hatten. Kein Verein im Spiel bekam je einen
+Werbevertrag; eine ganze Einnahmesäule war nicht verdrahtet.
+
+Das entwertet meine Begründung aus den beiden Vermerken davor. Die Läufe zu
+P0-02 und P0-03 gingen durch den echten Spielablauf und hatten deshalb **keine
+Sponsoren** — während die isolierte Kalibrierung, gegen die ich sie verglichen
+habe, immer zwei Verträge je Saison annahm. Ich habe zwei Prüfstände mit
+verschiedenen Einnahmequellen gegeneinandergestellt, als wären sie vergleichbar.
+Der Bankrott von −451 Mio, mit dem ich eine Änderung der Gehaltskurve begründet
+habe, kam fast vollständig aus der fehlenden Säule.
+
+Nachgerechnet, gleicher Lauf, diesmal **mit** Sponsoren:
+
+| Szenario | Exponent 4 | Exponent 3 |
+|---|---:|---:|
+| gewöhnlich, Saat 20260917 | +24, 9/30 | +22, 9/30 |
+| gewöhnlich, Saat 4711 | +337, 30/30 | +337, 30/30 |
+| starker Kader (70/82) | **+161**, 28/30 | +606, 30/30 |
+| Liga 1 isoliert | 667 Mio, **167 Punkte** | 854 Mio, 214 Punkte |
+
+Mit Exponent 4 war der starke Verein nie in Gefahr. Kevin hat daraufhin
+entschieden: **Exponent bleibt 4, Pull Request #12 geschlossen, stattdessen
+dieses Paket.** Die Ursache wird behoben, nicht das Symptom.
+
+**Lehre, die im Arbeitsplan steht und hier wiederholt wird, weil sie Geld
+gekostet hat:** eine Zahl aus dem isolierten Kern und eine aus dem Spielablauf
+sind erst vergleichbar, wenn beide dieselben Einnahmequellen kennen. Wer eine
+Stellschraube anfassen will, prüft zuerst, ob alle Posten einen Aufrufer haben.
+
+### Was gebaut wurde
+
+1. **Die Angebote liegen im Spielstand (`v.angebote`), nicht im Augenblick.**
+   Das ist der Kern. Würden sie beim Zeichnen erzeugt, bekäme man bei jedem
+   Aufschlagen des Bildschirms neue — und aus der Wahl würde ein Automat, den
+   man bis zum besten Angebot drückt. Sie werden einmal je Saison aus der Saat
+   des Vereins gewürfelt und bleiben stehen, bis sie angenommen sind oder die
+   Saison vorbei ist. `mitAngeboten` legt fehlende nach, damit alte Spielstände
+   und der Augenblick nach der Einschreibung ohne Sonderfall auskommen.
+2. **`sponsorAnnehmen` prüft vor dem Schreiben:** Platz frei, Angebot liegt
+   wirklich vor, Firma nicht schon Partner. Ein abgelehnter Abschluss ändert
+   gar nichts.
+3. **Drei Partner gleichzeitig** (`SPONSOR_MAX`).
+4. **Eigener Reiter im Vereinsbildschirm:** laufende Partner mit Betrag,
+   Restlaufzeit und Vorteil; darunter die Angebote mit Betrag, Laufzeit,
+   Gesamtwert und Vorteil. Ausgelaufene Verträge werden aus der Chronik
+   gemeldet. Sind alle Plätze belegt, sagt der Bildschirm das, statt den Knopf
+   wortlos zu sperren.
+5. **Nach jeder Saison neue Angebote**, gewürfelt mit dem neuen Jahr in der
+   Saat — sonst käme zweimal dieselbe Auswahl.
+
+### Die Obergrenze ist gemessen, nicht gesetzt
+
+Endkasse in Mio, erreichte Ausbaustufen in Klammern:
+
+| Partner | gewöhnl. A | gewöhnl. B | gewöhnl. C | starker Kader | sehr stark |
+|---:|---:|---:|---:|---:|---:|
+| 2 | +2 (9) | +32 (27) | +54 (27) | −79 (10) | −491 (4) |
+| **3** | **+5 (9)** | **+124 (29)** | **+122 (29)** | −194 (10) | −397 (5) |
+| 4 | +11 (9) | +223 (30) | +174 (30) | −54 (11) | −349 (6) |
+| 5 | +6 (10) | +199 (30) | +154 (30) | −38 (11) | −344 (7) |
+| 6 | +17 (10) | +309 (30) | +345 (30) | +135 (27) | −261 (7) |
+
+Drei ist der Vorschlag: der gewöhnliche Weg trägt und streut sichtbar — ein
+Durchlauf endet knapp über null, zwei bauen fast alles. Bei sechs ist jede
+Entscheidung weg, weil man einfach alles nimmt. Der sehr starke Kader bleibt bei
+jeder Obergrenze im Minus; das ist kein Fall für mehr Einnahmen, sondern für
+WIRT-P1-04.
+
+**Geprüft:** `npm test` **158/158** (vorher 154), `npm run build` erfolgreich.
+Vier neue Regressionen: Angebote überleben ein Neuladen und hängen am Verein,
+nicht an einer Konstante; Unterschreiben prüft vor dem Schreiben und sperrt bei
+vollen Plätzen; Verträge bringen mehr Einnahmen, laufen ab und werden gemeldet;
+der Reiter rendert Angebote und laufende Verträge ohne NaN.
+**Gegenprobe:** würfelt man die Angebote bei jedem Blick neu, werden alle vier
+rot.
+
+**Offen bleibt:**
+
+- **WIRT-P1-01 — Saisonabrechnung sichtbar.** Der Spieler sieht jetzt, wo das
+  Geld herkommt, aber noch nicht, wohin es geht.
+- **WIRT-P1-05 — Abschluss.** `abschlussWirtschaft` hat weiterhin null
+  Aufrufer: die Restkasse wird beim Vereinsende nicht zu Vermächtnispunkten.
+- **WIRT-P1-04 — Folgen einer leeren Kasse.** Für den sehr starken Kader die
+  einzige Antwort, die bleibt.
+- **Preise, Rechtsform und Vorstandsziel haben keine Oberfläche.**
+- **Kein Gerätetest.**

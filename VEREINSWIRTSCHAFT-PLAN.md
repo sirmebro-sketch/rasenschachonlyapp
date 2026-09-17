@@ -238,17 +238,58 @@ das Minus in ein Plus und erreicht 18 von 30 Stufen. Ein Verein mit Stärke 78
 erreicht **eine** Stufe: die Gehälter fressen den Ertrag, bevor gebaut werden
 kann, und wer einmal hinten liegt, baut sich nicht mehr heraus.
 
-Die Ursache ist der Exponent 4 auf die Spielerstärke. Bei der Kalibrierung
-rechnete er mit einer GESCHÄTZTEN Stärke von 74 in der ersten Liga; ein
-Spieler, der seine Akademie ausreizt, kommt darüber — und (78/60)^4 ist ein
-Viertel teurer als (74/60)^4, bei jedem Spieler, jede Saison.
+**AUFGELÖST (17.09.2026) — und zwar nicht so, wie ich es zuerst gedeutet
+habe. Die Tabelle oben ist mit einem Fehler entstanden; sie bleibt stehen,
+weil der Fehler lehrreicher ist als die Zahlen.**
 
-**Das ist eine Balance-Entscheidung und gehört Kevin**, nicht dem nächsten
-Paket. Drei Wege, absteigend nach Eingriffstiefe:
+Ich hatte die Ursache beim Exponenten 4 auf die Spielerstärke vermutet und
+Kevin drei Wege vorgelegt; er entschied sich für den Exponenten 3, und das
+wurde als Pull Request #12 vorgelegt.
 
-1. **Exponent 4 → 3 oder 3,5.** Trifft genau die Spitze und lässt die Mitte
-   fast unberührt. Am zielgenauesten.
-2. **Obergrenze des Gehaltsniveaus von 2,00 auf etwa 1,6 senken.** Einfach,
-   aber nimmt auch dem mittleren Verein Druck.
-3. **Einnahmen der ersten Liga anheben** (Prämien, Sponsorenbasis). Löst es
-   auch, macht aber den Aufstieg wieder zum Selbstläufer — vermutlich falsch.
+**Die wirkliche Ursache war eine andere:** `sponsorAngebote` und
+`sponsorAnnehmen` hatten **null Aufrufer**. Kein Verein im Spiel bekam je einen
+Werbevertrag. Die Läufe oben gingen durch den Spielablauf und hatten deshalb
+keine Sponsoren — während die isolierte Kalibrierung, gegen die ich sie
+verglichen habe, immer zwei Verträge je Saison annahm. Zwei Prüfstände mit
+verschiedenen Einnahmequellen, gegeneinandergestellt, als wären sie
+vergleichbar.
+
+Nachgerechnet, gleicher Lauf, diesmal **mit** Sponsoren:
+
+| Szenario | Exponent 4 | Exponent 3 |
+|---|---:|---:|
+| gewöhnlich, Saat 20260917 | +24, 9/30 | +22, 9/30 |
+| gewöhnlich, Saat 4711 | +337, 30/30 | +337, 30/30 |
+| starker Kader (70/82) | **+161**, 28/30 | +606, 30/30 |
+| Liga 1 isoliert | 667 Mio, **167 Punkte** | 854 Mio, 214 Punkte |
+
+Mit Exponent 4 war der starke Verein nie in Gefahr. Exponent 3 schösse über und
+gäbe zugleich einen Teil der Überschussreduzierung zurück, um die es bei den
+Gehältern überhaupt ging. **Kevin hat entschieden: Exponent bleibt 4, #12 wird
+geschlossen, stattdessen P0-04.** Die Ursache wird behoben, nicht das Symptom.
+
+**Lehre für die nächste Balance-Frage:** eine Zahl aus dem isolierten Kern und
+eine aus dem Spielablauf sind erst dann vergleichbar, wenn beide dieselben
+Einnahmequellen kennen. Vorher misst man den Unterschied der Prüfstände, nicht
+den der Kalibrierung. Wer künftig eine Stellschraube anfassen will, prüft
+zuerst, ob alle Posten überhaupt einen Aufrufer haben.
+
+### Die Obergrenze für Partner — gemessen, nicht gesetzt
+
+`SPONSOR_MAX` steuert, wie viele Verträge gleichzeitig laufen dürfen. Gleicher
+Lauf, Endkasse in Mio und erreichte Ausbaustufen in Klammern:
+
+| Partner | gewöhnl. A | gewöhnl. B | gewöhnl. C | starker Kader | sehr stark |
+|---:|---:|---:|---:|---:|---:|
+| 2 | +2 (9) | +32 (27) | +54 (27) | −79 (10) | −491 (4) |
+| **3** | **+5 (9)** | **+124 (29)** | **+122 (29)** | −194 (10) | −397 (5) |
+| 4 | +11 (9) | +223 (30) | +174 (30) | −54 (11) | −349 (6) |
+| 5 | +6 (10) | +199 (30) | +154 (30) | −38 (11) | −344 (7) |
+| 6 | +17 (10) | +309 (30) | +345 (30) | +135 (27) | −261 (7) |
+
+**Drei ist der Vorschlag.** Der gewöhnliche Weg trägt und streut sichtbar — ein
+Durchlauf endet knapp über null, zwei bauen fast alles. Bei sechs ist jede
+Entscheidung weg, weil man einfach alles nimmt. Der sehr starke Kader bleibt bei
+jeder Obergrenze im Minus; das ist kein Fall für mehr Einnahmen, sondern für
+WIRT-P1-04. Eine Konstante, in einer Zeile zu ändern, falls Codex oder Kevin
+anders entscheiden.

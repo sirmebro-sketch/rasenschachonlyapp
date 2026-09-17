@@ -504,6 +504,91 @@ test('Der Ausbaureiter zeigt Geld und VC getrennt, ohne NaN',()=>{
  assert(arm.includes('Dafür fehlen'));assert(!arm.includes('NaN'));
 });
 
+test('Sponsoren: die Angebote liegen im Spielstand, nicht im Augenblick',()=>{
+ /* WIRT-P0-04. Würden die Angebote beim Zeichnen erzeugt, bekäme man bei
+    jedem Aufschlagen des Bildschirms neue — und die Auswahl wäre kein
+    Entschluss, sondern ein Automat, den man bis zum besten Angebot drückt. */
+ const v=E.VEREIN.einschreiben(spielbereiterVerein()).v;
+ assert(Array.isArray(v.angebote)&&v.angebote.length>0,'die Einschreibung legt die erste Auswahl bereit');
+ /* Zweimal nachsehen ergibt dieselben drei. */
+ assert.deepEqual(E.VEREIN.mitAngeboten(v).angebote.map(a=>a.id),v.angebote.map(a=>a.id));
+ /* Auch nach einem Neuladen, also aus dem rohen gespeicherten Stand heraus. */
+ const geladen=JSON.parse(JSON.stringify(v));
+ assert.deepEqual(E.VEREIN.mitAngeboten(geladen).angebote.map(a=>a.id),v.angebote.map(a=>a.id));
+ /* Ein anderer Verein bekommt andere Angebote — sonst hinge die Saat nicht
+    am Verein, sondern wäre eine Konstante. */
+ const anders=E.VEREIN.mitAngeboten({...v,name:'Ganz anderer Verein',angebote:null});
+ assert.notDeepEqual(anders.angebote.map(a=>a.id),v.angebote.map(a=>a.id));
+ /* Jedes Angebot ist vollständig beschrieben: ohne Betrag und Laufzeit kann
+    man nicht wählen. */
+ for(const a of v.angebote){
+  assert(a.id&&a.n&&a.branche);
+  assert(a.betrag>0&&Number.isFinite(a.betrag));
+  assert(a.laufzeit>=1&&a.laufzeit<=4);
+ }
+});
+
+test('Sponsoren: unterschreiben prüft vor dem Schreiben und belegt einen Platz',()=>{
+ let v=E.VEREIN.einschreiben(spielbereiterVerein()).v;
+ assert(E.VEREIN.sponsorAnnehmen(v,'gibtesnicht').fehler,'ein Angebot, das nicht vorliegt');
+ assert.equal(E.VEREIN.sponsorAnnehmen(v,'gibtesnicht').v,v,'abgelehnt heisst unverändert');
+ const erste=v.angebote[0];
+ const r=E.VEREIN.sponsorAnnehmen(v,erste.id);
+ assert(!r.fehler,r.fehler);
+ assert.equal(r.v.sponsoren.length,1);
+ assert.equal(r.v.sponsoren[0].id,erste.id);
+ assert.equal(r.v.sponsoren[0].rest,erste.laufzeit,'die Laufzeit beginnt vollständig');
+ assert(!r.v.angebote.some(a=>a.id===erste.id),'das Angebot ist vom Tisch');
+ /* Dieselbe Firma nicht zweimal. */
+ assert(E.VEREIN.sponsorAnnehmen({...r.v,angebote:[erste]},erste.id).fehler);
+ /* Die Plätze sind begrenzt, sonst wäre Wählen Einsammeln. */
+ const voll={...v,sponsoren:Array.from({length:E.VEREIN.SPONSOR_MAX},(_,i)=>({id:'x'+i,rest:2,betrag:1}))};
+ const abgelehnt=E.VEREIN.sponsorAnnehmen(voll,erste.id);
+ assert(abgelehnt.fehler,'bei vollen Plätzen wird abgelehnt');
+ assert(abgelehnt.fehler.includes(String(E.VEREIN.SPONSOR_MAX)));
+});
+
+test('Sponsoren: Verträge laufen ab, bringen Geld und werden nachgemeldet',()=>{
+ let v=E.VEREIN.einschreiben(spielbereiterVerein()).v;
+ const ohne=E.VEREIN.vereinSaison(v).beleg.summeEin;
+ /* Denselben Verein einmal mit zwei Verträgen. */
+ let mit=v;
+ for(const a of mit.angebote.slice(0,2)){const r=E.VEREIN.sponsorAnnehmen(mit,a.id);if(!r.fehler)mit=r.v;}
+ assert.equal(mit.sponsoren.length,2);
+ const r=E.VEREIN.vereinSaison(mit);
+ assert(r.beleg.summeEin>ohne,'Werbeverträge bringen Geld: '+r.beleg.summeEin+' gegen '+ohne);
+ /* Nach der Saison ist jeder Vertrag ein Jahr kürzer, und es liegen neue
+    Angebote für die kommende Saison bereit. */
+ for(const sp of r.v.sponsoren)assert(sp.rest>=1,'abgelaufene fallen raus statt auf 0 zu stehen');
+ const vorher=mit.sponsoren.find(s=>s.laufzeit>1);
+ if(vorher)assert.equal(r.v.sponsoren.find(s=>s.id===vorher.id).rest,vorher.laufzeit-1);
+ assert(Array.isArray(r.v.angebote)&&r.v.angebote.length>0,'neue Saison, neue Angebote');
+ assert.notDeepEqual(r.v.angebote.map(a=>a.id),mit.angebote.map(a=>a.id),'nicht dieselben wie im Vorjahr');
+ /* Ein Einjahresvertrag taucht in der Chronik als ausgelaufen auf. */
+ const einjahr=mit.sponsoren.find(s=>s.laufzeit===1);
+ if(einjahr){
+  const c=r.v.chronik[r.v.chronik.length-1];
+  assert(c.wirtschaft.ausgelaufen.includes(einjahr.n),'ausgelaufene Verträge werden gemeldet');
+ }
+});
+
+test('Der Sponsorenreiter zeigt Angebote und laufende Verträge, ohne NaN',()=>{
+ const v=E.VEREIN.einschreiben(spielbereiterVerein()).v;
+ const html=E.renderVerein(v,E.leereAkademie(),'sponsoren');
+ assert(!html.includes('NaN'));
+ assert(html.includes('Partner'));
+ assert(html.includes('Angebote für diese Saison'));
+ assert(html.includes('Unterschreiben'));
+ assert(html.includes(v.angebote[0].n),'die Firma steht mit Namen da');
+ /* Mit vollen Plätzen wird der Knopf gesperrt und gesagt, warum. */
+ const voll={...v,sponsoren:Array.from({length:E.VEREIN.SPONSOR_MAX},(_,i)=>
+   ({id:'x'+i,n:'Partner '+i,branche:'Industrie',betrag:2.5,rest:2,laufzeit:3}))};
+ const html2=E.renderVerein(voll,E.leereAkademie(),'sponsoren');
+ assert(html2.includes('Kein Platz frei'));
+ assert(html2.includes('Alle Plätze belegt'));
+ assert(!html2.includes('NaN'));
+});
+
 test('Vereinswirtschaft: die Saison rechnet ab und schreibt den Spielstand fort',()=>{
  const v0=E.VEREIN.einschreiben(spielbereiterVerein()).v;
  assert(v0.ziel,'mit der Einschreibung steht ein Vorstandsziel');
