@@ -92,3 +92,28 @@ test('CHAR-P0-01: Inventar rendert alle Optionen ohne exakte Struktur-Dubletten'
  await page.screenshot({path:testInfo.outputPath('charakter-inventar-frisuren.png'),fullPage:true});
  expect(errors).toEqual([]);
 });
+
+test('CHAR-P0-02: sichtbare Porträtkette bleibt über Karriere, Halle, Karte und Kader identisch',async({page},testInfo)=>{
+ const errors=[];page.on('pageerror',e=>errors.push(e.message));
+ await page.goto('/.preview/spieltest.html');
+ await page.getByRole('button',{name:'Porträtkette',exact:true}).click();
+ await expect(page.getByRole('heading',{name:'Porträt-Identitätskette',exact:true})).toBeVisible();
+ const stufen=['portrait-karriere','portrait-halle','portrait-sammlung','portrait-kader'];
+ for(const id of stufen){
+  const panel=page.getByTestId(id);
+  await expect(panel.locator('svg[aria-label="Spielerporträt"]')).toHaveCount(1);
+  await expect(panel).toHaveAttribute('data-portrait',/.+/);
+ }
+ const daten=await Promise.all(stufen.map(id=>page.getByTestId(id).getAttribute('data-portrait')));
+ expect(new Set(daten).size,'Avatar, Merkmale und Geschlecht müssen in allen vier Stufen exakt erhalten bleiben').toBe(1);
+ // Karriere und Ruhmeshalle nutzen denselben neutralen Avatar-Kontext und müssen daher auch zeichnerisch gleich sein.
+ const direkt=await Promise.all(stufen.slice(0,2).map(id=>page.getByTestId(id).locator('svg[aria-label="Spielerporträt"]').evaluate(svg=>{
+  const c=svg.cloneNode(true),map=new Map();
+  [...c.querySelectorAll('[id]')].forEach((el,i)=>{const alt=el.id,neu='ID'+i;map.set(alt,neu);el.id=neu;});
+  [c,...c.querySelectorAll('*')].forEach(el=>[...el.attributes].forEach(a=>{let v=a.value;for(const [alt,neu] of map)v=v.split(alt).join(neu);el.setAttribute(a.name,v);}));
+  c.removeAttribute('width');c.removeAttribute('height');return c.outerHTML;
+ })));
+ expect(direkt[0]).toBe(direkt[1]);
+ await page.screenshot({path:testInfo.outputPath('portraet-identitaetskette.png'),fullPage:true});
+ expect(errors).toEqual([]);
+});
