@@ -7,7 +7,7 @@
     "build": "vite build",
     "test": "node --test tools/*.test.cjs",
     "dev": "vite",
-    "preview:gallery": "node tools/visuelle-vorschau.cjs && node tools/charakter-inventar.cjs && node tools/kopfformen-vorschau.cjs && node tools/spieltest.cjs",
+    "preview:gallery": "node tools/visuelle-vorschau.cjs && node tools/charakter-inventar.cjs && node tools/kopfformen-vorschau.cjs && node tools/gesichtszuege-vorschau.cjs && node tools/spieltest.cjs",
     "test:browser": "playwright test"
   },
   "dependencies": {
