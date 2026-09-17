@@ -418,6 +418,114 @@ test('Rechtsform: mehr Kapital gegen weniger Rückhalt', () => {
   for (let i = 1; i < reihe.length; i++) assert(reihe[i] > reihe[i - 1], 'Reihenfolge der Rechtsformen');
 });
 
+test('Gehaltsniveau: steigt schnell mit dem Erfolg, fällt langsam danach', () => {
+  const oben = verein({ ligastufe: 1 });
+  const hoch = W.gehaltsniveauNeu(oben, erg({ rang: 1 }));
+  assert(hoch > 1, 'wer oben mitspielt, zahlt mehr als der Durchschnitt');
+  assert(hoch <= W.GEHALT_MAX);
+  /* Zweimal dieselbe Saison: der zweite Schritt ist kleiner als der erste,
+     weil nur der halbe Abstand zum Ziel gegangen wird. */
+  const zweiter = W.gehaltsniveauNeu({ ...oben, gehaltsniveau: hoch }, erg({ rang: 1 }));
+  assert(zweiter > hoch, 'anhaltender Erfolg treibt weiter');
+  assert(zweiter - hoch < hoch - 1, 'aber in kleineren Schritten');
+  /* Abgestiegen mit Spitzengehältern: es geht abwärts, aber langsamer als
+     es hinaufging — eine Gehaltsstruktur wird ein Verein nicht in einem
+     Jahr los, und genau das macht anhaltenden Erfolg teuer. */
+  const nach = W.gehaltsniveauNeu({ ...verein({ ligastufe: 4 }), gehaltsniveau: 1.8 }, erg({ rang: 14 }));
+  assert(nach < 1.8 && nach >= W.GEHALT_MIN, 'das Niveau sinkt, aber nicht unter die Grenze');
+  assert(1.8 - nach < hoch - 1, 'langsamer abwärts als aufwärts');
+});
+
+test('Die Abrechnung schreibt das Gehaltsniveau fort und weist es im Beleg aus', () => {
+  const v = verein({ ligastufe: 1, kasse: 50 });
+  const { v: neu, beleg } = W.saisonAbrechnung(v, erg({ rang: 1 }), 5);
+  assert(Number.isFinite(neu.gehaltsniveau) && neu.gehaltsniveau > 1, 'das Niveau wandert mit');
+  assert.equal(beleg.gehalt.vorher, 1, 'bezahlt wird, was vorher vereinbart war');
+  assert.equal(beleg.gehalt.neu, neu.gehaltsniveau, 'Beleg und Verein nennen dieselbe Zahl');
+  assert(beleg.gehalt.kader.anzahl > 0 && beleg.gehalt.kader.summe > 0);
+  /* Dieselbe Mannschaft, ein Jahr Erfolg später: sie kostet mehr. */
+  assert(W.saisonKosten(neu).summe > W.saisonKosten(v).summe, 'anhaltender Erfolg wird teurer');
+});
+
+test('Gehälter ersetzen die alte Personalpauschale, statt sie zu ergänzen', () => {
+  const k = W.saisonKosten(verein({ ligastufe: 1 }));
+  assert(!k.posten.some((p) => p.k.startsWith('Personal und Mannschaft')),
+    'die Pauschale ist weg — sonst würde doppelt gezahlt (Arbeitsplan WIRT-P1-03)');
+  assert(k.posten.some((p) => p.k.startsWith('Spielergehälter')));
+  assert(k.posten.some((p) => p.k.startsWith('Mitarbeiter und Verwaltung')));
+  assert(Math.abs(k.posten.reduce((a, x) => a + x.v, 0) - k.summe) < 0.02, 'Summe ist die Summe der Posten');
+});
+
+test('Spielergehälter hängen am Kader und an der Liga', () => {
+  const mit = (ovrs, zu) => W.kaderKosten(verein({ ...zu, kader: ovrs.map((ovr) => ({ ovr })) }));
+  /* Stärke schlägt überproportional durch. */
+  assert(mit([80], { ligastufe: 1 }).summe > mit([50], { ligastufe: 1 }).summe * 5,
+    'ein Spitzenspieler kostet ein Vielfaches, nicht ein bisschen mehr');
+  assert.equal(mit([80], { ligastufe: 1 }).geschaetzt, false);
+  /* Derselbe Spieler kostet oben mehr als unten — die Liga gibt es her. */
+  assert(mit([70, 70], { ligastufe: 1 }).summe > mit([70, 70], { ligastufe: 5 }).summe * 4);
+  /* Ohne Kader wird geschätzt: der Rechenkern muss auch isoliert laufen,
+     solange der Anschluss an `verein.js` aussteht (WIRT-P0-02). */
+  const ohne = W.kaderKosten(verein({ ligastufe: 3 }));
+  assert.equal(ohne.geschaetzt, true);
+  assert.equal(ohne.anzahl, W.KADER_SOLL);
+  assert(ohne.summe > 0 && Number.isFinite(ohne.summe));
+});
+
+test('Das Gehaltsniveau bleibt in seinen Grenzen, auch bei absurder Vorgeschichte', () => {
+  assert(W.gehaltsZiel(verein({ ligastufe: 1, bilanz: { meister: 99, aufstiege: 99 } }),
+    erg({ rang: 1 })) <= W.GEHALT_MAX);
+  assert(W.gehaltsZiel(verein({ ligastufe: 6, bilanz: { abstiege: 99 } }),
+    erg({ rang: 18 })) >= W.GEHALT_MIN);
+  /* Alte Spielstände kennen das Feld nicht und beginnen bei 100 %. */
+  assert.equal(W.gehaltsniveau({}), 1);
+  assert.equal(W.gehaltsniveau({ gehaltsniveau: 'kaputt' }), 1);
+  assert.equal(W.gehaltsniveau({ gehaltsniveau: 99 }), W.GEHALT_MAX, 'gedeckelt statt geglaubt');
+});
+
+test('Fünfzehn Saisons: der Weg nach oben bleibt begehbar, oben reisst der Deckel nicht', () => {
+  /* Diese Regression hat einen konkreten Anlass. Der erste Entwurf der
+     Gehälter rechnete sie ohne Ligateiler — ein Viertligist zahlte damit
+     11,4 Mio bei 17 Mio Einnahmen und erreichte in fünfzehn Jahren NULL
+     Ausbaustufen. Der Rechenkern war in sich stimmig und die 138 anderen
+     Regressionen blieben grün; erst der Langzeitlauf zeigte es. */
+  const lauf = (stufe) => {
+    let v = verein({ ligastufe: stufe, kasse: 0, ausbau: {}, baustellen: {}, stimmung: 60 });
+    for (let s = 1; s <= 15; s++) {
+      const saat = stufe * 1000 + s, e = erg({ rang: 3 });
+      v = { ...v, ziel: W.zielSetzen(v, 3, 18) };
+      for (const a of W.sponsorAngebote(v, saat).sort((x, y) => y.betrag - x.betrag).slice(0, 2)) {
+        const r = W.sponsorAnnehmen(v, a); if (!r.fehler) v = r.v;
+      }
+      let weiter = true;
+      while (weiter) {
+        weiter = false;
+        for (const x of W.AUSBAU.map((a) => ({ id: a.id, k: W.ausbauKosten(v, a.id) }))
+               .filter((x) => x.k != null && !(v.baustellen || {})[x.id]).sort((a, b) => a.k - b.k)) {
+          const r = W.bauStart(v, x.id);
+          if (!r.fehler) { v = r.v; weiter = true; break; }
+        }
+      }
+      v = W.saisonAbrechnung(v, e, saat).v;
+    }
+    return { stufen: W.AUSBAU.reduce((a, x) => a + (W.ausbauStufe(v, x.id) - 1), 0),
+             kasse: v.kasse, punkte: W.abschlussWirtschaft(v).punkte };
+  };
+  /* Unten muss sich Aufbau lohnen: wer fünfzehn Jahre ordentlich wirtschaftet,
+     kommt voran, auch im Unterhaus. */
+  for (const stufe of [2, 3, 4, 5]) {
+    const r = lauf(stufe);
+    assert(r.stufen >= 12, 'Liga ' + stufe + ' erreicht nur ' + r.stufen + ' von 30 Ausbaustufen');
+    assert(r.kasse > -5, 'Liga ' + stufe + ' endet bei ' + r.kasse + ' Mio');
+  }
+  /* Oben darf Geld nicht aufhören, eine Entscheidung zu sein: wer den
+     Punktedeckel reisst, für den ist die letzte Saison wirtschaftlich egal. */
+  const eins = lauf(1);
+  assert.equal(eins.stufen, 30, 'die erste Liga schafft weiterhin den Vollausbau');
+  assert(eins.punkte < W.PUNKTE_DECKEL,
+    'der Überschuss reisst den Deckel wieder (' + eins.kasse + ' Mio, ' + eins.punkte + ' Punkte)');
+});
+
 test('Alles bleibt endlich, auch mit allen neuen Systemen', () => {
   const faelle = [
     verein({ ligastufe: 1, rechtsform: 'ag', stimmung: 100, preise: { ticket: 1.6, gastro: 1.6, merch: 1.6 },

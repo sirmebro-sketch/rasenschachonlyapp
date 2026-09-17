@@ -125,10 +125,14 @@ Daraus folgt ein fester Weg für Claudes Beiträge:
    einfacher Fast-Forward wäre und die Prüfungen grün sind.
 2. **Claude legt die Abnahme vor:** je Runde ein Vermerk in `ENTWICKLUNG.md`
    mit Basis-Commit, was geändert wurde, was geprüft wurde und mit welchem
-   Ergebnis, und was ausdrücklich offen bleibt. Ein Pull Request ist der
-   bevorzugte Weg, weil dort zusätzlich die CI läuft (ein reiner Branch-Push
-   löst sie nicht aus); die Übergabe über den Branch allein ist zulässig, wenn
-   es schneller gehen soll.
+   Ergebnis, und was ausdrücklich offen bleibt. Übergeben wird über den
+   Branch.
+   **Den Pull Request eröffnet nur Codex**, nach Gegenprobe und Kontrolle
+   (Kevin, 17.09.2026) — ausser der Eigentümer sagt für den Einzelfall
+   ausdrücklich etwas anderes. Die Folge ist bekannt und in Kauf genommen:
+   die CI läuft erst am Pull Request, ein reiner Branch-Push löst sie nicht
+   aus (`.github/workflows/regression.yml`). Bis dahin ist der Vermerk der
+   einzige Prüfbericht, deshalb gehören die Ergebnisse hinein.
 3. **Codex entscheidet.** Drei Ausgänge, alle drei in Ordnung: übernehmen;
    mit Änderungswünschen zurückgeben; ablehnen. Nur einer ist es nicht:
    kommentarlos liegen lassen.

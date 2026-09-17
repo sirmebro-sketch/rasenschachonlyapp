@@ -118,12 +118,23 @@ Karriereabschluss.
 Plätze, Auslastung und Zuschauerzahl sollen im Spiel sichtbar sein, nicht nur
 in der Rechnung. Ausverkauftes Haus als eigenes Ereignis.
 
-### WIRT-P1-03 – Spielergehälter statt Pauschale — OFFEN
+### WIRT-P1-03 – Spielergehälter statt Pauschale — VORGELEGT (Claude, 17.09.2026)
 
-Die laufenden Kosten schätzen das Personal derzeit pauschal aus Ligastufe und
-Stadiongröße. Echte Verträge je Spieler hängen am Kader und ändern die
-Transferlogik. Wer das baut, **ersetzt** den Posten „Personal und Mannschaft",
-statt ihn zu ergänzen — sonst wird doppelt gezahlt.
+Kevin: „Spielergehälter und allgemein laufende Kosten und Mitarbeitergehälter
+steigen bei langanhaltendem Erfolg."
+
+Die Pauschale „Personal und Mannschaft" ist **ersetzt**, nicht ergänzt. An
+ihrer Stelle stehen zwei Posten: **Spielergehälter** (0,9 Mio × (ovr/60)^4 ÷
+Ligastufe je Spieler, aus dem Kader oder je Ligastufe geschätzt) und
+**Mitarbeiter und Verwaltung**. Beide werden mit dem **Gehaltsniveau**
+multipliziert — einer Ratsche zwischen 0,75 und 2,00, die je Saison den halben
+Abstand nach oben und ein Sechstel nach unten geht. Erfolg wird damit dauerhaft
+teuer, ein einzelner guter Lauf nicht bestraft.
+
+**Kader anschliessen steht noch aus.** `kaderKosten` liest `v.kader`, wenn es
+da ist, und schätzt sonst aus der Ligastufe. Solange `verein.js` keinen Kader
+führt, rechnet der Kern mit der Schätzung — richtig, aber nicht individuell.
+Echte Verträge je Spieler bleiben ein eigenes Paket.
 
 ### WIRT-P1-04 – Folgen einer leeren Kasse — OFFEN
 
@@ -154,7 +165,14 @@ Abschlusspunkt, gedeckelt bei 250 (ein Aufstieg wiegt 120). Wirtschaften lohnt
 damit bis zur letzten Saison. Die Verdrahtung in `verein.js` steht noch aus
 (WIRT-P1-05); die Funktion `abschlussWirtschaft` ist fertig und geprüft.
 
-**Weiterhin offen: der Überschuss oben.** Ein Erstligist hat nach Vollausbau
-rund 1.250 Mio in der Kasse und reisst den Punktedeckel. Das ist der fehlende
-grosse Ausgabenposten, die Spielergehälter (WIRT-P1-03). Bis dahin bekannt und
-dokumentiert, nicht übersehen.
+**Gelöst (17.09.2026): der Überschuss oben ist halbiert.** Mit den
+Spielergehältern und der Erfolgsratsche (WIRT-P1-03) endet der Erstligist im
+gleichen Lauf bei 667 statt 1.435 Mio, das sind 167 statt 250 Abschlusspunkte
+— der Deckel wird nicht mehr gerissen, die letzte Saison bleibt also
+wirtschaftlich eine Entscheidung. Der Weg von unten bleibt begehbar: Liga 2
+weiterhin 30/30, Liga 5 22/30.
+
+**Neu offen: der Kader ist noch geschätzt.** Die Gehälter rechnen je Ligastufe
+mit einem Durchschnittsspieler, weil `verein.js` keinen Kader führt. Sobald er
+da ist, wird die Zahl individuell — und die Kalibrierung ist erneut zu
+prüfen.

@@ -1134,3 +1134,97 @@ Plakettenfaktor.
 Punktedeckel reisst) — das ist der fehlende Posten Spielergehälter
 (WIRT-P1-03). Anschluss an Spielablauf und Oberfläche unverändert offen
 (WIRT-P0-02 bis P0-04), kein Gerätetest.
+
+## WIRT-P1-03 — Spielergehälter mit Erfolgsratsche (Claude, 17.09.2026)
+
+**Basis-Commit:** `c632163` (Zusammenführung von `origin/main` = `a96660f`).
+**Branch:** `claude/vereinswirtschaft`. **Vorgelegt zur Abnahme, nicht
+zusammengeführt.**
+
+**Auftrag.** Kevin: „Lass uns die Sache mit dem Überschuss angehen!
+Spielergehälter und allgemein laufende Kosten und Mitarbeitergehälter steigen
+bei langanhaltendem Erfolg. Vielleicht bekommen wir es damit etwas reduziert."
+
+Damit ist der Punkt erledigt, der im Vermerk davor ausdrücklich offen blieb:
+ein Erstligist sass nach fünfzehn Jahren auf rund 1.250 Mio und riss den
+Punktedeckel — ab dem Jahr, in dem alles gebaut war, war Wirtschaften egal.
+
+**Was geändert wurde** (`vereinswirtschaft.js`):
+
+1. **Die Pauschale „Personal und Mannschaft" ist ersetzt, nicht ergänzt.** Das
+   stand so im Arbeitsplan (WIRT-P1-03) und war die eine Falle: wer den Posten
+   stehen lässt und Gehälter danebenstellt, zahlt doppelt. An seiner Stelle
+   stehen **Spielergehälter** und **Mitarbeiter und Verwaltung**; „Betrieb und
+   Unterhalt" sank im selben Zug von 0,85 auf 0,55 je Ausbaustufe, weil das
+   Personal dort mit drinsteckte.
+2. **Gehalt je Spieler: 0,9 Mio × (ovr/60)^4 ÷ Ligastufe.** Der Exponent
+   bildet ab, dass Gehälter nicht linear mit der Stärke wachsen; der Teiler,
+   dass derselbe Spieler in der ersten Liga mehr verdient als in der vierten.
+   Ohne Kader wird je Ligastufe geschätzt (74/66/60/55/51/48), damit der
+   Rechenkern auch isoliert läuft, solange `verein.js` keinen Kader führt.
+3. **Gehaltsniveau als Ratsche, 0,75 bis 2,00.** Ziel aus Ligastufe,
+   Platzierung und Vorgeschichte (Meisterschaften und Aufstiege, gedeckelt bei
+   +0,55). Je Saison wird der **halbe** Abstand nach oben gegangen und **ein
+   Sechstel** nach unten. Anhaltender Erfolg wird dadurch dauerhaft teuer,
+   eine einzelne gute Saison nicht bestraft — und ein Absteiger wird seine
+   Gehaltsstruktur nicht in einem Jahr los.
+4. **Die Abrechnung schreibt das Niveau fort.** Bezahlt wird die abgelaufene
+   Saison mit dem alten Niveau; das neue gilt ab der kommenden. Der Beleg
+   weist `gehalt: { vorher, neu, kader }` aus, damit die Oberfläche später
+   dieselbe Quelle liest wie die Buchung.
+
+**Nachgerechnet.** Fünfzehn Saisons je Ligastufe, gieriger Verein (Preise auf
+dem rechnerischen Optimum, die zwei besten Sponsorenangebote angenommen, jede
+bezahlbare Stufe sofort begonnen), Platz 3 in jeder Liga, gleiches Verfahren
+für beide Spalten:
+
+| Liga | Kasse vorher | Kasse nachher | Ausbau vorher | Ausbau nachher | Punkte vorher | Punkte nachher | Niveau am Ende |
+|---:|---:|---:|---:|---:|---:|---:|---:|
+| 1 | 1.435 | **667** | 30/30 | 30/30 | 250 (Deckel) | **167** | 1,61 |
+| 2 | 537 | 302 | 30/30 | 30/30 | 134 | 76 | 1,29 |
+| 3 | 151 | 86 | 30/30 | 29/30 | 38 | 21 | 1,17 |
+| 4 | 32 | 22 | 27/30 | 24/30 | 8 | 6 | 1,11 |
+| 5 | 42 | 24 | 24/30 | 22/30 | 10 | 6 | 1,06 |
+
+Der Überschuss oben ist mehr als halbiert und der Punktedeckel wird nicht mehr
+gerissen — die letzte Saison bleibt eine wirtschaftliche Entscheidung. Unten
+bleibt der Weg begehbar.
+
+**Ein Fehler auf dem Weg, weil er sich wiederholen kann.** Die erste Fassung
+rechnete die Gehälter **ohne Ligateiler**. In sich stimmig, alle 138
+bestehenden Regressionen grün — und trotzdem falsch: ein Viertligist zahlte
+11,4 Mio Gehälter bei 17 Mio Einnahmen und erreichte in fünfzehn Jahren **0
+von 30** Ausbaustufen, Liga 3 kam auf 8. Aus „sich hocharbeiten" wurde „nichts
+geht". Gefunden hat das nicht der Prüfstand, sondern erst der Langzeitlauf.
+Deshalb ist er jetzt selbst eine Regression.
+
+**Geprüft:** `npm test` **144/144** (vorher 138), `npm run build` erfolgreich.
+Sechs neue Regressionen im Modul: Ratsche schnell hoch und langsam runter;
+Fortschreibung und Beleg; die Pauschale ist nachweislich verschwunden; Gehälter
+folgen Kader und Liga; Grenzen halten auch bei absurder Vorgeschichte; und ein
+Fünfzehn-Saisons-Lauf, der unten mindestens 12 von 30 Stufen und oben den
+Vollausbau **unter** dem Punktedeckel verlangt. Gegenprobe gemacht: nimmt man
+den Ligateiler wieder heraus, werden genau diese Regressionen rot (`not ok 29`
+und `not ok 31`, „Liga 3 erreicht nur 8 von 30 Ausbaustufen"). Die CI lief
+nicht, weil ein Branch-Push sie nicht auslöst.
+
+**Zusätzlich, weil die Regel sonst in der nächsten Sitzung wieder falsch
+gilt:** `CLAUDE.md` und `README.md` sagten „ein Pull Request ist der
+bevorzugte Weg". Kevin am 17.09.2026: „Pull requests macht nur Astra, nach
+Gegenprobe und Kontrolle! Außer ich sage explizit was anderes!" Beide Stellen
+sind entsprechend korrigiert, samt der in Kauf genommenen Folge, dass die CI
+damit erst an Codex' Pull Request läuft.
+
+**Offen bleibt:**
+
+- **Der Kader ist geschätzt, nicht gelesen.** `kaderKosten` liest `v.kader`,
+  wenn es da ist — `verein.js` führt aber keinen. Sobald er da ist, ist die
+  Kalibrierung erneut zu prüfen.
+- **Anschluss an Spielablauf und Oberfläche** unverändert offen (WIRT-P0-02
+  bis P0-04). Das Gehaltsniveau braucht dabei ein Feld im Spielstand;
+  alte Spielstände ohne `gehaltsniveau` beginnen bei 100 % (geprüft).
+- **Kein Gerätetest.** Die Zahlen stammen aus Läufen, nicht aus dem Spiel.
+- **Ob 667 Mio oben noch zu viel sind, entscheidet Kevin.** Der Lauf ist der
+  bestmögliche Verlauf, nicht der mittlere; ein normaler Verlauf liegt
+  darunter. Nachschärfen ginge über die Obergrenze des Niveaus (2,00) oder
+  das Tempo nach oben (halber Abstand).

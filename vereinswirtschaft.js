@@ -485,25 +485,103 @@ export function saisonEinnahmen(v, erg = {}) {
    Erstligist mit 64.000 Plätzen beschäftigt Hunderte, ein Fünftligist ein
    Dutzend. Deshalb hängt er an Ligastufe UND Stadiongrösse.
 
-   SPIELERGEHÄLTER SIND HIER NICHT EINZELN ABGEBILDET. Der Posten schätzt sie
-   pauschal mit. Echte Verträge je Spieler hängen am Kader, ändern die
-   Transferlogik und gehören in ein eigenes Paket — siehe Arbeitsplan
-   WIRT-P1-03. Wer das baut, ersetzt diesen Posten, statt ihn zu ergänzen. */
+   DIE SPIELERGEHÄLTER STEHEN SEIT 17.09.2026 ALS EIGENER POSTEN DA und haben
+   die alte Pauschale „Personal und Mannschaft" ersetzt, nicht ergänzt — sonst
+   würde doppelt gezahlt (Arbeitsplan WIRT-P1-03). Sie hängen am Kader und am
+   Gehaltsniveau; „Betrieb und Unterhalt" wurde im selben Zug von 0,85 auf
+   0,55 je Ausbaustufe gesenkt, weil das Personal dort mit drinsteckte. */
 export function saisonKosten(v) {
   const posten = [];
   const dazu = (k, betrag) => { const x = Math.round(betrag * 100) / 100; if (x > 0) posten.push({ k, v: x }); };
   const stufe = v?.ligastufe || 3;
   const stufen = AUSBAU.reduce((a, x) => a + (stufeVon(v, x.id) - 1), 0);
-  /* Der Exponent 1,5 ist nachgerechnet, nicht geschätzt. Mit 0,85 zahlte ein
-     Fünftligist 7,3 Mio Personal bei 9,1 Mio Einnahmen und stand fünfzehn
-     Jahre im Minus, ohne je eine Ausbaustufe zu erreichen — aus „sich
-     hocharbeiten" wurde „nichts geht". Mit 1,5 zahlt er 1,8 und wächst
-     langsam, während ein Erstligist 20 zahlt. */
-  dazu("Personal und Mannschaft", 20 / Math.pow(stufe, 1.5) + plaetze(v) / 1000 * .40);
-  dazu("Betrieb und Unterhalt", 1.2 + stufen * 0.85);
+  const niveau = gehaltsniveau(v);
+  const k = kaderKosten(v);
+  dazu("Spielergehälter · " + k.anzahl + " Spieler, Ø " + k.schnitt
+       + (niveau > 1.02 ? " · Niveau " + Math.round(niveau * 100) + " %" : ""), k.summe * niveau);
+  dazu("Mitarbeiter und Verwaltung", (2.2 / Math.pow(stufe, .6) + stufen * .55 + plaetze(v) / 1000 * .22) * niveau);
+  dazu("Betrieb und Unterhalt", 1.2 + stufen * 0.55);
   dazu("Spielbetrieb und Reisen", Math.max(.5, 3.5 / Math.pow(stufe, .5)));
   const summe = Math.round(posten.reduce((a, x) => a + x.v, 0) * 100) / 100;
-  return { posten, summe };
+  return { posten, summe, niveau, kader: k };
+}
+
+/* ---------------------------------------------------------- Gehälter
+   Kevin, 17.09.2026: „Spielergehälter und allgemein laufende Kosten und
+   Mitarbeitergehälter steigen bei langanhaltenden Erfolg."
+
+   DAS PROBLEM, DAS DAMIT GELÖST WIRD. Bis dahin schätzte ein einziger Posten
+   „Personal und Mannschaft" das Personal pauschal aus Ligastufe und
+   Stadiongrösse. Der wuchs mit dem Ausbau, aber nicht mit dem ERFOLG — und
+   deshalb sass ein Erstligist nach fünfzehn Jahren auf 1.248 Mio, die nichts
+   mehr kaufen konnten.
+
+   DIE RATSCHE. Wer oben mitspielt, zahlt Spitzengehälter: die Spieler
+   verlangen sie, die Konkurrenz bietet sie, und der Stab wächst mit. Das
+   Niveau steigt schnell (halber Abstand zum Ziel je Saison) und fällt
+   langsam (ein Sechstel) — ein Verein wird seine Gehaltsstruktur nach einem
+   Abstieg nicht in einem Jahr los. Genau das macht anhaltenden Erfolg teuer,
+   ohne einen einzelnen guten Lauf zu bestrafen.
+
+   Die Spanne 0,75 bis 2,00 ist nachgerechnet, nicht geraten: darunter wäre
+   der Effekt unsichtbar, darüber frisst er auch einen gesunden Verein auf. */
+export const GEHALT_MIN = 0.75, GEHALT_MAX = 2.0;
+export const gehaltsniveau = (v) => {
+  const x = Number(v?.gehaltsniveau);
+  return Number.isFinite(x) ? Math.max(GEHALT_MIN, Math.min(GEHALT_MAX, x)) : 1;
+};
+
+/* Wohin das Niveau strebt: Ligastufe, aktuelle Platzierung und die Summe der
+   bisherigen Erfolge. Der Erfolgsanteil ist gedeckelt, sonst würde ein Verein
+   mit fünfzehn Meisterschaften unbezahlbar. */
+export function gehaltsZiel(v, erg = {}) {
+  const stufe = v?.ligastufe || 3;
+  const N = Number(erg.N) || 18;
+  const platzTeil = 1 - ((Number(erg.rang) || 10) - 1) / Math.max(1, N - 1);
+  const b = v?.bilanz || {};
+  const geschichte = Math.min(.55, (b.meister || 0) * .075 + (b.aufstiege || 0) * .05);
+  const ligaTeil = .55 + .75 / Math.pow(stufe, .8);
+  return Math.max(GEHALT_MIN, Math.min(GEHALT_MAX,
+    ligaTeil + platzTeil * .35 + geschichte - (b.abstiege || 0) * .04));
+}
+
+/* Schnell hoch, langsam runter. */
+export function gehaltsniveauNeu(v, erg = {}) {
+  const jetzt = gehaltsniveau(v);
+  const ziel = gehaltsZiel(v, erg);
+  const tempo = ziel > jetzt ? .5 : 1 / 6;
+  return Math.round((jetzt + (ziel - jetzt) * tempo) * 1000) / 1000;
+}
+
+/* Was der Kader kostet, bevor das Niveau daraufkommt.
+
+   Der Exponent 4 ist Absicht: Gehälter wachsen im Fussball nicht linear mit
+   der Stärke. Ein Spieler mit 85 kostet nicht anderthalbmal so viel wie einer
+   mit 55, sondern das Sechsfache.
+
+   DER TEILER `stufe` IST NACHGERECHNET, NICHT GERATEN. Ohne ihn zahlte ein
+   Viertligist 11,4 Mio Gehälter bei 17 Mio Einnahmen und erreichte in
+   fünfzehn Jahren **0 von 30** Ausbaustufen — das alte „sich hocharbeiten"
+   war damit tot (Lauf vom 17.09.2026, Tabelle im Vermerk). Er hat einen
+   Grund über die Rechnung hinaus: derselbe Spieler verdient in der ersten
+   Liga mehr als in der vierten, weil die Liga es hergibt, nicht weil er
+   besser ist. Gerechnet: 0,9 Mio × (ovr/60)^4 ÷ Ligastufe je Spieler.
+
+   OHNE KADER wird geschätzt. Der Rechenkern muss auch dann eine sinnvolle
+   Zahl liefern, wenn er isoliert läuft — im Prüfstand und bevor der Anschluss
+   an `verein.js` steht (WIRT-P0-02). Die Schätzwerte je Ligastufe stammen aus
+   den Vereinsstärken des Spiels. */
+export const KADER_SOLL = 18;
+const SCHAETZ_OVR = [0, 74, 66, 60, 55, 51, 48];
+export function kaderKosten(v) {
+  const kader = Array.isArray(v?.kader) ? v.kader.filter((s) => s && Number.isFinite(Number(s.ovr))) : [];
+  const stufe = Math.max(1, Math.min(6, v?.ligastufe || 3));
+  const werte = kader.length ? kader.map((s) => Number(s.ovr))
+    : Array.from({ length: KADER_SOLL }, () => SCHAETZ_OVR[stufe]);
+  const summe = werte.reduce((a, o) => a + 0.9 * Math.pow(Math.max(30, o) / 60, 4) / stufe, 0);
+  return { anzahl: werte.length, geschaetzt: !kader.length,
+           schnitt: Math.round(werte.reduce((a, o) => a + o, 0) / Math.max(1, werte.length)),
+           summe: Math.round(summe * 100) / 100 };
 }
 
 /* Die vollständige Abrechnung einer Saison: Einnahmen minus Kosten auf die
@@ -521,6 +599,11 @@ export function saisonAbrechnung(v, erg = {}, saat = 0) {
   const ereignisGeld = ereignisse.reduce((a, e) => a + (e.geld || 0), 0);
   const ziel = zielPruefen(v, erg);
   const bau = bauTicken(v);
+
+  /* Das Gehaltsniveau der ABGELAUFENEN Saison steckt in `aus`; hier entsteht
+     das der kommenden. Bezahlt wird, was vorher vereinbart war — der Erfolg
+     dieser Saison verteuert den Kader erst ab dem nächsten Jahr. */
+  const gehaltNeu = gehaltsniveauNeu(v, erg);
 
   const kasseVorher = Math.round((Number(v?.kasse) || 0) * 100) / 100;
   const ergebnis = Math.round((ein.summe - aus.summe + ereignisGeld + (ziel.praemie || 0)) * 100) / 100;
@@ -540,14 +623,15 @@ export function saisonAbrechnung(v, erg = {}, saat = 0) {
     + ereignisse.reduce((a, e) => a + (e.stimmung || 0), 0))));
 
   return {
-    v: { ...v, kasse, sponsoren, stimmung: stimmungNeu,
+    v: { ...v, kasse, sponsoren, stimmung: stimmungNeu, gehaltsniveau: gehaltNeu,
          ausbau: bau.ausbau, baustellen: bau.baustellen, ziel: null },
     beleg: { kasseVorher, einnahmen: ein.posten, ausgaben: aus.posten,
              summeEin: ein.summe, summeAus: aus.summe, ergebnis, kasse,
              zuschauer: ein.zuschauer, auslastung: ein.auslastung,
              ausgelaufen: ausgelaufen.map((s) => s.n),
              ereignisse, ziel, bau, stimmung: stimmungNeu,
-             stimmungVorher: v?.stimmung ?? 60 },
+             stimmungVorher: v?.stimmung ?? 60,
+             gehalt: { vorher: aus.niveau, neu: gehaltNeu, kader: aus.kader } },
   };
 }
 
