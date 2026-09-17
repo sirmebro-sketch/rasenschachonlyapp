@@ -588,6 +588,69 @@ test('Vereinswirtschaft: dieselbe Saison zweimal ergibt dasselbe Geld',()=>{
  assert(Number.isFinite(c.beleg.ergebnis));
 });
 
+test('Gehaltskurve: weder der gewöhnliche noch der starke Verein geht unter',()=>{
+ /* DER LAUF, DER DIE GEHALTSKURVE ENTSCHIEDEN HAT. Mit dem Exponenten 4 ging
+    ein Verein mit starkem Kader und kleinem Stadion in fünfzehn Jahren auf
+    -539 Mio: er konnte nicht bauen, weil die Gehälter alles frassen, und wer
+    einmal hinten liegt, baut sich nicht mehr heraus. Kevin hat am 17.09.2026
+    den Exponenten 3 gewählt (WIRT-P0-03, Vermerk in ENTWICKLUNG.md).
+
+    Zwei Fälle, weil einer nicht reicht: der gewöhnliche Weg allein hätte die
+    Nachbesserung NICHT erzwungen — er war auch mit 4 tragfähig. Erst der
+    starke Kader zeigt den Unterschied. Beide stehen hier, damit eine spätere
+    Änderung an beiden Enden stolpert. */
+ const pos=['TW','IV','IV','AV','AV','ZDM','ZM','ZM','AF','AF','ST','TW','IV','ZM','ST','AV','ZOM','AF'];
+ /* `nachwuchs` ist die Stärke, mit der aufgefüllt wird: null heisst
+    Akademieniveau, eine Zahl heisst „der Verein zieht dauerhaft Starke hoch". */
+ const durchlauf=(saat,start,nachwuchs)=>{
+  E.zufallSetzen(saat);
+  try{
+   const r0=E.VEREIN.gruenden(E.VEREIN.leererVerein(),
+     {name:'Probeverein',stadt:'Hamburg',land:'GER',weltjahr:2026});
+   let v=E.VEREIN.einschreiben(E.VEREIN.autoAufstellen({...r0.v,
+     kader:pos.map((p,i)=>({id:'t'+i,name:'S'+i,nat:'GER',flag:'x',pos:p,
+       ovr:start+(i%5),pot:start+12,alter:19+(i%5),form:50,fitness:80,
+       spiele:0,tore:0,jahreImVerein:1}))})).v;
+   let nr=0;
+   for(let i=0;i<15;i++){
+    /* Baut, sobald er kann — der aggressivste Weg, also der Boden. */
+    let w=true;while(w){w=false;
+     for(const x of E.VEREIN.VEREIN_AUSBAU.map(a=>({id:a.id,k:E.VEREIN.ausbauKosten(v,a.id)}))
+          .filter(x=>x.k!=null&&!(v.baustellen||{})[x.id]).sort((a,b)=>a.k-b.k)){
+      const r=E.VEREIN.bauStarten(v,x.id);if(!r.fehler){v=r.v;w=true;break;}}}
+    const r=E.VEREIN.vereinSaison(v);if(r.fehler)break;
+    v=r.v;
+    if((v.kader||[]).length<17){const f=17-v.kader.length;
+     v=E.VEREIN.autoAufstellen({...v,kader:[...v.kader,...Array.from({length:f},(_,k)=>({
+      id:'j'+(nr++),name:'J'+i+k,nat:'GER',flag:'x',pos:['IV','ZM','ST','AV','AF','TW'][k%6],
+      ovr:nachwuchs==null?46+(k%6):nachwuchs,pot:(nachwuchs==null?58:nachwuchs)+(k%14),
+      alter:18,form:50,fitness:80,spiele:0,tore:0,jahreImVerein:0}))]});}
+   }
+   return {kasse:v.kasse,
+     stufen:E.VEREIN.VEREIN_AUSBAU.reduce((a,x)=>a+(E.VEREIN.ausbauStufe(v,x.id)-1),0)};
+  }finally{E.zufallSetzen(null);}
+ };
+ /* 1. Der gewöhnliche Weg: Akademieabsolventen, fünfzehn Jahre. Er darf
+    zwischendurch ins Minus rutschen, aber nicht dort enden. */
+ for(const saat of [20260917,4711]){
+  const r=durchlauf(saat,48,null);
+  assert(r.stufen>=3,'Saat '+saat+': nur '+r.stufen+' von 30 Stufen — Aufbau lohnt nicht mehr');
+  assert(r.kasse>-25,'Saat '+saat+': endet bei '+Math.round(r.kasse)+' Mio Schulden');
+ }
+ /* 2. Der starke Kader — der Fall, an dem der Exponent 4 gescheitert ist.
+    In genau diesem Lauf gemessen: mit 4 endet er bei -451 und 7 Stufen, mit 3
+    bei -121 und 9 Stufen, mit 2,5 bei +28 und 18 Stufen. Die Schwelle liegt
+    zwischen 4 und 3 und hat nach beiden Seiten reichlich Luft.
+
+    SIE VERLANGT KEINE SCHWARZE NULL, und das ist Absicht: ein Verein, dessen
+    Kader seiner Infrastruktur davongelaufen ist, DARF ins Minus geraten. Er
+    soll nur nicht in eine Lage kommen, aus der kein Bauen mehr heraushilft. */
+ const stark=durchlauf(20260917,70,70);
+ assert(stark.kasse>-200,'starker Kader endet bei '+Math.round(stark.kasse)
+   +' Mio bei '+stark.stufen+' von 30 Stufen — die Gehaltskurve frisst den Aufbau'
+   +' wieder (Exponent 4 lieferte hier -451)');
+});
+
 test('Vereinswirtschaft: fünfzehn Jahre am Stück bleiben endlich',()=>{
  let v=E.VEREIN.einschreiben(spielbereiterVerein()).v;
  for(let i=0;i<15;i++){

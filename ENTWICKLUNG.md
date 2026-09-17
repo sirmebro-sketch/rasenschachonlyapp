@@ -1408,3 +1408,69 @@ abzuschwächen. Drei Wege, absteigend nach Eingriffstiefe:
   müsste sie bei einer neuen APK erhöhen — das entscheidet Codex beim Ausliefern,
   nicht ich auf dem Zweig.
 - **Kein Gerätetest.**
+
+## Gehaltskurve: Exponent 4 → 3 (Claude, 17.09.2026)
+
+**Basis-Commit:** `d1a49d4`-Stand des Zweigs `claude/wirt-p0-03` (Pull Request
+#11). **Branch:** `claude/wirt-gehaltskurve`. **Vorgelegt zur Abnahme.**
+Kette: `claude/vereinswirtschaft` → `wirt-p0-02` → `wirt-p0-03` → dieser.
+
+**Auftrag.** Kevin, nachdem ich ihm drei Wege vorgelegt hatte: „Nimm Option 1,
+Exponent auf 3 und schaue dann ob wir noch nachbessern müssen."
+
+**Die Änderung ist klein:** der Exponent der Gehaltskurve steht als
+`GEHALT_KURVE` an genau einer Stelle und ist von 4 auf 3 gesetzt. Ein Spieler
+mit 80 kostet damit rund das Vierfache eines mit 50 statt des Sechseinhalbfachen.
+
+**Die Messung ist das Eigentliche.** Derselbe Lauf unter drei Exponenten,
+einmal isoliert (Liga 1, geschätzter Kader, Vollausbau) und einmal durch den
+echten Spielablauf (Kader, der laufend auf Stärke 70 gehalten wird, Stadion so
+gross wie bezahlbar), `zufallSetzen(20260917)`:
+
+| Exponent | Liga-1-Kasse isoliert | Punkte (Deckel 250) | starker Kader im Spiel | gewöhnlicher Weg |
+|---:|---:|---:|---:|---:|
+| 4 | 667 | 167 | **−451** (7/30) | −3 / ±0 |
+| **3** | **854** | **214** | **−121** (9/30) | **−2 / +8** |
+| 2,5 | 923 | 231 | +28 (18/30) | −3 / −10 |
+
+**Die Antwort auf „müssen wir noch nachbessern": nein, nicht an dieser
+Schraube — und zwar aus einem Grund, der vorher nicht sichtbar war.**
+
+Ein einzelner Exponent kann die beiden Enden nicht trennen. Er tauscht den
+Bankrott des starken Vereins gegen den Überschuss des Erstligisten, weil beide
+an derselben Gehaltsrechnung hängen. Bei 2,5 wäre der starke Verein gerettet —
+und der Punktedeckel mit 231 von 250 fast wieder gerissen, also genau das
+Problem zurück, dessentwegen die Gehälter überhaupt eingeführt wurden.
+
+Was die beiden Fälle trennt, ist **nicht der Kader, sondern das Stadion**: der
+Überschuss entsteht bei Vollausbau, der Bankrott bei Stufe 1. Eine Stellschraube
+am Kader kann das nicht auseinanderhalten — deshalb ist 3 kein Zwischenschritt
+auf dem Weg zu einer besseren Zahl, sondern das Ende dieser Reihe.
+
+Was bleibt, ist ein Verein, dessen Kader seiner Infrastruktur davongelaufen ist.
+Der **gehört** ins Minus; nur folgt daraus bisher nichts. Das macht
+**WIRT-P1-04** wichtiger, nicht eine weitere Kalibrierung: erzwungene Verkäufe
+wären die naheliegende Folge — ein Verein, der nicht zahlen kann, verkauft
+Spieler, und damit sinkt auch die Gehaltslast. Dieser Mechanismus schliesst die
+Lücke, die keine Zahl schliessen kann.
+
+**Geprüft:** `npm test` **155/155** (vorher 154), `npm run build` erfolgreich.
+Zwei Regressionen halten die Entscheidung fest:
+
+- `GEHALT_KURVE` ist 3, und das Verhältnis 80 zu 50 liegt zwischen 3,5 und 4,5.
+- Ein Langzeitlauf mit **zwei** Fällen: der gewöhnliche Weg (Akademie-
+  absolventen) und der starke Kader. Der zweite ist nötig, weil der erste die
+  Nachbesserung NICHT erzwungen hätte — er war auch mit Exponent 4 tragfähig.
+  Die Schwelle verlangt bewusst keine schwarze Null, sondern nur, dass Bauen
+  noch hilft.
+
+**Gegenprobe:** setzt man `GEHALT_KURVE` zurück auf 4, werden beide rot
+(`not ok 67` und `not ok 122`).
+
+**Offen bleibt:**
+
+- **WIRT-P1-04 — Folgen einer leeren Kasse.** Jetzt der wichtigste offene
+  Punkt der Wirtschaft, nicht mehr eine Fussnote.
+- **WIRT-P0-04** (Sponsorenwahl) und **P1-01** (Saisonabrechnung sichtbar).
+- **Preise, Rechtsform und Vorstandsziel haben weiterhin keine Oberfläche.**
+- **Kein Gerätetest.**

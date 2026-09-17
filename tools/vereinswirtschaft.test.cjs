@@ -458,9 +458,18 @@ test('Gehälter ersetzen die alte Personalpauschale, statt sie zu ergänzen', ()
 
 test('Spielergehälter hängen am Kader und an der Liga', () => {
   const mit = (ovrs, zu) => W.kaderKosten(verein({ ...zu, kader: ovrs.map((ovr) => ({ ovr })) }));
-  /* Stärke schlägt überproportional durch. */
-  assert(mit([80], { ligastufe: 1 }).summe > mit([50], { ligastufe: 1 }).summe * 5,
-    'ein Spitzenspieler kostet ein Vielfaches, nicht ein bisschen mehr');
+  /* Stärke schlägt überproportional durch: mit dem Exponenten 3 kostet ein
+     Spieler mit 80 rund das Vierfache eines mit 50, nicht das Anderthalbfache. */
+  assert.equal(W.GEHALT_KURVE, 3, 'die Gehaltskurve steht an genau einer Stelle');
+  const verhaeltnis = mit([80], { ligastufe: 1 }).summe / mit([50], { ligastufe: 1 }).summe;
+  assert(verhaeltnis > 3.5 && verhaeltnis < 4.5,
+    'ein Spitzenspieler kostet ein Vielfaches, aber kein Zehnfaches (war ' + verhaeltnis.toFixed(2) + ')');
+  /* Die Kurve ist nachgebessert worden, und zwar nach unten. Mit dem alten
+     Exponenten 4 wäre das Verhältnis 6,6 — daran ist ein Verein mit starkem
+     Kader und kleinem Stadion zugrunde gegangen (WIRT-P0-03, Lauf im Vermerk).
+     Wer sie wieder erhöht, soll hier stolpern und nicht erst im Spiel. */
+  assert(Math.pow(80 / 50, W.GEHALT_KURVE) < Math.pow(80 / 50, 4),
+    'die Kurve ist flacher als die ursprüngliche');
   assert.equal(mit([80], { ligastufe: 1 }).geschaetzt, false);
   /* Derselbe Spieler kostet oben mehr als unten — die Liga gibt es her. */
   assert(mit([70, 70], { ligastufe: 1 }).summe > mit([70, 70], { ligastufe: 5 }).summe * 4);

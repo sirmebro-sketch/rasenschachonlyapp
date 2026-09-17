@@ -243,12 +243,35 @@ rechnete er mit einer GESCHÄTZTEN Stärke von 74 in der ersten Liga; ein
 Spieler, der seine Akademie ausreizt, kommt darüber — und (78/60)^4 ist ein
 Viertel teurer als (74/60)^4, bei jedem Spieler, jede Saison.
 
-**Das ist eine Balance-Entscheidung und gehört Kevin**, nicht dem nächsten
-Paket. Drei Wege, absteigend nach Eingriffstiefe:
+**Entschieden (17.09.2026): Exponent 4 → 3** (Kevin, Weg 1 von dreien). Die
+Zahl steht jetzt als `GEHALT_KURVE` an genau einer Stelle.
 
-1. **Exponent 4 → 3 oder 3,5.** Trifft genau die Spitze und lässt die Mitte
-   fast unberührt. Am zielgenauesten.
-2. **Obergrenze des Gehaltsniveaus von 2,00 auf etwa 1,6 senken.** Einfach,
-   aber nimmt auch dem mittleren Verein Druck.
-3. **Einnahmen der ersten Liga anheben** (Prämien, Sponsorenbasis). Löst es
-   auch, macht aber den Aufstieg wieder zum Selbstläufer — vermutlich falsch.
+**Und dabei etwas gelernt, das wichtiger ist als die Zahl.** Derselbe Lauf
+unter drei Exponenten, einmal isoliert (Liga 1, geschätzter Kader, Vollausbau)
+und einmal im Spiel (starker Kader, Stadion so gross wie bezahlbar):
+
+| Exponent | Liga-1-Kasse isoliert | Punkte (Deckel 250) | starker Kader im Spiel | gewöhnlicher Weg |
+|---:|---:|---:|---:|---:|
+| 4 | 667 | 167 | **−451** | −3 / ±0 |
+| **3** | **854** | **214** | **−121** | **−2 / +8** |
+| 2,5 | 923 | 231 | +28 | −3 / −10 |
+
+**Ein einzelner Exponent kann nicht beide Enden bedienen.** Er tauscht den
+Bankrott des starken Vereins gegen den Überschuss des Erstligisten, weil beide
+an derselben Gehaltsrechnung hängen. Bei 2,5 wäre der starke Verein gerettet —
+und der Punktedeckel mit 231 von 250 fast wieder gerissen, also genau das
+Problem zurück, dessentwegen es die Gehälter überhaupt gibt.
+
+Was die beiden Fälle trennt, ist **nicht der Kader, sondern das Stadion**: der
+Überschuss entsteht bei Vollausbau, der Bankrott bei Stufe 1. Eine Stellschraube
+am Kader kann das nicht auseinanderhalten.
+
+**Bewertung:** 3 ist der richtige Kompromiss und bleibt. Der gewöhnliche Weg
+trägt mit Reserve, der starke Verein überlebt dreieinhalbmal länger als zuvor,
+der Deckel hält. Was bleibt, ist ein Verein, dessen Kader seiner Infrastruktur
+davongelaufen ist — und der GEHÖRT ins Minus. Nur folgt daraus bisher nichts.
+
+**Daraus wird WIRT-P1-04 wichtiger**, nicht eine weitere Kalibrierung: eine
+leere Kasse braucht Folgen (erzwungene Verkäufe wären die naheliegende — ein
+Verein, der nicht zahlen kann, verkauft Spieler, und damit sinkt auch die
+Gehaltslast). Das ist der Mechanismus, der die verbleibende Lücke schliesst.

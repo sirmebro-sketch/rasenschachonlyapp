@@ -555,9 +555,19 @@ export function gehaltsniveauNeu(v, erg = {}) {
 
 /* Was der Kader kostet, bevor das Niveau daraufkommt.
 
-   Der Exponent 4 ist Absicht: Gehälter wachsen im Fussball nicht linear mit
-   der Stärke. Ein Spieler mit 85 kostet nicht anderthalbmal so viel wie einer
-   mit 55, sondern das Sechsfache.
+   DER EXPONENT IST 3, NACHGEBESSERT AM 17.09.2026. Gehälter wachsen im
+   Fussball nicht linear mit der Stärke — ein Spieler mit 85 kostet nicht
+   anderthalbmal so viel wie einer mit 55, sondern das Vierfache.
+
+   Er war zuerst 4. Das war gegen eine GESCHÄTZTE Stärke von 74 in der ersten
+   Liga kalibriert, und solange der Rechenkern isoliert lief, stimmte es auch.
+   Am echten Spielablauf (WIRT-P0-03) zeigte sich der Fehler: wer seine
+   Akademie ausreizt, baut Kader über 74, und (78/60)^4 ist ein Viertel teurer
+   als (74/60)^4 — je Spieler, je Saison. Ein Verein mit Stärke 78 erreichte in
+   fünfzehn Jahren EINE von dreissig Ausbaustufen und endete bei −539 Mio.
+   Mit 3 fällt die Kurve oben ab, ohne die Mitte anzufassen; Kevin hat diesen
+   Weg gegenüber einer niedrigeren Obergrenze und höheren Erstliga-Einnahmen
+   ausdrücklich gewählt.
 
    DER TEILER `stufe` IST NACHGERECHNET, NICHT GERATEN. Ohne ihn zahlte ein
    Viertligist 11,4 Mio Gehälter bei 17 Mio Einnahmen und erreichte in
@@ -565,20 +575,23 @@ export function gehaltsniveauNeu(v, erg = {}) {
    war damit tot (Lauf vom 17.09.2026, Tabelle im Vermerk). Er hat einen
    Grund über die Rechnung hinaus: derselbe Spieler verdient in der ersten
    Liga mehr als in der vierten, weil die Liga es hergibt, nicht weil er
-   besser ist. Gerechnet: 0,9 Mio × (ovr/60)^4 ÷ Ligastufe je Spieler.
+   besser ist. Gerechnet: 0,9 Mio × (ovr/60)^3 ÷ Ligastufe je Spieler.
 
    OHNE KADER wird geschätzt. Der Rechenkern muss auch dann eine sinnvolle
    Zahl liefern, wenn er isoliert läuft — im Prüfstand und bevor der Anschluss
    an `verein.js` steht (WIRT-P0-02). Die Schätzwerte je Ligastufe stammen aus
    den Vereinsstärken des Spiels. */
 export const KADER_SOLL = 18;
+/* Als eigener Name, damit die Zahl an genau einer Stelle steht und eine
+   Regression sie prüfen kann — nicht dreimal im Quelltext verstreut. */
+export const GEHALT_KURVE = 3;
 const SCHAETZ_OVR = [0, 74, 66, 60, 55, 51, 48];
 export function kaderKosten(v) {
   const kader = Array.isArray(v?.kader) ? v.kader.filter((s) => s && Number.isFinite(Number(s.ovr))) : [];
   const stufe = Math.max(1, Math.min(6, v?.ligastufe || 3));
   const werte = kader.length ? kader.map((s) => Number(s.ovr))
     : Array.from({ length: KADER_SOLL }, () => SCHAETZ_OVR[stufe]);
-  const summe = werte.reduce((a, o) => a + 0.9 * Math.pow(Math.max(30, o) / 60, 4) / stufe, 0);
+  const summe = werte.reduce((a, o) => a + 0.9 * Math.pow(Math.max(30, o) / 60, GEHALT_KURVE) / stufe, 0);
   return { anzahl: werte.length, geschaetzt: !kader.length,
            schnitt: Math.round(werte.reduce((a, o) => a + o, 0) / Math.max(1, werte.length)),
            summe: Math.round(summe * 100) / 100 };
