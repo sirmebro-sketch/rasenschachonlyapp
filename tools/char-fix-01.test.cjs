@@ -21,7 +21,7 @@ test('CHAR-FIX-01: Langkantig bleibt ID 11, waechst aber nach oben statt in den 
  assert.match(app,/k\.profil === "lang"\) return `M\$\{l\+1\},40 L\$\{l\+2\},26 Q\$\{l\+5\},11 42,9 Q50,7 58,9/);
 });
 
-test('CHAR-FIX-01: beide modernen Haarlagen erhalten Profil und echte Kopfh102lle',()=>{
+test('CHAR-FIX-01: beide modernen Haarlagen erhalten Profil und echte Kopfhuelle',()=>{
  const props=(app.match(/kopfprofil=\{kopf\.profil\|\|''\} kopfpfad=\{kopfD\}/g)||[]).length;
  assert.equal(props,2,'Vorder- und Hinterhaar muessen dieselbe Kopfanpassung erhalten');
  for(const profil of ['trapez','lang','diamant','kurzbreit'])assert.match(haar,new RegExp(profil+':\\{breite:'));
