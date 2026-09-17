@@ -26,7 +26,7 @@ function CharFixProbe(){
   <Avatar seed={93000+kopf*100+i} zuege={{...basis,kopf,haut:r.haut?.id??r.haut,haar:r.haut?.id===13?12:2,frisur:r.frisur}} size={r.size} g={r.g} nat="GER" meta={{mk_haar:true,mk_acc:true}}/>
   <div className="lbl">{r.label||((r.g==='m'?'M':'W')+' · '+r.haut.name+' · '+r.size+' · F'+r.frisur)}</div>
  </div>;
- return <div className="fl"><style>{CSS+`\nbody{margin:0}.charfix{max-width:1540px;margin:auto;padding:18px}.kopfkarte{min-width:0}.kritisch,.matrix{display:flex;gap:8px;align-items:end;flex-wrap:wrap}.probe{text-align:center;min-width:76px}.lbl{font-size:9px;color:var(--mu);margin-top:3px;overflow-wrap:anywhere}.matrix .probe{flex:0 1 150px}.matrix .probe svg{margin:auto}.kopfkarte h2{margin:0 0 8px;font-size:17px}.neu{outline:1px solid rgba(103,210,143,.55)}\n`}</style><main className="charfix">
+ return <div className="fl"><style>{CSS+' body{margin:0}.charfix{max-width:1540px;margin:auto;padding:18px}.kopfkarte{min-width:0}.kritisch,.matrix{display:flex;gap:8px;align-items:end;flex-wrap:wrap}.probe{text-align:center;min-width:76px}.lbl{font-size:9px;color:var(--mu);margin-top:3px;overflow-wrap:anywhere}.matrix .probe{flex:0 1 150px}.matrix .probe svg{margin:auto}.kopfkarte h2{margin:0 0 8px;font-size:17px}.neu{outline:1px solid rgba(103,210,143,.55)} '}</style><main className="charfix">
   <h1>CHAR-FIX-01 · Kopf / Hals / Frisur</h1>
   <p>Reproduzierbare Sichtmatrix: jede Kopfform in 72 / 96 / 145 px, beide Geschlechter, helle / mittlere / dunkle Haut und wechselnde kritische Kurzhaarformen.</p>
   <section data-testid="kritisch" style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(min(100%,360px),1fr))',gap:12,marginBottom:18}}>
