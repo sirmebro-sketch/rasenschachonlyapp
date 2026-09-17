@@ -17,6 +17,22 @@ test('CHAR-P1-02: bestehende Gesichts-IDs bleiben append-only stabil',async()=>{
  }
 });
 
+test('CHAR-P1-02: neue Gesichtsformen hängen hinten an, schwache Altformen bleiben nur ladbar',async()=>{
+ const {PORTRAET_NAMEN,portraetOptionen}=await import('../portraet.js');
+ const o=portraetOptionen(BASIS,'m');
+ assert.deepEqual(o.augen,[0,1,2,3,4,5,6,7,8]);
+ assert.deepEqual(o.nase,[0,1,2,3,5,6,8,9,10,11]);
+ assert.deepEqual(o.wangen,[0,1,2,3,5,6]);
+ assert.deepEqual(o.details,[0,1,2,3,4,5,6,7,8]);
+ assert.equal(PORTRAET_NAMEN.nase[4],'Gerade');
+ assert.equal(PORTRAET_NAMEN.nase[7],'Fein');
+ assert.equal(PORTRAET_NAMEN.wangen[4],'Wangengrübchen');
+ assert.equal(PORTRAET_NAMEN.augen[7],'Angehobene Außenkante');
+ assert.equal(PORTRAET_NAMEN.nase[10],'Breite Stupsnase');
+ assert.equal(PORTRAET_NAMEN.wangen[5],'Hohe Wangenkontur');
+ assert.equal(PORTRAET_NAMEN.details[7],'Leichte Augenringe');
+});
+
 test('CHAR-P1-02: alle sichtbaren Gesichtsoptionen haben eindeutige IDs und Namen',async()=>{
  const {PORTRAET_NAMEN,portraetOptionen}=await import('../portraet.js');
  for(const g of ['m','w']){
