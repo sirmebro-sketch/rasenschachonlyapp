@@ -22,7 +22,10 @@ test('CHAR-FIX-01: alle Koepfe decken Groesse Geschlecht Haut und kritische Haar
  expect(overflow,'CHAR-FIX-01 darf keinen horizontalen Ueberlauf erzeugen').toBeLessThanOrEqual(1);
  if(testInfo.project.name==='desktop'){
   await page.locator('[data-testid="kritisch"]').screenshot({path:testInfo.outputPath('char-fix-01-alle-koepfe-kritisch.png')});
-  for(const id of [10,11,12,13])await page.locator(`[data-testid="matrix"] article[data-id="${id}"]`).screenshot({path:testInfo.outputPath(`char-fix-01-kopf-${id}-vollmatrix.png`)});
+  for(const id of [10,11,12,13]){
+   await page.locator(`[data-testid="kritisch"] article[data-id="${id}"]`).screenshot({path:testInfo.outputPath(`char-fix-01-kopf-${id}-kritisch.png`)});
+   await page.locator(`[data-testid="matrix"] article[data-id="${id}"]`).screenshot({path:testInfo.outputPath(`char-fix-01-kopf-${id}-vollmatrix.png`)});
+  }
  }
  expect(errors).toEqual([]);
 });
