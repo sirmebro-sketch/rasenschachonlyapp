@@ -54,3 +54,41 @@ test('Galerie: alle Merkmale beider Auswahlen und Freischaltungen',async({page},
  await page.screenshot({path:testInfo.outputPath('baerte.png'),fullPage:true});
  expect(errors).toEqual([]);
 });
+
+test('CHAR-P0-01: Inventar rendert alle Optionen ohne exakte Struktur-Dubletten',async({page},testInfo)=>{
+ test.skip(testInfo.project.name!=='desktop','Der vollständige Inventarlauf genügt einmal; responsive Wege prüft die bestehende Galerie.');
+ test.setTimeout(120000);
+ const errors=[];page.on('pageerror',e=>errors.push(e.message));
+ await page.goto('/.preview/charakter-inventar.html');
+ await expect(page.getByRole('heading',{name:'Rasenschach · Charakter-Inventar'})).toBeVisible();
+ const zaehlung={};
+ for(const gender of ['m','w']){
+  await page.getByRole('combobox',{name:'Geschlecht',exact:true}).selectOption(gender);
+  const fields=await page.getByRole('combobox',{name:'Merkmal',exact:true}).locator('option').evaluateAll(o=>o.map(x=>x.value));
+  zaehlung[gender]={};
+  for(const field of fields){
+   await page.getByRole('combobox',{name:'Merkmal',exact:true}).selectOption(field);
+   const cards=page.locator('[data-testid="varianten"] article');
+   const n=await cards.count();expect(n,gender+'/'+field).toBeGreaterThan(0);zaehlung[gender][field]=n;
+   await expect(page.locator('main')).not.toContainText('undefined');
+   const daten=await cards.evaluateAll(nodes=>nodes.map(node=>{
+    const id=node.getAttribute('data-id');
+    const norm=(svg)=>{
+     const c=svg.cloneNode(true),map=new Map();
+     [...c.querySelectorAll('[id]')].forEach((el,i)=>{const alt=el.id,neu='ID'+i;map.set(alt,neu);el.id=neu;});
+     [c,...c.querySelectorAll('*')].forEach(el=>[...el.attributes].forEach(a=>{let v=a.value;for(const [alt,neu] of map)v=v.split(alt).join(neu);el.setAttribute(a.name,v);}));
+     return c.outerHTML;
+    };
+    return {id,sig:[...node.querySelectorAll('svg[aria-label="Spielerporträt"]')].map(norm).join('\n')};
+   }));
+   const gesehen=new Map(),doppelt=[];
+   for(const x of daten){if(gesehen.has(x.sig))doppelt.push([gesehen.get(x.sig),x.id]);else gesehen.set(x.sig,x.id);}
+   expect(doppelt,'Exakte Render-Dubletten bei '+gender+'/'+field).toEqual([]);
+  }
+ }
+ await testInfo.attach('charakter-inventar.json',{body:Buffer.from(JSON.stringify(zaehlung,null,2)),contentType:'application/json'});
+ await page.getByRole('combobox',{name:'Geschlecht',exact:true}).selectOption('m');
+ await page.getByRole('combobox',{name:'Merkmal',exact:true}).selectOption('frisur');
+ await page.screenshot({path:testInfo.outputPath('charakter-inventar-frisuren.png'),fullPage:true});
+ expect(errors).toEqual([]);
+});
