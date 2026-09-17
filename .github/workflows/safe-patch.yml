@@ -1,0 +1,92 @@
+name: Safe patch bridge
+
+on:
+  push:
+    paths:
+      - 'patches/inbox/*.patch'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: safe-patch-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  apply-patch:
+    if: github.ref_name != 'main' && github.ref_name != 'master' && github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Select and validate patch
+        id: patch
+        shell: bash
+        run: |
+          set -euo pipefail
+          mapfile -t patches < <(find patches/inbox -maxdepth 1 -type f -name '*.patch' -print | sort)
+          if [ "${#patches[@]}" -ne 1 ]; then
+            echo "Expected exactly one patch in patches/inbox, found ${#patches[@]}" >&2
+            exit 1
+          fi
+          patch="${patches[0]}"
+          echo "path=$patch" >> "$GITHUB_OUTPUT"
+          echo "name=$(basename "$patch" .patch)" >> "$GITHUB_OUTPUT"
+
+          if grep -q '^GIT binary patch$' "$patch"; then
+            echo 'Binary patches are not allowed.' >&2
+            exit 1
+          fi
+          if grep -Eq '^(new file mode|old mode) 120000$' "$patch"; then
+            echo 'Symlink patches are not allowed.' >&2
+            exit 1
+          fi
+
+          while IFS= read -r raw; do
+            [ "$raw" = '/dev/null' ] && continue
+            path="${raw#a/}"
+            path="${path#b/}"
+            case "$path" in
+              /*|*'../'*|../*|.github/*|patches/*|.git/*)
+                echo "Unsafe or infrastructure path in patch: $path" >&2
+                exit 1
+                ;;
+            esac
+          done < <(awk '/^(---|\+\+\+) / {print $2}' "$patch")
+
+          git apply --check --index --whitespace=error-all "$patch"
+
+      - name: Apply patch exactly to index and worktree
+        shell: bash
+        run: |
+          set -euo pipefail
+          git apply --index --whitespace=error-all "${{ steps.patch.outputs.path }}"
+          rm "${{ steps.patch.outputs.path }}"
+          git add -A
+          git diff --cached --check
+          if git diff --cached --quiet; then
+            echo 'Patch produced no repository changes.' >&2
+            exit 1
+          fi
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run regression suite
+        run: npm test
+
+      - name: Build production bundle
+        run: npm run build
+
+      - name: Commit verified patch
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m "apply: ${{ steps.patch.outputs.name }}"
+          git push origin "HEAD:${GITHUB_REF_NAME}"
