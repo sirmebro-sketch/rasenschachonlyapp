@@ -32,6 +32,7 @@ jobs:
             .preview/kopfformen.html
             .preview/gesichtszuege.html
             .preview/char-fix-01.html
+            .preview/baerte.html
             .preview/spieltest.html
             .preview/bildschirm.html
           include-hidden-files: true
