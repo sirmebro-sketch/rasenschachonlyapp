@@ -2959,15 +2959,17 @@ function Avatar({ seed = 1, zuege, club, size = 72, ring, g, nat, meta }) {
         <path d="M18,86 L74,-8 L82,-8 L28,88 Z" fill="#FFFFFF" opacity=".03" />
         <path d="M0,72 H100 V100 H0 Z" fill={grundTief} opacity=".55" />
 
-        {/* Schultern und Trikot: feste Lage, unabhaengig von der Kopfform. */}
-        <path d={`M2,100 C4,82 22,${KRAGEN_Y} 50,${KRAGEN_Y} C78,${KRAGEN_Y} 96,82 98,100 Z`} fill={c1} />
-        <path d={`M2,100 C4,82 22,${KRAGEN_Y} 34,${KRAGEN_Y} L40,100 Z`} fill={shade(c1, -16)} />
-
         {/* Hals laeuft hinter Kopf UND Kragen bis zur immer gleichen Basis.
             So kann ein kurzer Kopf nicht mehr schweben und ein langer Kopf
             drueckt den Kragen nicht mehr nach unten. */}
+        {/* CHAR-FIX-02: Hals zuerst. Trikot und Kragen maskieren danach seine
+            untere Flaeche, damit nirgendwo Haut durch geschlossene Teile scheint. */}
         <path d={`M43,${HALS_OBEN_Y} H57 V${HALS_BASIS_Y} Q57,81 50,81 Q43,81 43,${HALS_BASIS_Y} Z`} fill={schatten} />
         <path d={`M43,${halsSchattenY} H57 V${halsSchattenEnde} Q50,${halsSchattenEnde+2} 43,${halsSchattenEnde} Z`} fill={tief} opacity=".72" />
+
+        {/* Schultern und Trikot: feste Lage, unabhaengig von der Kopfform. */}
+        <path d={`M2,100 C4,82 22,${KRAGEN_Y} 50,${KRAGEN_Y} C78,${KRAGEN_Y} 96,82 98,100 Z`} fill={c1} />
+        <path d={`M2,100 C4,82 22,${KRAGEN_Y} 34,${KRAGEN_Y} L40,100 Z`} fill={shade(c1, -16)} />
         {/* Kragen liegt zuletzt auf dem Hals und sitzt damit sichtbar sauber. */}
         <path d={`M40,${KRAGEN_Y} L50,${KRAGEN_Y+13} L60,${KRAGEN_Y} L56,${KRAGEN_Y-1} L50,${KRAGEN_Y+8} L44,${KRAGEN_Y-1} Z`} fill={c2} />
 
