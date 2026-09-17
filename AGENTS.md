@@ -67,6 +67,15 @@ Entscheidungen aufheben.
   Force-Pushes.
 - **„Versionsschema"** — wann die Version steigt und wann nicht.
 
+## Spezieller Arbeitsplan Charakter & Optik
+
+Wenn der Auftrag Charaktererstellung, Porträts, Frisuren/Bärte, Spielerkarten,
+Wildcards, Packs oder Holo-/Glanz-/Spezialeffekte betrifft, zusätzlich
+[`CHARAKTER-OPTIK-ARBEITSPLAN.md`](CHARAKTER-OPTIK-ARBEITSPLAN.md) lesen.
+Dort stehen dauerhafte Einstiegspunkte, Qualitätskriterien, Paket-IDs und
+Abnahmeregeln. Konkrete Runde weiterhin in `ENTWICKLUNG.md` bzw. einem
+Prüfbericht dokumentieren; der Arbeitsplan ist kein statischer Live-Status.
+
 ## Vor dem Veröffentlichen
 
 `main` erneut prüfen. Ist er weitergelaufen, zuerst zusammenführen und die

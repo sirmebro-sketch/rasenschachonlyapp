@@ -17,6 +17,13 @@ git fetch --all --prune
 git branch -r --no-merged origin/main
 ```
 
+Bei Arbeit an Charaktererstellung, Porträts, Frisuren/Bärten, Spielerkarten,
+Wildcards, Packs oder Spezialeffekten zusätzlich
+[`CHARAKTER-OPTIK-ARBEITSPLAN.md`](CHARAKTER-OPTIK-ARBEITSPLAN.md) lesen und die
+Runde einer dortigen Paket-ID zuordnen. Neue Varianten nicht durch bloße Menge
+als Verbesserung behandeln; visuelle Abnahme und stabile gespeicherte Indizes
+sind Teil des Auftrags.
+
 ## Die eigene Rolle
 
 Codex nimmt Claudes Arbeit ab, bevor sie nach `main` geht. Daraus folgt für
