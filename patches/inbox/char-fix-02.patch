@@ -1,7 +1,7 @@
 diff --git a/App.jsx b/App.jsx
 --- a/App.jsx
 +++ b/App.jsx
-@@ -2959,19 +2959,20 @@ function Avatar({ seed = 1, zuege, club, size = 72, ring, g, nat, meta }) {
+@@ -2959,14 +2959,16 @@ function Avatar({ seed = 1, zuege, club, size = 72, ring, g, nat, meta }) {
          <path d="M18,86 L74,-8 L82,-8 L28,88 Z" fill="#FFFFFF" opacity=".03" />
          <path d="M0,72 H100 V100 H0 Z" fill={grundTief} opacity=".55" />
  
