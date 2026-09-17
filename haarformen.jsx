@@ -4,17 +4,18 @@ import React from 'react';
 export function Haarform({index=0,weiblich=false,breite=24,farbe,hell,ebene='vorn'}){
  const id='haar'+React.useId().replace(/[^a-zA-Z0-9_-]/g,'');
  const namen=weiblich
-  ? ['kurz','lang','volumen','bob','knoten','seitenzopf','scheitellang','pixie','locken','crop','pferdeschwanz','zoepfe','hoch','afro','wellen','krause','cornrows','lockenseite','vorhang','fade']
-  : ['rasiert','kurz','scheitel','undercut','locken','afro','textur','licht','zoepfe','knoten','vokuhila','glatze','slick','crop','flach','seitlich','wellen','krause','cornrows','lockenseite','vorhang','fade'];
+  ? ['kurz','lang','volumen','bob','knoten','seitenzopf','scheitellang','pixie','locken','crop','pferdeschwanz','zoepfe','hoch','afro','wellen','krause','cornrows','lockenseite','vorhang','fade','locs','iro','schulter','flechtkranz']
+  : ['rasiert','kurz','scheitel','undercut','locken','afro','textur','licht','zoepfe','knoten','vokuhila','glatze','slick','crop','flach','seitlich','wellen','krause','cornrows','lockenseite','vorhang','fade','locs','iro','schulter','flechtkranz'];
  const typ=namen[index]||'kurz';
  const transform=`translate(50 0) scale(${breite/24} 1) translate(-50 0)`;
  if(typ==='glatze')return null;
  if(ebene==='hinten'){
   let d='';
-  if(['lang','scheitellang','volumen','bob','vokuhila'].includes(typ)){
-   const y=typ==='bob'?62:typ==='vokuhila'?68:82;
+  if(['lang','scheitellang','volumen','bob','vokuhila','schulter'].includes(typ)){
+   const y=typ==='bob'?62:typ==='vokuhila'?68:typ==='schulter'?75:82;
    d=`M25 36 C20 50 22 ${y-5} 30 ${y} Q36 ${y+2} 38 ${y-5} L37 35 Z M75 36 C80 50 78 ${y-5} 70 ${y} Q64 ${y+2} 62 ${y-5} L63 35 Z`;
   }
+  if(typ==='locs')d='M27 33 C22 47 23 66 27 79 L32 79 L34 38 Z M35 31 C31 49 33 70 36 82 L41 82 L42 35 Z M65 31 C69 49 67 70 64 82 L59 82 L58 35 Z M73 33 C78 47 77 66 73 79 L68 79 L66 38 Z';
   if(['pferdeschwanz','seitenzopf'].includes(typ))d='M69 23 C85 20 87 41 80 55 Q76 66 74 73 Q82 54 73 43 Q68 32 65 29 Z';
   if(typ==='zoepfe')d='M29 32 Q17 40 24 62 Q25 68 29 71 Q28 56 33 42 Z M71 32 Q83 40 76 62 Q75 68 71 71 Q72 56 67 42 Z';
   if(typ==='knoten'||typ==='hoch')d=typ==='hoch'?'M34 19 C26 3 48 1 52 7 C63 -1 79 11 66 23 Z':'M42 16 C33 5 44 1 51 3 C64 2 68 15 57 19 Z';
@@ -56,14 +57,20 @@ export function Haarform({index=0,weiblich=false,breite=24,farbe,hell,ebene='vor
  if(typ==='krause')d='M26 39 Q23 32 26 27 Q23 21 29 19 Q30 12 36 14 Q41 8 47 12 Q53 8 58 12 Q65 10 69 17 Q76 17 74 24 Q79 29 74 39 Q67 29 61 32 Q54 28 48 32 Q39 28 32 34 Z';
  if(typ==='lockenseite')d='M25 40 Q21 31 25 25 Q22 18 30 17 Q29 10 39 11 Q43 4 50 10 Q61 5 65 13 Q74 13 75 23 L74 40 Q67 29 60 30 Q54 25 49 30 Q43 27 38 34 Q31 30 25 40 Z';
  if(typ==='vorhang'||typ==='scheitellang')d='M25 44 C22 22 32 9 49 11 Q66 8 74 24 Q78 35 74 44 L68 38 Q58 35 50 22 Q43 36 32 39 Z';
+ // CHAR-P1-03: neue Kategorien sind append-only und bewusst als andere Silhouetten angelegt.
+ if(typ==='locs')d='M25 42 C22 23 32 9 50 10 C68 9 78 23 75 42 Q67 31 61 31 Q50 25 39 31 Q32 31 25 42 Z';
+ if(typ==='iro')d='M29 39 Q27 28 35 22 L40 20 L42 8 L47 13 L50 3 L54 13 L59 8 L61 20 L66 22 Q74 28 71 39 Q62 29 50 29 Q38 29 29 39 Z';
+ if(typ==='schulter')d='M25 46 C22 23 31 9 50 10 C69 9 78 23 75 46 L69 54 L67 31 Q58 25 51 21 Q43 25 33 31 L31 54 Z';
+ if(typ==='flechtkranz')d='M26 40 C23 25 31 12 43 11 Q50 5 57 11 C69 12 77 25 74 40 Q66 31 60 31 Q50 26 40 31 Q33 31 26 40 Z';
  return <g><g transform={transform}>
   <defs><linearGradient id={id+'farbe'} x1="0" y1="0" x2=".75" y2="1"><stop stopColor={hell}/><stop offset=".38" stopColor={farbe}/><stop offset="1" stopColor={farbe}/></linearGradient><linearGradient id={id+'fade'} x1="0" y1="0" x2="0" y2="1"><stop offset=".25" stopColor={farbe}/><stop offset="1" stopColor={farbe} stopOpacity=".22"/></linearGradient><clipPath id={id+'clip'}><path d={d}/></clipPath></defs>
   {typ!=='licht'&&<path d={scalp} stroke={farbe} strokeWidth={.65} fill={['undercut','fade'].includes(typ)?'url(#'+id+'fade)':farbe} opacity={typ==='rasiert'?.42:1}/>}
   {typ!=='rasiert'&&<path d={d} stroke={typ==='licht'?farbe:'none'} strokeWidth={.5} strokeLinejoin="round" fill={'url(#'+id+'farbe)'}/>}
+  {typ==='flechtkranz'&&<path d="M29 26 Q38 15 50 16 Q62 15 71 26" fill="none" stroke={hell} strokeWidth="4.2" strokeLinecap="round" strokeDasharray="2 1.5" opacity=".7"/>}
   <g clipPath={'url(#'+id+'clip)'} fill="none" stroke={hell} strokeLinecap="round" opacity=".27">
    {['cornrows','zoepfe'].includes(typ)?[-18,-10,-2,6,14,22].map(x=><path key={x} d={`M${50+x} 9 Q${43+x} 24 ${49+x} 41`} strokeWidth="1.5"/>):
     ['locken','krause','lockenseite','afro','volumen'].includes(typ)?Array.from({length:18},(_,i)=><path key={i} d={`M${27+(i%6)*8} ${18+Math.floor(i/6)*7} q-2 -3 2 -4 q4 0 3 3`} strokeWidth=".7"/>):
-    typ!=='rasiert'&&typ!=='licht'&&[0,1,2].map(i=><path key={i} d={['slick','hoch','knoten'].includes(typ)?`M${32+i*12} 28 Q${27+i*12} 14 ${42+i*8} 8`:`M${29+i*3} ${27-i*4} Q48 ${12-i*2} ${70-i*4} ${23-i*3}`} strokeWidth=".8"/>)}
+    typ!=='rasiert'&&typ!=='licht'&&typ!=='flechtkranz'&&[0,1,2].map(i=><path key={i} d={['slick','hoch','knoten'].includes(typ)?`M${32+i*12} 28 Q${27+i*12} 14 ${42+i*8} 8`:`M${29+i*3} ${27-i*4} Q48 ${12-i*2} ${70-i*4} ${23-i*3}`} strokeWidth=".8"/>)}
   </g>
  </g></g>;
 }
