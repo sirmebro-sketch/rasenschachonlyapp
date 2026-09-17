@@ -1494,6 +1494,19 @@ der Reiter rendert Angebote und laufende Verträge ohne NaN.
 **Gegenprobe:** würfelt man die Angebote bei jedem Blick neu, werden alle vier
 rot.
 
+**Nachtrag vom selben Tag, weil der Fehler sich wiederholen kann.** Der
+Statuseintrag dieses Pakets im Arbeitsplan („BEREIT" statt „VORGELEGT") ist
+beim ersten Anlauf verlorengegangen: Das Änderungsskript hatte vier
+Ersetzungen, lief bei der zweiten auf einen Fehlschlag und schreibt die Datei
+erst am Ende — die erste, im Speicher bereits erledigte Ersetzung fiel damit
+weg. Nachgezogen wurde danach nur der Teil, der aufgefallen war.
+
+Gefunden hat es niemand beim Lesen des Vermerks, sondern erst ein späterer
+Blick auf die Paketliste. **Wer mehrere Ersetzungen in einem Skript
+zusammenfasst, schreibt nach jeder oder prüft danach das Ergebnis** — ein
+Abbruch in der Mitte sieht sonst aus wie „nichts passiert", ist aber
+„teilweise passiert und alles verworfen".
+
 **Offen bleibt:**
 
 - **WIRT-P1-01 — Saisonabrechnung sichtbar.** Der Spieler sieht jetzt, wo das
