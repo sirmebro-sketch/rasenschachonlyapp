@@ -114,9 +114,11 @@ jobs:
           jarsigner -J-Duser.language=en -verify "$AAB" > "$RUNNER_TEMP/aab-signature.txt"
           grep -q 'jar verified' "$RUNNER_TEMP/aab-signature.txt"
           VERSION=$(node -p "require('./package.json').version")
+          # NUR AUF DEM BETA-ZWEIG: die Datei soll nicht wie eine Auslieferung
+          # heissen. Dieser Zweig wird NICHT nach main zusammengefuehrt.
           mkdir -p release
-          cp "$APK" "release/Rasenschach-XI-${VERSION}.apk"
-          cp "$AAB" "release/Rasenschach-XI-${VERSION}.aab"
+          cp "$APK" "release/Rasenschach-XI-${VERSION}-BETA-unabgenommen.apk"
+          cp "$AAB" "release/Rasenschach-XI-${VERSION}-BETA-unabgenommen.aab"
       - uses: actions/upload-artifact@v4
         with:
           name: Rasenschach-Android

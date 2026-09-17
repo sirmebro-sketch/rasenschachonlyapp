@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">Rasenschach XI</string>
-    <string name="title_activity_main">Rasenschach XI</string>
-    <string name="package_name">de.rasenschach.xi</string>
-    <string name="custom_url_scheme">de.rasenschach.xi</string>
+    <string name="app_name">Rasenschach XI (Beta)</string>
+    <string name="title_activity_main">Rasenschach XI (Beta)</string>
+    <string name="package_name">de.rasenschach.xi.beta</string>
+    <string name="custom_url_scheme">de.rasenschach.xi.beta</string>
 </resources>

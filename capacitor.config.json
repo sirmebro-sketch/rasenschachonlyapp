@@ -1,6 +1,6 @@
 {
-  "appId": "de.rasenschach.xi",
-  "appName": "Rasenschach XI",
+  "appId": "de.rasenschach.xi.beta",
+  "appName": "Rasenschach XI (Beta)",
   "webDir": "dist",
   "android": {
     "allowMixedContent": false

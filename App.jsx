@@ -31,7 +31,13 @@ import { machAkademie } from "./akademie.js";
    ================================================================ */
 
 const NAME = "Rasenschach XI";
-const VERSION = "35.192";
+const VERSION = "35.193";
+/* NUR AUF DEM BETA-ZWEIG. Die Kennzeichnung steht bewusst NEBEN der Version
+   und nicht darin: `VERSION` wandert in jede Sicherung und muss dem Muster
+   \d+\.\d+ folgen (`backupLesen` in sicherung.js weist alles andere ab).
+   Ein "35.193-beta" waere damit kein Schoenheitsfehler, sondern ein Spielstand,
+   der sich nicht mehr einlesen laesst. */
+const BETA = "Beta \u00b7 von Astra noch nicht abgenommen";
 const VERSION_INFO = "Stabile Spielerporträts, stimmige Ligatabellen und einheitliche Karrierejahre.";
 
 /* Fester Zufallsstrom aus einer Zeichenkette — damit Angebote des eigenen
@@ -14735,7 +14741,7 @@ function Optionen({ ruhe, aufRuhe, onBackup, onZu, onAnleitung, hall, aka, laeuf
         <div className="band matt"><span>Hilfe & Ausgabe</span><small aria-hidden="true">05</small></div>
         <div className="pad" style={{ paddingTop: 9 }}>
           <div className="m zellen" style={{ fontSize: 11 }}>
-            <div><span className="eb">Fassung</span>{VERSION}</div>
+            <div><span className="eb">Fassung</span>{VERSION}{BETA ? " \u00b7 " + BETA : ""}</div>
             <div><span className="eb">Vereine</span>{CLUBS.length}</div>
             <div><span className="eb">Nationen</span>{NATIONS.length}</div>
             <div><span className="eb">Ereignisse</span>{EVENTS.length}</div>
@@ -15140,7 +15146,7 @@ function MenuScreen({ onSammlung, hall, onNew, onHall, save, onResume, onAch, ac
         <div className="impressum">
           <span className="strichcode" aria-hidden="true" />
           <span className="m" style={{ fontSize: 9.5, color: "var(--mu)", lineHeight: 1.7, flex: 1 }}>
-            {NAME} · Fassung {VERSION}{schriftBefund} · {CLUBS.length} Vereine · {NATIONS.length} Nationen
+            {NAME} · Fassung {VERSION}{BETA ? " · " + BETA : ""}{schriftBefund} · {CLUBS.length} Vereine · {NATIONS.length} Nationen
             · {EVENTS.length} Ereignisse
           </span>
         </div>
