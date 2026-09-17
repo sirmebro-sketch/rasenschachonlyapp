@@ -124,11 +124,24 @@ Landeswährung mit den laufenden Baustellen, darunter die sechs Abteilungen mit
 Geldpreisen, und erst danach — eigener Abschnitt, eigene Überschrift — die vier
 VC-Extras. Keine Zeile, in der beides nebeneinander steht.
 
-### WIRT-P0-04 – Sponsorenwahl als Oberfläche — BEREIT
+### WIRT-P0-04 – Sponsorenwahl als Oberfläche — VORGELEGT (Claude, 17.09.2026)
 
-Zu Saisonbeginn drei Angebote zur Auswahl, mit Betrag, Laufzeit und Vorteil.
-Auslaufende Verträge werden gemeldet. Die Angebote sind über die Saat
-reproduzierbar; ein Neuladen darf keine neuen Angebote würfeln.
+Eigener Reiter im Vereinsbildschirm: laufende Partner mit Betrag, Restlaufzeit
+und Vorteil, darunter die Angebote der Saison mit Betrag, Laufzeit, Gesamtwert
+und Vorteil. Ausgelaufene Verträge werden aus der Chronik gemeldet.
+
+**Die Angebote liegen im Spielstand (`v.angebote`), nicht im Augenblick.** Das
+ist der Kern des Pakets: würden sie beim Zeichnen erzeugt, bekäme man bei jedem
+Aufschlagen des Bildschirms neue — und aus der Wahl würde ein Automat, den man
+bis zum besten Angebot drückt. Sie werden einmal je Saison aus der Saat des
+Vereins gewürfelt und bleiben stehen, bis sie angenommen sind oder die Saison
+vorbei ist. `mitAngeboten` legt fehlende nach, damit alte Spielstände und der
+Augenblick nach der Einschreibung ohne Sonderfall auskommen.
+
+**Drei Partner gleichzeitig** (`SPONSOR_MAX`), gemessen statt gesetzt — die
+Tabelle steht in Abschnitt 6.
+
+**Das war der fehlende Posten, nicht die Gehaltskurve.** Ebenfalls Abschnitt 6.
 
 ### WIRT-P1-01 – Saisonabrechnung sichtbar machen — VORGELEGT (Claude, 17.09.2026)
 
