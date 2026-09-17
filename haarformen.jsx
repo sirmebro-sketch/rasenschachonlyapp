@@ -85,11 +85,13 @@ export function Haarform({index=0,weiblich=false,breite=24,farbe,hell,ebene='vor
  if(typ==='schulter')d='M25 46 C22 23 31 9 50 10 C69 9 78 23 75 46 L69 54 L67 31 Q58 25 51 21 Q43 25 33 31 L31 54 Z';
  if(typ==='flechtkranz')d='M26 40 C23 25 31 12 43 11 Q50 5 57 11 C69 12 77 25 74 40 Q66 31 60 31 Q50 26 40 31 Q33 31 26 40 Z';
  const unterlage=typ==='rasiert'?rasierKappe:scalp;
+ const kopfsaum=neueKopfpassform&&!['rasiert','licht'].includes(typ);
  return <g>
-  {kopfpfad&&<defs><clipPath id={id+'kopf'} clipPathUnits="userSpaceOnUse"><path d={kopfpfad}/></clipPath></defs>}
+  {kopfpfad&&<defs><clipPath id={id+'kopf'} clipPathUnits="userSpaceOnUse"><path d={kopfpfad}/></clipPath><clipPath id={id+'kopfsaum'} clipPathUnits="userSpaceOnUse"><rect x="15" y="3" width="70" height="41"/></clipPath></defs>}
   {typ!=='licht'&&<g clipPath={kopfpfad?'url(#'+id+'kopf)':undefined}><g transform={transform}>
    <path d={unterlage} stroke={typ==='rasiert'?'none':farbe} strokeWidth={.65} fill={['undercut','fade'].includes(typ)?'url(#'+id+'fade)':farbe} opacity={typ==='rasiert'?.28:1}/>
   </g></g>}
+  {kopfsaum&&<path d={kopfpfad} fill="none" stroke={farbe} strokeWidth=".9" strokeLinejoin="round" clipPath={'url(#'+id+'kopfsaum)'}/>} 
   <g transform={transform}>
    <defs><linearGradient id={id+'farbe'} x1="0" y1="0" x2=".75" y2="1"><stop stopColor={hell}/><stop offset=".38" stopColor={farbe}/><stop offset="1" stopColor={farbe}/></linearGradient><linearGradient id={id+'fade'} x1="0" y1="0" x2="0" y2="1"><stop offset=".25" stopColor={farbe}/><stop offset="1" stopColor={farbe} stopOpacity=".22"/></linearGradient><clipPath id={id+'clip'}><path d={d}/></clipPath></defs>
    {typ!=='rasiert'&&<path d={d} stroke={typ==='licht'?farbe:'none'} strokeWidth={.5} strokeLinejoin="round" fill={'url(#'+id+'farbe)'}/>}
