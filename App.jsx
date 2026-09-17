@@ -2696,7 +2696,7 @@ const KOPFFORM = [
   /* CHAR-P1-01 / ChatGPT-Codex: nur angehängt. IDs 0–9 sind gespeicherter
      Vertrag und werden weder umsortiert noch geometrisch umgedeutet. */
   { n: "Trapez",     b: 26, j: 23, kinn: 72, profil: "trapez" },
-  { n: "Langkantig", b: 24, j: 19, kinn: 78, profil: "lang" },
+  { n: "Langkantig", b: 24, j: 19, kinn: 72, profil: "lang" },
   { n: "Diamant",    b: 29, j: 17, kinn: 73, kv: .72, profil: "diamant" },
   { n: "Kurzbreit",  b: 30, j: 27, kinn: 64, profil: "kurzbreit" },
 ];
@@ -2728,7 +2728,7 @@ const kopfPfad = (k) => {
   /* IDs 0–9 laufen weiterhin exakt durch den historischen Standardpfad.
      Nur angehängte Profile bekommen eine bewusst andere Außen-Silhouette. */
   if (k.profil === "trapez") return `M${l},42 C${l+1},30 ${l+8},17 36,13 C43,10 57,10 64,13 C${r-8},17 ${r-1},30 ${r},42 C${r},52 ${kur},${k.kinn-8} ${kur},${k.kinn-6} C${kur},${k.kinn-1} ${50+ku*.45},${k.kinn} 50,${k.kinn} C${50-ku*.45},${k.kinn} ${kul},${k.kinn-1} ${kul},${k.kinn-6} C${kul},${k.kinn-8} ${l},52 ${l},42 Z`;
-  if (k.profil === "lang") return `M${l+1},40 L${l+2},27 Q${l+6},13 50,11 Q${r-6},13 ${r-2},27 L${r-1},52 C${r-1},62 ${kur},${k.kinn-8} ${kur},${k.kinn-6} C${kur},${k.kinn-1} ${50+ku*.45},${k.kinn} 50,${k.kinn} C${50-ku*.45},${k.kinn} ${kul},${k.kinn-1} ${kul},${k.kinn-6} C${kul},${k.kinn-8} ${l+1},62 ${l+1},52 Z`;
+  if (k.profil === "lang") return `M${l+1},40 L${l+2},26 Q${l+5},11 42,9 Q50,7 58,9 Q${r-5},11 ${r-2},26 L${r-1},51 C${r-1},59 ${kur},${k.kinn-8} ${kur},${k.kinn-6} C${kur},${k.kinn-1} ${50+ku*.45},${k.kinn} 50,${k.kinn} C${50-ku*.45},${k.kinn} ${kul},${k.kinn-1} ${kul},${k.kinn-6} C${kul},${k.kinn-8} ${l+1},59 ${l+1},51 Z`;
   if (k.profil === "diamant") return `M31,18 Q41,10 50,11 Q59,10 69,18 Q76,30 ${r},44 Q${r-3},54 ${kur+3},63 Q${kur},${k.kinn-2} 50,${k.kinn} Q${kul},${k.kinn-2} ${kul-3},63 Q${l+3},54 ${l},44 Q24,30 31,18 Z`;
   if (k.profil === "kurzbreit") return `M${l},39 Q${l},21 32,13 Q50,8 68,13 Q${r},21 ${r},39 L${r},48 Q${r-1},55 ${kur},58 Q${kur},${k.kinn-1} 50,${k.kinn} Q${kul},${k.kinn-1} ${kul},58 Q${l+1},55 ${l},48 Z`;
   return "M" + l + ",40 C" + l + ",21 " + (l + 9) + ",12 50,12 C" + (r - 9) + ",12 " + r + ",21 " + r + ",40"
@@ -2896,6 +2896,13 @@ function Avatar({ seed = 1, zuege, club, size = 72, ring, g, nat, meta }) {
      setzen — sonst passt er auf hellen und dunklen Tönen nie zugleich. */
   const lidfarbe = shade(haut, -34);
   const kopfD = kopfPfad(kopf);
+  /* CHAR-FIX-01: Trikot/Kragen/Halsbasis bilden EINEN unverrueckbaren Anker.
+     Der Kopf darf kuerzer oder laenger sein; die Verbindung zum Koerper nicht. */
+  const KRAGEN_Y = 74;
+  const HALS_OBEN_Y = 55;
+  const HALS_BASIS_Y = 79;
+  const halsSchattenY = Math.min(kinnY - 1, KRAGEN_Y - 2);
+  const halsSchattenEnde = Math.min(kinnY + 4, KRAGEN_Y + 1);
 
   /* Haaransatz folgt der Kopfbreite, damit keine Frisur neben dem Kopf sitzt. */
   const hl = 50 - kopf.b, hr = 50 + kopf.b;
@@ -2952,16 +2959,19 @@ function Avatar({ seed = 1, zuege, club, size = 72, ring, g, nat, meta }) {
         <path d="M18,86 L74,-8 L82,-8 L28,88 Z" fill="#FFFFFF" opacity=".03" />
         <path d="M0,72 H100 V100 H0 Z" fill={grundTief} opacity=".55" />
 
-        {/* Schultern und Trikot */}
-        <path d="M2,100 C4,82 22,74 50,74 C78,74 96,82 98,100 Z" fill={c1} />
-        <path d="M2,100 C4,82 22,74 34,74 L40,100 Z" fill={shade(c1, -16)} />
-        <path d="M40,74 L50,87 L60,74 L56,73 L50,82 L44,73 Z" fill={c2} />
+        {/* Schultern und Trikot: feste Lage, unabhaengig von der Kopfform. */}
+        <path d={`M2,100 C4,82 22,${KRAGEN_Y} 50,${KRAGEN_Y} C78,${KRAGEN_Y} 96,82 98,100 Z`} fill={c1} />
+        <path d={`M2,100 C4,82 22,${KRAGEN_Y} 34,${KRAGEN_Y} L40,100 Z`} fill={shade(c1, -16)} />
 
-        {/* Hals mit Schatten unter dem Kiefer */}
-        <path d={"M43," + (kinnY - 10) + " h14 v14 c0,4 -14,4 -14,0 Z"} fill={schatten} />
-        <path d={"M43," + (kinnY - 10) + " h14 v4 c-4,3 -10,3 -14,0 Z"} fill={tief} />
+        {/* Hals laeuft hinter Kopf UND Kragen bis zur immer gleichen Basis.
+            So kann ein kurzer Kopf nicht mehr schweben und ein langer Kopf
+            drueckt den Kragen nicht mehr nach unten. */}
+        <path d={`M43,${HALS_OBEN_Y} H57 V${HALS_BASIS_Y} Q57,81 50,81 Q43,81 43,${HALS_BASIS_Y} Z`} fill={schatten} />
+        <path d={`M43,${halsSchattenY} H57 V${halsSchattenEnde} Q50,${halsSchattenEnde+2} 43,${halsSchattenEnde} Z`} fill={tief} opacity=".72" />
+        {/* Kragen liegt zuletzt auf dem Hals und sitzt damit sichtbar sauber. */}
+        <path d={`M40,${KRAGEN_Y} L50,${KRAGEN_Y+13} L60,${KRAGEN_Y} L56,${KRAGEN_Y-1} L50,${KRAGEN_Y+8} L44,${KRAGEN_Y-1} Z`} fill={c2} />
 
-        {modern && <Haarform index={z.frisur} weiblich={w} breite={kopf.b} farbe={haar} hell={haarHell} ebene="hinten"/>}
+        {modern && <Haarform index={z.frisur} weiblich={w} breite={kopf.b} kopfprofil={kopf.profil||''} kopfpfad={kopfD} farbe={haar} hell={haarHell} ebene="hinten"/>}
         {/* Ohren */}
         {(() => { const ry = [5.6,6.8,8,5.8,6.2][z.ohren] || 5.6, cy = 47, ex = kopf.b - (z.ohren === 3 ? 2.6 : 1);
           return (<g fill={haut}>
@@ -3168,7 +3178,7 @@ function Avatar({ seed = 1, zuege, club, size = 72, ring, g, nat, meta }) {
         </g>;})()}
 
         </>}
-        {modern && <Haarform index={z.frisur} weiblich={w} breite={kopf.b} farbe={haar} hell={haarHell}/>}
+        {modern && <Haarform index={z.frisur} weiblich={w} breite={kopf.b} kopfprofil={kopf.profil||''} kopfpfad={kopfD} farbe={haar} hell={haarHell}/>}
 
         {/* ---- Augenbrauen ---- */}
         <g fill={shade(haar, -12)}>
