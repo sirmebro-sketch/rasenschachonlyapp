@@ -9,112 +9,67 @@ Paket: `CHAR-FIX-02`
 
 ## Ziel
 
-Den sichtbaren Hals-/Kragenfehler im gemeinsamen Avatar-Renderer so beheben, dass Haut ausschließlich innerhalb der vorgesehenen Kragenöffnung sichtbar bleibt. Geschlossene Trikot- und Kragenflächen dürfen nicht von der Halsbasis überzeichnet werden. Gespeicherte Porträtkennungen bleiben unangetastet.
+Den sichtbaren Hals-/Kragenfehler im gemeinsamen Avatar-Renderer so beheben, dass die geschlossenen Trikotflächen den Hals sauber maskieren, **die tatsächliche V-Ausschnitt-Öffnung aber Kopf-Hautfarbe zeigt**. Gespeicherte Porträtkennungen bleiben unangetastet.
 
 ## Ursache
 
-`CHAR-FIX-01` hatte bereits feste Hals-/Kragenanker eingeführt und den Kragen nach dem Hals gerendert. Das Trikot selbst lag aber weiterhin **vor dem Hals im Quelltext und damit hinter dem Hals in der SVG-Zeichenreihenfolge**. Dadurch konnte die untere Halsfläche außerhalb der eigentlichen V-Öffnung auf geschlossenen Trikotflächen sichtbar werden.
+`CHAR-FIX-01` hatte feste Hals-/Kragenanker eingeführt. Beim ersten `CHAR-FIX-02`-Versuch wurde anschließend die Reihenfolge Hals → Trikot → Kragen hergestellt. Damit verschwand zwar das seitliche Hautdurchscheinen, zugleich überdeckte das Trikot aber auch die offene Innenfläche des V-Ausschnitts. Dort blieb dadurch Trikotfarbe sichtbar, obwohl anatomisch Haut zu sehen sein muss.
 
-## Änderung
+Der Nutzer hat diesen Fehler bei der Sichtprüfung erkannt. Die erste positive visuelle Abnahme ist damit **verworfen** und darf nicht als gültiger Endbefund verwendet werden.
 
-In `App.jsx` wurde ausschließlich die gemeinsame Layerreihenfolge des Avatar-Oberkörpers korrigiert:
+## Korrigierte Änderung
+
+Die endgültige Layerlogik lautet:
 
 1. Hals und Halsschatten;
-2. Trikot/Schultern;
-3. Kragen als vorderste der drei Ebenen.
+2. Trikot/Schultern als geschlossene Vorderfläche;
+3. **explizite Innenfläche des offenen V-Ausschnitts in `haut`, also exakt der Basis-Hautfarbe des Kopfes**;
+4. Kragenrand als vorderste Ebene.
 
-Damit maskiert die Trikotfläche die Halsbasis bereits flächig; der Kragen deckt anschließend seine Vorderkante sauber ab. Die festen Anker aus `CHAR-FIX-01` (`KRAGEN_Y`, `HALS_OBEN_Y`, `HALS_BASIS_Y`) bleiben unverändert.
+Die V-Öffnung verwendet die Geometrie
 
-Keine Kopf-, Haar-, Bart- oder sonstigen Porträt-IDs wurden geändert oder umnummeriert.
+`M44,${KRAGEN_Y-1} L50,${KRAGEN_Y+8} L56,${KRAGEN_Y-1} Z`
 
-## Neue Regression
+und liegt zwischen Trikot und Kragen. Dadurch bleibt der geschlossene Stoff vor dem Hals, während ausschließlich die tatsächliche Öffnung wieder Haut zeigt.
 
-`tools/char-fix-02.test.cjs` schützt drei Punkte:
+Die festen Anker aus `CHAR-FIX-01` (`KRAGEN_Y`, `HALS_OBEN_Y`, `HALS_BASIS_Y`) bleiben unverändert. Keine Kopf-, Haar-, Bart- oder sonstigen Porträt-IDs wurden geändert oder umnummeriert.
+
+## Regression
+
+`tools/char-fix-02.test.cjs` schützt nun insbesondere:
 
 - Hals wird vor Trikot und Kragen gerendert;
-- zwischen Trikot und Kragen wird keine Haut-/Halsschicht erneut aufgetragen;
-- die festen Hals-/Kragenanker aus `CHAR-FIX-01` bleiben erhalten.
+- die V-Ausschnitt-Hautfläche liegt **nach** dem Trikot und **vor** dem Kragen;
+- genau diese Öffnung verwendet `fill={haut}`;
+- die feste V-Geometrie bleibt erhalten;
+- die Hals-/Kragenanker aus `CHAR-FIX-01` bleiben erhalten.
 
-## Automatische Prüfung
+## Sichere Patch-Brücke
 
-### Sichere Patch-Brücke
+Der Spielcode wurde über `.github/workflows/safe-patch.yml` eingespielt. Die Brücke hat im Verlauf sowohl fehlerhafte Patchstände vor jeder Quelländerung abgelehnt als auch gültige Patches nach `git apply --check`, Regression und Build automatisiert übernommen.
 
-Der Spielcode-Fix wurde über `.github/workflows/safe-patch.yml` eingespielt.
+Für die korrigierte V-Ausschnitt-Version:
 
-- erster eingereichter Patch: wegen formal fehlerhafter Unified-Diff-Zeilenzählung **vor jeder Quelländerung abgelehnt**;
-- korrigierter Lauf `35273131521`: **erfolgreich**;
-- Patchprüfung, Anwendung, `npm ci`, komplette Regression und Produktions-Build erfolgreich;
-- geprüfter Bot-Commit: `6e3142a3bd466517754c8200308714c64d362901`.
+- Patch-Commit: `5673ab8a8de7fdee0fbb4da1798259ccaf86c464`;
+- Safe-Patch-Run `35274142553`: **erfolgreich**;
+- Patchprüfung und Anwendung: erfolgreich;
+- `npm ci`: erfolgreich;
+- `npm test`: erfolgreich;
+- `npm run build`: erfolgreich;
+- geprüfter Bot-Commit: `aeea757a72e099f35cf46ebf13bbdf6c179f9850`.
 
-Damit sind sowohl der Schutz-/Ablehnungsweg als auch der Erfolgsweg der neuen Patch-Brücke praktisch belegt.
+Die Patch-Brücke ist dauerhaft dokumentiert in:
 
-### PR-Spielregression
+- `PATCH-BRUECKE.md`;
+- `AGENTS.md`;
+- `.github/workflows/safe-patch.yml`.
 
-GitHub Actions Run `35273291894`: **erfolgreich**.
+## Erneute Browser-/Sichtabnahme
 
-- `npm test`: **130/130 bestanden**, 0 fehlgeschlagen, 0 übersprungen;
-- darin alle drei neuen `CHAR-FIX-02`-Regressionen erfolgreich;
-- `npm run build`: **erfolgreich**;
-- Vite 6.4.3, 54 Module transformiert.
+Nach dem Nutzerhinweis ist eine **neue** Browsergalerie auf dem korrigierten Endstand Pflicht. Die frühere Galerie/Artifact-ID `10519334408` belegt nur den verworfenen Zwischenstand und darf nicht als Endabnahme von CHAR-FIX-02 gelten.
 
-Bekannte, nicht blockierende Hinweise bleiben bestehen:
-
-- React-SSR-Hinweise zu `useLayoutEffect`;
-- Vite-Hinweis auf den großen Hauptchunk;
-- GitHub-Actions-Hinweis zur Node-20-Abkündigung älterer Actions.
-
-### Browser / Playwright
-
-GitHub Actions Run `35273291878`: **erfolgreich**.
-
-- **38 bestanden, 13 planmäßig übersprungen, 0 fehlgeschlagen**;
-- 51 Testfälle über `handy`, `schmal` und `desktop`;
-- die bestehende CHAR-FIX-01-Vollmatrix mit 14 Kopfformen und 252 Porträts lief auf allen drei Projekten erfolgreich;
-- Porträt-Identitätskette, Charaktererstellung, Kopfformen, Gesichtsmerkmale, Frisuren und Bartprüfungen blieben grün.
-
-Browserartefakt:
-
-- Name: `Rasenschach-Browsertest`
-- Artifact-ID: `10519334408`
-- SHA-256: `46b7669665d8aa6542b832985dca24806f6ccc2d86e5b4861c21229ae8f15fc4`
-- Größe: 27.043.709 Byte
-- 103 Dateien im Artefakt.
-
-## Tatsächliche visuelle Kontrolle
-
-Das Browserartefakt wurde heruntergeladen und die erzeugten PNG-Matrizen wurden geöffnet. Geprüft wurden insbesondere:
-
-- Gesamtmatrix aller 14 Kopfformen;
-- kritische Reihen der neuen Kopfformen 10–13;
-- 72-, 96- und 145-px-Darstellungen;
-- männliche und weibliche Porträts;
-- helle, mittlere und dunkle Haut-/Trikotkontraste.
-
-### Befund
-
-- Hals bleibt sichtbar innerhalb der vorgesehenen V-Öffnung;
-- geschlossene Trikotflächen decken die Halsbasis sauber ab;
-- an der Vorderkante des Kragens ist kein Hautdurchscheinen mehr erkennbar;
-- keine neue sichtbare Lücke zwischen Kopf/Hals/Kragen;
-- die kleinen 72-px-Porträts bleiben geschlossen und lesbar;
-- die neuen Kopfformen, Frisuren- und Bartkorrekturen aus den vorherigen Paketen bleiben optisch intakt.
-
-## Patch-Brücke dokumentiert
-
-Die neue Arbeitsmöglichkeit ist dauerhaft im Repository beschrieben:
-
-- `PATCH-BRUECKE.md` – Zweck, Schutzregeln, Nutzung, Grenzen und belegter Ersteinsatz;
-- `AGENTS.md` – verbindlicher Verweis für automatisierte Mitarbeit und neue Bearbeiter;
-- `.github/workflows/safe-patch.yml` – ausführender, auf Arbeitsbranches begrenzter Workflow.
-
-Dadurch können spätere ChatGPT-/Codex-/Claude- oder andere Arbeitsumgebungen gezielte Änderungen an konfliktanfälligen Großdateien sicher über Unified Diffs einspielen, ohne eine komplette alte `App.jsx` zurückzuschreiben.
-
-## Grenzen
-
-- Es wurde kein neuer physischer Android-Geräte-Screenshot speziell für diesen Fix aufgenommen.
-- Browser-Sichtprüfung und Android-Geräteprüfung werden nicht gleichgesetzt.
-- Der Fix betrifft ausschließlich SVG-Layering im gemeinsamen Avatar-Renderer und enthält keine native Android-Änderung.
+Die erneute PR-CI und Sichtprüfung werden auf dem korrigierten Code ausgeführt. Erst danach wird dieses Paket im Arbeitsplan auf `ERLEDIGT` gesetzt und PR #20 integriert.
 
 ## Status
 
-**CHAR-FIX-02 erfüllt die vorgesehenen technischen und visuellen Abnahmekriterien und ist zur Integration freigegeben.**
+**KORRIGIERT, erneute visuelle Abnahme läuft. Noch nicht zur Integration freigegeben.**
