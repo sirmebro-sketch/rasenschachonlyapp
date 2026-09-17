@@ -1561,3 +1561,61 @@ was man sich vorstellt, ein erzeugter prüft, was passiert.
 - **Preise, Rechtsform und Vorstandsziel haben keine Oberfläche.**
 - **WIRT-P1-02 — Stadionausbau spürbar machen.**
 - **Kein Gerätetest.**
+
+## WIRT-P1-05 — Die Restkasse zählt beim Abschluss (Claude, 17.09.2026)
+
+**Basis-Commit:** Stand des Zweigs `claude/wirt-p1-01` (Pull Request #15).
+**Branch:** `claude/wirt-p1-05`. **Vorgelegt zur Abnahme.**
+Kette: `vereinswirtschaft` → `p0-02` → `p0-03` → `p0-04` → `p1-01` → dieser.
+
+**Das Problem.** `abschlussWirtschaft` war seit dem Wirtschaftskern fertig und
+geprüft — und hatte **null Aufrufer**. Was am Ende der fünfzehn Jahre in der
+Kasse lag, verfiel. Damit war Wirtschaften ab dem Jahr, in dem alles gebaut
+war, gleichgültig, und genau das sollte die Umstellung auf Geld abschaffen.
+
+**Was geändert wurde:**
+
+1. **`abschluss` addiert die Kassenpunkte.** Vier Millionen ergeben einen
+   Punkt, gedeckelt bei 250 — zum Vergleich wiegt ein Aufstieg 120 und eine
+   Meisterschaft 90. Spürbar, aber kein Ersatz für Sport. Schulden zählen nicht
+   negativ; der Abschluss soll nicht zweimal bestrafen.
+2. **Der Plakettenfaktor wirkt auf beide Teile, jeden genau einmal.** Das
+   VC-Extra „Vermächtnisplakette" verspricht „+15 % Abschlusspunkte", nicht
+   „+15 % auf den Kassenanteil". `abschlussWirtschaft` rechnet ihn in seinen
+   eigenen Punktwert ein; der sportliche Teil wird in `abschluss` einmal damit
+   multipliziert. Eine Regression prüft, dass das Verhältnis 1,15 bleibt —
+   doppelt angewandt wären es 1,32.
+3. **Mehr Punkte heissen auch mehr VC und frühere Boni.** Gewollte Folge, kein
+   Nebeneffekt: `vc` und `BONI` hängen an derselben Punktzahl.
+4. **Der Abschlussbildschirm zeigt die Aufteilung** („… sportlich · … aus der
+   Kasse") und nennt die Plakette, wenn sie gekauft wurde. Ohne diese Zeile
+   sähe der Spieler nur eine gewachsene Zahl und würde beim nächsten Verein
+   wieder alles bis zur letzten Mark verbauen. War die Kasse leer, sagt der
+   Bildschirm auch das.
+
+**Geprüft:** `npm test` **164/164** (vorher 160), `npm run build` erfolgreich.
+Vier neue Regressionen: die Kasse zählt mit 4 Mio je Punkt, Schulden nicht
+negativ, der Deckel hält; die Plakette wirkt auf beide Teile und genau einmal;
+ein Verein ohne Wirtschaftsfelder bleibt abschliessbar und erfindet nichts;
+der Abschlussbildschirm nennt Aufteilung, leere Kasse und Plakette.
+**Gegenprobe:** lässt man die Kassenpunkte wieder weg, werden zwei davon rot.
+
+Dafür ist der Prüfstand um `renderVereinAbschluss` gewachsen — der
+Abschlussbildschirm hatte bis jetzt keinen.
+
+**Damit ist die Wirtschaft vollständig durchgeschaltet:** Geld wird eingenommen
+(P0-04), ausgegeben (P0-03), abgerechnet (P0-02), angezeigt (P1-01) und zählt
+am Ende (P1-05). **Ab hier ist ein Gerätetest sinnvoll.**
+
+**Offen bleibt:**
+
+- **WIRT-P1-04 — Folgen einer leeren Kasse.** Die Kasse darf weiterhin ins
+  Minus laufen, ohne dass etwas passiert. Für den sehr starken Kader, der seiner
+  Infrastruktur davongelaufen ist, die einzige verbleibende Antwort.
+- **WIRT-P1-02 — Stadionausbau spürbar machen.**
+- **Preise, Rechtsform und Vorstandsziel haben keine Oberfläche.** Sie rechnen
+  mit den Vorgabewerten mit; einstellen kann man sie nicht.
+- **Die Versionsnummer bleibt 35.192.0.** Die Kette ändert Spielverhalten und
+  müsste sie bei einer neuen APK erhöhen — das entscheidet Codex beim
+  Ausliefern.
+- **Kein Gerätetest.** Jetzt wäre er dran.

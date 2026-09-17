@@ -175,12 +175,24 @@ Derzeit kann die Kasse ins Minus laufen, ohne dass etwas passiert. Denkbar:
 Transfersperre, Punktabzug, erzwungene Verkäufe. Bewusst noch nicht gebaut,
 weil es die Schwierigkeit spürbar verschiebt.
 
-### WIRT-P1-05 – Abschluss und Vermächtnis nachziehen — OFFEN
+### WIRT-P1-05 – Abschluss und Vermächtnis nachziehen — VORGELEGT (Claude, 17.09.2026)
 
-Der Abschluss nach fünfzehn Jahren schüttet VC aus (`abschluss` in
-`verein.js`). Zu klären: Was passiert mit der Kasse? Fließt Wirtschaftserfolg
-in die Abschlusspunkte? Das VC-Extra „Vermächtnisplakette" setzt bereits einen
-`punkteFaktor`, der noch nirgends gelesen wird.
+`abschluss` ruft jetzt `abschlussWirtschaft` und addiert die Kassenpunkte zu
+den sportlichen. Vier Millionen ergeben einen Punkt, gedeckelt bei 250 (ein
+Aufstieg wiegt 120, eine Meisterschaft 90). Schulden zählen nicht negativ.
+
+**Der Plakettenfaktor wirkt auf beide Teile, jeden genau einmal.** Das VC-Extra
+verspricht „+15 % Abschlusspunkte" — nicht „+15 % auf den Kassenanteil".
+`abschlussWirtschaft` rechnet ihn in seinen eigenen Punktwert ein, der
+sportliche Teil wird in `abschluss` einmal damit multipliziert. Eine Regression
+prüft, dass das Verhältnis 1,15 bleibt und nicht 1,32 wird.
+
+**Mehr Punkte heissen auch mehr VC und frühere Boni.** Das ist die gewollte
+Folge, kein Nebeneffekt: Wirtschaften lohnt bis zur letzten Saison.
+
+Der Abschlussbildschirm zeigt die Aufteilung („… sportlich · … aus der Kasse")
+und nennt die Plakette, wenn sie gekauft wurde — sonst wüsste niemand, wofür
+die 120 VC waren. War die Kasse leer, sagt er auch das.
 
 ## 6. Offene Balance-Fragen
 
@@ -195,8 +207,8 @@ man es sich meist nicht leisten kann, bleibt die Spezialisierung.
 
 **Gelöst: die Restkasse verfällt nicht mehr.** Vier Millionen ergeben einen
 Abschlusspunkt, gedeckelt bei 250 (ein Aufstieg wiegt 120). Wirtschaften lohnt
-damit bis zur letzten Saison. Die Verdrahtung in `verein.js` steht noch aus
-(WIRT-P1-05); die Funktion `abschlussWirtschaft` ist fertig und geprüft.
+damit bis zur letzten Saison. **Seit WIRT-P1-05 ist es auch verdrahtet** und im
+Abschlussbildschirm sichtbar.
 
 **Gelöst (17.09.2026): der Überschuss oben ist halbiert.** Mit den
 Spielergehältern und der Erfolgsratsche (WIRT-P1-03) endet der Erstligist im
