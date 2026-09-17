@@ -13,7 +13,7 @@ diff --git a/CHARAKTER-OPTIK-ARBEITSPLAN.md b/CHARAKTER-OPTIK-ARBEITSPLAN.md
 diff --git a/START-NEUER-CHAT.md b/START-NEUER-CHAT.md
 --- a/START-NEUER-CHAT.md
 +++ b/START-NEUER-CHAT.md
-@@ -20,5 +20,10 @@ Der aktuelle Repository-Stand ist die Arbeitsbasis. Frühere Chats, Erinnerungen
+@@ -20,4 +20,9 @@ Der aktuelle Repository-Stand ist die Arbeitsbasis. Frühere Chats, Erinnerungen
  
  Niemals einen älteren Gesamtstand ungeprüft über `main` kopieren.
  
