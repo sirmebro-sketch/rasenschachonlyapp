@@ -29,6 +29,8 @@ jobs:
             test-results/
             .preview/sichtprobe.html
             .preview/charakter-inventar.html
+            .preview/kopfformen.html
+            .preview/gesichtszuege.html
             .preview/spieltest.html
             .preview/bildschirm.html
           include-hidden-files: true
