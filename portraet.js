@@ -23,7 +23,7 @@ export function portraetWuerfeln(alt,optionen,fest,zufall){
 }
 export const PORTRAET_NAMEN={
  brauen:['Gerade','Geschwungen','Markant','Fein','Breit geschwungen','Weich auslaufend','Sanfter Bogen'],
- augen:['Mandelförmig','Schmal','Betont','Tief liegend','Offen','Sanft rund','Feiner Lidspalt','Außen angehoben','Außen abgesenkt'],
+ augen:['Mandelförmig','Schmal','Betont','Tief liegend','Offen','Sanft rund','Leicht angehoben','Angehobene Außenkante','Abgesenkte Außenkante'],
  nase:['Ausgeglichen','Breit','Schmal','Lang','Gerade','Rund','Kräftig','Fein','Kurze Nasenspitze','Sanfter Nasenrücken','Breite Stupsnase','Hoher Nasenrücken'],
  mund:['Lächelnd','Gerade','Schmal geschwungen','Entspannt','Ausgeglichen','Voll','Breit','Leichtes Lächeln','Offenes Lächeln'],
  ohren:['Klein','Mittel','Groß','Anliegend','Rund'],
