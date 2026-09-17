@@ -1,0 +1,31 @@
+name: CHAR FIX 01 Patchlauf
+on:
+  push:
+    branches:
+      - codex/char-fix-01-kopf-hals-frisur
+    paths:
+      - .github/workflows/char-fix-01-patch.yml
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: codex/char-fix-01-kopf-hals-frisur
+      - name: Avatar-Renderer patchen
+        run: python3 tools/char-fix-01-patch.py
+      - name: Patchhilfen und Inspektionshilfen entfernen
+        run: |
+          rm tools/char-fix-01-patch.py
+          rm tools/char-fix-01-source.txt
+          rm .github/workflows/char-fix-01-inspect.yml
+          rm .github/workflows/char-fix-01-patch.yml
+      - name: Produktionsaenderung committen
+        run: |
+          git config user.name "ChatGPT Codex"
+          git config user.email "noreply@openai.com"
+          git add App.jsx tools/char-fix-01-patch.py tools/char-fix-01-source.txt .github/workflows/char-fix-01-inspect.yml .github/workflows/char-fix-01-patch.yml
+          git commit -m "CHAR-FIX-01: Kopf Hals und Haar sauber ankoppeln"
+          git push origin HEAD:codex/char-fix-01-kopf-hals-frisur
