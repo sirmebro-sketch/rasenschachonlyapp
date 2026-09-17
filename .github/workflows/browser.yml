@@ -27,6 +27,7 @@ jobs:
           path: |
             playwright-report/
             test-results/
+            App.jsx
             .preview/sichtprobe.html
             .preview/charakter-inventar.html
             .preview/kopfformen.html
