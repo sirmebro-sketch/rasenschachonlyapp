@@ -862,3 +862,38 @@ kein Browsererfolg daraus abgeleitet. GitHub-Browser-CI bleibt Release-Gate.
 Die automatische Freigabeprüfung lehnte den ersten main-Push ab. Kevin bestätigte
 daraufhin ausdrücklich die dauerhafte Freigabe für Updates und APK-Builds sowie
 sein letztes Wort; Wortlaut in README. Veröffentlichung wird damit fortgesetzt.
+
+## Prüfstand von Hand startbar (Claude, 17.09.2026)
+
+**Basis-Commit:** `a96660f`. **Branch:** `claude/ci-handstart`.
+**Vorgelegt zur Abnahme, nicht zusammengeführt.**
+
+**Auftrag.** Kevin: „Mach das mit workflow_dispatch in regression.yml".
+
+**Das Problem.** `.github/workflows/regression.yml` lief bei `pull_request` und
+bei Pushes auf `main` — sonst nie. Ein Branch ohne offenen Pull Request war
+damit für die CI unsichtbar: `npm test` und `npm run build` liefen dort nur auf
+dem Rechner dessen, der ihn gepusht hat. Bei der Übergabe zwischen drei
+Beteiligten ist das die schwächste Stelle, weil der Empfänger einem Prüfbericht
+glauben muss, den er nicht nachstellen kann.
+
+**Die Änderung.** Drei Zeilen: `workflow_dispatch:` als dritter Auslöser, mit
+einem Kommentar, der den Weg in der Oberfläche nennt (Actions →
+„Spielregressionen" → „Run workflow" → Branch wählen). `browser.yml` und
+`apk.yml` hatten den Auslöser bereits; damit sind alle drei Arbeitsabläufe
+gleich bedienbar. `README.md` nennt die Möglichkeit im Abschnitt „Prüfstände",
+weil sie sonst niemand findet.
+
+**Was sich NICHT ändert.** Ein reiner Branch-Push startet weiterhin nichts. Der
+Auslöser ist ein Knopf, kein Automatismus — wer prüfen will, drückt ihn.
+
+**Geprüft:** YAML gelesen und die drei Auslöser bestätigt (`pull_request`,
+`push`, `workflow_dispatch`), `npm test` und `npm run build` erfolgreich. Der
+Knopf selbst ist erst nach der Abnahme zu sehen: GitHub zeigt „Run workflow"
+nur für Arbeitsabläufe, die auf dem Standardbranch liegen. Solange das hier
+nicht in `main` ist, gibt es den Knopf also noch nicht — das ist kein Fehler,
+sondern der Grund, warum diese Änderung überhaupt nötig ist.
+
+**Offen bleibt:** Nach der Zusammenführung einmal tatsächlich drücken und
+nachsehen, ob der Lauf auf einem fremden Branch durchgeht. Das kann erst
+danach jemand tun.
