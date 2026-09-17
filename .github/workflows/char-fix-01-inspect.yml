@@ -1,0 +1,43 @@
+name: CHAR FIX 01 Rendereranker
+on:
+  push:
+    branches:
+      - codex/char-fix-01-kopf-hals-frisur
+    paths:
+      - .github/workflows/char-fix-01-inspect.yml
+permissions:
+  contents: write
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: codex/char-fix-01-kopf-hals-frisur
+      - name: Relevante Avatar-Ausschnitte sichern
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          s=Path('App.jsx').read_text()
+          needles=['const KOPFFORM = [','const kopfPfad = (k) => {','function Avatar({','const kinnY = kopf.kinn','<Haarform','M43,','M2,100','M40,74']
+          out=[]
+          for needle in needles:
+              start=0
+              hits=[]
+              while True:
+                  i=s.find(needle,start)
+                  if i<0: break
+                  hits.append(i); start=i+1
+              out.append('\n\n===== '+needle+' :: '+str(hits)+' =====\n')
+              for i in hits[:8]:
+                  out.append(s[max(0,i-1400):min(len(s),i+2200)])
+                  out.append('\n-----\n')
+          Path('tools/char-fix-01-source.txt').write_text(''.join(out))
+          PY
+      - name: Ausschnitt committen
+        run: |
+          git config user.name "ChatGPT Codex"
+          git config user.email "noreply@openai.com"
+          git add tools/char-fix-01-source.txt
+          git commit -m "CHAR-FIX-01: relevante Rendereranker sichern"
+          git push origin HEAD:codex/char-fix-01-kopf-hals-frisur
