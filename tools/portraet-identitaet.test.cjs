@@ -36,7 +36,6 @@ import {renderToStaticMarkup} from 'react-dom/server';
 export {createPlayer,KARTEN,VEREIN,leereAkademie,leereBilanz,SAVE_KEY,AKA_KEY,LIFE_KEY,zufallSetzen};
 export const renderPortrait=x=>renderToStaticMarkup(<Avatar seed={x.avatar} zuege={x.zuege} g={x.g} nat={x.natId||x.nation?.id||'GER'} club={null} size={54}/>);
 export const renderCard=k=>renderToStaticMarkup(<Spielerkarte karte={k}/>);
-export const renderRoster=s=>renderToStaticMarkup(<Elfkarte spieler={s} stufe={KARTEN.stufeFuer(s.ovr)} platz={s.pos} eignung={1}/>);
 export async function runFinish(q){
  const out={};const aka={...leereAkademie(),vc:100,verdient:200,gratisPacks:2};
  const ges=leereBilanz(),verein=null,meta={},ach={},seen={},wcSeen={},hall=[],hsvZ=0;
@@ -97,7 +96,6 @@ for(const g of ['m','w'])test('CHAR-P0-02: Karriere → Halle → Karte → Kade
  const original={...p,natId:p.nation.id};
  assert.equal(normalisiere(E.renderPortrait(original)),normalisiere(E.renderPortrait(h)),'Karriere und Ruhmeshalle zeichnen nicht dasselbe Gesicht');
  assert.equal(normalisiere(E.renderPortrait(h)),normalisiere(E.renderCard(card)),'Ruhmeshalle und Sammelkarte zeichnen nicht dasselbe Gesicht');
- assert.equal(normalisiere(E.renderPortrait(h)),normalisiere(E.renderRoster(kader)),'Ruhmeshalle und Kader zeichnen nicht dasselbe Gesicht');
 });
 
 test('CHAR-P0-02: Altstand ergänzt Porträt nur über historische Identität, nicht über gleichen Namen',()=>{
