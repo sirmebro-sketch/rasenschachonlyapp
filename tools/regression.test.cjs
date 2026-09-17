@@ -39,6 +39,7 @@ export {simTable, LEAGUES, karriereZeitraum, verdict, vorsatzBelohnen, vorsatzPu
 export const renderCreate=()=>renderToStaticMarkup(<CreateScreen meta={{}} onStart={()=>{}} onBack={()=>{}}/>);
 export const renderPortraits=()=>renderToStaticMarkup(<>{['m','w'].flatMap(g=>Array.from({length:4},(_,i)=><Avatar key={g+i} seed={1} g={g} zuege={{...zuegeAusKennung(1,g,'GER',{}),stil:2,haut:10+i,haar:9+i,frisur:(g==='w'?14:16)+i,details:i,bart:g==='w'?0:10+i%3}}/>))}</>);
 export const renderEnd=p=>renderToStaticMarkup(<EndScreen p={p} onNew={()=>{}}/>);
+export const renderOptionen=(test)=>renderToStaticMarkup(<Optionen ruhe={0} aufRuhe={()=>{}} onBackup={()=>{}} onZu={()=>{}} onAnleitung={()=>{}} hall={[]} aka={leereAkademie()} laeuft={false} meta={{}} aufRahmen={()=>{}} test={test}/>);
 export const renderVereinAbschluss=(v,ergebnis,ges)=>renderToStaticMarkup(<VereinAbschluss v={v} ergebnis={ergebnis} ges={ges||{}} onNeu={()=>{}} onZurueck={()=>{}}/>);
 export const renderVerein=(v,aka,reiter)=>renderToStaticMarkup(<VereinScreen v={v} aka={aka} startReiter={reiter} onAendern={()=>{}} onZurueck={()=>{}} onAbschluss={()=>{}}/>);
 export const renderPacks=(pool,reiter='laden',verein=null)=>renderToStaticMarkup(<Packladen vc={100} pool={pool} verein={verein} gratis={1} startpaket={false} startReiter={reiter} onKauf={()=>{}} onGratis={()=>{}} onStartpaket={()=>{}} onEinsetzen={()=>{}} onEntfernen={()=>{}} onVerkauf={()=>{}} onZurueck={()=>{}}/>);
@@ -649,6 +650,28 @@ test('Saisonabrechnung: verfehltes Ziel, fertige Bauten und Ereignisse werden be
  assert(rest.includes('Sturmschaden am Dach'));
  assert(rest.includes('Novembernacht'),'das Ereignis wird erzählt, nicht nur gebucht');
  assert(!rest.includes('NaN'));
+});
+
+test('Testwerkzeuge erscheinen nur, wenn sie durchgereicht werden',()=>{
+ /* NUR IN DER BETA. Der Block haengt an einem Buendel, das der Beta-Zweig
+    setzt und eine Auslieferung nicht — ohne ihn darf im Optionsbildschirm
+    keine Spur davon zu sehen sein. */
+ const ohne=E.renderOptionen(null);
+ assert(!ohne.includes('Testwerkzeuge'),'in der Auslieferung ist nichts davon da');
+ /* Nicht auf 'Laufbahnen' pruefen: das Wort steht auch sonst im Bildschirm.
+    Geprueft wird die Beschriftung der Knoepfe, die es nur hier gibt. */
+ assert(!ohne.includes('20 Laufbahnen'));
+ assert(!ohne.includes('+500 VC'));
+ assert(!ohne.includes('NaN'));
+ const mit=E.renderOptionen({sprung:()=>{},vc:()=>{},log:null});
+ assert(mit.includes('Testwerkzeuge'));
+ assert(mit.includes('20 Laufbahnen'),'der Sprung ueber zwanzig Laufbahnen, den Kevin angefragt hat');
+ assert(mit.includes('+500 VC')&&mit.includes('+2000 VC'));
+ assert(mit.includes('Ruhmeshalle bleiben leer'),'der Block sagt, was er NICHT tut');
+ assert(!mit.includes('NaN'));
+ /* Die Rueckmeldung eines Laufs wird angezeigt, nicht verschluckt. */
+ const gelaufen=E.renderOptionen({sprung:()=>{},vc:()=>{},log:'20 Laufbahnen angerechnet · 20 Vereinssaisons gespielt'});
+ assert(gelaufen.includes('20 Vereinssaisons gespielt'));
 });
 
 test('Sponsoren: die Angebote liegen im Spielstand, nicht im Augenblick',()=>{

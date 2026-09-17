@@ -46,6 +46,28 @@ Actions → **„Android-App bauen"** → *Run workflow* → Zweig
 prüft die Signatur; die APK liegt danach als Artefakt „Rasenschach-Android"
 am Lauf.
 
+## Testwerkzeuge (Einstellungen → ganz oben, rot umrandet)
+
+Nur in der Beta vorhanden. Sie rufen **dieselben Funktionen wie der
+Karriereabschluss** (`akaVerbuchen`, `VEREIN.vereinSaison`) — eine Abkürzung
+mit eigener Rechnung würde genau das nicht mehr prüfen, worum es geht.
+
+| Knopf | Was er tut |
+|---|---|
+| **5 / 20 Laufbahnen** | Rechnet so viele abgeschlossene Laufbahnen an: die Akademie altert je Laufbahn ein Jahr, der Verein spielt je Laufbahn eine Saison samt Wirtschaft, die Zähler steigen (Akademie ab 2, Verein ab 5 freigeschaltet) |
+| **+500 / +2000 VC** | Erhöht den VC-Bestand der Akademie |
+
+**Was sie NICHT tun:** eine Spielerlaufbahn simulieren. Torschützenlisten,
+Ruhmeshalle und Spielerstatistiken bleiben leer. Wer die Spielerseite testen
+will, spielt sie. Unter den Knöpfen steht nach jedem Lauf, was tatsächlich
+passiert ist — etwa „20 Laufbahnen angerechnet · 20 Vereinssaisons gespielt".
+
+**Geprüft ist, dass der Block nur in der Beta erscheint und richtig rendert**
+(Regression in `tools/regression.test.cjs`). **Nicht** geprüft ist der
+Klickweg in einem echten Browser: mein Prüfaufbau kam nicht am Vorspann
+vorbei. Du bist der Erste, der die Knöpfe wirklich drückt — wenn einer nicht
+tut, was draufsteht, ist das ein echter Fund.
+
 ## Was beim Testen zu beachten ist
 
 - **Die Beta startet leer.** Eigene App-ID heisst eigener Speicher. Wer mit

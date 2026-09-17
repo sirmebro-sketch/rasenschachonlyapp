@@ -14500,7 +14500,7 @@ function Kurzanleitung({ onZu }) {
 /* Alles, was man einmal einstellt und dann in Ruhe lässt: Darstellung,
    Rückmeldung, Sicherung, Rechtliches. Liegt hinter dem Zahnrad, damit das
    Titelblatt frei bleibt. */
-function Optionen({ ruhe, aufRuhe, onBackup, onZu, onAnleitung, hall, aka, laeuft, meta, aufRahmen }) {
+function Optionen({ ruhe, aufRuhe, onBackup, onZu, onAnleitung, hall, aka, laeuft, meta, aufRahmen, test }) {
   useZurueck(onZu);
   const [vib, setVib] = useState(VIBRATION);
   const [stufe, setStufe] = useState(TEXTSTUFE);
@@ -14662,6 +14662,32 @@ function Optionen({ ruhe, aufRuhe, onBackup, onZu, onAnleitung, hall, aka, laeuf
               ? "Ein Ereignis je Saison, Training und Anschaffungen laufen von selbst."
               : "Alles selbst entscheiden: Training, Einkäufe, Gehaltspoker."}</p>
 
+
+          {/* TESTWERKZEUGE — nur in der Beta vorhanden (`test` ist sonst null). */}
+          {test && (
+            <div style={{ borderTop: "1px solid var(--ln)", paddingTop: 11, marginTop: 11,
+              borderLeft: "3px solid var(--bad)", paddingLeft: 9 }}>
+              <span className="eb" style={{ color: "var(--bad)" }}>Testwerkzeuge · nur in der Beta</span>
+              <p style={{ fontSize: 11.5, color: "var(--mu)", marginTop: 4 }}>
+                Rechnet Laufbahnen an, ohne sie zu spielen: die Akademie altert,
+                der Verein spielt seine Saisons, die Zähler steigen. Torschützen
+                und Ruhmeshalle bleiben leer — wer die Spielerseite testen will,
+                spielt sie.</p>
+              <div className="optionen-auswahl" style={{ marginTop: 6 }}>
+                {[5, 20].map((n) => (
+                  <button key={n} className="btn sm" style={{ flex: 1 }}
+                    onClick={() => { test.sprung(n); haptik("tipp"); }}>
+                    {n} Laufbahnen</button>))}
+              </div>
+              <div className="optionen-auswahl" style={{ marginTop: 6 }}>
+                {[500, 2000].map((x) => (
+                  <button key={x} className="btn sm" style={{ flex: 1 }}
+                    onClick={() => { test.vc(x); haptik("tipp"); }}>
+                    +{x} VC</button>))}
+              </div>
+              {test.log && (
+                <p style={{ fontSize: 11.5, color: "var(--ok)", marginTop: 6 }}>{test.log}</p>)}
+            </div>)}
 
           <div style={{ borderTop: "1px solid var(--ln)", paddingTop: 11, marginTop: 11 }}>
             <span className="eb">Schwierigkeit</span>
@@ -14876,7 +14902,7 @@ function titelgeschichte(save, laeuft, hall, aka) {
     unter: "Trainingsschwerpunkte, Vertragspoker, Leihen, Angebote, die man besser ablehnt. Eine Laufbahn, eine Entscheidung nach der anderen." };
 }
 
-function MenuScreen({ onSammlung, hall, onNew, onHall, save, onResume, onAch, achN, metaN, onBackup, ruhe, setRuhe, setRuheState, aka, onAka, verein, onVerein, onVereinDach, gesamt, onLaden, meta, aufRahmen, freiHinweis, onFreiZu, karten, speicherFehler, optAuf, onOptAufGesehen }) {
+function MenuScreen({ onSammlung, hall, onNew, onHall, save, onResume, onAch, achN, metaN, onBackup, ruhe, setRuhe, setRuheState, aka, onAka, verein, onVerein, onVereinDach, gesamt, onLaden, meta, aufRahmen, freiHinweis, onFreiZu, karten, speicherFehler, optAuf, onOptAufGesehen, test }) {
   const [ask, setAsk] = useState(false);
   const [opt, setOpt] = useState(false);
   /* F56 (35.147): kam man aus der Sicherung zurück, war `opt` wieder false
@@ -14899,6 +14925,7 @@ function MenuScreen({ onSammlung, hall, onNew, onHall, save, onResume, onAch, ac
   if (opt) return (
     <Shell blatt="optionen">
       <Optionen ruhe={ruhe} hall={hall} aka={aka} laeuft={!!laeuft} onBackup={onBackup}
+        test={test}
         meta={meta} aufRahmen={aufRahmen}
         onZu={() => setOpt(false)} onAnleitung={() => setAnleitung(true)}
         aufRuhe={(n) => { setRuhe(n); setRuheState(n); }} />
@@ -18437,6 +18464,51 @@ function FlutlichtApp() {
     if (a !== undefined) daten[AKA_KEY] = JSON.stringify(a);
     return bucheAenderung(daten, () => { setVerein(n); if (a !== undefined) setAka(a); });
   };
+  /* ===================== TESTWERKZEUGE — NUR IN DER BETA =====================
+     Kevin: „Eine Art Testwerkzeuge damit ich schneller in der Beta testen kann.
+     Das schnelle Abschliessen von Spielerkarrieren mit mind. 20 Laufbahnen und
+     das Erhoehen der eigenen VC im Besitz."
+
+     ES WIRD NICHTS NACHGEBAUT. Der Sprung ruft `akaVerbuchen` und
+     `VEREIN.vereinSaison` — dieselben Funktionen, die der Karriereabschluss
+     aufruft. Eine Abkuerzung, die eine eigene Rechnung mitbraechte, wuerde
+     genau das nicht mehr pruefen, worum es beim Testen geht.
+
+     Was er NICHT tut: eine Spielerlaufbahn simulieren. Die Zaehler
+     `karrieren` und `hausKarrieren` werden hochgesetzt, damit Akademie und
+     Verein freischalten — Torschuetzenlisten und Ruhmeshalle bleiben leer.
+     Wer die Spielerseite testen will, spielt sie.
+
+     Der ganze Block haengt an `BETA` und ist in einer Auslieferung nicht
+     vorhanden. */
+  const [testLog, setTestLog] = useState(null);
+  const testSprung = async (n) => {
+    if (buchungAktiv.current) return;
+    let A = aka, V = verein, G = { ...(ges || leereBilanz()) };
+    let saisons = 0, abbruch = null;
+    for (let i = 0; i < n; i++) {
+      if (A && A.gegruendet) A = akaVerbuchen(A, 0).a;
+      if (VEREIN.spieltMit(V)) {
+        const r = VEREIN.vereinSaison(V);
+        if (r.fehler) { abbruch = r.fehler; }
+        else { V = r.v; saisons++; }
+      }
+      G.karrieren = (G.karrieren || 0) + 1;
+      G.hausKarrieren = (G.hausKarrieren || 0) + 1;
+    }
+    const daten = { [LIFE_KEY]: JSON.stringify(G), [AKA_KEY]: JSON.stringify(A) };
+    if (V) daten[VER_KEY] = JSON.stringify(V);
+    await bucheAenderung(daten, () => { setGes(G); setAka(A); if (V) setVerein(V); });
+    setTestLog(n + " Laufbahnen angerechnet · " + saisons + " Vereinssaisons gespielt"
+      + (abbruch ? " · Verein ausgesetzt: " + abbruch : ""));
+  };
+  const testVC = async (x) => {
+    if (buchungAktiv.current) return;
+    const A = { ...(aka || leereAkademie()), vc: Math.max(0, ((aka && aka.vc) || 0) + x) };
+    await bucheAenderung({ [AKA_KEY]: JSON.stringify(A) }, () => setAka(A));
+    setTestLog((x > 0 ? "+" : "") + x + " VC · Bestand " + A.vc);
+  };
+
   const einblendungenLeeren = () => {
     setRueckblick(null); setJubel([]); setMarken([]); setSchluss(null);
     setKarriereRueck(null); setSimLauf(false); setEnthuellung(null); setStopAsk(false);
@@ -18842,6 +18914,7 @@ function FlutlichtApp() {
   })();
 
   if (phase === "menu") return <MenuScreen hall={hall} save={save} karten={karten}
+    test={BETA ? { sprung: testSprung, vc: testVC, log: testLog } : null}
     speicherFehler={speicherFehler}
     optAuf={optZurueck} onOptAufGesehen={() => setOptZurueck(false)}
     freiHinweis={freiJetzt}
