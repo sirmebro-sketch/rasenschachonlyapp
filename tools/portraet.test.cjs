@@ -11,7 +11,7 @@ test('Festgehaltene Merkmale bleiben beim Würfeln und JSON-Wiederladen erhalten
 });
 test('Würfeln erreicht neue Varianten und bleibt innerhalb gültiger Optionen',async()=>{
  const {portraetOptionen:f,portraetWuerfeln:w}=await import('../portraet.js');const a=f(basis,'m');const z=w({},a,{},()=>.99999);
- for(const [k,werte] of Object.entries(a))assert(werte.includes(z[k]));assert.equal(z.frisur,25);assert.equal(z.details,6);assert.equal(z.bart,15);
+ for(const [k,werte] of Object.entries(a))assert(werte.includes(z[k]));assert.equal(z.frisur,25);assert.equal(z.details,8);assert.equal(z.bart,15);
 });
 
 test('Frisurenfreischaltung bewahrt alle alten Bonusformen und neue Kennungen',async()=>{
