@@ -14,13 +14,13 @@ function KopfProbe(){
  return <div className="fl"><style>{CSS}</style><main style={{maxWidth:1180,margin:'auto',padding:18}}>
   <h1>CHAR-P1-01 · Kopfformen</h1>
   <p style={{maxWidth:860}}>ChatGPT/Codex-Sichtprobe: identische Gesichtszüge, mehrere Haut-/Haarkontexte sowie Haar-/Bartprobe. Gespeicherte IDs bleiben sichtbar.</p>
-  <section data-testid="koepfe" style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(330px,1fr))',gap:12}}>
-   {KOPFFORM.map((kopf,id)=><article className="pan pad" data-id={id} key={id}>
+  <section data-testid="koepfe" style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(min(100%,300px),1fr))',gap:12}}>
+   {KOPFFORM.map((kopf,id)=><article className="pan pad" data-id={id} key={id} style={{minWidth:0}}>
     <div className="d" style={{fontSize:15}}>ID {id} · {kopf.n}</div>
-    <div style={{display:'flex',alignItems:'end',gap:8,flexWrap:'wrap',marginTop:8}}>
-     {proben.map((r,ri)=>{const z={...basis,kopf:id,haut:r.haut,haar:r.haar,frisur:r.frisur,bart:r.bart};return <div key={ri} style={{textAlign:'center',minWidth:76}}>
+    <div style={{display:'flex',alignItems:'end',gap:8,flexWrap:'wrap',marginTop:8,minWidth:0}}>
+     {proben.map((r,ri)=>{const z={...basis,kopf:id,haut:r.haut,haar:r.haar,frisur:r.frisur,bart:r.bart};return <div key={ri} style={{textAlign:'center',flex:'1 1 68px',minWidth:0}}>
       <Avatar seed={8100+id*10+ri} zuege={z} size={r.size} g={r.g} nat="GER" meta={{mk_haar:true,mk_acc:true}}/>
-      <div className="m" style={{fontSize:9,color:'var(--mu)',marginTop:3}}>{r.label}</div>
+      <div className="m" style={{fontSize:9,color:'var(--mu)',marginTop:3,overflowWrap:'anywhere'}}>{r.label}</div>
      </div>})}
     </div>
    </article>)}
