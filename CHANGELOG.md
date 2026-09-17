@@ -1,5 +1,17 @@
 # Änderungen
 
+## 35.192.0 – Stimmige Bilanzen und freiwillige Vereinsgründung
+
+- Ligatabellen aus gemeinsamen Hin-/Rückspielen: Siege, Niederlagen, Remis und Tore passen ligaweit zusammen. Karriere-Rang und daran gebundene Folgen bleiben erhalten.
+- Kalenderjahre in Abschluss, Rückblick und Ruhmeshalle vereinheitlicht, auch beim Rücktritt direkt nach einer Saison.
+- Erste Vereinsgründung lässt sich über einen sichtbaren Zurück-Button verlassen.
+- Akademie- und Gratispacktexte nennen die tatsächlichen Mindestlaufzeiten.
+
+## 35.191.0 – Wiedererkennbare Ruhmeshallen-Spieler
+
+- Gesicht, Haut, Frisur, Bart und Geschlecht werden von der Ruhmeshalle auf die Sammelkarte und in den Vereinskader übernommen.
+- Vorhandene Karten werden beim Laden anhand noch vorhandener Ruhmeshallen-Einträge abgeglichen; Kartenwerte bleiben erhalten.
+
 ## 35.190.0 – Icon-Kopf bis an den Rand
 
 - Rote Kopffläche und weißer Trennstreifen reichen über die Launcher-Schnittkante; dunkler Saum oben und seitlich entfernt. Native Vektor- und Legacy-Icons neu erzeugt.

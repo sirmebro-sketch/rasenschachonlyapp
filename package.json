@@ -1,13 +1,13 @@
 {
   "name": "rasenschach",
   "private": true,
-  "version": "35.190.0",
+  "version": "35.192.0",
   "type": "module",
   "scripts": {
     "build": "vite build",
     "test": "node --test tools/*.test.cjs",
     "dev": "vite",
-    "preview:gallery": "node tools/visuelle-vorschau.cjs",
+    "preview:gallery": "node tools/visuelle-vorschau.cjs && node tools/spieltest.cjs",
     "test:browser": "playwright test"
   },
   "dependencies": {

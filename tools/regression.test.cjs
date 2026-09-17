@@ -35,12 +35,14 @@ before(async () => {
     .map(n=>`const ${n}=v=>{out[${JSON.stringify(n.slice(3))}]=v;};`).join('\n');
   const extension = `
 import {renderToStaticMarkup} from 'react-dom/server';
-export {verdict, vorsatzBelohnen, vorsatzPunkte, bilanzLaden, bilanzErgaenzen, akaGruenden, SAVE_KEY, AKA_KEY, LIFE_KEY, createPlayer, develop, simulateSeason, vcFuer, vcPosten, vcAusHaeusern, leereAkademie, leereBilanz, KARTEN, VEREIN, zufallSetzen, rerollWildcard, ladenGesperrt, saisonSchlagzeile, saisonIndex, EVENTS, strangDran, strangWeiter, laufStand, laufWeiter};
+export {simTable, LEAGUES, karriereZeitraum, verdict, vorsatzBelohnen, vorsatzPunkte, bilanzLaden, bilanzErgaenzen, akaGruenden, SAVE_KEY, AKA_KEY, LIFE_KEY, createPlayer, develop, simulateSeason, vcFuer, vcPosten, vcAusHaeusern, leereAkademie, leereBilanz, KARTEN, VEREIN, zufallSetzen, rerollWildcard, ladenGesperrt, saisonSchlagzeile, saisonIndex, EVENTS, strangDran, strangWeiter, laufStand, laufWeiter};
 export const renderCreate=()=>renderToStaticMarkup(<CreateScreen meta={{}} onStart={()=>{}} onBack={()=>{}}/>);
 export const renderPortraits=()=>renderToStaticMarkup(<>{['m','w'].flatMap(g=>Array.from({length:4},(_,i)=><Avatar key={g+i} seed={1} g={g} zuege={{...zuegeAusKennung(1,g,'GER',{}),stil:2,haut:10+i,haar:9+i,frisur:(g==='w'?14:16)+i,details:i,bart:g==='w'?0:10+i%3}}/>))}</>);
 export const renderEnd=p=>renderToStaticMarkup(<EndScreen p={p} onNew={()=>{}}/>);
 export const renderVerein=(v,aka)=>renderToStaticMarkup(<VereinScreen v={v} aka={aka} onAendern={()=>{}} onZurueck={()=>{}} onAbschluss={()=>{}}/>);
 export const renderPacks=(pool,reiter='laden',verein=null)=>renderToStaticMarkup(<Packladen vc={100} pool={pool} verein={verein} gratis={1} startpaket={false} startReiter={reiter} onKauf={()=>{}} onGratis={()=>{}} onStartpaket={()=>{}} onEinsetzen={()=>{}} onEntfernen={()=>{}} onVerkauf={()=>{}} onZurueck={()=>{}}/>);
+export const renderPortraitCard=k=>renderToStaticMarkup(<Spielerkarte karte={k}/>);
+export const renderPortraitOriginal=h=>renderToStaticMarkup(<Avatar seed={h.avatar} zuege={h.zuege} g={h.g} nat={h.natId} size={54}/>);
 export const renderWildcard=card=>renderToStaticMarkup(<WildcardCard card={card} big aufdeckung/>);
 export const renderReveal=card=>renderToStaticMarkup(<WildcardEnthuellung card={card} onFertig={()=>{}}/>);
 export const renderShop=(spieler,schritt='training')=>renderToStaticMarkup(<VCLadenAnsicht wo="saison" vc={100} laden={{}} onKauf={()=>{}} spieler={spieler} schritt={schritt}/>);
@@ -436,4 +438,78 @@ test('Neue Porträts haben gültige SVG-Werte und eindeutige Clip-/Gradientenken
  const html=E.renderPortraits();assert(!html.includes('NaN'));assert(!html.includes('undefined'));
  const ids=[...html.matchAll(/ id="([^"]+)"/g)].map(m=>m[1]);assert.equal(ids.length,new Set(ids).size);
  for(const m of html.matchAll(/url\(#([^)]*)\)/g))assert(ids.includes(m[1]));
+});
+
+test('Ruhmeshallen-Porträt bleibt auf Karte, im Kader und nach Altstand-Abgleich erhalten',()=>{
+ const h={id:'portrait-test',nr:3,name:'Marvin Test',peak:90,age:40,natId:'GER',g:'w',avatar:321,zuege:{stil:2,kopf:8,haut:4,haar:2,frisur:7,bart:3}};
+ const card=E.KARTEN.ausHalle(h,3);
+ assert.deepEqual(card.portraet,{avatar:321,zuege:h.zuege,g:'w'});
+ assert.notEqual(card.portraet.zuege,h.zuege);
+ const old={...card,ovr:95,sonderkarte:true}; delete old.portraet;
+ const unrelated={...old,kid:'h:other:Marvin Test'};
+ const pool=E.KARTEN.portraetsAbgleichen({karten:[old,unrelated],stand:2},[h]);
+ assert.equal(pool.karten.length,2);assert.equal(pool.karten[0].ovr,95);assert.equal(pool.karten[0].sonderkarte,true);
+ assert.deepEqual(pool.karten[0].portraet,card.portraet);assert.equal(pool.karten[1].portraet,undefined);
+ assert.equal(old.portraet,undefined);
+ const legacy={...h,id:undefined,nr:7};
+ const legacyCard=E.KARTEN.ausHalle(legacy,7);delete legacyCard.portraet;
+ const sameNameWrongId={...legacyCard,kid:'h:0:Marvin Test'};
+ const legacyPool=E.KARTEN.portraetsAbgleichen({karten:[legacyCard,sameNameWrongId]},[legacy]);
+ assert.deepEqual(legacyPool.karten[0].portraet,card.portraet);
+ assert.equal(legacyPool.karten[1].portraet,undefined);
+ assert.deepEqual(E.KARTEN.portraetsAbgleichen({karten:[card]},[]).karten[0].portraet,card.portraet);
+ const merged=E.KARTEN.poolErgaenzen({karten:[old]},[card]);assert.deepEqual(merged.karten[0].portraet,card.portraet);assert.equal(merged.karten[0].ovr,95);
+ const v=E.VEREIN.karteEinsetzen({...E.VEREIN.leererVerein(),gegruendet:true,kader:[]},card);
+ assert.equal(v.fehler,null);assert.deepEqual(v.v.kader[0].portraet,card.portraet);
+ assert.deepEqual(E.KARTEN.ausKader(v.v.kader[0],'Test',2030).portraet,card.portraet);
+});
+
+
+test('Sammlung rendert die tatsächlichen Gesichtsmerkmale der Ruhmeshalle',()=>{
+ const h={id:'portrait-render',name:'Test',peak:40,natId:'GER',g:'w',avatar:1234,
+ zuege:{stil:2,kopf:8,haut:4,haar:2,frisur:7,bart:3,augen:2,augenfarbe:3,brauen:1,nase:2,mund:1,ohren:0,wangen:0,schmuck:0}};
+ const normalize=html=>{
+  const svg=html.match(/<svg[^>]*role="img"[^>]*>[\s\S]*?<\/svg>/)[0];
+  const ids=[...svg.matchAll(/ id="([^"]+)"/g)].map(m=>m[1]);
+  let s=svg; ids.sort((a,b)=>b.length-a.length).forEach((id,i)=>{s=s.split(id).join('ID'+i)});
+  return s.replace(/<svg[^>]*>/,'<svg>');
+ };
+ assert.equal(normalize(E.renderPortraitCard(E.KARTEN.ausHalle(h,1))),normalize(E.renderPortraitOriginal(h)));
+});
+
+
+test('Geschlossene Ligatabellen: jeder Rang, Hin/Rückrunde und globale Summen',()=>{
+ E.zufallSetzen(351920);
+ for(const clubs of Object.values(E.LEAGUES)) {
+  const club=clubs[0];
+  for(const rank of [1,Math.ceil(clubs.length/2),clubs.length]) {
+   const table=E.simTable(club,rank), n=table.length;
+   const sum=k=>table.reduce((a,r)=>a+r[k],0);
+   assert.equal(table.find(r=>r.me).pos,rank);
+   assert.equal(new Set(table.map(r=>r.club)).size,n);
+   assert.equal(sum('w'),sum('l'));assert.equal(sum('d')%2,0);
+   assert.equal(sum('gf'),sum('ga'));
+   assert.equal(sum('pts'),3*n*(n-1)-sum('d')/2);
+   table.forEach((r,i)=>{
+    assert.equal(r.games,2*(n-1));assert.equal(r.w+r.d+r.l,r.games);
+    assert.equal(r.pts,3*r.w+r.d);assert.equal(r.pos,i+1);
+    for(const k of ['w','d','l','gf','ga'])assert(Number.isInteger(r[k])&&r[k]>=0);
+    if(i){const a=table[i-1];assert(a.pts>r.pts || a.pts===r.pts &&
+      (a.gf-a.ga>r.gf-r.ga || a.gf-a.ga===r.gf-r.ga && a.gf>=r.gf));}
+   });
+  }
+ }
+});
+
+test('Rücktritt vor/nach Saison und Angebotsannahme hat gleiche Kalendergrenzen in Halle und Abschluss',async()=>{
+ for(const stage of ['vorher','ergebnis','folgejahr']) {
+  saved.clear();const p=player(0),start=p.year;
+  if(stage!=='vorher')E.simulateSeason(p);
+  if(stage==='folgejahr'){p.year++;p.age++;}
+  const expected={von:start,bis:start+(stage==='vorher'?0:1)};
+  assert.deepEqual(E.karriereZeitraum(p),expected);
+  const out=await E.runFinish(p);
+  assert.equal(out.Hall[0].von,expected.von);assert.equal(out.Hall[0].bis,expected.bis);
+  assert(E.renderEnd(out.P).includes('Karriereende '+expected.bis));
+ }
 });

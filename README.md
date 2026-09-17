@@ -160,6 +160,22 @@ nicht als technische Zugangsgarantie. Neue Chats prüfen ihre verfügbare
 GitHub-Verbindung selbst; Plattformregeln und spätere Nutzeranweisungen gelten
 weiter. Einzelheiten zum Einstieg stehen in `START-NEUER-CHAT.md`.
 
+### Bestätigung der dauerhaften Freigabe (17.09.2026)
+
+Kevin hat nach der Rückfrage zur Veröffentlichung von Commit `5f9d6d7`
+(35.192) ausdrücklich bestätigt:
+
+> Du darfst sowieso alles machen und jetdes Update und neuen APK Bau usw. Auslösen.
+> Du und ich sind gleichberechtigt.
+> Ich habe nur immer das letzte Wort
+
+Damit sind im Rahmen von Rasenschach XI eigenständige Weiterentwicklung,
+geprüfte Updates, Veröffentlichungen nach `main` und neue APK-Builds dauerhaft
+autorisiert. Für gewöhnliche Projektrunden ist keine erneute Freigabe nötig.
+Kevin behält das letzte Wort; spätere Anweisungen haben Vorrang. Die Prüf- und
+Integrationsregeln sowie die Rollenverteilung gegenüber Claude bleiben bestehen.
+Technischer Zugriff und Plattformkontrollen werden dadurch nicht ersetzt.
+
 ### Offene Übergaben finden
 
 Die Liste führt niemand von Hand — Git kennt sie. Vor jeder Runde:
@@ -199,9 +215,9 @@ Im Entwicklungsvermerk Quell- und Zielcommit sowie die Entscheidung nennen.
 
 ### Versionsschema
 
-`package.json` führt die Version als `major.minor.patch` (derzeit 35.190.0).
+`package.json` führt die Version als `major.minor.patch` (derzeit 35.192.0).
 Daraus rechnet `tools/android-version.cjs` den `versionCode`
-(`major*100000 + minor*100 + patch`, also 3519000) und schreibt ihn zusammen mit
+(`major*100000 + minor*100 + patch`, also 3519200) und schreibt ihn zusammen mit
 dem `versionName` nach `android/app/build.gradle`. Beide Felder sollen nie von
 Hand auseinanderlaufen. Die Version wird erhöht, wenn eine neue APK entsteht —
 reine Werkzeug- oder Dokumentationsänderungen erhöhen sie nicht.
@@ -322,3 +338,17 @@ erzeugt daraus beziehungsweise aus derselben Geometrie das native Android-
 Foreground und die Legacy-PNGs in allen Dichten. Benötigt Python fonttools
 mit WOFF2-Unterstützung und Inkscape. Die Buchstaben stammen aus der bereits
 eingebetteten Spielschrift; keine externe Ersatzschrift.
+
+### Isolierter Spieltest (35.191)
+
+`npm run preview:gallery` erzeugt zusätzlich `.preview/spieltest.html`.
+Hier läuft die echte App mit einem getrennten `sessionStorage`-Adapter.
+„Neues Spiel“ setzt nur diesen Teststand zurück; „Fortgeschritten“ erstellt
+eine reproduzierbare Ruhmeshalle, eine alte Karte ohne Porträt, Karten aller
+Stufen und Testguthaben. „Gespeicherten Stand laden“ lädt den Teststand erneut.
+Produktive Spielstände und die Android-App werden davon nicht verändert.
+Im Bildschirmrahmen „Isolierter Spieltest“ auswählen. Bei Codeänderungen
+neu erzeugen. Ein Teststand ersetzt keinen durchgespielten Freischaltweg.
+
+Bisherige Befunde und noch offene Testbereiche:
+[Spieltest 35.191](pruefberichte/35.191-spieltest.md).

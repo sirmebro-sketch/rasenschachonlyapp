@@ -112,6 +112,7 @@ export const machKarten = (H) => {
 
   const ausKader = (s, vereinName, jahr) => ({
     kid: "k:" + s.id,
+    portraet: s.portraet ? structuredClone(s.portraet) : undefined,
     name: s.name, pos: s.pos, ovr: s.ovr, pot: s.pot,
     alter: s.alter, flag: s.flag || "", nat: s.nat || "",
     stufe: stufeFuer(s.ovr), herkunft: "verein", verein: vereinName || "",
@@ -127,12 +128,28 @@ export const machKarten = (H) => {
   const ausHalle = (h, i) => ({
     kid: "h:" + (h.id || i) + ":" + (h.name || ""),
     name: h.name, pos: h.pos, ovr: h.peak || 0, pot: h.peak || 0,
+    portraet: { avatar: h.avatar ?? 1, zuege: h.zuege ? structuredClone(h.zuege) : null, g: h.g || "m" },
     alter: h.age || 0, flag: h.nat || "", nat: h.natId || "",
     stufe: stufeFuer(h.peak), herkunft: "halle", jahr: h.bis || null,
     zusatz: { score: h.score, titel: h.titles, tore: h.goals,
               laenderspiele: h.caps, wildcard: h.wc || null,
               rahmen: h.rahmen || null },
   });
+
+  // Repariert nur vorhandene Karten anhand stabiler Hallenkennungen. Kein
+  // Namensabgleich und kein erneutes Anlegen verkaufter/fehlender Karten.
+  const portraetsAbgleichen = (pool, hall) => {
+    const quelle = new Map();
+    (hall || []).forEach((h,i) => {
+      for (const nr of [h.nr ?? i]) {
+        const k=ausHalle(h,nr); quelle.set(k.kid,k.portraet);
+      }
+    });
+    return {...pool,karten:(pool?.karten||[]).map(k => {
+      const p=quelle.get(String(k.kid).replace(/^(k:)+(?=h:)/,""));
+      return p ? {...k,portraet:structuredClone(p)} : k;
+    })};
+  };
 
   /* ---- Der dauerhafte Pool ----------------------------------------------
      Kevin: „Wenn eine Profimannschaft durchgespielt wurde, werden alle Spieler
@@ -172,7 +189,8 @@ export const machKarten = (H) => {
          veredelt bleibt veredelt, auch wenn spaeter dieselbe Karte ohne
          Marker aus einer neuen Laufbahn nachkommt. */
       const veredelt = !!(alt.sonderkarte || k.sonderkarte);
-      if ((k.ovr || 0) > (alt.ovr || 0)) nach.karten[i] = { ...alt, ...k };
+      if (k.portraet) nach.karten[i] = {...alt,portraet:structuredClone(k.portraet)};
+      if ((k.ovr || 0) > (alt.ovr || 0)) nach.karten[i] = { ...alt, ...k, portraet:k.portraet || alt.portraet };
       if (veredelt && !nach.karten[i].sonderkarte)
         nach.karten[i] = { ...nach.karten[i], sonderkarte: true };
     });
@@ -567,7 +585,7 @@ export const machKarten = (H) => {
     return liste;
   };
 
-  return { STUFEN, REIHE, stufeFuer, ausAbsolvent, ausKader, ausHalle,
+  return { portraetsAbgleichen, STUFEN, REIHE, stufeFuer, ausAbsolvent, ausKader, ausHalle,
     SETS, setStand,
            STARTPAKET, startpaket,
            flaeche, MERKMALE, merkmaleVon,

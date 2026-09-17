@@ -533,6 +533,7 @@ export const machVerein = (H) => {
     }
     v.kader.push({
       id: karte.kid, name: karte.name, nat: karte.nat, flag: karte.flag,
+      portraet: karte.portraet ? structuredClone(karte.portraet) : undefined,
       pos: karte.pos, ovr: karte.ovr, pot: karte.pot, alter: karte.alter,
       form: 50, fitness: 80, spiele: 0, tore: 0, jahreImVerein: 0,
       /* DIE HERKUNFT BLEIBT AM SPIELER. Ohne sie liesse sich die Grenze nach

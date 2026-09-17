@@ -31,8 +31,8 @@ import { machAkademie } from "./akademie.js";
    ================================================================ */
 
 const NAME = "Rasenschach XI";
-const VERSION = "35.190";
-const VERSION_INFO = "Zentrierte Wildcards, eindrucksvollere seltene Enthüllungen und ein randfüllendes App-Icon.";
+const VERSION = "35.192";
+const VERSION_INFO = "Stabile Spielerporträts, stimmige Ligatabellen und einheitliche Karrierejahre.";
 
 /* Fester Zufallsstrom aus einer Zeichenkette — damit Angebote des eigenen
    Vereins nicht bei jedem Klick anders aussehen.                        */
@@ -4013,26 +4013,33 @@ const tabVerein = (t) => {
 
 function simTable(club, myRank) {
   const arr = leagueClubs(club);
-  const N = arr.length, games = Math.max(2, (N - 1) * 2);
+  const N = arr.length;
   const me = arr.find((c) => c.n === club.n) || club;
   const others = arr.filter((c) => c.n !== club.n)
     .map((c) => ({ c, sc: c.s + gauss(0, 3.1) })).sort((a, b) => b.sc - a.sc).map((x) => x.c);
   const ordered = [...others];
   ordered.splice(clamp(myRank - 1, 0, others.length), 0, me);
-  const topPts = Math.round(games * (2.06 + rnd(-.13, .17)));
-  const botPts = Math.round(games * (.62 + rnd(-.08, .1)));
-  let last = 1e9;
+  /* 35.192: Gemeinsame Hin-/Rückspiele statt unabhängiger Zeilen.
+     Die Karriere bestimmt den eigenen Rang bereits aus Stärke, Form und
+     Einsätzen. Deshalb zunächst eine geschlossene Saison für Leistungsplätze
+     simulieren und deren sortierte Bilanzen der bestehenden Vereinsreihenfolge
+     zuordnen. Diese Umbenennung erhält jedes Paarungsergebnis und den Rang,
+     auf dem Meisterschaft, Aufstieg und Folgeangebote beruhen. */
+  const rows = ordered.map((c, i) => ({ s: 82 - 26 * i / Math.max(1, N - 1),
+    games: 0, w: 0, d: 0, l: 0, pts: 0, gf: 0, ga: 0 }));
+  for (let i = 0; i < N; i++) for (let j = 0; j < N; j++) {
+    if (i === j) continue;
+    const a = rows[i], b = rows[j];
+    const [x, y] = simMatch(a, b);
+    a.games++; b.games++; a.gf += x; a.ga += y; b.gf += y; b.ga += x;
+    if (x === y) { a.d++; b.d++; a.pts++; b.pts++; }
+    else { const win = x > y ? a : b, lose = x > y ? b : a;
+      win.w++; win.pts += 3; lose.l++; }
+  }
+  rows.sort((a, b) => b.pts - a.pts || (b.gf - b.ga) - (a.gf - a.ga) || b.gf - a.gf);
   return ordered.map((c, i) => {
-    const t = N <= 1 ? 0 : i / (N - 1);
-    let raw = Math.round(topPts - (topPts - botPts) * Math.pow(t, .92) + gauss(0, 2.2));
-    raw = clamp(raw, 0, games * 3);
-    if (raw >= last) raw = Math.max(0, last - ri(0, 2));
-    const [w, d, l, pts] = wdl(raw, games);
-    last = pts;
-    /* NUR DER NAME (35.115) — siehe `tabVerein` oben. */
-    return { club: c.n, pos: i + 1, games, w, d, l, pts, me: c.n === club.n,
-      gf: Math.max(3, Math.round(games * (.82 + (1 - t) * 1.3) + gauss(0, 4))),
-      ga: Math.max(3, Math.round(games * (.78 + t * 1.3) + gauss(0, 4))) };
+    const { s, ...bilanz } = rows[i];
+    return { ...bilanz, club: c.n, pos: i + 1, me: c.n === club.n };
   });
 }
 /* Konföderationen: bestimmen, an welchem internationalen Wettbewerb ein Verein teilnimmt */
@@ -6335,6 +6342,16 @@ const LEGENDEN = [
     ok:(p)=>p.assets.includes("akademie")&&p.legacyBonus>=90 },
 ];
 
+/* Kalendergrenzen kommen aus den tatsächlich gespielten Saisons.
+   p.year bleibt bis zur Angebotsannahme das Startjahr der letzten Saison. */
+function karriereZeitraum(p) {
+  const seasons = p.seasons || [];
+  const starts = seasons.map(s => Number(String(s.year).slice(0, 4))).filter(Number.isFinite);
+  const ends = seasons.map(s => Number(s.y) || Number(String(s.year).slice(0, 4)) + 1).filter(Number.isFinite);
+  return { von: starts.length ? Math.min(...starts) : p.year,
+    bis: Math.max(p.year, ...ends) };
+}
+
 function verdict(p) {
   const majors = p.nt.majors.filter((m) => m.res === "Titel").length;
   const cl = p.trophies.filter((t) => t.indexOf("Champions League") === 0).length;
@@ -6861,8 +6878,9 @@ function AkademieScreen({ aka, verein, onKauf, onGruenden, onBack, onAendern }) 
         </p>
         <p style={{ color: "var(--mu)", marginTop: 8 }}>
           Bezahlt wird mit <b style={{ color: "var(--go)" }}>Vermächtnis-Coins</b>. Die bekommst
-          du nach jeder beendeten Karriere, je nachdem, was du erreicht hast. Jede beendete
-          Laufbahn ist zugleich ein Jahr in der Akademie.
+          du ab {VC_MIN_SAISONEN} gespielten Saisons, je nachdem, was du erreicht hast.
+          Ein Akademiejahr vergeht nach einer abgeschlossenen Laufbahn mit mindestens
+          {" "}{HAUS_MIN_SAISONEN} gespielten Saisons.
         </p>
         <div className="pan pad" style={{ marginTop: 14 }}>
           <div className="eb">Guthaben</div>
@@ -9205,7 +9223,7 @@ function VereinGruenden({ aka, verein, art = "voll", onFertig, onZurueck }) {
         </div></>)}
 
         <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
-          {!nurKennung && <button className="btn schmal" onClick={onZurueck}>Zurück</button>}
+          <button className="btn schmal" onClick={onZurueck}>Zurück</button>
           <button className="btn on" disabled={!bereit} style={{ flex: "1 1 auto", minWidth: 0 }}
             onClick={() => {
               /* JE SCHRITT EIN ANDERER AUFRUF (35.67). Die Kennung setzt nur
@@ -11380,7 +11398,7 @@ function KarriereRueckblick({ p, onFertig }) {
   const GZ = { fontSize: "clamp(46px,15vw,96px)", lineHeight: 1 };
   const MZ = { fontSize: "clamp(30px,9vw,56px)", lineHeight: 1 };
 
-  K("Deine Laufbahn", p.name + " · " + (S.length ? String(S[0].year).slice(0, 4) : p.year) + " bis " + p.year, (
+  K("Deine Laufbahn", p.name + " · " + (S.length ? String(S[0].year).slice(0, 4) : p.year) + " bis " + karriereZeitraum(p).bis, (
     <div style={{ textAlign: "center" }}>
       <Zahl v={S.length} className="d" style={{ ...GZ, color: "var(--ac)" }} />
       <div className="eb" style={{ marginTop: 4 }}>{S.length === 1 ? "Saison als Profi" : "Saisons als Profi"}</div>
@@ -12438,8 +12456,8 @@ function Elfkarte({ spieler, stufe, klein, onTippen, aktiv, platz, eignung }) {
             farbe={spieler.ausPack ? st.farbe : "var(--ok)"} groesse={10} />
         </span>
         <span style={{ display: "block", margin: "0 auto" }}>
-          <Avatar seed={kartenKennung({ kid: spieler.id })} zuege={null} club={null}
-            size={klein ? 30 : 38} nat={spieler.nat || null} g="m" meta={null} />
+          <Avatar seed={spieler.portraet?.avatar ?? kartenKennung({ kid: spieler.id })} zuege={spieler.portraet?.zuege} club={null}
+            size={klein ? 30 : 38} nat={spieler.nat || null} g={spieler.portraet?.g || "m"} meta={null} />
         </span>
         <span className="d" style={{ display: "block", fontSize: 9.5, marginTop: 3,
           overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
@@ -12963,8 +12981,8 @@ function Spielerkarte({ karte, gross, aufgedeckt = true, onTippen, jubel }) {
       {/* 35.181: Keine Vollflächenfolie über Porträt und Text mehr. */}
 
       <div style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
-        <Avatar seed={kartenKennung(karte)} zuege={null} club={null}
-          size={Math.round(54 * gr)} nat={karte.nat || null} g="m"
+        <Avatar seed={karte.portraet?.avatar ?? kartenKennung(karte)} zuege={karte.portraet?.zuege} club={null}
+          size={Math.round(54 * gr)} nat={karte.nat || null} g={karte.portraet?.g || "m"}
           meta={karte.stufe === "legende" ? { mk_rahmen4: true, rahmenWahl: "mk_rahmen4" }
             : karte.stufe === "gold" ? { mk_gold: true, rahmenWahl: "mk_gold" } : null} />
         <div style={{ flex: 1, minWidth: 0 }}>
@@ -13898,7 +13916,7 @@ function VereinDach({ aka, verein, gesamt, karten, onAka, onProfi, onPacks, onFu
           titel: "Packs", farbe: "var(--go)",
           kopf: (aka && aka.gratisPacks) ? (aka.gratisPacks + " gratis") : ((aka && aka.vc) || 0) + " VC",
           status: (aka && aka.gratisPacks)
-            ? "Für jede beendete Laufbahn ein Bronzepack — antippen."
+            ? "Gratispack verfügbar — antippen. Weitere Packs ab " + PACK_MIN_SAISONEN + " Saisons pro Laufbahn."
             : "Spieler ziehen, die deine Jugend ergänzen. Antippen.",
           statusFarbe: (aka && aka.gratisPacks) ? "var(--go)" : undefined,
           zahlen: [["Sammlung", ((karten && karten.karten) || []).length],
@@ -17045,7 +17063,7 @@ function EndScreen({ p, onNew }) {
   return (
     <Shell wide>
       <div className="fade">
-        <div className="eb">Karriereende {p.year}</div>
+        <div className="eb">Karriereende {karriereZeitraum(p).bis}</div>
         <div className="d" style={{ fontSize: "clamp(32px,9vw,64px)", color: "var(--ac)" }}>{v.tier}</div>
         <p style={{ maxWidth: 560, marginTop: 8, color: "var(--mu)" }}>{v.text}</p>
         {persoenlicherRueckblick(p).length > 0 && <div style={{maxWidth:560,marginTop:12}}>
@@ -17524,7 +17542,7 @@ function FlutlichtApp() {
       const lies = (k, leer) => roh[k] == null ? leer : JSON.parse(roh[k]);
       const H = lies(HALL_KEY, []), S = lies(SAVE_KEY, null);
       const A = { ...leereAkademie(), ...lies(AKA_KEY, {}) };
-      const V = lies(VER_KEY, null);
+      let V = lies(VER_KEY, null);
       let W = lies(WC_KEY, {}), K = lies(KARTEN_KEY, KARTEN.leererPool());
       // Historischer Schlüsselkonflikt: Wildcard-Map ist keine Sammlung.
       if (!Array.isArray(K?.karten)) {
@@ -17542,6 +17560,11 @@ function FlutlichtApp() {
         const t = absolventen.get(k.kid);
         return t?.typ && !k.zusatz?.typ ? {...k, zusatz:{...k.zusatz,typ:t.typ}} : k;
       }) };
+      K = KARTEN.portraetsAbgleichen(K,H);
+      if(V?.kader){
+        const gesichter=new Map(K.karten.filter(k=>k.portraet).map(k=>[k.kid,k.portraet]));
+        V={...V,kader:V.kader.map(s=>gesichter.has(s.id)?{...s,portraet:structuredClone(gesichter.get(s.id))}:s)};
+      }
       setSave(S); setP(null); setHall(H); setSeen(seenNeu); setAch(achNeu); setGes(gesNeu);
       setMeta(metaNeu); setWcSeen(W); setHsvZ(Number.isFinite(h) ? Math.max(0,h) : 0);
       setAka(A); setVerein(V ? { ...VEREIN.leererVerein(), ...V } : null);
@@ -17977,7 +18000,7 @@ function FlutlichtApp() {
       speed: !!q.speed,
       /* Ab 33.10 für die Würdigung in der Ruhmeshalle. Ältere Einträge haben
          das nicht — jede Auswertung muss ohne diese Felder auskommen. */
-      avatar: q.avatar, zuege: q.zuege, g: q.g, natId: q.nation.id, von: q.year + 1 - (q.age - 16), bis: q.year + 1,
+      avatar: q.avatar, zuege: q.zuege, g: q.g, natId: q.nation.id, ...karriereZeitraum(q),
       heimat, heimatSpiele: heimat ? proVerein[heimat] : 0,
       apps: q.tot.apps, assists: q.tot.assists, saisons: q.seasons.length,
       /* DIE BIOGRAFIE (35.117). Stufe C aus dem Meta-Papier: „Ehemalige
@@ -18583,7 +18606,10 @@ function FlutlichtApp() {
        Kein Zurueck aus diesem Schritt: das Dach ist der einzige Weg dorthin,
        und ein Ausgang ohne Ergebnis wuerde nur dazu fuehren, dass man beim
        naechsten Antippen wieder hier steht. Der Bildschirm blendet den
-       Zurueckknopf deshalb in dieser Betriebsart aus. */
+       Zurueckknopf deshalb in dieser Betriebsart aus.
+       Korrektur 17.09.2026 (35.192): Auch die erste Gründung ist freiwillig.
+       Zurück kehrt ohne Buchung ins Menü zurück; ein späterer Einstieg beginnt
+       die noch nicht abgeschlossene Gründung erneut. */
     if (!verein || !verein.gekannt)
       return <VereinGruenden art="kennung" aka={aka} verein={verein}
         onFertig={(nv) => vereinSichern(nv)}

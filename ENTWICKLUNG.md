@@ -812,3 +812,53 @@ Die ehemaligen Abzeichenpfade endeten bei x5/95 und y5. Rot und weißer
 Trennstreifen nun mit Beschnittzugabe von -30 bis130 gezeichnet; Android
 schneidet die äußere Form. Motiv, Schrift und unterer Teil unverändert.
 Vektor und alle Legacy-Dichten aus derselben Quelle regeneriert.
+
+
+## Porträtidentität und Spieltest 35.191 – Codex, 17.09.2026
+
+Basis main 9bb0d57, vor Veröffentlichung erneut abgeglichen. Keine fremden
+Änderungen ersetzt. Porträtverlust in ausHalle/Spielerkarte/Elfkarte behoben,
+Merkmale beim Karteneinsatz und Kaderabschluss weitergetragen. Altstand-Abgleich
+über vorhandene Hallenkennungen; keine namensbasierte Rekonstruktion.
+Fehlende historische Hallenquellen bleiben eine Grenze der Reparatur.
+
+Isolierter vollständiger App-Prüfstand tools/spieltest.cjs ergänzt und im
+Bildschirmrahmen verlinkt. Die neue Vorlage verwendet ausschließlich getrennte
+Sitzungsdaten. Browserdurchlauf und konkrete offene Befunde stehen in
+[pruefberichte/35.191-spieltest.md](pruefberichte/35.191-spieltest.md).
+Kein Anspruch auf vollständige Spiel- oder Android-Fehlerfreiheit.
+
+Nächste Prioritäten: inkonsistente Gesamttabelle, Abschlussjahr bei Rücktritt
+nach Saisonende, dann restlicher Akademie-/Vereins- und Sicherungsdurchlauf.
+
+Lokale Prüfungen: 107 Regressionen bestanden, Produktionsbuild erfolgreich,
+Capacitor-Android-Synchronisierung erfolgreich. Galerie und isolierter Spieltest
+neu erzeugt. GitHub- und Android-Workflow-Ergebnisse sind am Release-Commit
+zu prüfen; zum Zeitpunkt dieses Vermerks noch nicht ausgeführt.
+
+
+## Konsistenz und fortgesetzter Spieltest 35.192 – Codex, 17.09.2026
+
+Lokaler Ausgang 07e2966 (unveröffentlichte 35.191), Remote main 9bb0d57.
+Porträtkorrektur erhalten und gemeinsam mit dieser Runde zur Veröffentlichung
+vorbereitet. Keine offenen PRs oder neuen Remote-Übergaben festgestellt.
+
+Gemeinsame Paarungen statt unabhängiger Tabellenzeilen; sortierte Leistungsplätze
+werden der bestehenden Rangfolge zugeordnet, damit Karrierefolgen konsistent bleiben.
+Kalendergrenzen aus tatsächlichen Saisonangaben für Abschluss, Rückblick und Halle.
+Kein zusätzliches Jahr im Spielerzustand und keine Änderung alter Tabellen.
+Sichtbarer Rückweg aus erster Vereinsgründung; Mindestdauertexte korrigiert.
+
+109 Regressionen, Web-Build und Capacitor-Sync bestanden. Langzeitlauf 192 Karrieren
+mit 4527 Saisons erfolgreich. Echte Browserwege für Gründung, Ausbau, Hochziehen,
+Aufstellung und Textsicherung; Details und klare Grenzen in
+[pruefberichte/35.192-spieltest.md](pruefberichte/35.192-spieltest.md).
+Version 35.192.0 / 3519200. CI-/APK-Ergebnis nach Veröffentlichung prüfen.
+
+Fortsetzung 17.09.2026: Lokalen Commit 5f9d6d7 vollständig wiedergefunden.
+109 Regressionen, Produktionsbuild und Capacitor-Sync erneut erfolgreich.
+Lokale Playwright-Ausführung konnte mangels installiertem Chromium nicht starten;
+kein Browsererfolg daraus abgeleitet. GitHub-Browser-CI bleibt Release-Gate.
+Die automatische Freigabeprüfung lehnte den ersten main-Push ab. Kevin bestätigte
+daraufhin ausdrücklich die dauerhafte Freigabe für Updates und APK-Builds sowie
+sein letztes Wort; Wortlaut in README. Veröffentlichung wird damit fortgesetzt.
