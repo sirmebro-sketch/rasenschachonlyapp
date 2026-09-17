@@ -13,19 +13,20 @@ function IdentitaetsProbe(){
  const card=KARTEN.ausHalle(h,h.nr);
  const gesetzt=VEREIN.karteEinsetzen({...VEREIN.leererVerein(),gegruendet:true,name:'Identitätsverein',kader:[]},card);
  const kader=gesetzt.v.kader[0];
- const box=(id,titel,inhalt)=><article data-testid={id} style={{minWidth:0,border:'1px solid var(--ln)',background:'var(--pa)',padding:12,borderRadius:12}}><div className="d" style={{fontSize:12,letterSpacing:'.08em',marginBottom:8}}>{titel}</div><div style={{display:'grid',placeItems:'center',minHeight:170}}>{inhalt}</div></article>;
+ const daten=p=>JSON.stringify({avatar:p.avatar,zuege:p.zuege,g:p.g});
+ const box=(id,titel,inhalt,p)=><article data-testid={id} data-portrait={daten(p)} style={{minWidth:0,border:'1px solid var(--ln)',background:'var(--pa)',padding:12,borderRadius:12}}><div className="d" style={{fontSize:12,letterSpacing:'.08em',marginBottom:8}}>{titel}</div><div style={{display:'grid',placeItems:'center',minHeight:170}}>{inhalt}</div></article>;
  return <><style>{CSS}</style><main className="fl" style={{minHeight:'100vh',padding:16}} data-testid="portraet-kette">
   <div style={{maxWidth:1040,margin:'0 auto'}}>
    <div className="k" style={{marginBottom:12}}>CHAR-P0-02 · SICHTPRÜFUNG</div>
    <h1 className="d" style={{fontSize:24,margin:'0 0 6px'}}>Porträt-Identitätskette</h1>
    <p className="m" style={{fontSize:12,maxWidth:760,margin:'0 0 16px'}}>Dasselbe gespeicherte Gesicht wird über vier reale Darstellungswege gezeigt. Frisur, Kopfform, Haut, Gesichtszüge, Schmuck, Make-up und Geschlecht müssen wiedererkennbar gleich bleiben.</p>
    <section style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(190px,1fr))',gap:12,alignItems:'stretch'}}>
-    {box('portrait-karriere','1 · Karriere',<Avatar seed={karriere.avatar} zuege={karriere.zuege} g={karriere.g} nat={karriere.natId} club={null} size={112}/>)}
-    {box('portrait-halle','2 · Ruhmeshalle',<Avatar seed={h.avatar} zuege={h.zuege} g={h.g} nat={h.natId} club={null} size={112}/>)}
-    {box('portrait-sammlung','3 · Sammelkarte',<div style={{width:150}}><Spielerkarte karte={card}/></div>)}
-    {box('portrait-kader','4 · Vereinskader',<div style={{width:112}}><Elfkarte spieler={kader} stufe={KARTEN.stufeFuer(kader.ovr)} platz={kader.pos} eignung={1}/></div>)}
+    {box('portrait-karriere','1 · Karriere',<Avatar seed={karriere.avatar} zuege={karriere.zuege} g={karriere.g} nat={karriere.natId} club={null} size={112}/>,karriere)}
+    {box('portrait-halle','2 · Ruhmeshalle',<Avatar seed={h.avatar} zuege={h.zuege} g={h.g} nat={h.natId} club={null} size={112}/>,h)}
+    {box('portrait-sammlung','3 · Sammelkarte',<div style={{width:150}}><Spielerkarte karte={card}/></div>,card.portraet)}
+    {box('portrait-kader','4 · Vereinskader',<div style={{width:112}}><Elfkarte spieler={kader} stufe={KARTEN.stufeFuer(kader.ovr)} platz={kader.pos} eignung={1}/></div>,kader.portraet)}
    </section>
-   <div className="m" style={{fontSize:11,marginTop:14}}>Quelle: isolierter Prüfstand. Keine produktiven Speicherstände werden verändert.</div>
+   <div className="m" style={{fontSize:11,marginTop:14}}>Quelle: isolierter Prüfstand. Keine produktiven Speicherstände werden verändert. Karten- und Kaderrahmen dürfen den Avatar anders einbetten; die gespeicherte Porträtidentität muss gleich bleiben.</div>
   </div>
  </main></>;
 }
