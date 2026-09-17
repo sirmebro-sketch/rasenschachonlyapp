@@ -1,7 +1,7 @@
 name: Visuelle Browsertests
 on:
   push:
-    branches: [main]
+    branches: [main, codex/char-fix-01-kopf-hals-frisur]
   pull_request:
   workflow_dispatch:
 permissions:
