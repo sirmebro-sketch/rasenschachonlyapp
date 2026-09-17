@@ -76,6 +76,19 @@ Dort stehen dauerhafte Einstiegspunkte, Qualitätskriterien, Paket-IDs und
 Abnahmeregeln. Konkrete Runde weiterhin in `ENTWICKLUNG.md` bzw. einem
 Prüfbericht dokumentieren; der Arbeitsplan ist kein statischer Live-Status.
 
+## Sichere Patch-Brücke für große oder konfliktanfällige Dateien
+
+Wenn eine Umgebung eine große Datei wie `App.jsx` nicht sicher partiell schreiben
+kann, **keine alte Gesamtdatei zurückkopieren**. Dafür existiert die geprüfte
+[`PATCH-BRUECKE.md`](PATCH-BRUECKE.md) mit dem Workflow
+`.github/workflows/safe-patch.yml`.
+
+Die Brücke wendet genau einen Unified Diff ausschließlich auf einem
+Arbeitsbranch an, prüft den Patch vor der Änderung, führt Regressionen und Build
+aus und committet nur bei Erfolg. Sie ist kein Ersatz für Review, visuelle
+Sichtprüfung oder Android-Gates; diese bleiben je nach Änderung zusätzlich
+Pflicht. Vor der Nutzung immer die vollständige Anleitung lesen.
+
 ## Vor dem Veröffentlichen
 
 `main` erneut prüfen. Ist er weitergelaufen, zuerst zusammenführen und die
