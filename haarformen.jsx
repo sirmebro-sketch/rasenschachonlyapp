@@ -36,7 +36,14 @@ export function Haarform({index=0,weiblich=false,breite=24,farbe,hell,ebene='vor
  // Die Unterlage deckt die tatsächliche Schädelkurve ab; einzelne Strähnen
  // dürfen keine hautfarbenen Spalten am Scheitel oder an den Schläfen lassen.
  const schlaefe=26+9*24/haarbreite;
- const scalp=`M26 40 C26 21 ${schlaefe} 12 50 12 C${100-schlaefe} 12 74 21 74 40 Q69 31 50 28 Q31 31 26 40 Z`;
+ const neueKopfpassform=['trapez','lang','diamant','kurzbreit'].includes(kopfprofil)&&kopfpfad;
+ /* Bei den neuen, stärker variierenden Silhouetten darf die Haarunterlage bewusst
+    über die theoretische Schädelkante hinausreichen: der echte Kopfpfad clippt sie
+    anschließend exakt. Damit bleibt an Langkantig/Kurzbreit kein heller Hautsaum,
+    ohne bei alten Köpfen oder außerhalb der Kopfform zusätzliche Haarfläche zu erzeugen. */
+ const scalp=neueKopfpassform
+  ? 'M20 46 C18 15 29 6 50 6 C71 6 82 15 80 46 Q70 30 50 27 Q30 30 20 46 Z'
+  : `M26 40 C26 21 ${schlaefe} 12 50 12 C${100-schlaefe} 12 74 21 74 40 Q69 31 50 28 Q31 31 26 40 Z`;
  /* Rasierte Haare brauchen keine dunklen Seitenbänder. Die kurze Kappe liegt
     nur auf der Schädeloberseite und wird zusätzlich auf die echte Kopfhülle
     beschnitten. So entsteht bei Glatze/Rasiert kein schwarzer Schläfenschatten. */
