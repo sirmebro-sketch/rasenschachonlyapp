@@ -9330,10 +9330,13 @@ function VereinGruenden({ aka, verein, art = "voll", onFertig, onZurueck }) {
    wird der Anpfiffknopf aktiv — und er sagt, WAS fehlt. Ein grauer Knopf ohne
    Begründung ist eine Zumutung; dieselbe Überlegung wie bei `sperre` an den
    Auswahlmöglichkeiten und bei „noch 2 bis zum Verein". */
-function VereinScreen({ v, aka, onAendern, onZurueck, onAbschluss }) {
+function VereinScreen({ v, aka, onAendern, onZurueck, onAbschluss, startReiter }) {
   /* F55 (35.147): siehe VereinDach. */
   useZurueck(onZurueck);
-  const [reiter, setReiter] = React.useState("kader");
+  /* `startReiter` wie beim Packladen: der Prüfstand soll einen bestimmten
+     Reiter aufschlagen können, ohne einen Klick nachzubauen. Im Spiel wird er
+     nicht gesetzt, dort beginnt der Bildschirm wie immer beim Kader. */
+  const [reiter, setReiter] = React.useState(startReiter || "kader");
   const [bericht, setBericht] = React.useState(null);
   /* Welcher Platz gerade besetzt wird (35.49). `null` heisst: keiner offen.
      Bewusst eine Zahl und kein Objekt — der Index ist der Schluessel, unter
@@ -9473,7 +9476,7 @@ function VereinScreen({ v, aka, onAendern, onZurueck, onAbschluss }) {
 
   const REITER = [["kader", "Kader"], ["elf", "Aufstellung"],
     ...(hatRueck ? [["rueck", "Rückblick"]] : []),
-    ["ausbau", "Ausbau"], ["chronik", "Chronik"]];
+    ["ausbau", "Ausbau"], ["sponsoren", "Sponsoren"], ["chronik", "Chronik"]];
   const rueckJahre = (v.chronik || []).filter((c) => c.tabelle).map((c) => c.jahr).reverse();
   const [rjahr, setRjahr] = React.useState(null);
   const rc = (v.chronik || []).filter((c) => c.tabelle)
@@ -9890,12 +9893,101 @@ function VereinScreen({ v, aka, onAendern, onZurueck, onAbschluss }) {
               </div>)}
           </div>)}
 
+        {/* WIRT-P0-04: Werbeverträge. Die Angebote stehen im Spielstand, nicht
+            im Augenblick — wer den Bildschirm zumacht und wieder aufschlägt,
+            findet dieselben drei vor. Sonst wäre die Auswahl kein Entschluss,
+            sondern ein Automat, den man bis zum besten Angebot drückt. */}
+        {reiter === "sponsoren" && (() => {
+          const vs = VEREIN.mitAngeboten(v);
+          const laufend = vs.sponsoren || [];
+          const jeSaison = laufend.reduce((a, x) => a + (x.betrag || 0), 0);
+          const voll = laufend.length >= VEREIN.SPONSOR_MAX;
+          const letzte = (v.chronik || [])[(v.chronik || []).length - 1];
+          const raus = (letzte && letzte.wirtschaft && letzte.wirtschaft.ausgelaufen) || [];
+          return (
+            <div style={{ marginTop: 10 }}>
+              <div className="pan pad">
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
+                  <span className="eb">Partner · {laufend.length} von {VEREIN.SPONSOR_MAX}</span>
+                  <span className="d" style={{ fontSize: 16, color: "var(--ok)" }}>
+                    {VEREIN.geldText(Math.round(jeSaison * 100) / 100, v.land)} je Saison</span>
+                </div>
+                <div className="m" style={{ fontSize: 11.5, marginTop: 2 }}>
+                  Ein langer Vertrag zahlt je Saison weniger, hält den Platz aber
+                  besetzt. Wer aufsteigt, hätte neu verhandeln können.</div>
+                {raus.length > 0 && (
+                  <div className="m" style={{ fontSize: 11.5, marginTop: 6, color: "var(--bad)" }}>
+                    Ausgelaufen: {raus.join(", ")}</div>)}
+              </div>
+
+              {laufend.map((sp) => (
+                <div key={sp.id} className="pan pad" style={{ marginTop: 8 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
+                    <span className="d" style={{ fontSize: 15 }}>{sp.n}</span>
+                    <span className="m" style={{ fontSize: 12 }}>
+                      noch {sp.rest} {sp.rest === 1 ? "Saison" : "Saisons"}</span>
+                  </div>
+                  <div className="m" style={{ fontSize: 11.5, marginTop: 2 }}>
+                    {sp.branche} · {VEREIN.geldText(sp.betrag, v.land)} je Saison
+                    {sp.vorteil ? " · " + sp.vorteil : ""}</div>
+                </div>))}
+
+              <div className="pan pad" style={{ marginTop: 14 }}>
+                <div className="eb">Angebote für diese Saison</div>
+                <div className="m" style={{ fontSize: 11.5, marginTop: 2 }}>
+                  {voll ? "Alle Plätze belegt — erst wenn ein Vertrag ausläuft, ist wieder einer frei."
+                        : "Die Beträge richten sich nach Liga, Erfolg und Ansehen des Vereins."}</div>
+              </div>
+              {(vs.angebote || []).length === 0 && (
+                <div className="pan pad m" style={{ marginTop: 8, fontSize: 12 }}>
+                  Für diese Saison liegt nichts mehr vor.</div>)}
+              {(vs.angebote || []).map((an) => (
+                <div key={an.id} className="pan pad" style={{ marginTop: 8 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
+                    <span className="d" style={{ fontSize: 15 }}>{an.n}</span>
+                    <span className="d" style={{ fontSize: 14, color: "var(--ok)" }}>
+                      {VEREIN.geldText(an.betrag, v.land)}</span>
+                  </div>
+                  <div className="m" style={{ fontSize: 11.5, marginTop: 2 }}>
+                    {an.branche} · {an.laufzeit} {an.laufzeit === 1 ? "Saison" : "Saisons"}
+                    {" · insgesamt " + VEREIN.geldText(Math.round(an.betrag * an.laufzeit * 100) / 100, v.land)}</div>
+                  {an.vorteil && <div className="m" style={{ fontSize: 11.5 }}>{an.vorteil}</div>}
+                  <button className="btn sm" style={{ marginTop: 6 }} disabled={voll}
+                    onClick={() => { const r = VEREIN.sponsorAnnehmen(v, an.id); if (!r.fehler) onAendern(r.v); }}>
+                    {voll ? "Kein Platz frei" : "Unterschreiben"}
+                  </button>
+                </div>))}
+            </div>);
+        })()}
+
+        {/* WIRT-P0-03: Ausbau kostet Geld, VC nur noch die vier Extras. Die
+            Trennung ist auch optisch eine: zwei Abschnitte, zwei Währungen,
+            keine Zeile, in der beides nebeneinander steht. */}
         {reiter === "ausbau" && (
-          <div className="pan pad" style={{ marginTop: 10 }}>
-            <div className="eb">Vereinsausbau · {aka ? aka.vc : 0} VC verfügbar</div>
+          <div style={{ marginTop: 10 }}>
+            <div className="pan pad">
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
+                <span className="eb">Vereinskasse</span>
+                <span className="d" style={{ fontSize: 18,
+                  color: VEREIN.kasse(v) < 0 ? "var(--bad)" : "var(--ok)" }}>
+                  {VEREIN.geldText(VEREIN.kasse(v), v.land)}</span>
+              </div>
+              <div className="m" style={{ fontSize: 11.5, marginTop: 2 }}>
+                Das Geld kommt aus Zuschauern, Gastronomie, Fanartikeln, Prämien
+                und Werbeverträgen — jede Saison neu abgerechnet.</div>
+              {VEREIN.baustellenText(v).length > 0 && (
+                <div style={{ marginTop: 7 }}>
+                  <div className="m" style={{ fontSize: 11.5 }}>Im Bau:</div>
+                  {VEREIN.baustellenText(v).map((t, i) => (
+                    <div key={i} className="d" style={{ fontSize: 12.5 }}>· {t}</div>))}
+                </div>)}
+            </div>
+
             {VEREIN.VEREIN_AUSBAU.map((ab) => {
               const stufe = VEREIN.ausbauStufe(v, ab.id);
               const k = VEREIN.ausbauKosten(v, ab.id);
+              const laeuft = (v.baustellen || {})[ab.id];
+              const fehlt = k == null ? 0 : Math.max(0, Math.round((k - VEREIN.kasse(v)) * 100) / 100);
               return (
                 <div key={ab.id} className="pan pad" style={{ marginTop: 8 }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
@@ -9905,13 +9997,42 @@ function VereinScreen({ v, aka, onAendern, onZurueck, onAbschluss }) {
                   <div className="m" style={{ fontSize: 11.5, marginTop: 2 }}>{ab.t}</div>
                   <div className="m" style={{ fontSize: 11.5 }}>{ab.wirkt}</div>
                   <button className="btn sm" style={{ marginTop: 6 }}
-                    disabled={k == null || !aka || aka.vc < k}
+                    disabled={k == null || !!laeuft || fehlt > 0}
+                    onClick={() => { const r = VEREIN.bauStarten(v, ab.id); if (!r.fehler) onAendern(r.v); }}>
+                    {k == null ? "Voll ausgebaut"
+                      : laeuft ? "Im Bau · noch " + laeuft.rest + (laeuft.rest === 1 ? " Saison" : " Saisons")
+                      : "Bauen · " + VEREIN.geldText(k, v.land)}
+                  </button>
+                  {k != null && !laeuft && fehlt > 0 && (
+                    <div className="m" style={{ fontSize: 11, marginTop: 4 }}>
+                      Dafür fehlen {VEREIN.geldText(fehlt, v.land)}</div>)}
+                </div>);
+            })}
+
+            <div className="pan pad" style={{ marginTop: 14 }}>
+              <div className="eb">Mit VC · {aka ? aka.vc : 0} verfügbar</div>
+              <div className="m" style={{ fontSize: 11.5, marginTop: 2 }}>
+                Nur was den Verein überdauert oder mit Geld allein nicht geht.
+                Jedes einmal je Verein.</div>
+            </div>
+            {VEREIN.VC_EXTRAS.map((ex) => {
+              const hat = (v.extras || []).includes(ex.id);
+              return (
+                <div key={ex.id} className="pan pad" style={{ marginTop: 8 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
+                    <span className="d" style={{ fontSize: 15 }}>{ex.n}</span>
+                    <span className="m" style={{ fontSize: 12 }}>{ex.vc} VC</span>
+                  </div>
+                  <div className="m" style={{ fontSize: 11.5, marginTop: 2 }}>{ex.t}</div>
+                  <div className="m" style={{ fontSize: 11.5 }}>{ex.wirkt}</div>
+                  <button className="btn sm" style={{ marginTop: 6 }}
+                    disabled={hat || !aka || aka.vc < ex.vc}
                     onClick={() => {
-                      const r = VEREIN.ausbauen(v, ab.id, aka ? aka.vc : 0);
-                      if (!r.fehler) { onAendern(r.v, { ...aka, vc: aka.vc - r.kosten,
-                        ausgegeben: (aka.ausgegeben || 0) + r.kosten }); }
+                      const r = VEREIN.extraKaufen(v, ex.id, aka ? aka.vc : 0);
+                      if (!r.fehler) onAendern(r.v, { ...aka, vc: aka.vc - r.kosten,
+                        ausgegeben: (aka.ausgegeben || 0) + r.kosten });
                     }}>
-                    {k == null ? "Voll ausgebaut" : "Ausbauen · " + k + " VC"}
+                    {hat ? "Bereits vorhanden" : "Kaufen · " + ex.vc + " VC"}
                   </button>
                 </div>);
             })}
@@ -10071,6 +10192,21 @@ function VereinAbschluss({ v, ergebnis, ges, onNeu, onZurueck }) {
           <div className="d" style={{ fontSize: 30, color: "var(--go)" }}>
             <Zahl v={ergebnis.vc} dauer={900} suffix=" VC" /></div>
           <div className="m" style={{ fontSize: 11.5 }}>{ergebnis.punkte} Vermächtnispunkte</div>
+          {/* WIRT-P1-05: woraus die Punkte bestehen. Ohne diese Zeile sähe der
+              Spieler nur eine gewachsene Zahl und wüsste nicht, dass seine
+              Kasse darin steckt — und würde beim nächsten Verein wieder alles
+              bis zur letzten Mark verbauen. */}
+          {ergebnis.wirtschaft && (
+            <div className="m" style={{ fontSize: 10.5, color: "var(--mu)", marginTop: 2 }}>
+              {ergebnis.wirtschaft.punkte > 0
+                ? ergebnis.sportlich + " sportlich · " + ergebnis.wirtschaft.punkte
+                  + " aus der Kasse (" + VEREIN.geldText(ergebnis.wirtschaft.kasse, v.land) + ")"
+                : "Alles sportlich — die Kasse war am Ende leer."}
+              {ergebnis.wirtschaft.faktor > 1
+                ? " · Vermächtnisplakette +"
+                  + Math.round((ergebnis.wirtschaft.faktor - 1) * 100) + " %"
+                : ""}
+            </div>)}
           {/* DER DRITTE TOTE ZAEHLER BEKOMMT EINEN LESER (35.103).
               `vereinPunkteSumme` wurde seit 35.74 fortgeschrieben und von
               niemandem gelesen — nicht einmal von einer Errungenschaft, anders
@@ -17281,6 +17417,65 @@ function EndScreen({ p, onNew }) {
                   {b.abgaenge > 0 ? b.abgaenge + " Abgänge — die Akademie muss nachliefern." : ""}
                   {b.vorbei ? (b.abgaenge > 0 ? " " : "") + "Die fünfzehn Jahre sind um." : ""}
                 </div>)}
+
+              {/* WIRT-P1-01: woher das Geld kam und wohin es ging. Ohne diese
+                  Seite sah der Spieler nur einen Kassenstand, der sich
+                  veraendert hatte — ohne zu wissen, warum. Dieselbe Bauart wie
+                  der Coinbeleg: Posten links, Betrag rechts, Summe darunter.
+                  Der Beleg ist gebucht worden; hier wird er nur gelesen. */}
+              {b.wirtschaft && (() => {
+                const w = b.wirtschaft;
+                const geld = (x) => VEREIN.geldText(x, w.land);
+                const zeile = (k, wert, farbe) => (
+                  <div key={k} style={{ display: "flex", justifyContent: "space-between",
+                    gap: 10, fontSize: 11.5, padding: "2px 0" }}>
+                    <span style={{ color: "var(--mu)", flex: 1, minWidth: 0, overflow: "hidden",
+                      textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{k}</span>
+                    <span style={{ color: farbe || "inherit", whiteSpace: "nowrap" }}>{wert}</span>
+                  </div>);
+                return (
+                  <div style={{ marginTop: 10, paddingTop: 9, borderTop: "1px solid var(--ln)" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
+                      <span className="eb" style={{ fontSize: 11 }}>Saisonabrechnung</span>
+                      <span className="d" style={{ fontSize: 17,
+                        color: w.kasse < 0 ? "var(--bad)" : "var(--ok)" }}>{geld(w.kasse)}</span>
+                    </div>
+                    {w.zuschauer > 0 && (
+                      <div className="m" style={{ fontSize: 10, color: "var(--mu)", marginBottom: 4 }}>
+                        Ø {Math.round(w.zuschauer).toLocaleString("de-DE")} Zuschauer
+                        {w.auslastung ? " · " + Math.round(w.auslastung * 100) + " % ausgelastet" : ""}</div>)}
+
+                    <div style={{ marginTop: 6 }}>
+                      {(w.einnahmen || []).map((x) => zeile(x.k, "+" + geld(x.v), "var(--ok)"))}
+                      {(w.ausgaben || []).map((x) => zeile(x.k, "−" + geld(x.v), "var(--bad)"))}
+                      {(w.ereignisse || []).filter((e) => e.geld).map((e) =>
+                        zeile(e.n, (e.geld > 0 ? "+" : "−") + geld(Math.abs(e.geld)),
+                          e.geld > 0 ? "var(--ok)" : "var(--bad)"))}
+                      {w.ziel && w.ziel.erfuellt && w.ziel.praemie > 0 &&
+                        zeile("Vorstandsziel erfüllt · " + w.ziel.n, "+" + geld(w.ziel.praemie), "var(--ok)")}
+                    </div>
+
+                    <div style={{ display: "flex", justifyContent: "space-between", gap: 10,
+                      marginTop: 6, paddingTop: 6, borderTop: "1px solid var(--ln)", fontSize: 12.5 }}>
+                      <span className="d">Ergebnis</span>
+                      <span className="d" style={{ color: w.ergebnis < 0 ? "var(--bad)" : "var(--ok)" }}>
+                        {(w.ergebnis > 0 ? "+" : "") + geld(w.ergebnis)}</span>
+                    </div>
+
+                    {w.ziel && !w.ziel.erfuellt && (
+                      <div className="m" style={{ fontSize: 11, marginTop: 5, color: "var(--mu)" }}>
+                        Vorstandsziel verfehlt: {w.ziel.n} — keine Prämie.</div>)}
+                    {!!(w.fertig || []).length && (
+                      <div className="m" style={{ fontSize: 11, marginTop: 5 }}>
+                        Fertig geworden: {w.fertig.join(", ")}</div>)}
+                    {!!(w.ausgelaufen || []).length && (
+                      <div className="m" style={{ fontSize: 11, marginTop: 3, color: "var(--mu)" }}>
+                        Vertrag ausgelaufen: {w.ausgelaufen.join(", ")}</div>)}
+                    {(w.ereignisse || []).map((e, i) => (
+                      <div key={i} className="m" style={{ fontSize: 11, marginTop: 3, color: "var(--mu)" }}>
+                        {e.n}{e.t ? " — " + e.t : ""}</div>))}
+                  </div>);
+              })()}
             </div>);
         })()}
         {p.hausFortschritt === false && <p style={{ marginTop: 12, color: "var(--mu)" }}>
@@ -17943,6 +18138,26 @@ function FlutlichtApp() {
           punkte: VS.punkte, aufstieg: !!VS.aufstieg, abstieg: !!VS.abstieg,
           meister: VS.rang === 1, vorbei: !!VS.vorbei,
           abgaenge: (VS.abgaenge || []).length,
+          /* WIRT-P1-01: die Saisonabrechnung wandert mit in den Bericht.
+             DIESELBE QUELLE wie die Buchung — der Beleg aus `vereinSaison`,
+             nicht eine zweite Rechnung daneben. Genau wie beim Coinbeleg am
+             Karriereende: zwei Rechnungen laufen frueher oder spaeter
+             auseinander, und dann glaubt der Spieler der falschen.
+             Mitgenommen wird der Beleg EINER Saison, nicht die Chronik —
+             fuenfzehn davon gehoerten nicht in einen Karrierebericht. */
+          wirtschaft: VS.beleg ? {
+            land: verein.land,
+            einnahmen: VS.beleg.einnahmen, ausgaben: VS.beleg.ausgaben,
+            summeEin: VS.beleg.summeEin, summeAus: VS.beleg.summeAus,
+            ergebnis: VS.beleg.ergebnis, kasse: VS.beleg.kasse,
+            zuschauer: VS.beleg.zuschauer, auslastung: VS.beleg.auslastung,
+            ereignisse: (VS.beleg.ereignisse || []).map((e) => ({ n: e.n, t: e.t, geld: e.geld })),
+            ziel: VS.beleg.ziel && VS.beleg.ziel.gesetzt
+              ? { n: VS.beleg.ziel.n, erfuellt: VS.beleg.ziel.erfuellt, praemie: VS.beleg.ziel.praemie }
+              : null,
+            fertig: ((VS.beleg.bau || {}).fertig || []).map((f) => f.n + " Stufe " + f.stufe),
+            ausgelaufen: VS.beleg.ausgelaufen || [],
+          } : null,
         };
         /* DEN ABSCHLUSS AM VEREIN SPEICHERN (35.73, von Kevin gemeldet:
            „die Bonis werden nicht uebernommen").

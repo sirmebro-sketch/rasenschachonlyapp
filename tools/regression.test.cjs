@@ -39,7 +39,8 @@ export {simTable, LEAGUES, karriereZeitraum, verdict, vorsatzBelohnen, vorsatzPu
 export const renderCreate=()=>renderToStaticMarkup(<CreateScreen meta={{}} onStart={()=>{}} onBack={()=>{}}/>);
 export const renderPortraits=()=>renderToStaticMarkup(<>{['m','w'].flatMap(g=>Array.from({length:4},(_,i)=><Avatar key={g+i} seed={1} g={g} zuege={{...zuegeAusKennung(1,g,'GER',{}),stil:2,haut:10+i,haar:9+i,frisur:(g==='w'?14:16)+i,details:i,bart:g==='w'?0:10+i%3}}/>))}</>);
 export const renderEnd=p=>renderToStaticMarkup(<EndScreen p={p} onNew={()=>{}}/>);
-export const renderVerein=(v,aka)=>renderToStaticMarkup(<VereinScreen v={v} aka={aka} onAendern={()=>{}} onZurueck={()=>{}} onAbschluss={()=>{}}/>);
+export const renderVereinAbschluss=(v,ergebnis,ges)=>renderToStaticMarkup(<VereinAbschluss v={v} ergebnis={ergebnis} ges={ges||{}} onNeu={()=>{}} onZurueck={()=>{}}/>);
+export const renderVerein=(v,aka,reiter)=>renderToStaticMarkup(<VereinScreen v={v} aka={aka} startReiter={reiter} onAendern={()=>{}} onZurueck={()=>{}} onAbschluss={()=>{}}/>);
 export const renderPacks=(pool,reiter='laden',verein=null)=>renderToStaticMarkup(<Packladen vc={100} pool={pool} verein={verein} gratis={1} startpaket={false} startReiter={reiter} onKauf={()=>{}} onGratis={()=>{}} onStartpaket={()=>{}} onEinsetzen={()=>{}} onEntfernen={()=>{}} onVerkauf={()=>{}} onZurueck={()=>{}}/>);
 export const renderPortraitCard=k=>renderToStaticMarkup(<Spielerkarte karte={k}/>);
 export const renderPortraitOriginal=h=>renderToStaticMarkup(<Avatar seed={h.avatar} zuege={h.zuege} g={h.g} nat={h.natId} size={54}/>);
@@ -410,6 +411,430 @@ test('Vereinsansicht rendert frisch gegründeten Verein ohne erfundene Kaderspie
  const r=E.VEREIN.gruenden(E.VEREIN.leererVerein(),{name:'Testverein',stadt:'Hamburg',land:'GER',weltjahr:2026});assert(!r.fehler);
  const html=E.renderVerein(r.v,E.leereAkademie());assert(html.includes('Testverein'));assert(!html.includes('NaN'));
 });
+/* ------------------------------------------------ Vereinswirtschaft P0-02
+   Der Anschluss des Rechenkerns an den Spielablauf. Geprüft wird hier NICHT
+   die Kalibrierung (das tut tools/vereinswirtschaft.test.cjs), sondern dass
+   die Abrechnung überhaupt läuft, dass sie den Spielstand fortschreibt und
+   dass ein alter Spielstand ohne die neuen Felder nicht stolpert. */
+const spielbereiterVerein=(zu={})=>{
+ const r=E.VEREIN.gruenden(E.VEREIN.leererVerein(),{name:'Testverein',stadt:'Hamburg',land:'GER',weltjahr:2026});
+ assert(!r.fehler,'Gründung: '+r.fehler);
+ /* Positionen aus GUETE in verein.js, nicht erfunden: TW IV AV ZDM ZM ZOM AF ST. */
+ const pos=['TW','IV','IV','AV','AV','ZDM','ZM','ZM','AF','AF','ST','TW','IV','ZM','ST','AV','ZOM','AF'];
+ const kader=pos.map((p,i)=>({id:'t'+i,name:'Spieler '+i,nat:'GER',flag:'🇩🇪',pos:p,
+   ovr:60,pot:70,alter:24,form:50,fitness:80,spiele:0,tore:0,jahreImVerein:1}));
+ /* autoAufstellen gibt den ganzen Verein zurück, nicht nur die Aufstellung. */
+ return E.VEREIN.autoAufstellen({...r.v,kader,...zu});
+};
+
+test('Ausbau kostet Geld: die alte VC-Funktion ist weg, ein Katalog statt zwei',()=>{
+ /* Kevins Vorgabe: „Das man keine VC in etwas versenkt was nach 15 Saison eh
+    verschwindet." Die alte Funktion muss VERSCHWUNDEN sein, nicht nur
+    unbenutzt — sonst baut sie jemand in der nächsten Runde wieder ein. */
+ assert.equal(typeof E.VEREIN.ausbauen,'undefined','VEREIN.ausbauen (VC) ist ersetzt, nicht ergänzt');
+ assert.equal(typeof E.VEREIN.bauStarten,'function');
+ /* Ein Katalog: sechs Abteilungen, die drei alten Kennungen unverändert. */
+ const ids=E.VEREIN.VEREIN_AUSBAU.map(a=>a.id);
+ assert.equal(ids.length,6);
+ for(const alt of ['training','stadion','medizin'])assert(ids.includes(alt),alt+' bleibt Vertrag');
+ for(const neu of ['gastro','sortiment','reichweite'])assert(ids.includes(neu));
+ /* Die Preise sind Geld, nicht VC: eine Stufe kostet Millionen, keine
+    dreistellige VC-Summe wie früher (Stadion Stufe 2 kostete 45 VC). */
+ assert.equal(E.VEREIN.ausbauKosten({},'stadion'),4);
+ assert.equal(E.VEREIN.ausbauKosten({ausbau:{stadion:6}},'stadion'),null,'voll ausgebaut');
+});
+
+test('Bauen: prüft vor dem Schreiben, bucht genau einmal ab und dauert an',()=>{
+ const arm={land:'GER',kasse:1,ausbau:{},baustellen:{}};
+ const r0=E.VEREIN.bauStarten(arm,'stadion');
+ assert(r0.fehler,'ohne Geld kein Bau');
+ assert.equal(r0.v.kasse,1,'ein abgelehnter Bau ändert gar nichts');
+ assert.deepEqual(r0.v.baustellen||{},{});
+ const reich={...arm,kasse:20};
+ const r1=E.VEREIN.bauStarten(reich,'stadion');
+ assert(!r1.fehler,r1.fehler);
+ assert.equal(r1.v.kasse,16,'4 Mio sofort abgebucht');
+ assert.equal(E.VEREIN.ausbauStufe(r1.v,'stadion'),1,'die Stufe steigt erst, wenn gebaut ist');
+ assert(r1.v.baustellen.stadion.rest>=1);
+ /* Dieselbe Abteilung nicht zweimal gleichzeitig, eine andere schon. */
+ assert(E.VEREIN.bauStarten(r1.v,'stadion').fehler);
+ assert(!E.VEREIN.bauStarten(r1.v,'gastro').fehler);
+ /* Der laufende Bau steht als Text für die Oberfläche bereit. */
+ const txt=E.VEREIN.baustellenText(r1.v);
+ assert.equal(txt.length,1);assert(txt[0].includes('Stadion'));assert(txt[0].includes('Saison'));
+});
+
+test('VC kaufen nur noch die vier Extras, jedes einmal',()=>{
+ const ids=E.VEREIN.VC_EXTRAS.map(x=>x.id);
+ assert.equal(ids.length,4,'bewusst wenige');
+ const v={land:'GER',kasse:0,extras:[]};
+ assert(E.VEREIN.extraKaufen(v,'startkapital',10).fehler,'zu wenig VC');
+ assert.equal(E.VEREIN.extraKaufen(v,'startkapital',10).v.kasse,0,'abgelehnt heisst unverändert');
+ const r=E.VEREIN.extraKaufen(v,'startkapital',100);
+ assert(!r.fehler);assert.equal(r.kosten,45);
+ assert.equal(r.v.kasse,12,'Gründungskapital fliesst in die Kasse');
+ assert(r.v.extras.includes('startkapital'));
+ assert(E.VEREIN.extraKaufen(r.v,'startkapital',100).fehler,'nur einmal');
+ assert(E.VEREIN.extraKaufen(v,'gibtesnicht',100).fehler);
+});
+
+test('Die Ausbauwirkungen im Spiel hängen weiter an denselben Kennungen',()=>{
+ /* Wäre die Umstellung an dieser Stelle schiefgegangen, hätte ein
+    ausgebautes Trainingszentrum stumm aufgehört zu wirken. */
+ const bauen=(id,stufe)=>spielbereiterVerein({ausbau:{[id]:stufe}});
+ const schwach=E.VEREIN.staerke(bauen('stadion',1)).gesamt;
+ const stark=E.VEREIN.staerke(bauen('stadion',6)).gesamt;
+ assert(stark>schwach,'das Stadion trägt weiter zur Mannschaftsstärke bei');
+ assert.equal(E.VEREIN.ausbauStufe(bauen('training',4),'training'),4);
+ assert.equal(E.VEREIN.ausbauStufe({},'training'),1,'ohne Angabe Stufe 1');
+});
+
+test('Der Ausbaureiter zeigt Geld und VC getrennt, ohne NaN',()=>{
+ const v=E.VEREIN.mitWirtschaft(spielbereiterVerein({kasse:25.5,extras:[]}));
+ const html=E.renderVerein(v,{...E.leereAkademie(),vc:100},'ausbau');
+ assert(!html.includes('NaN'),'keine kaputte Zahl');
+ assert(html.includes('Vereinskasse'));
+ assert(html.includes('Bauen'),'Geldknopf');
+ assert(html.includes('Gastronomie'),'die neuen Abteilungen sind da');
+ assert(html.includes('Gründungskapital'),'die VC-Extras stehen im eigenen Abschnitt');
+ /* Kein Ausbau darf mehr mit VC ausgezeichnet sein. */
+ assert(!html.includes('Ausbauen ·'),'die alte VC-Beschriftung ist weg');
+ /* Eine leere Kasse macht den Knopf nicht kaputt, sondern nennt die Lücke. */
+ const arm=E.renderVerein(E.VEREIN.mitWirtschaft(spielbereiterVerein({kasse:0})),
+   {...E.leereAkademie(),vc:0},'ausbau');
+ assert(arm.includes('Dafür fehlen'));assert(!arm.includes('NaN'));
+});
+
+test('Abschluss: die Restkasse wird zu Vermächtnispunkten',()=>{
+ /* WIRT-P1-05. Bis hierher verfiel, was am Ende in der Kasse lag — damit war
+    Wirtschaften ab dem Jahr, in dem alles gebaut war, gleichgültig, und genau
+    das sollte die Umstellung auf Geld abschaffen. */
+ const bilanz={saisons:15,aufstiege:1,abstiege:0,meister:0,tore:600,gegentore:500,
+   punkte:700,bestePlatzierung:2};
+ const leer=E.VEREIN.abschluss({bilanz,kader:[],kasse:0,extras:[]});
+ const voll=E.VEREIN.abschluss({bilanz,kader:[],kasse:100,extras:[]});
+ assert(voll.punkte>leer.punkte,'die Kasse zählt');
+ assert.equal(voll.punkte-leer.punkte,25,'4 Mio je Punkt');
+ assert.equal(voll.wirtschaft.punkte,25);
+ assert.equal(voll.sportlich,leer.sportlich,'der sportliche Teil bleibt derselbe');
+ /* Schulden zählen nicht negativ — der Abschluss soll nicht zweimal bestrafen. */
+ const schulden=E.VEREIN.abschluss({bilanz,kader:[],kasse:-80,extras:[]});
+ assert.equal(schulden.punkte,leer.punkte);
+ /* Der Deckel verhindert, dass eine nie ausgegebene Kasse den Sport ersetzt. */
+ const reich=E.VEREIN.abschluss({bilanz,kader:[],kasse:99999,extras:[]});
+ assert.equal(reich.wirtschaft.punkte,250);
+ /* Mehr Punkte heissen auch mehr VC — das ist die gewollte Folge, nicht ein
+    Nebeneffekt: Wirtschaften lohnt bis zur letzten Saison. */
+ assert(voll.vc>=leer.vc);
+});
+
+test('Abschluss: die Vermächtnisplakette wirkt auf beide Teile, jeden genau einmal',()=>{
+ /* Das VC-Extra verspricht „+15 % Abschlusspunkte" — nicht „+15 % auf den
+    Kassenanteil". Beide Teile werden erhöht, keiner doppelt. */
+ const bilanz={saisons:15,aufstiege:1,abstiege:0,meister:1,tore:600,gegentore:500,
+   punkte:700,bestePlatzierung:1};
+ const ohne=E.VEREIN.abschluss({bilanz,kader:[],kasse:100,extras:[]});
+ const mit=E.VEREIN.abschluss({bilanz,kader:[],kasse:100,extras:['ewigkeit']});
+ assert.equal(ohne.wirtschaft.faktor,1);
+ assert.equal(mit.wirtschaft.faktor,1.15);
+ assert.equal(mit.sportlich,Math.round(ohne.sportlich*1.15),'sportlicher Teil einmal erhöht');
+ assert.equal(mit.wirtschaft.punkte,Math.round(ohne.wirtschaft.punkte*1.15),'Kassenteil einmal erhöht');
+ assert.equal(mit.punkte,mit.sportlich+mit.wirtschaft.punkte,'die Summe ist die Summe');
+ /* Nicht mehr als 15 % insgesamt — ein doppelt angewandter Faktor wäre 32 %. */
+ const verhaeltnis=mit.punkte/ohne.punkte;
+ assert(verhaeltnis>1.14&&verhaeltnis<1.16,'genau einmal angewandt, war '+verhaeltnis.toFixed(3));
+});
+
+test('Der Abschlussbildschirm sagt, woraus die Punkte bestehen',()=>{
+ /* Ohne diese Zeile sähe der Spieler nur eine gewachsene Zahl und wüsste
+    nicht, dass seine Kasse darin steckt — und würde beim nächsten Verein
+    wieder alles bis zur letzten Mark verbauen. */
+ const v={...spielbereiterVerein({kasse:100,extras:[],jahr:15}),
+   bilanz:{saisons:15,aufstiege:1,abstiege:0,meister:1,tore:600,gegentore:480,
+     punkte:720,bestePlatzierung:1},chronik:[]};
+ const erg=E.VEREIN.abschluss(v);
+ const html=E.renderVereinAbschluss(v,erg,{});
+ assert(!html.includes('NaN'));
+ assert(html.includes('Vermächtnis'));
+ assert(html.includes('aus der Kasse'),'der Kassenanteil wird benannt');
+ assert(html.includes(String(erg.wirtschaft.punkte)));
+ /* Leere Kasse: der Bildschirm sagt es, statt die Zeile wegzulassen. */
+ const arm={...v,kasse:0};
+ const html2=E.renderVereinAbschluss(arm,E.VEREIN.abschluss(arm),{});
+ assert(html2.includes('Kasse war am Ende leer'));
+ assert(!html2.includes('NaN'));
+ /* Mit Plakette wird sie genannt — sonst weiss niemand, wofür die 120 VC waren. */
+ const mit={...v,extras:['ewigkeit']};
+ const html3=E.renderVereinAbschluss(mit,E.VEREIN.abschluss(mit),{});
+ assert(html3.includes('Vermächtnisplakette'));
+ assert(html3.includes('15 %'));
+});
+
+test('Abschluss: ein Verein ohne Wirtschaftsfelder bleibt rechenbar',()=>{
+ /* Ein Spielstand aus 35.192 hat keine Kasse. Er muss abschliessbar bleiben
+    und darf dabei nichts erfinden. */
+ const alt={bilanz:{saisons:15,aufstiege:0,abstiege:1,meister:0,tore:400,
+   gegentore:520,punkte:480,bestePlatzierung:6},kader:[]};
+ const erg=E.VEREIN.abschluss(alt);
+ assert(Number.isFinite(erg.punkte)&&erg.punkte>=0);
+ assert.equal(erg.wirtschaft.punkte,0,'keine Kasse, keine Punkte daraus');
+ assert.equal(erg.wirtschaft.kasse,0);
+ assert.equal(erg.punkte,erg.sportlich);
+ assert(erg.vc>=60,'die VC-Ausschüttung bleibt unberührt');
+});
+
+test('Saisonabrechnung: der Karrierebericht zeigt, woher das Geld kam und wohin es ging',async()=>{
+ /* WIRT-P1-01. Vorher sah der Spieler nur einen Kassenstand, der sich
+    verändert hatte — ohne Grund. Der Beleg wird gebucht UND angezeigt, aus
+    derselben Quelle: zwei Rechnungen laufen auseinander, und dann glaubt der
+    Spieler der falschen (dieselbe Regel wie beim Coinbeleg). */
+ const v0=E.VEREIN.einschreiben(spielbereiterVerein()).v;
+ const r=E.VEREIN.vereinSaison(v0);
+ assert(!r.fehler,r.fehler);
+ const b=r.beleg;
+ /* Ein ECHTER abgeschlossener Spieler als Unterlage, kein handgebautes
+    Objekt: der Abschlussbildschirm liest mehr Felder, als man beim Nachbauen
+    ahnt — zwei Anläufe sind an erfundenen Ständen gescheitert. */
+ const fertig=(await E.runFinish(player(3))).P;
+ const p={...fertig,
+  vereinBericht:{name:'Testverein',jahr:1,liga:v0.liga,rang:r.rang,N:r.N,
+   tore:r.tore,gegentore:r.gegentore,punkte:r.punkte,aufstieg:!!r.aufstieg,
+   abstieg:!!r.abstieg,meister:r.rang===1,vorbei:false,abgaenge:0,
+   wirtschaft:{land:'GER',einnahmen:b.einnahmen,ausgaben:b.ausgaben,
+    summeEin:b.summeEin,summeAus:b.summeAus,ergebnis:b.ergebnis,kasse:b.kasse,
+    zuschauer:b.zuschauer,auslastung:b.auslastung,
+    ereignisse:(b.ereignisse||[]).map(e=>({n:e.n,t:e.t,geld:e.geld})),
+    ziel:null,fertig:[],ausgelaufen:[]}}};
+ const html=E.renderEnd(p);
+ assert(!html.includes('NaN'),'keine kaputte Zahl');
+ assert(html.includes('Saisonabrechnung'));
+ assert(html.includes('Ergebnis'));
+ /* Jeder gebuchte Posten steht auch da — sonst zeigt der Bericht eine andere
+    Rechnung als die, die stattgefunden hat. */
+ for(const x of b.einnahmen)assert(html.includes(x.k.split(' ·')[0]),'Einnahme fehlt: '+x.k);
+ for(const x of b.ausgaben)assert(html.includes(x.k.split(' ·')[0]),'Ausgabe fehlt: '+x.k);
+ assert(html.includes('Zuschauer'));
+ /* Ohne Wirtschaftsteil bleibt der Bericht wie vorher — alte Spielstände
+    haben keinen Beleg, und der Bildschirm darf daran nicht zerbrechen. */
+ const ohne={...p,vereinBericht:{...p.vereinBericht,wirtschaft:null}};
+ const html2=E.renderEnd(ohne);
+ assert(!html2.includes('NaN'));
+ assert(!html2.includes('Saisonabrechnung'));
+ assert(html2.includes('Ein Jahr Profimannschaft'),'der übrige Bericht steht weiter');
+});
+
+test('Saisonabrechnung: verfehltes Ziel, fertige Bauten und Ereignisse werden benannt',async()=>{
+ const grund=(await E.runFinish(player(3))).P;
+ const bericht=(w)=>({...grund,vereinBericht:{name:'Testverein',jahr:3,liga:'3. Liga',
+  rang:7,N:18,tore:40,gegentore:44,punkte:48,aufstieg:false,abstieg:false,
+  meister:false,vorbei:false,abgaenge:0,wirtschaft:{land:'GER',
+   einnahmen:[{k:'Zuschauer',v:8}],ausgaben:[{k:'Spielergehälter',v:6}],
+   summeEin:8,summeAus:6,ergebnis:2,kasse:12,zuschauer:6000,auslastung:0.75,...w}}});
+ /* Verfehltes Ziel wird gesagt, nicht verschwiegen. */
+ const verfehlt=E.renderEnd(bericht({ereignisse:[],fertig:[],ausgelaufen:[],
+   ziel:{n:'Gesicherte Mitte',erfuellt:false,praemie:0}}));
+ assert(verfehlt.includes('Vorstandsziel verfehlt'));
+ assert(verfehlt.includes('Gesicherte Mitte'));
+ /* Erfülltes Ziel steht als Posten mit Prämie in der Rechnung. */
+ const erfuellt=E.renderEnd(bericht({ereignisse:[],fertig:[],ausgelaufen:[],
+   ziel:{n:'Klassenerhalt',erfuellt:true,praemie:1.4}}));
+ assert(erfuellt.includes('Vorstandsziel erfüllt'));
+ assert(!erfuellt.includes('Vorstandsziel verfehlt'));
+ /* Fertige Bauten, ausgelaufene Verträge und Ereignisse mit Text. */
+ const rest=E.renderEnd(bericht({ziel:null,fertig:['Stadion Stufe 2'],
+   ausgelaufen:['Nordwind Energie'],
+   ereignisse:[{n:'Sturmschaden am Dach',t:'Eine Novembernacht kostet die Nordtribüne ihr halbes Dach.',geld:-1.2}]}));
+ assert(rest.includes('Stadion Stufe 2'));
+ assert(rest.includes('Nordwind Energie'));
+ assert(rest.includes('Sturmschaden am Dach'));
+ assert(rest.includes('Novembernacht'),'das Ereignis wird erzählt, nicht nur gebucht');
+ assert(!rest.includes('NaN'));
+});
+
+test('Sponsoren: die Angebote liegen im Spielstand, nicht im Augenblick',()=>{
+ /* WIRT-P0-04. Würden die Angebote beim Zeichnen erzeugt, bekäme man bei
+    jedem Aufschlagen des Bildschirms neue — und die Auswahl wäre kein
+    Entschluss, sondern ein Automat, den man bis zum besten Angebot drückt. */
+ const v=E.VEREIN.einschreiben(spielbereiterVerein()).v;
+ assert(Array.isArray(v.angebote)&&v.angebote.length>0,'die Einschreibung legt die erste Auswahl bereit');
+ /* Zweimal nachsehen ergibt dieselben drei. */
+ assert.deepEqual(E.VEREIN.mitAngeboten(v).angebote.map(a=>a.id),v.angebote.map(a=>a.id));
+ /* Auch nach einem Neuladen, also aus dem rohen gespeicherten Stand heraus. */
+ const geladen=JSON.parse(JSON.stringify(v));
+ assert.deepEqual(E.VEREIN.mitAngeboten(geladen).angebote.map(a=>a.id),v.angebote.map(a=>a.id));
+ /* Ein anderer Verein bekommt andere Angebote — sonst hinge die Saat nicht
+    am Verein, sondern wäre eine Konstante. */
+ const anders=E.VEREIN.mitAngeboten({...v,name:'Ganz anderer Verein',angebote:null});
+ assert.notDeepEqual(anders.angebote.map(a=>a.id),v.angebote.map(a=>a.id));
+ /* Jedes Angebot ist vollständig beschrieben: ohne Betrag und Laufzeit kann
+    man nicht wählen. */
+ for(const a of v.angebote){
+  assert(a.id&&a.n&&a.branche);
+  assert(a.betrag>0&&Number.isFinite(a.betrag));
+  assert(a.laufzeit>=1&&a.laufzeit<=4);
+ }
+});
+
+test('Sponsoren: unterschreiben prüft vor dem Schreiben und belegt einen Platz',()=>{
+ let v=E.VEREIN.einschreiben(spielbereiterVerein()).v;
+ assert(E.VEREIN.sponsorAnnehmen(v,'gibtesnicht').fehler,'ein Angebot, das nicht vorliegt');
+ assert.equal(E.VEREIN.sponsorAnnehmen(v,'gibtesnicht').v,v,'abgelehnt heisst unverändert');
+ const erste=v.angebote[0];
+ const r=E.VEREIN.sponsorAnnehmen(v,erste.id);
+ assert(!r.fehler,r.fehler);
+ assert.equal(r.v.sponsoren.length,1);
+ assert.equal(r.v.sponsoren[0].id,erste.id);
+ assert.equal(r.v.sponsoren[0].rest,erste.laufzeit,'die Laufzeit beginnt vollständig');
+ assert(!r.v.angebote.some(a=>a.id===erste.id),'das Angebot ist vom Tisch');
+ /* Dieselbe Firma nicht zweimal. */
+ assert(E.VEREIN.sponsorAnnehmen({...r.v,angebote:[erste]},erste.id).fehler);
+ /* Die Plätze sind begrenzt, sonst wäre Wählen Einsammeln. */
+ const voll={...v,sponsoren:Array.from({length:E.VEREIN.SPONSOR_MAX},(_,i)=>({id:'x'+i,rest:2,betrag:1}))};
+ const abgelehnt=E.VEREIN.sponsorAnnehmen(voll,erste.id);
+ assert(abgelehnt.fehler,'bei vollen Plätzen wird abgelehnt');
+ assert(abgelehnt.fehler.includes(String(E.VEREIN.SPONSOR_MAX)));
+});
+
+test('Sponsoren: Verträge laufen ab, bringen Geld und werden nachgemeldet',()=>{
+ let v=E.VEREIN.einschreiben(spielbereiterVerein()).v;
+ const ohne=E.VEREIN.vereinSaison(v).beleg.summeEin;
+ /* Denselben Verein einmal mit zwei Verträgen. */
+ let mit=v;
+ for(const a of mit.angebote.slice(0,2)){const r=E.VEREIN.sponsorAnnehmen(mit,a.id);if(!r.fehler)mit=r.v;}
+ assert.equal(mit.sponsoren.length,2);
+ const r=E.VEREIN.vereinSaison(mit);
+ assert(r.beleg.summeEin>ohne,'Werbeverträge bringen Geld: '+r.beleg.summeEin+' gegen '+ohne);
+ /* Nach der Saison ist jeder Vertrag ein Jahr kürzer, und es liegen neue
+    Angebote für die kommende Saison bereit. */
+ for(const sp of r.v.sponsoren)assert(sp.rest>=1,'abgelaufene fallen raus statt auf 0 zu stehen');
+ const vorher=mit.sponsoren.find(s=>s.laufzeit>1);
+ if(vorher)assert.equal(r.v.sponsoren.find(s=>s.id===vorher.id).rest,vorher.laufzeit-1);
+ assert(Array.isArray(r.v.angebote)&&r.v.angebote.length>0,'neue Saison, neue Angebote');
+ assert.notDeepEqual(r.v.angebote.map(a=>a.id),mit.angebote.map(a=>a.id),'nicht dieselben wie im Vorjahr');
+ /* Ein Einjahresvertrag taucht in der Chronik als ausgelaufen auf. */
+ const einjahr=mit.sponsoren.find(s=>s.laufzeit===1);
+ if(einjahr){
+  const c=r.v.chronik[r.v.chronik.length-1];
+  assert(c.wirtschaft.ausgelaufen.includes(einjahr.n),'ausgelaufene Verträge werden gemeldet');
+ }
+});
+
+test('Der Sponsorenreiter zeigt Angebote und laufende Verträge, ohne NaN',()=>{
+ const v=E.VEREIN.einschreiben(spielbereiterVerein()).v;
+ const html=E.renderVerein(v,E.leereAkademie(),'sponsoren');
+ assert(!html.includes('NaN'));
+ assert(html.includes('Partner'));
+ assert(html.includes('Angebote für diese Saison'));
+ assert(html.includes('Unterschreiben'));
+ assert(html.includes(v.angebote[0].n),'die Firma steht mit Namen da');
+ /* Mit vollen Plätzen wird der Knopf gesperrt und gesagt, warum. */
+ const voll={...v,sponsoren:Array.from({length:E.VEREIN.SPONSOR_MAX},(_,i)=>
+   ({id:'x'+i,n:'Partner '+i,branche:'Industrie',betrag:2.5,rest:2,laufzeit:3}))};
+ const html2=E.renderVerein(voll,E.leereAkademie(),'sponsoren');
+ assert(html2.includes('Kein Platz frei'));
+ assert(html2.includes('Alle Plätze belegt'));
+ assert(!html2.includes('NaN'));
+});
+
+test('Vereinswirtschaft: die Saison rechnet ab und schreibt den Spielstand fort',()=>{
+ const v0=E.VEREIN.einschreiben(spielbereiterVerein()).v;
+ assert(v0.ziel,'mit der Einschreibung steht ein Vorstandsziel');
+ assert.equal(v0.kasse,0);assert.equal(v0.gehaltsniveau,1);
+ const r=E.VEREIN.vereinSaison(v0);
+ assert(!r.fehler,'Saison: '+r.fehler);
+ /* Der Beleg ist da, und die Kasse ändert sich um genau das, was er ausweist. */
+ assert(r.beleg,'die Saison liefert einen Beleg');
+ assert.equal(r.v.kasse,Math.round((v0.kasse+r.beleg.ergebnis)*100)/100);
+ assert(Number.isFinite(r.beleg.summeEin)&&r.beleg.summeEin>0);
+ assert(Number.isFinite(r.beleg.summeAus)&&r.beleg.summeAus>0);
+ assert(r.beleg.ausgaben.some(x=>x.k.startsWith('Spielergehälter')),'Gehälter stehen im Beleg');
+ /* Das Ziel der KOMMENDEN Saison ist gesetzt, nicht das verbrauchte. */
+ assert(r.v.ziel&&r.v.ziel.soll>=1,'neues Vorstandsziel');
+ assert.equal(r.ziel.n,r.v.ziel.n);
+ /* Die Kurzfassung liegt in der Chronik, der volle Beleg nicht. */
+ const c=r.v.chronik[r.v.chronik.length-1];
+ assert(c.wirtschaft,'Chronik führt die Wirtschaft');
+ assert.equal(c.wirtschaft.kasse,r.v.kasse);
+ assert.equal(c.wirtschaft.ausgaben,undefined,'keine vollen Posten im Spielstand');
+});
+
+test('Vereinswirtschaft: die Ligastufe wird abgeleitet und folgt dem Auf- und Abstieg',()=>{
+ const v=E.VEREIN.mitWirtschaft(spielbereiterVerein());
+ assert(v.ligastufe>=1&&v.ligastufe<=9,'Stufe im sinnvollen Bereich, war '+v.ligastufe);
+ /* Von oben gezählt: die höchste Liga des Landes ist Stufe 1. */
+ const oben=E.VEREIN.ligastufe('GER','Bundesliga');
+ const unten=E.VEREIN.ligastufe('GER','3. Liga');
+ assert(oben<unten,'Bundesliga ('+oben+') liegt über der 3. Liga ('+unten+')');
+ assert.equal(oben,1);
+ /* Kein gespeicherter Wert: eine geänderte Liga ändert die Stufe sofort mit. */
+ assert.notEqual(E.VEREIN.mitWirtschaft({...v,liga:'3. Liga'}).ligastufe,
+                 E.VEREIN.mitWirtschaft({...v,liga:'Bundesliga'}).ligastufe);
+ assert.equal(E.VEREIN.ligastufe('GER','Gibt es nicht'),3,'unbekannte Liga fällt auf die Mitte zurück');
+});
+
+test('Vereinswirtschaft: alte Spielstände ohne Wirtschaftsfelder laufen weiter',()=>{
+ /* Genau der Fall aus 35.192: gegründet, eingeschrieben, mitten im Durchlauf
+    — und ohne jedes der neuen Felder. Er darf weder stolpern noch etwas
+    erfinden, was der Spieler nie hatte. */
+ const alt=spielbereiterVerein({jahr:7,eingeschrieben:true});
+ for(const k of ['kasse','sponsoren','extras','stimmung','rechtsform','preise','baustellen','gehaltsniveau','ziel'])
+  delete alt[k];
+ const r=E.VEREIN.vereinSaison(alt);
+ assert(!r.fehler,'alter Spielstand: '+r.fehler);
+ assert(Number.isFinite(r.v.kasse)&&Number.isFinite(r.v.stimmung));
+ assert.equal(r.beleg.kasseVorher,0,'eine fehlende Kasse ist leer, nicht NaN');
+ assert.equal(r.beleg.ziel.gesetzt,false,'ohne gesetztes Ziel gibt es keine Prämie');
+ assert.equal(r.beleg.ziel.praemie,0);
+ /* Die alten Ausbaukennungen bleiben unberührt — sie sind Vertrag. */
+ assert.equal(r.v.ausbau.training,1);assert.equal(r.v.ausbau.stadion,1);assert.equal(r.v.ausbau.medizin,1);
+ /* Eine gespeicherte 0 ist keine fehlende Zahl. */
+ assert.equal(E.VEREIN.mitWirtschaft({kasse:0,stimmung:0}).kasse,0);
+ assert.equal(E.VEREIN.mitWirtschaft({kasse:0,stimmung:0}).stimmung,0);
+ assert.equal(E.VEREIN.mitWirtschaft({}).stimmung,60,'fehlende Stimmung beginnt in der Mitte');
+});
+
+test('Vereinswirtschaft: dieselbe Saison zweimal ergibt dasselbe Geld',()=>{
+ /* Ein Neuladen darf keine neuen Sponsorenangebote und keine anderen
+    Ereignisse würfeln. Die Saat kommt deshalb aus dem Verein selbst, nicht
+    aus rnd() — geprüft wird das hier an den Ereignissen, weil sie die
+    einzige Stelle mit Zufall in der Abrechnung sind. */
+ const v0=E.VEREIN.einschreiben(spielbereiterVerein()).v;
+ /* Der SPORTLICHE Teil würfelt weiter — eine Saison wird gespielt, nicht
+    festgelegt. Geprüft wird hier der wirtschaftliche Zufall: dieselben
+    Ereignisse trotz verschiedener Spielverläufe. */
+ const a=E.VEREIN.vereinSaison(v0),b=E.VEREIN.vereinSaison(v0);
+ assert.deepEqual(a.beleg.ereignisse.map(e=>e.id),b.beleg.ereignisse.map(e=>e.id),
+  'die Ereignisse hängen am Verein, nicht am Spielverlauf');
+ /* Mit festgehaltenem Würfel muss dann ALLES gleich sein — sonst steckt
+    irgendwo in der Abrechnung doch noch ein rnd(). */
+ try{
+  E.zufallSetzen(4711);const x=E.VEREIN.vereinSaison(v0);
+  E.zufallSetzen(4711);const y=E.VEREIN.vereinSaison(v0);
+  assert.equal(x.rang,y.rang,'gleicher Würfel, gleiche Tabelle');
+  assert.equal(x.beleg.summeEin,y.beleg.summeEin);
+  assert.equal(x.beleg.summeAus,y.beleg.summeAus);
+  assert.equal(x.beleg.ergebnis,y.beleg.ergebnis);
+ }finally{E.zufallSetzen(null);}
+ /* Ein anderer Verein bekommt andere Angebote und Ereignisse. */
+ const c=E.VEREIN.vereinSaison({...v0,name:'Ganz anderer Verein'});
+ assert(Number.isFinite(c.beleg.ergebnis));
+});
+
+test('Vereinswirtschaft: fünfzehn Jahre am Stück bleiben endlich',()=>{
+ let v=E.VEREIN.einschreiben(spielbereiterVerein()).v;
+ for(let i=0;i<15;i++){
+  const r=E.VEREIN.vereinSaison(v);
+  if(r.fehler)break;                      /* Kader kann unter das Minimum fallen */
+  for(const k of ['kasse','stimmung','gehaltsniveau'])
+   assert(Number.isFinite(r.v[k]),k+' ist in Jahr '+(i+1)+' keine Zahl: '+r.v[k]);
+  assert(r.v.stimmung>=0&&r.v.stimmung<=100);
+  assert(r.v.gehaltsniveau>=0.75&&r.v.gehaltsniveau<=2);
+  v=r.v;
+ }
+ assert(v.chronik.length>=1);
+ assert(v.chronik.every(c=>!c.wirtschaft||Number.isFinite(c.wirtschaft.kasse)));
+});
+
 test('Packladen und Sammlung rendern leeren sowie gefüllten Fundus',()=>{
  const leer=E.KARTEN.leererPool();
  for(const tab of ['laden','sammlung'])assert(E.renderPacks(leer,tab).length>100);
