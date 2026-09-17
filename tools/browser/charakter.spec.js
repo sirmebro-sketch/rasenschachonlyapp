@@ -92,3 +92,22 @@ test('CHAR-P0-01: Inventar rendert alle Optionen ohne exakte Struktur-Dubletten'
  await page.screenshot({path:testInfo.outputPath('charakter-inventar-frisuren.png'),fullPage:true});
  expect(errors).toEqual([]);
 });
+
+test('CHAR-P0-02: sichtbare Porträtkette bleibt über Karriere, Halle, Karte und Kader identisch',async({page},testInfo)=>{
+ const errors=[];page.on('pageerror',e=>errors.push(e.message));
+ await page.goto('/.preview/spieltest.html');
+ await page.getByRole('button',{name:'Porträtkette',exact:true}).click();
+ await expect(page.getByRole('heading',{name:'Porträt-Identitätskette',exact:true})).toBeVisible();
+ const stufen=['portrait-karriere','portrait-halle','portrait-sammlung','portrait-kader'];
+ for(const id of stufen)await expect(page.getByTestId(id).locator('svg[aria-label="Spielerporträt"]')).toHaveCount(1);
+ const signaturen=await page.locator('[data-testid^="portrait-"]').evaluateAll(nodes=>nodes.map(node=>{
+  const svg=node.querySelector('svg[aria-label="Spielerporträt"]');
+  const c=svg.cloneNode(true),map=new Map();
+  [...c.querySelectorAll('[id]')].forEach((el,i)=>{const alt=el.id,neu='ID'+i;map.set(alt,neu);el.id=neu;});
+  [c,...c.querySelectorAll('*')].forEach(el=>[...el.attributes].forEach(a=>{let v=a.value;for(const [alt,neu] of map)v=v.split(alt).join(neu);el.setAttribute(a.name,v);}));
+  return c.innerHTML;
+ }));
+ expect(new Set(signaturen).size,'Die vier Darstellungswege müssen dasselbe Avatar-SVG verwenden').toBe(1);
+ await page.screenshot({path:testInfo.outputPath('portraet-identitaetskette.png'),fullPage:true});
+ expect(errors).toEqual([]);
+});
