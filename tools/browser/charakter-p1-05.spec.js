@@ -1,7 +1,7 @@
 import {test,expect} from '@playwright/test';
 
 const gespeicherteZuege=async(page,spieler)=>page.evaluate((name)=>{
- for(const wert of Object.values(localStorage)){
+ for(const wert of [...Object.values(localStorage),...Object.values(sessionStorage)]){
   try{
    const stand=JSON.parse(wert);
    if(stand?.p?.name===name)return stand.p.zuege || null;
@@ -10,10 +10,10 @@ const gespeicherteZuege=async(page,spieler)=>page.evaluate((name)=>{
  return null;
 },spieler);
 
-test('CHAR-P1-05: Feineinstellung bleibt bei 320/390 px bedienbar und speichert die Auswahl',async({page},testInfo)=>{
+for(const url of ['/', '/.preview/spieltest.html'])test('CHAR-P1-05: Feineinstellung bleibt bei 320/390 px bedienbar und speichert die Auswahl '+url,async({page},testInfo)=>{
  test.skip(!['schmal','handy'].includes(testInfo.project.name),'CHAR-P1-05 nimmt die beiden geforderten Smartphone-Breiten ab.');
  const errors=[];page.on('pageerror',e=>errors.push(e.message));
- await page.goto('/');
+ await page.goto(url);
  await page.getByRole('button',{name:'Überspringen'}).click();
  await page.getByRole('button',{name:'NEUE LAUFBAHN ab Seite 3'}).click();
 

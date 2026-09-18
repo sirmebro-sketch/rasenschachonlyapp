@@ -215,9 +215,9 @@ Im Entwicklungsvermerk Quell- und Zielcommit sowie die Entscheidung nennen.
 
 ### Versionsschema
 
-`package.json` führt die Version als `major.minor.patch` (derzeit 35.194.0).
+`package.json` führt die Version als `major.minor.patch` (derzeit 35.194.1).
 Daraus rechnet `tools/android-version.cjs` den `versionCode`
-(`major*100000 + minor*100 + patch`, also 3519400) und schreibt ihn zusammen mit
+(`major*100000 + minor*100 + patch`, also 3519401) und schreibt ihn zusammen mit
 dem `versionName` nach `android/app/build.gradle`. Beide Felder sollen nie von
 Hand auseinanderlaufen. Die Version wird erhöht, wenn eine neue APK entsteht —
 reine Werkzeug- oder Dokumentationsänderungen erhöhen sie nicht.
@@ -352,3 +352,27 @@ neu erzeugen. Ein Teststand ersetzt keinen durchgespielten Freischaltweg.
 
 Bisherige Befunde und noch offene Testbereiche:
 [Spieltest 35.191](pruefberichte/35.191-spieltest.md).
+
+
+### Kleine Entwicklungsrunden und unabhängige Abnahme (18.09.2026)
+
+- Je Runde ein abgegrenztes Paket, Basiscommit und betroffene Bereiche nennen.
+  Funktionierende fremde Arbeit erhalten; keine Rollen- oder Balanceänderung nebenbei.
+- Umsetzung, automatische Prüfung, Sichtprüfung und unabhängige Abnahme getrennt
+  benennen. „Integriert“ bedeutet nicht automatisch „abschließend abgenommen“.
+  Den Fortschritt im Meta-Issue pflegen; historische Berichte bleiben erhalten.
+- Bei neuen Merkmalen alle Verbraucher mitprüfen: Renderer, Namen, Freischaltungen,
+  Maß-/Ankertabellen, Zufall, Speichern und sämtliche Vorschauwege. Prüfschleifen
+  möglichst aus dem echten Katalog ableiten; feste alte Fallzahlen erkennen keine
+  neu hinzugefügten, ungeprüften Varianten.
+- Eine Pixelabweichung belegt Verschiedenheit, nicht ästhetische Qualität.
+  Neue Varianten gegen ihre nächsten Nachbarn und in kleinen Spielgrößen ansehen.
+- Vorschauen müssen auch ausgelagerte Produkt-CSS enthalten. Der isolierte
+  Spieltest wird zusätzlich zum echten Einstieg mobil geprüft.
+- Die Anzeigeversion kommt aus package.json. Spielrelevante Korrekturen erhalten
+  eine neue Version; Test-/Dokumentationsarbeit allein nicht.
+- Änderungen zunächst auf einem Arbeitsbranch prüfen. Pro fertigem Paket eine
+  nachvollziehbare Integration bevorzugen, statt zahlreiche Reparatur-/Patch-
+  Zwischencommits nach main zu übernehmen. Bestehende Geschichte nicht umschreiben.
+- Nicht selbst als unabhängig abgenommen bezeichnen. Wer umsetzt, dokumentiert
+  seine Eigenprüfung; eine angeforderte Fremdabnahme bleibt bis dahin offen.

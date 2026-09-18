@@ -1,3 +1,4 @@
+import appPackage from "./package.json";
 import { WildcardPraegung, WildcardBuehne, WILDCARD_CSS } from "./wildcardoptik.jsx";
 import { Bartform } from "./bartformen.jsx";
 import { gesichtsAnker } from "./gesichtsanker.js";
@@ -32,8 +33,8 @@ import { machAkademie } from "./akademie.js";
    ================================================================ */
 
 const NAME = "Rasenschach XI";
-const VERSION = "35.192";
-const VERSION_INFO = "Stabile Spielerporträts, stimmige Ligatabellen und einheitliche Karrierejahre.";
+const VERSION = appPackage.version.replace(/\.0$/, "");
+const VERSION_INFO = "Erweiterte Frisuren und Gesichtszüge, mobile Charaktererstellung und geprüfte Porträtpassung.";
 
 /* Fester Zufallsstrom aus einer Zeichenkette — damit Angebote des eigenen
    Vereins nicht bei jedem Klick anders aussehen.                        */

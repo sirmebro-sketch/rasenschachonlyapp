@@ -939,3 +939,18 @@ Finale PR-Abnahme auf dem korrigierten Produktcode:
 Vollständiger Bericht: [pruefberichte/2026-09-18-char-p1-02-gesichtszuege-02.md](pruefberichte/2026-09-18-char-p1-02-gesichtszuege-02.md).
 
 **Bewusst offen:** kein physischer Android-Gerätetest. Post-Merge-Regressionen, Browsertests und signierter Android-Build werden auf dem neuen `main` geprüft.
+
+## Unabhängige Qualitätsabnahme 35.194.1 – Codex/Astra, 18.09.2026
+
+Basis main e9b21630, geprüft gegen den Ausgang vor der Charakterarbeit 78f7dc8.
+Auftrag: integrierte ChatGPT-Arbeit abnehmen, kleine Defekte bereinigen; Claudes
+Vereinswirtschaft ausdrücklich ausgenommen. Kein Rollback erforderlich.
+
+Vier kleine Korrekturen: Mund-IDs 9–11 in der gemeinsamen Abstandsrechnung;
+Katalogabdeckung im Kombinationstest; vollständige 31er-Porträtbögen; mobile CSS
+auch in isolierten Vorschauen. Versionsanzeige zusätzlich an package.json gebunden.
+140 Regressionen, Build, Galerie und Capacitor-Sync erfolgreich. Langzeitstichprobe
+am Ausgang: 192 Karrieren / 4.527 Saisons. Eigene mobile Browser-/Renderstichproben,
+Befunde, Bewertung und Grenzen im [Abnahmebericht](pruefberichte/2026-09-18-astra-qualitaetsabnahme.md).
+Keine fremden Branches gelöscht und keine Claude-PRs integriert. Korrekturversion
+35.194.1 / 3519401; CI und Android nach Veröffentlichung am exakten Commit prüfen.

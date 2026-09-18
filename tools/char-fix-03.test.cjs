@@ -42,10 +42,12 @@ export const bart=(index,kopf,nase,mund)=>renderToStaticMarkup(<svg viewBox="0 0
 });
 after(()=>{if(temp)fs.rmSync(temp,{recursive:true,force:true});});
 
-test('CHAR-FIX-03: alle 14 Kopf × 12 Nase × 9 Mund Kombinationen besitzen kollisionsfreie Gesichtsanker',async()=>{
- const {gesichtsAnker}=await import('../gesichtsanker.js');
+test('CHAR-FIX-03: alle 14 Kopf × 12 Nase × alle Mundformen Kombinationen besitzen kollisionsfreie Gesichtsanker',async()=>{
+ const {gesichtsAnker,GESICHTSANKER_GRENZEN}=await import('../gesichtsanker.js');
+ const {PORTRAET_NAMEN}=await import('../portraet.js');
+ assert.equal(GESICHTSANKER_GRENZEN.MUND_MASSE.length,PORTRAET_NAMEN.mund.length,'Jede Mundform braucht eigene Kollisionsgrenzen');
  let count=0;
- for(const kopf of KOEPFE)for(let nase=0;nase<12;nase++)for(let mund=0;mund<9;mund++){
+ for(const kopf of KOEPFE)for(let nase=0;nase<12;nase++)for(let mund=0;mund<PORTRAET_NAMEN.mund.length;mund++){
   const g=gesichtsAnker(kopf,nase,mund);count++;
   for(const [key,value] of Object.entries(g))assert(Number.isFinite(value),`${kopf.n}/${nase}/${mund}: ${key} ist nicht endlich`);
   assert(g.mundTop>=g.naseBottom+.49,`${kopf.n} N${nase} M${mund}: Mund beginnt bei ${g.mundTop}, Nase endet ${g.naseBottom}`);
@@ -54,7 +56,7 @@ test('CHAR-FIX-03: alle 14 Kopf × 12 Nase × 9 Mund Kombinationen besitzen koll
   assert(g.schnurrbartY<=g.mundY-1.49,`${kopf.n} N${nase} M${mund}: Schnurrbartanker zu tief`);
   assert(g.mundScale>=.58&&g.mundScale<=1,`${kopf.n} N${nase} M${mund}: unplausible Mundskalierung`);
  }
- assert.equal(count,1512);
+ assert.equal(count,14*12*PORTRAET_NAMEN.mund.length);
 });
 
 test('CHAR-FIX-03: alle Frisuren rendern auf allen 14 Kopfformen ohne ungültige Geometrie',()=>{

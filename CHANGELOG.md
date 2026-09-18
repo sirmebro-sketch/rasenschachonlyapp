@@ -1,5 +1,11 @@
 # Änderungen
 
+## 35.194.1 – Kleine Korrekturen nach unabhängiger Qualitätsprüfung
+
+- Neue Mundformen verwenden eigene Abstandsgrenzen für Lippen, Kinn und Bärte.
+- Die Versionsanzeige folgt direkt der zentralen Paketversion.
+- Mobile Charaktergestaltung auch im isolierten Spieltest und in der Galerie; vollständige Porträtbögen mit allen 31 Frisuren.
+
 ## 35.194.0 – Ausdrucksstärkere Gesichter
 
 - Drei neue Mundformen: herzförmig, kompakt und ein breites Grinsen.
