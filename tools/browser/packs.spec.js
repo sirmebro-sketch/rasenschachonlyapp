@@ -51,6 +51,12 @@ for(const still of [false,true]){
    const clipPfad=await effekt.locator('clipPath path').getAttribute('d');
    expect(norm(clipPfad),`${stufe}: Folienclip entspricht sichtbarer Packkontur`).toBe(norm(basisPfad));
 
+   const [effektZ,druckZ]=await Promise.all([
+    effekt.evaluate(el=>Number.parseInt(getComputedStyle(el).zIndex,10)),
+    druck.evaluate(el=>Number.parseInt(getComputedStyle(el).zIndex,10)),
+   ]);
+   expect(druckZ,`${stufe}: Beschriftungs-/Druckebene liegt über der Folie`).toBeGreaterThan(effektZ);
+
    const laufend=await effekt.evaluate(el=>el.getAnimations({subtree:true})
     .filter(a=>a.playState==='running').map(a=>a.animationName).filter(Boolean));
    if(still)expect(laufend,`${stufe}: Ruhemodus ohne Bewegung`).toEqual([]);
