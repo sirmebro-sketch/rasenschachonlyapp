@@ -4,8 +4,8 @@ import React from 'react';
 export function Haarform({index=0,weiblich=false,breite=24,farbe,hell,ebene='vorn',kopfprofil='',kopfpfad=''}){
  const id='haar'+React.useId().replace(/[^a-zA-Z0-9_-]/g,'');
  const namen=weiblich
-  ? ['kurz','lang','volumen','bob','knoten','seitenzopf','scheitellang','pixie','locken','crop','pferdeschwanz','zoepfe','hoch','afro','wellen','krause','cornrows','lockenseite','vorhang','fade','locs','iro','schulter','flechtkranz']
-  : ['rasiert','kurz','scheitel','undercut','locken','afro','textur','licht','zoepfe','knoten','vokuhila','glatze','slick','crop','flach','seitlich','wellen','krause','cornrows','lockenseite','vorhang','fade','locs','iro','schulter','flechtkranz'];
+  ? ['kurz','lang','volumen','bob','knoten','seitenzopf','scheitellang','pixie','locken','crop','pferdeschwanz','zoepfe','hoch','naturvolumen','wellen','krause','cornrows','lockenseite','vorhang','fade','locs','iro','schulter','flechtkranz','vollpony','curtain','asymbob','halfup','langzopf','langwellen','twinbuns']
+  : ['rasiert','kurz','scheitel','undercut','locken','afro','textur','licht','zoepfe','knoten','vokuhila','glatze','slick','crop','flach','seitlich','wellen','krause','cornrows','lockenseite','vorhang','fade','locs','iro','schulter','flechtkranz','mittellocken','langlocken','boxbraids','locsgebunden','fringe'];
  const typ=namen[index]||'kurz';
  /* CHAR-FIX-04: Die feste Profilbreite aus FIX-03 konnte eine gültige, aber
     sichtbar zu kleine "Perücke" ergeben. Kopfnahe Kurzformen leiten ihre
@@ -13,8 +13,8 @@ export function Haarform({index=0,weiblich=false,breite=24,farbe,hell,ebene='vor
     Ein kleiner profilspezifischer Zuschlag deckt die echte Schläfenkurve ab;
     die reale Kopfmaske begrenzt Unterlage und kopfnahe Vorderform wieder exakt. */
  const neueKopfpassform=['trapez','lang','diamant','kurzbreit'].includes(kopfprofil)&&kopfpfad;
- const kompakteTypen=['rasiert','kurz','scheitel','undercut','textur','slick','crop','flach','seitlich','vorhang','fade','pixie','bob','iro'];
- const kopfnaheTypen=['kurz','scheitel','undercut','slick','crop','flach','seitlich','vorhang','fade','pixie'];
+ const kompakteTypen=['rasiert','kurz','scheitel','undercut','textur','slick','crop','flach','seitlich','vorhang','fade','pixie','bob','iro','fringe','vollpony','curtain','asymbob'];
+ const kopfnaheTypen=['kurz','scheitel','undercut','slick','crop','flach','seitlich','vorhang','fade','pixie','fringe','vollpony','curtain','asymbob'];
  const kompakt=kompakteTypen.includes(typ);
  const kopfnah=kopfnaheTypen.includes(typ);
  const profilBonus={trapez:.8,lang:1.4,diamant:.8,kurzbreit:.8}[kopfprofil]||0;
@@ -32,8 +32,17 @@ export function Haarform({index=0,weiblich=false,breite=24,farbe,hell,ebene='vor
   if(['pferdeschwanz','seitenzopf'].includes(typ))d='M69 23 C85 20 87 41 80 55 Q76 66 74 73 Q82 54 73 43 Q68 32 65 29 Z';
   if(typ==='zoepfe')d='M29 32 Q17 40 24 62 Q25 68 29 71 Q28 56 33 42 Z M71 32 Q83 40 76 62 Q75 68 71 71 Q72 56 67 42 Z';
   if(typ==='knoten'||typ==='hoch')d=typ==='hoch'?'M34 19 C26 3 48 1 52 7 C63 -1 79 11 66 23 Z':'M42 16 C33 5 44 1 51 3 C64 2 68 15 57 19 Z';
+  if(typ==='mittellocken')d='M25 33 Q18 45 24 61 Q26 68 31 68 Q29 54 36 39 Z M75 33 Q82 45 76 61 Q74 68 69 68 Q71 54 64 39 Z';
+  if(['langlocken','langwellen'].includes(typ))d='M25 32 Q17 46 23 60 Q18 70 26 83 L33 82 Q28 69 35 58 Q29 48 37 36 Z M75 32 Q83 46 77 60 Q82 70 74 83 L67 82 Q72 69 65 58 Q71 48 63 36 Z';
+  if(typ==='boxbraids')d='M26 31 Q22 49 25 80 L30 80 Q27 53 33 35 Z M35 30 Q32 52 36 84 L41 84 Q38 56 42 34 Z M65 30 Q68 52 64 84 L59 84 Q62 56 58 34 Z M74 31 Q78 49 75 80 L70 80 Q73 53 67 35 Z';
+  if(typ==='locsgebunden')d='M66 24 Q83 22 82 39 Q81 50 73 58 Q70 69 73 80 L66 80 Q63 65 68 53 Q73 42 64 31 Z';
+  if(['vollpony','curtain'].includes(typ))d='M25 32 Q19 47 24 70 L31 75 Q29 57 36 37 Z M75 32 Q81 47 76 70 L69 75 Q71 57 64 37 Z';
+  if(typ==='asymbob')d='M25 34 Q20 45 27 52 L32 51 L36 36 Z M74 31 Q82 47 74 65 L66 66 L63 35 Z';
+  if(typ==='halfup')d='M25 32 Q19 49 25 78 L32 79 Q29 57 36 37 Z M75 32 Q81 49 75 78 L68 79 Q71 57 64 37 Z M41 17 Q38 8 50 6 Q62 8 59 17 Q50 13 41 17 Z';
+  if(typ==='langzopf')d='M68 28 Q82 34 74 49 Q82 58 73 68 Q80 77 70 87 L65 84 Q72 76 66 68 Q73 58 67 50 Q74 40 64 33 Z';
+  if(typ==='twinbuns')d='M24 27 Q16 20 21 12 Q27 5 35 11 Q40 18 33 27 Z M76 27 Q84 20 79 12 Q73 5 65 11 Q60 18 67 27 Z';
   if(!d)return null;
-  return <g data-haar-typ={typ} data-haar-ebene="hinten" data-haar-profil={kopfprofil||'standard'} transform={transform}><path d={d} fill={farbe}/><path d={d} fill="none" stroke={hell} strokeWidth=".45" opacity=".18"/></g>;
+  return <g data-haar-typ={typ} data-haar-ebene="hinten" data-haar-profil={kopfprofil||'standard'} transform={transform}><path d={d} fill={farbe}/><path d={d} fill="none" stroke={hell} strokeWidth={['boxbraids','langzopf'].includes(typ)?'.9':'.45'} strokeDasharray={['boxbraids','langzopf'].includes(typ)?'1.2 2.1':undefined} opacity={['boxbraids','langzopf'].includes(typ)?'.42':'.18'}/></g>;
  }
  // Die Unterlage deckt die tatsächliche Schädelkurve ab; einzelne Strähnen
  // dürfen keine hautfarbenen Spalten am Scheitel oder an den Schläfen lassen.
@@ -59,6 +68,7 @@ export function Haarform({index=0,weiblich=false,breite=24,farbe,hell,ebene='vor
  if(['scheitel','wellen','seitlich','pixie'].includes(typ))d=swept;
  if(['locken','krause','lockenseite'].includes(typ))d=curls;
  if(['afro','volumen'].includes(typ))d=afro;
+ if(typ==='naturvolumen')d='M29 44 Q22 39 25 31 Q20 24 28 20 Q25 12 36 12 Q38 4 48 8 Q56 2 64 10 Q75 9 74 20 Q82 24 76 32 Q79 39 71 44 Q65 35 59 36 Q50 31 41 36 Q35 34 29 44 Z';
  if(typ==='rasiert')d=rasierKappe;
  if(typ==='undercut')d='M28 37 C26 24 29 12 43 10 C58 5 72 13 74 27 Q71 32 67 32 Q49 28 31 37 Z';
  if(typ==='fade')d='M27 34 C26 19 36 9 50 9 C64 9 74 19 73 34 Q63 29 50 30 Q37 29 27 34 Z';
@@ -74,7 +84,9 @@ export function Haarform({index=0,weiblich=false,breite=24,farbe,hell,ebene='vor
   d=`M25 42 C25 ${42-20*t} ${c} ${cy} ${x} ${y} Q32 26 33 38 L30 47 L25 44 Z M75 42 C75 ${42-20*t} ${100-c} ${cy} ${100-x} ${y} Q68 26 67 38 L70 47 L75 44 Z`;
  }
  if(typ==='slick'||typ==='hoch')d='M25 41 C23 23 30 11 45 8 C64 4 78 21 75 41 Q65 30 50 30 Q35 30 25 41 Z';
- if(typ==='crop')d='M25 41 C23 20 35 10 50 10 C66 10 77 22 75 41 L70 33 Q62 35 57 33 Q49 35 43 33 Q34 35 30 33 Z';
+ if(typ==='crop')d=weiblich
+  ?'M26 42 C23 23 32 10 50 10 Q70 9 75 30 Q66 23 58 27 Q49 29 39 40 Q34 44 28 39 Z'
+  :'M25 41 Q23 29 29 23 L28 18 L36 18 L35 13 L43 15 L47 9 L53 14 L61 11 L65 18 Q75 20 75 39 L69 32 L62 36 L55 31 L48 37 L41 32 L34 37 Z';
  if(typ==='flach')d='M25 41 L27 18 Q29 8 39 8 L62 8 Q73 8 74 22 L75 41 Q67 31 50 31 Q33 31 25 41 Z';
  if(typ==='wellen')d='M24 42 Q21 26 29 18 Q33 9 44 11 Q55 4 66 13 Q77 14 76 35 Q69 29 62 30 Q55 26 49 30 Q39 27 31 36 Z';
  if(typ==='pixie')d='M26 40 C22 22 33 10 50 10 Q70 9 75 31 Q66 23 56 27 Q47 35 29 32 Z';
@@ -87,6 +99,18 @@ export function Haarform({index=0,weiblich=false,breite=24,farbe,hell,ebene='vor
  if(typ==='iro')d='M28 41 Q26 28 35 22 L40 20 L42 7 L47 12 L50 2 L54 12 L59 7 L61 20 L66 22 Q75 28 72 41 Q62 31 50 31 Q38 31 28 41 Z';
  if(typ==='schulter')d='M24 47 C21 23 30 8 50 9 C70 8 79 23 76 47 L69 55 L67 32 Q58 26 51 22 Q43 26 33 32 L31 55 Z';
  if(typ==='flechtkranz')d='M25 42 C22 25 30 11 43 10 Q50 4 57 10 C70 11 78 25 75 42 Q66 33 60 33 Q50 28 40 33 Q33 33 25 42 Z';
+ if(typ==='mittellocken')d='M23 46 Q19 35 24 28 Q21 21 30 18 Q30 10 39 12 Q45 5 51 11 Q60 6 67 14 Q77 14 77 25 Q82 34 75 46 L70 51 Q64 40 58 42 Q50 37 43 42 Q35 38 29 50 Z';
+ if(typ==='langlocken')d='M23 47 Q19 35 24 27 Q21 19 31 17 Q32 9 40 11 Q46 4 52 10 Q62 5 68 14 Q78 14 77 25 Q82 34 75 48 L70 59 Q64 47 58 49 Q50 42 43 49 Q35 45 29 59 Z';
+ if(typ==='boxbraids')d='M25 43 C22 24 31 9 50 9 C69 9 78 24 75 43 Q68 34 61 33 Q50 27 39 33 Q32 34 25 43 Z M29 31 L26 58 L30 58 L34 34 Z M71 31 L74 58 L70 58 L66 34 Z';
+ if(typ==='locsgebunden')d='M25 42 C23 23 31 10 48 9 Q66 7 76 28 L72 36 Q63 29 51 29 Q38 29 29 38 Z';
+ if(typ==='fringe')d='M26 43 C22 25 31 10 49 9 Q69 8 76 29 L72 35 Q63 27 56 31 Q52 38 43 47 Q38 50 39 40 Q31 37 26 43 Z';
+ if(typ==='vollpony')d='M24 47 C21 23 30 8 50 9 C70 8 79 23 76 47 L70 51 L68 33 L62 34 L60 40 L55 36 L50 41 L45 36 L40 40 L38 34 L31 33 L30 51 Z';
+ if(typ==='curtain')d='M24 47 C21 23 30 8 48 9 Q50 11 50 17 Q50 11 52 9 C70 8 79 23 76 47 L70 51 Q64 36 54 25 L52 43 L48 43 L46 25 Q36 36 30 51 Z';
+ if(typ==='asymbob')d='M25 46 C22 23 31 9 50 9 Q70 8 76 37 L72 61 Q66 65 64 55 L65 33 Q56 27 50 25 Q41 32 31 36 L30 48 Z';
+ if(typ==='halfup')d='M24 47 C21 23 30 9 50 10 C70 9 79 23 76 47 L70 51 Q68 34 58 28 Q50 32 42 28 Q32 34 30 51 Z M41 18 Q39 10 50 8 Q61 10 59 18 Q50 14 41 18 Z';
+ if(typ==='langzopf')d='M25 43 C23 23 32 9 50 9 Q71 8 76 35 Q65 27 56 29 Q46 35 28 36 Z';
+ if(typ==='langwellen')d='M23 47 Q20 34 25 27 Q22 19 31 17 Q34 8 43 11 Q50 5 57 11 Q68 8 73 17 Q80 23 76 34 Q80 42 74 49 Q66 39 59 42 Q50 37 42 42 Q34 39 28 51 Z';
+ if(typ==='twinbuns')d='M25 42 C23 24 32 10 49 10 Q67 8 75 28 L74 42 Q64 32 55 31 L50 24 L45 31 Q36 32 26 42 Z';
  const unterlage=typ==='rasiert'?rasierKappe:scalp;
  const kopfsaum=neueKopfpassform&&!['rasiert','licht'].includes(typ);
  return <g data-haar-typ={typ} data-haar-ebene="vorn" data-haar-profil={kopfprofil||'standard'} data-haar-breite={haarbreite} data-haar-passung={neueKopfpassform&&kompakt?'kopfkontur':'standard'} data-haar-vorderclip={neueKopfpassform&&kopfnah?'kopf':'frei'}>
@@ -101,8 +125,9 @@ export function Haarform({index=0,weiblich=false,breite=24,farbe,hell,ebene='vor
     {typ!=='rasiert'&&<path d={d} stroke={typ==='licht'?farbe:'none'} strokeWidth={.5} strokeLinejoin="round" fill={'url(#'+id+'farbe)'}/>}
     {typ==='flechtkranz'&&<path d="M29 27 Q38 16 50 17 Q62 16 71 27" fill="none" stroke={hell} strokeWidth="4.2" strokeLinecap="round" strokeDasharray="2 1.5" opacity=".7"/>}
     <g clipPath={'url(#'+id+'clip)'} fill="none" stroke={hell} strokeLinecap="round" opacity=".27">
-     {['cornrows','zoepfe'].includes(typ)?[-18,-10,-2,6,14,22].map(x=><path key={x} d={`M${50+x} 9 Q${43+x} 24 ${49+x} 42`} strokeWidth="1.5"/>):
-      ['locken','krause','lockenseite','afro','volumen'].includes(typ)?Array.from({length:18},(_,i)=><path key={i} d={`M${27+(i%6)*8} ${18+Math.floor(i/6)*7} q-2 -3 2 -4 q4 0 3 3`} strokeWidth=".7"/>):
+     {['cornrows','zoepfe','boxbraids','langzopf'].includes(typ)?[-18,-10,-2,6,14,22].map(x=><path key={x} d={`M${50+x} 9 Q${43+x} 24 ${49+x} 42`} strokeWidth="1.5"/>):
+      ['locken','krause','lockenseite','afro','volumen','naturvolumen','mittellocken','langlocken','langwellen'].includes(typ)?Array.from({length:18},(_,i)=><path key={i} d={`M${27+(i%6)*8} ${18+Math.floor(i/6)*7} q-2 -3 2 -4 q4 0 3 3`} strokeWidth=".7"/>):
+      typ==='locsgebunden'?[28,36,44,52,60,68].map(x=><path key={x} d={`M${x} 12 Q${x-4} 26 ${x+1} 39`} strokeWidth="1.15"/>):
       typ!=='rasiert'&&typ!=='licht'&&typ!=='flechtkranz'&&[0,1,2].map(i=><path key={i} d={['slick','hoch','knoten'].includes(typ)?`M${32+i*12} 30 Q${27+i*12} 15 ${42+i*8} 8`:`M${29+i*3} ${29-i*4} Q48 ${12-i*2} ${70-i*4} ${25-i*3}`} strokeWidth=".8"/>)}
     </g>
    </g>
