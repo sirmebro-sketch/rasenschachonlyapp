@@ -210,10 +210,35 @@ absteigbar — das ist keine Kalibrierfrage, sondern eine Grenze des Mittels.
 Die Gegenprobe über acht Läufe ergibt auf die Schulden Rauschen in beide
 Richtungen (+21 %, 0 %, −20 %, −3 %, +6 %, −13 %).
 
-**Offen bleibt deshalb der Lizenzentzug** — Zwangsabstieg statt Punktabzug,
-wenn die Auflage mehrere Saisons hintereinander greift. Das ist dasselbe
-Verfahren, nur seine letzte Stufe, und es ist das Einzige, was den extremen
-Fall schließt. Entscheidung des Eigentümers, nicht nebenbei gebaut.
+### WIRT-P1-04b – Lizenzentzug als letzte Stufe — VORGELEGT (Claude, 18.09.2026)
+
+Die Antwort auf die Grenze oben, auf Kevins Auftrag vom 18.09.2026. **Drei
+Saisons in Folge auf der höchsten Abzugsstufe** (mehr als drei Kreditrahmen
+unter der Linie) heißt Lizenzentzug: Zwangsabstieg, unabhängig von der
+Tabelle. Der Zähler springt auf null, sobald der Verein die höchste Stufe
+verlässt — Besserung genügt, gesund werden muss er nicht. Zwei volle Saisons
+Vorwarnung, sichtbar im Vereinsbildschirm.
+
+Gemessen, gleiche Läufe wie oben:
+
+| Stärke | ohne Entzug | mit Entzug | Entzüge | Endliga |
+|---:|---:|---:|---:|---|
+| 62 | −107 / −53 | −105 / −51 | 1 / 0 | unverändert |
+| 70 | −323 / −293 | **−228 / −243** | 2 / 2 | unverändert |
+| 78 | −662 / −600 | **−575 / −486** | 3 / 2 | **eine Liga tiefer** |
+
+13 bis 29 Prozent weniger Schulden genau dort, wo der Punktabzug allein nichts
+ausrichtete. **Geheilt ist der Verein nicht:** er pendelt, weil er sportlich zu
+stark für unten und finanziell zu schwach für oben ist. Jede Runde nach unten
+halbiert aber die Gehälter, und das ist die Wirkung.
+
+Nebenbefund aus dem Prüfstand: ein Verein in der untersten Liga, dem die Lizenz
+fehlt, wurde bei gutem Ergebnis **befördert**. Wer keine Lizenz für seine Liga
+bekommt, bekommt erst recht keine für die darüber — er bleibt jetzt, wo er ist.
+
+**Offen bleibt der Ausschluss aus dem Spielbetrieb** als Stufe unter dem
+Entzug. In der untersten Liga bleibt es beim Punktabzug; der Beleg sagt das,
+statt stumm nichts zu tun.
 
 ### WIRT-P1-05 – Abschluss und Vermächtnis nachziehen — VORGELEGT (Claude, 17.09.2026)
 

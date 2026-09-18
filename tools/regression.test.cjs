@@ -1214,3 +1214,96 @@ test('Rücktritt vor/nach Saison und Angebotsannahme hat gleiche Kalendergrenzen
   assert(E.renderEnd(out.P).includes('Karriereende '+expected.bis));
  }
 });
+
+test('Der Lizenzentzug steigt ab, egal wie gut gespielt wurde',()=>{
+ /* DIE ZUSICHERUNG, DIE P1-04 NICHT GEBEN KONNTE. Dort blieb ein Verein mit
+    -700 Mio ueber fuenfzehn Saisons in der ersten Liga, weil neun Punkte Abzug
+    einen 52-Punkte-Vorsprung nicht schliessen. Hier steigt er ab, auch wenn er
+    Meister wird. */
+ E.zufallSetzen(20260918);
+ /* DER VEREIN MUSS IN EINER LIGA STEHEN, AUS DER ES NACH UNTEN GEHT. Der erste
+    Entwurf dieser Pruefung nahm den Testverein, wie `gruenden` ihn anlegt — und
+    der startet in der UNTERSTEN Liga der Pyramide. Dort greift der Entzug
+    bewusst nicht (`idx > 0`), also war `entzug` zu Recht false und die Pruefung
+    mass den falschen Fall. Der Fehler lag in der Pruefung; den Fall der
+    untersten Liga deckt jetzt die Pruefung darunter ab. */
+ /* GENAU DAS SZENARIO AUS P1-04: ein Kader, der seiner Liga davongelaufen ist,
+    mit Schulden, die kein Punktabzug mehr einholt. Der Standardkader (ovr 60)
+    wuerde in der obersten Liga Letzter und damit ohnehin absteigen — dann
+    pruefte diese Regression wieder den falschen Weg nach unten. */
+ const stark=spielbereiterVerein().kader.map(sp=>({...sp,ovr:84,pot:88}));
+ const roh=spielbereiterVerein({kasse:-99999,lizenzJahre:2,kader:stark});
+ /* `stufenVon` liefert die ganze Leiter, `idx` die Sprosse; hoeher heisst
+    hoeherer Index (so liest es auch `aufstieg`). Oberste Sprosse waehlen. */
+ const leiter=E.VEREIN.stufenVon(roh.land,roh.liga);
+ const tief=E.VEREIN.mitWirtschaft({...roh,liga:leiter[leiter.length-1].liga});
+ const v0=E.VEREIN.einschreiben(tief).v;
+ const vorher=v0.liga;
+ assert(E.VEREIN.stufenVon(v0.land,vorher).findIndex(x=>x.liga===vorher)>0,
+   'der Pruefverein steht nicht in der untersten Liga');
+ const r=E.VEREIN.vereinSaison(v0);
+ assert(!r.fehler,'die Saison laeuft: '+r.fehler);
+ assert.equal(r.entzug,true,'die Lizenz ist weg');
+ /* DEN SPORTLICHEN ABSTIEG AUSSCHLIESSEN. Der erste Entwurf pruefte nur, dass
+    die Liga sich aendert — das erfuellt auch ein gewoehnlicher Abstieg, und die
+    Gegenprobe (Entzug wirkt nicht auf die Liga) blieb deshalb gruen. Die
+    Pruefung mass also gar nicht, was sie behauptet. Jetzt muss der Verein
+    SPORTLICH gehalten haben und trotzdem unten stehen. */
+ assert.equal(r.abstieg,false,'sportlich ist er nicht abgestiegen (Rang '+r.rang+' von '+r.N+')');
+ assert(r.v.liga!==vorher,'und steht trotzdem eine Liga tiefer');
+ /* Eine Liga, nicht zwei. */
+ const stufen=E.VEREIN.stufenVon(v0.land,vorher);
+ const idx=stufen.findIndex(x=>x.liga===vorher);
+ assert.equal(r.v.liga,stufen[idx-1].liga,'genau eine Liga nach unten');
+ /* Nach dem Entzug faengt die Zaehlung von vorne an — sonst stiege derselbe
+    Verein jede Saison erneut ab, ohne je die Gelegenheit zur Erholung. */
+ assert.equal(r.v.lizenzJahre,0,'der Zaehler steht wieder auf null');
+ assert.equal(r.v.abzug,0,'und die Auflage ist mit dem Abstieg abgegolten');
+ /* Das Vorstandsziel passt zur neuen Lage statt "Um den Titel spielen". */
+ assert(r.v.ziel&&r.v.ziel.n,'ein Ziel wird gesetzt: '+JSON.stringify(r.v.ziel));
+ const c=r.v.chronik.at(-1).wirtschaft;
+ assert.equal(c.entzogen,true,'die Chronik haelt es fest');
+});
+
+test('In der untersten Liga bleibt es beim Punktabzug',()=>{
+ /* Tiefer geht es nicht. Der Ausschluss aus dem Spielbetrieb waere die naechste
+    Stufe und ist nicht gebaut — der Beleg sagt das, statt stumm nichts zu tun. */
+ E.zufallSetzen(20260918);
+ const unten=E.VEREIN.mitWirtschaft(spielbereiterVerein({kasse:-99999,lizenzJahre:2}));
+ const idx=E.VEREIN.stufenVon(unten.land,unten.liga).findIndex(x=>x.liga===unten.liga);
+ assert.equal(idx,0,'der gegruendete Verein startet ganz unten');
+ const r=E.VEREIN.vereinSaison(E.VEREIN.einschreiben(unten).v);
+ assert(!r.fehler,'die Saison laeuft: '+r.fehler);
+ assert.equal(r.entzug,false,'es gibt keinen Zwangsabstieg nach ganz unten');
+ assert.equal(r.entzugOhneWirkung,true,'aber der Grund wird benannt');
+ /* Und er steigt auch nicht AUF. Ein Verein ohne Lizenz fuer seine Liga
+    bekommt erst recht keine fuer die darueber — beim Schreiben dieser Pruefung
+    aufgefallen, weil er zunaechst befoerdert wurde. */
+ assert.equal(r.v.liga,unten.liga,'die Liga bleibt, in beide Richtungen');
+ assert(r.v.abzug>0,'der Punktabzug bleibt die Folge');
+});
+
+test('Ohne Lizenzgrund steigt niemand zwangsweise ab',()=>{
+ /* Die Gegenrichtung: ein gesunder Verein darf von alldem nichts merken. */
+ E.zufallSetzen(20260918);
+ const r=E.VEREIN.vereinSaison(E.VEREIN.einschreiben(spielbereiterVerein({kasse:300})).v);
+ assert.equal(r.entzug,false);
+ assert.equal(r.v.lizenzJahre,0);
+ assert.equal((r.v.chronik.at(-1).wirtschaft||{}).entzogen,false);
+});
+
+test('Die Oberflaeche zaehlt die Jahre ohne Lizenz sichtbar mit',()=>{
+ /* Ein Zwangsabstieg ohne Ansage waere Willkuer. Zwei Saisons Vorwarnung. */
+ const erste=E.renderVerein(E.VEREIN.mitWirtschaft(
+   spielbereiterVerein({kasse:-9999,abzug:9,lizenzJahre:1})),E.leereAkademie(),'ausbau');
+ assert(erste.includes('Ohne Lizenz seit 1'),'der Zaehler steht da');
+ assert(erste.includes('Zwangsabstieg'),'und nennt die Folge');
+ assert(!erste.includes('NaN'));
+ const letzte=E.renderVerein(E.VEREIN.mitWirtschaft(
+   spielbereiterVerein({kasse:-9999,abzug:9,lizenzJahre:2})),E.leereAkademie(),'ausbau');
+ assert(letzte.includes('Noch eine Saison'),'im letzten Jahr wird es deutlich');
+ /* Wer im Rahmen bleibt, sieht den Zaehler gar nicht. */
+ const gesund=E.renderVerein(E.VEREIN.mitWirtschaft(spielbereiterVerein({kasse:40})),
+   E.leereAkademie(),'ausbau');
+ assert(!gesund.includes('Ohne Lizenz'));
+});

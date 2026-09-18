@@ -126,6 +126,7 @@ export const machVerein = (H) => {
     gehaltsniveau: 1,              /* Ratsche 0,75 bis 2,00 */
     ziel: null,                    /* Vorstandsziel der laufenden Saison */
     abzug: 0,                      /* Lizenzauflage fuer die KOMMENDE Saison */
+    lizenzJahre: 0,                /* Saisons in Folge auf der hoechsten Stufe */
   });
 
   /* -------------------------------------------------------- Ligapyramide */
@@ -218,6 +219,7 @@ export const machVerein = (H) => {
       /* Alte Spielstaende kennen die Lizenzauflage nicht und starten ohne.
          Auf null geklemmt: ein negativer Abzug waere ein Geschenk. */
       abzug: Math.max(0, zahl(v.abzug, 0)),
+      lizenzJahre: Math.max(0, zahl(v.lizenzJahre, 0)),
       ligastufe: ligastufe(v.land, v.liga),
     };
   };
@@ -1083,6 +1085,43 @@ export const machVerein = (H) => {
        abgezogen WURDE und was die naechste kostet. */
     beleg.lizenz.angewandt = erg.abzug || 0;
 
+    /* ---- LIZENZENTZUG (WIRT-P1-04b) --------------------------------------
+       Der Zwangsabstieg wird HIER angewandt und nicht oben bei `abstieg`,
+       weil die Lizenzpruefung die Kasse NACH der Abrechnung braucht — und die
+       steht erst jetzt. `neueLiga` wird deshalb nachtraeglich ueberschrieben;
+       `zielNeu` weiter unten liest bereits den korrigierten Wert.
+
+       DER ENTZUG SCHLAEGT DAS SPORTLICHE ERGEBNIS. Wer keine Lizenz bekommt,
+       steigt ab, ganz gleich wie er gespielt hat — ein Aufstieg wird dadurch
+       hinfaellig, nicht verrechnet. Genau so behandelt es der Fussball.
+
+       EINE LIGA, NICHT ZWEI. Steigt der Verein ohnehin sportlich ab, bleibt es
+       bei dieser einen Liga: zweimal fuer dasselbe Jahr nach unten waere eine
+       Doppelbestrafung, und das Spiel zaehlt auch sonst je Saison einen
+       Auf- oder Abstieg.
+
+       IN DER UNTERSTEN LIGA GEHT ES NICHT TIEFER. Der Ausschluss aus dem
+       Spielbetrieb waere die naechste Stufe; die ist nicht gebaut. Der
+       Punktabzug bleibt dort die einzige Folge, und der Beleg sagt das. */
+    const entzug = !!beleg.lizenz.entzug && idx > 0;
+    const entzugOhneWirkung = !!beleg.lizenz.entzug && idx <= 0;
+    /* OHNE LIZENZ AUCH KEIN AUFSTIEG. Beim Schreiben der Pruefung aufgefallen:
+       ein Verein in der untersten Liga, dem die Lizenz fehlt, wurde bei gutem
+       Ergebnis trotzdem befoerdert — der Entzug greift dort mangels tieferer
+       Liga nicht, und `neueLiga` zeigte munter nach oben. Ein Verein, der keine
+       Lizenz fuer SEINE Liga bekommt, bekommt erst recht keine fuer die
+       daerueber. Er bleibt, wo er ist. */
+    const ligaNachEntzug = entzug ? stufen[idx - 1].liga
+      : entzugOhneWirkung ? v.liga : neueLiga;
+    beleg.lizenz.entzogen = entzug;
+    beleg.lizenz.entzugOhneWirkung = entzugOhneWirkung;
+    /* Nach dem Entzug faengt die Zaehlung von vorne an. Sonst stiege derselbe
+       Verein jede Saison erneut zwangsab, ohne je die Gelegenheit zu bekommen,
+       sich in der neuen Liga zu fangen — und dort halbieren sich die Gehaelter
+       (`kaderKosten` teilt durch die Ligastufe), das ist die eigentliche
+       Wirkung dieser Stufe. */
+    if (entzug) { wNach.lizenzJahre = 0; wNach.abzug = 0; }
+
     /* Das Ziel fuer die KOMMENDE Saison steht in der NEUEN Liga: nach einem
        Aufstieg ist Klassenerhalt die Ansage, nicht der Titel.
 
@@ -1097,9 +1136,13 @@ export const machVerein = (H) => {
        neue. Ein Aufsteiger gilt deshalb als Letzter (Ziel: Klassenerhalt),
        ein Absteiger als Dritter (Ziel: vorne angreifen — nicht als Erster,
        sonst faengt er sofort wieder beim Titel an). */
-    const zielRang = aufstieg ? N : abstieg ? 3 : rang;
+    /* Ein Zwangsabsteiger gilt fuer das Ziel wie ein sportlicher Absteiger:
+       er kommt als Dritter herein und bekommt "vorne angreifen", nicht den
+       Titel. Sonst stuende ein Verein, der gerade seine Lizenz verloren hat,
+       mit der Ansage "Um den Titel spielen" da. */
+    const zielRang = aufstieg && !entzug ? N : (abstieg || entzug) ? 3 : rang;
     const zielNeu = WIRT.zielSetzen(
-      { ...wNach, ligastufe: ligastufe(v.land, neueLiga) }, zielRang, N);
+      { ...wNach, ligastufe: ligastufe(v.land, ligaNachEntzug) }, zielRang, N);
 
     /* In die Chronik wandert die KURZFASSUNG. Fuenfzehn volle Belege mit
        allen Posten laegen dauerhaft im Spielstand, gelesen wird davon die
@@ -1119,6 +1162,8 @@ export const machVerein = (H) => {
          aussieht, als waere nichts gewesen. */
       abzug: erg.abzug || 0,
       auflage: beleg.lizenz.punkte || 0,
+      lizenzJahre: beleg.lizenz.jahre || 0,
+      entzogen: entzug,
     };
 
     /* Neue Angebote fuer die KOMMENDE Saison. Die Saat haengt am Jahr, also
@@ -1126,7 +1171,7 @@ export const machVerein = (H) => {
     const mitNeuenAngeboten = (nv) => ({ ...nv, angebote: sponsorAngebote(nv) });
 
     return {
-      v: mitNeuenAngeboten({ ...v, jahr: v.jahr + 1, liga: neueLiga, kader: noch, aufstellung: gesaeubert,
+      v: mitNeuenAngeboten({ ...v, jahr: v.jahr + 1, liga: ligaNachEntzug, kader: noch, aufstellung: gesaeubert,
            /* Wirtschaft: was die Abrechnung fortgeschrieben hat, einzeln
               uebernommen statt den ganzen Zwischenstand einzustreuen — sonst
               schleppte der Spielstand `wVor.bilanz` und den Kader doppelt. */
@@ -1134,7 +1179,7 @@ export const machVerein = (H) => {
            stimmung: wNach.stimmung, rechtsform: wNach.rechtsform,
            preise: wNach.preise, baustellen: wNach.baustellen,
            ausbau: wNach.ausbau, gehaltsniveau: wNach.gehaltsniveau,
-           abzug: wNach.abzug,
+           abzug: wNach.abzug, lizenzJahre: wNach.lizenzJahre,
            ziel: zielNeu, angebote: null,          /* gleich unten neu gewuerfelt */
            faelle: faelleNeu, offeneAbschiede: [],
            bilanz: neueBilanz,
@@ -1161,6 +1206,10 @@ export const machVerein = (H) => {
       /* Was diese Saison an Lizenzauflage gekostet hat. Ohne dieses Feld
          muesste der Aufrufer es aus der Chronik nachschlagen. */
       abzug: erg.abzug || 0,
+      /* Der Zwangsabstieg wird getrennt gemeldet: `abstieg` ist das sportliche
+         Ergebnis, `entzug` die Lizenzfolge. Wer beides in ein Feld legte,
+         koennte hinterher nicht mehr sagen, warum der Verein unten steht. */
+      entzug, entzugOhneWirkung,
       vorbei: v.jahr + 1 > VEREIN_JAHRE,
       fehler: null,
     };
@@ -1712,5 +1761,6 @@ export const machVerein = (H) => {
            VEREIN_AUSBAU, AUSBAU_MAX, ausbauStufe, ausbauKosten,
            bauStarten, baustellenText, VC_EXTRAS, extraKaufen, geldText, kasse,
            SPONSOR_MAX, sponsorAngebote, sponsorAnnehmen, mitAngeboten, werbeErtrag,
+           ENTZUG_NACH: WIRT.ENTZUG_NACH,
            BONI, punkte, abschluss, neuerVerein };
 };

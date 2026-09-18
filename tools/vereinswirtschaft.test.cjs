@@ -691,3 +691,28 @@ test('Die Abrechnung beschliesst die Auflage aus der Kasse NACH der Saison', () 
   assert.equal(reich.v.abzug, 0);
   assert.equal(reich.beleg.lizenz.warnung, false);
 });
+
+test('Der Lizenzentzug zaehlt nur die hoechste Stufe und verzeiht Besserung', () => {
+  const v = verein({ ligastufe: 1 });
+  const r = W.kreditrahmen(v, erg());
+  const pruef = (kasse, jahre) => W.lizenzPruefung({ ...v, kasse, lizenzJahre: jahre }, erg());
+  /* Auf der hoechsten Stufe zaehlt der Zaehler hoch. */
+  assert.equal(pruef(-(r * 9), 0).jahre, 1);
+  assert.equal(pruef(-(r * 9), 1).jahre, 2);
+  assert.equal(pruef(-(r * 9), 2).jahre, 3);
+  /* Erst beim Erreichen der Grenze folgt der Entzug, nicht davor. */
+  assert.equal(pruef(-(r * 9), 0).entzug, false);
+  assert.equal(pruef(-(r * 9), 1).entzug, false, 'zwei volle Saisons Vorwarnung');
+  assert.equal(pruef(-(r * 9), 2).entzug, true);
+  /* BESSERUNG GENUEGT. Wer die hoechste Stufe verlaesst, faengt von vorne an —
+     auch wenn er noch tief im Minus steht. Der Ausweg muss erreichbar sein,
+     sonst ist der Entzug nur eine verzoegerte Unvermeidlichkeit. */
+  assert.equal(pruef(-(r * 3), 2).jahre, 0, 'mittlere Stufe setzt zurueck');
+  assert.equal(pruef(-(r * 3), 2).entzug, false);
+  assert.equal(pruef(-(r * 1.5), 2).jahre, 0);
+  assert.equal(pruef(50, 2).jahre, 0, 'eine volle Kasse erst recht');
+  /* Der Zaehler wandert an den Verein, damit die naechste Saison ihn kennt. */
+  const { v: nach } = W.saisonAbrechnung({ ...v, kasse: -(r * 20), lizenzJahre: 1 },
+    erg({ rang: 10 }), 3);
+  assert.equal(nach.lizenzJahre, 2, 'die Abrechnung schreibt ihn fort');
+});

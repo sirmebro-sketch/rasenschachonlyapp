@@ -2060,3 +2060,112 @@ abgezogen wird.
 - **WIRT-P1-02 — Stadionausbau spürbar machen.**
 - **Kein Gerätetest.** Die Oberflächenteile sind im Prüfstand gerendert, aber
   niemand hat die Auflage im Spiel gesehen.
+
+## WIRT-P1-04b — Lizenzentzug als letzte Stufe (Claude, 18.09.2026)
+
+**Basis-Commit:** `f86ad78` (`claude/wirt-p1-04`). Zur Abnahme durch Astra.
+
+### Warum es das Paket braucht
+
+P1-04 hat seine eigene Grenze gemessen und offengelegt: der Punktabzug wirkt
+sportlich, aber ein Kader, der seiner Liga weit davongelaufen ist, steht **52
+Punkte** über dem Abstiegsplatz. Neun Punkte schließen ein Sechstel davon. Ein
+78er-Verein blieb über fünfzehn Saisons oben und verschuldet, bei **null**
+Abstiegen. Die Staffel höher zu drehen kauft nichts — auch dreissig Punkte
+reichten nicht, und eine Tabelle mit dreissig Minuspunkten liest sich wie ein
+Anzeigefehler.
+
+### Die Regel
+
+**Drei Saisons in Folge auf der höchsten Abzugsstufe** — also mehr als drei
+Kreditrahmen unter der Linie — heisst Lizenzentzug: Zwangsabstieg, unabhängig
+von der Tabelle. Dasselbe Verfahren wie in P1-04, nur seine letzte Stufe; 1860
+München und Rangers sind genau das.
+
+Vier Entscheidungen, die den Unterschied machen:
+
+1. **Nur die höchste Stufe zählt.** Wer knapp unter der Linie steht, hat ein
+   Problem; wer mehr als drei Rahmen darunter steht, hat keinen Betrieb mehr,
+   den man genehmigen könnte.
+2. **Besserung genügt, Gesundung nicht nötig.** Der Zähler springt auf null,
+   sobald der Verein die höchste Stufe verlässt. Ein Ausweg, der nur über eine
+   volle Kasse führte, wäre kein Ausweg, sondern eine verzögerte
+   Unvermeidlichkeit.
+3. **Zwei volle Saisons Vorwarnung**, sichtbar im Vereinsbildschirm mit Zähler
+   und Ausweg. Ein Zwangsabstieg ohne Ansage wäre Willkür.
+4. **Nach dem Entzug beginnt die Zählung von vorn**, und die offene Auflage ist
+   abgegolten. Sonst stiege derselbe Verein jede Saison erneut ab, ohne je die
+   Gelegenheit zu bekommen, sich unten zu fangen — und genau dort halbieren
+   sich die Gehälter (`kaderKosten` teilt durch die Ligastufe). Das ist die
+   eigentliche Wirkung dieser Stufe.
+
+**Der Entzug schlägt das sportliche Ergebnis**, aber es bleibt bei **einer**
+Liga: zweimal für dasselbe Jahr nach unten wäre Doppelbestrafung.
+
+### Ein Nebenbefund aus dem Prüfstand
+
+Beim Schreiben der Regression fiel auf: **ein Verein in der untersten Liga, dem
+die Lizenz fehlt, wurde bei gutem Ergebnis befördert.** Der Entzug greift dort
+mangels tieferer Liga nicht, und `neueLiga` zeigte munter nach oben. Wer keine
+Lizenz für seine Liga bekommt, bekommt erst recht keine für die darüber — er
+bleibt jetzt, wo er ist. Gefunden nicht durch Nachdenken, sondern weil die
+Prüfung eine Zahl lieferte, die nicht passte.
+
+### Was gemessen wurde
+
+Gleiche Läufe wie in P1-04, gleiche Saaten, einmal mit und einmal ohne die
+letzte Stufe:
+
+| Stärke | Saat | ohne | mit | Entzüge | Endliga |
+|---:|---:|---:|---:|---:|---|
+| 62 | 20260917 | −107 | −105 | 1 | unverändert |
+| 62 | 4711 | −53 | −51 | 0 | unverändert |
+| 70 | 20260917 | −323 | **−228** | 2 | unverändert |
+| 70 | 4711 | −293 | **−243** | 2 | unverändert |
+| 78 | 20260917 | −662 | **−575** | 3 | **2. Bundesliga** statt Bundesliga |
+| 78 | 4711 | −600 | **−486** | 2 | unverändert |
+
+**13 bis 29 Prozent weniger Schulden genau dort, wo der Punktabzug allein
+nichts ausrichtete** — und der Spitzenverein steht am Ende tatsächlich eine
+Liga tiefer, statt fünfzehn Jahre unbehelligt oben zu bleiben.
+
+**Geheilt ist er nicht, und das steht hier, weil es wichtig ist:** er pendelt.
+Sportlich ist er zu stark für unten, finanziell zu schwach für oben, also
+steigt er ab, kommt zurück, verliert die Lizenz wieder. Jede Runde nach unten
+halbiert die Gehälter — deshalb die Besserung. Wer das für falsch hält, hat
+einen Punkt; es ist aber eine kohärente Vereinsgeschichte und keine Sackgasse.
+
+### Geprüft
+
+- `npm test` **189/189** (vorher 184), `npm run build` erfolgreich.
+- Vier neue Regressionen: der Zähler zählt nur die höchste Stufe und verzeiht
+  Besserung (alle drei unteren Stufen setzen zurück); der Entzug steigt ab,
+  obwohl der Verein sportlich gehalten hat; in der untersten Liga bleibt es
+  beim Punktabzug **und der Verein steigt auch nicht auf**; die Oberfläche
+  zählt die Jahre sichtbar mit und wird im letzten Jahr deutlich.
+- **Drei Gegenproben, alle rot:** wirkt der Entzug nicht auf die Liga, wird
+  `not ok 99` rot; setzt der Zähler bei Besserung nicht zurück, `not ok 159`;
+  darf ein Verein ohne Lizenz aufsteigen, `not ok 100`.
+
+### Ein eigener Fehler, der wichtiger ist als das Paket
+
+Die erste Fassung der Entzugs-Regression prüfte nur, **dass sich die Liga
+ändert**. Das erfüllt auch ein gewöhnlicher sportlicher Abstieg — und der
+Testverein (Kader 60) wurde in der obersten Liga Letzter, stieg also ohnehin
+ab. Die Gegenprobe „Entzug wirkt nicht auf die Liga" blieb deshalb **grün**:
+die Prüfung mass gar nicht, was sie behauptete.
+
+Behoben durch zweierlei: ein Kader, der sportlich hält (Stärke 84, also genau
+das P1-04-Szenario), und eine ausdrückliche Zusicherung `abstieg === false`.
+Erst damit isoliert sie den Zwangsabstieg. **Eine Gegenprobe, die grün bleibt,
+ist ein Befund über die Prüfung, nicht über den Code** — das ist die Lehre, und
+sie steht als Kommentar an der Regression.
+
+### Ausdrücklich offen
+
+- **Der Ausschluss aus dem Spielbetrieb** als Stufe unter dem Entzug. In der
+  untersten Liga bleibt es beim Punktabzug; der Beleg sagt das, statt stumm
+  nichts zu tun.
+- **Kein Schuldenschnitt.** Ein Insolvenzverfahren würde die Schulden kürzen;
+  das wäre eine eigene Entscheidung und hier bewusst nicht getroffen.
+- **Kein Gerätetest.**

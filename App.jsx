@@ -9931,6 +9931,20 @@ function VereinScreen({ v, aka, onAendern, onZurueck, onAbschluss, startReiter }
                   <b>Lizenzauflage: {v.abzug} Punkte Abzug.</b> Sie wird am Ende
                   dieser Saison auf die Tabelle angerechnet. Weniger Schulden
                   heisst kleinere Auflage im nächsten Jahr.</div>)}
+              {/* DER ZÄHLER MUSS SICHTBAR SEIN (WIRT-P1-04b). Ein Zwangsabstieg,
+                  der ohne Ansage kommt, wäre Willkür — und er kommt frühestens
+                  im dritten Jahr, also gibt es zwei volle Saisons Vorwarnung.
+                  Die Zeile nennt auch den Ausweg: die höchste Stufe verlassen
+                  genügt, gesund werden muss der Verein nicht. */}
+              {v.lizenzJahre > 0 && (
+                <div className="m" style={{ fontSize: 11.5, marginTop: 4, color: "var(--bad)" }}>
+                  <b>Ohne Lizenz seit {v.lizenzJahre}{" von "}{VEREIN.ENTZUG_NACH} Saisons.</b>{" "}
+                  {v.lizenzJahre >= VEREIN.ENTZUG_NACH - 1
+                    ? "Noch eine Saison so, und der Verein steigt zwangsweise ab — unabhängig von der Tabelle."
+                    : "Bleibt es dabei, folgt nach " + VEREIN.ENTZUG_NACH
+                      + " Saisons der Zwangsabstieg."}{" "}
+                  Der Zähler springt auf null, sobald die Schulden wieder unter
+                  drei Kreditrahmen liegen.</div>)}
               {v.abzug <= 0 && VEREIN.kasse(v) < 0 && (
                 <div className="m" style={{ fontSize: 11.5, marginTop: 6, color: "var(--mu)" }}>
                   Die Kasse ist im Minus. Ein Überziehen bis zur Hälfte einer
@@ -10049,6 +10063,10 @@ function VereinScreen({ v, aka, onAendern, onZurueck, onAbschluss, startReiter }
                 {!!(c.wirtschaft && c.wirtschaft.abzug) && (
                   <div className="m" style={{ fontSize: 11.5, marginTop: 3, color: "var(--bad)" }}>
                     Lizenzauflage: {c.wirtschaft.abzug} Punkte abgezogen</div>)}
+                {!!(c.wirtschaft && c.wirtschaft.entzogen) && (
+                  <div className="m" style={{ fontSize: 11.5, marginTop: 3,
+                    color: "var(--bad)", fontWeight: 600 }}>
+                    Lizenz entzogen — Zwangsabstieg</div>)}
               </div>))}
           </div>)}
 
@@ -17490,6 +17508,19 @@ function EndScreen({ p, onNew }) {
                       <div className="m" style={{ fontSize: 11, marginTop: 3, color: "var(--bad)" }}>
                         Die Kasse steht {geld(Math.abs(w.lizenz.kasse))} im Minus, geduldet sind
                         {" " + geld(w.lizenz.rahmen)}. Kommende Saison: {w.lizenz.punkte} Punkte Abzug.</div>)}
+                    {!!(w.lizenz && w.lizenz.entzogen) && (
+                      <div className="m" style={{ fontSize: 11.5, marginTop: 5,
+                        color: "var(--bad)", fontWeight: 600 }}>
+                        Die Lizenz wurde entzogen: Zwangsabstieg, unabhängig vom
+                        Tabellenplatz. In der neuen Liga kostet der Kader rund
+                        die Hälfte — das ist der Weg zurück.</div>)}
+                    {!!(w.lizenz && w.lizenz.entzugOhneWirkung) && (
+                      <div className="m" style={{ fontSize: 11.5, marginTop: 5, color: "var(--bad)" }}>
+                        Die Lizenz wäre entzogen — tiefer geht es aber nicht.
+                        Es bleibt beim Punktabzug.</div>)}
+                    {!!(w.lizenz && w.lizenz.jahre > 0 && !w.lizenz.entzogen) && (
+                      <div className="m" style={{ fontSize: 11, marginTop: 3, color: "var(--bad)" }}>
+                        Ohne Lizenz seit {w.lizenz.jahre} von {VEREIN.ENTZUG_NACH} Saisons.</div>)}
                     {!!(w.lizenz && !w.lizenz.punkte && w.lizenz.warnung) && (
                       <div className="m" style={{ fontSize: 11, marginTop: 3, color: "var(--mu)" }}>
                         Die Kasse ist im Minus. Bis {geld(w.lizenz.rahmen)} ist das geduldet —
