@@ -1,5 +1,9 @@
 # Änderungen
 
+## Noch nicht veröffentlicht
+
+- Auf schmalen Smartphones zeigt die Charakter-Kategorienleiste jetzt dezent an, dass weitere Kategorien horizontal erreichbar sind; der Hinweis wechselt beim Wischen passend zwischen Anfang, Mitte und Ende.
+
 ## 35.194.1 – Kleine Korrekturen nach unabhängiger Qualitätsprüfung
 
 - Neue Mundformen verwenden eigene Abstandsgrenzen für Lippen, Kinn und Bärte.

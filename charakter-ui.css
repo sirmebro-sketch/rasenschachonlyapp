@@ -56,8 +56,36 @@
     touch-action: pan-x pan-y;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: thin;
-    margin: 0 -4px 12px !important;
+    margin: 0 -4px 2px !important;
     padding: 2px 4px 6px;
+  }
+  /* Die angeschnittene Folgekategorie bleibt als visueller Hinweis erhalten,
+     bekommt aber eine kleine, rein informative Wischlegende. Sie reagiert
+     auf Anfang/Mitte/Ende der echten Scrollposition und ist keine Aktion. */
+  .char-kategorie-hinweis {
+    display: flex;
+    align-items: center;
+    min-height: 18px;
+    margin: 0 2px 10px;
+    color: var(--mu);
+    font-size: 10px;
+    line-height: 1.2;
+    letter-spacing: .035em;
+    opacity: .82;
+    pointer-events: none;
+    user-select: none;
+  }
+  .char-kategorie-hinweis[data-richtung="weiter"] {
+    justify-content: flex-end;
+    text-align: right;
+  }
+  .char-kategorie-hinweis[data-richtung="beide"] {
+    justify-content: center;
+    text-align: center;
+  }
+  .char-kategorie-hinweis[data-richtung="zurueck"] {
+    justify-content: flex-start;
+    text-align: left;
   }
   [id$="-feinheiten"] > div:has(> .btn.sm[aria-pressed]) > .btn {
     min-height: 44px;
@@ -99,4 +127,9 @@
   [id$="-feinheiten"] > div:has(> .btn.sm[aria-pressed]) {
     grid-auto-columns: minmax(112px, 44%);
   }
+}
+
+/* Außerhalb der mobilen Charakteransicht gibt es keinen zusätzlichen Hinweis. */
+@media (min-width: 521px) {
+  .char-kategorie-hinweis { display: none; }
 }
