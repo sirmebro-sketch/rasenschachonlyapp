@@ -42,9 +42,11 @@ jobs:
         run: |
           set -euo pipefail
           sed -i 's/applicationId "de.rasenschach.xi"/applicationId "de.rasenschach.xi.beta"/' android/app/build.gradle
+          sed -i 's/android:name=".MainActivity"/android:name="de.rasenschach.xi.MainActivity"/' android/app/src/main/AndroidManifest.xml
           sed -i 's/>Rasenschach XI</>Rasenschach XI Beta</g' android/app/src/main/res/values/strings.xml
           sed -i 's/>de\.rasenschach\.xi</>de.rasenschach.xi.beta</g' android/app/src/main/res/values/strings.xml
           grep -q 'applicationId "de.rasenschach.xi.beta"' android/app/build.gradle
+          grep -q 'android:name="de.rasenschach.xi.MainActivity"' android/app/src/main/AndroidManifest.xml
       - name: Debug-Beta bauen
         working-directory: android
         run: |
