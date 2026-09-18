@@ -1574,3 +1574,138 @@ was man sich vorstellt, ein erzeugter prüft, was passiert.
 - **Preise, Rechtsform und Vorstandsziel haben keine Oberfläche.**
 - **WIRT-P1-02 — Stadionausbau spürbar machen.**
 - **Kein Gerätetest.**
+## Nachbesserung nach Gegenlesen — Wirtschaftskern (Claude, 17.09.2026)
+
+Nach dem Bau der ganzen Kette habe ich den eigenen Diff systematisch
+gegengelesen. Drei Befunde betreffen diesen Zweig; keiner davon ist von den
+Regressionen gefunden worden, weil sie prüfen, dass die Rechnung **in sich**
+stimmt — nicht, ob sie das **Richtige** rechnet.
+
+**1. Die Stimmung fiel jede Saison, ohne dass jemand etwas tat.** Der
+Stimmungsschaden mass den Abstand zum ertragreichsten Preis. Der liegt fast
+überall UNTER 1 (gemessen: Liga 1 0,22, Liga 3 0,24, selbst ein voll
+ausgebauter Drittligist 0,34) — und 1 ist die Voreinstellung, hinter der keine
+Entscheidung steht. Gemessen an einem Drittligisten auf Platz 9: 60 → 55 → 54
+→ 47 → 42 → 37 → 31 → 23 in acht Saisons, danach gegen null. Da die Stimmung
+auf Auslastung und Merchandising wirkt, war es eine Abwärtsspirale — und eine
+Preisoberfläche, mit der man hätte gegensteuern können, gibt es nicht.
+**Der Normalpreis ist kein Übergriff:** die Grenze ist jetzt nie kleiner als 1.
+Derselbe Lauf endet nun bei 67 statt 23. Überteuerung kostet weiterhin.
+
+**2. Die Vermächtnisplakette hob den Punktedeckel an.** Der Faktor wurde NACH
+der Deckelung angewandt: aus 250 wurden 288, während drei Stellen „gedeckelt
+bei 250" behaupteten. Jetzt wird erst gerechnet, dann gedeckelt.
+
+**3. „Scoutnetz" war ein Placebo für 70 VC.** Das Extra versprach „Bleibt der
+Akademie erhalten" über ein Feld `akademieAufnahmen`, das niemand liest. Es ist
+**ersatzlos entfernt** statt notdürftig verdrahtet: der naheliegende Anker
+`bonus.aufnahmen` aus den Abschluss-BONI wird ebenfalls nur ANGEZEIGT und nie
+gelesen (App.jsx:9483, bestehender Code, nicht aus dieser Runde). An etwas
+anzudocken, das selbst nichts tut, wäre derselbe Fehler mit mehr Zeilen.
+
+**Dazu zwei Prüfungen, die nichts geprüft haben:**
+`assert.equal(e.zuschauer, Math.round(plaetze * auslastung))` war tautologisch —
+`auslastung` wird aus `zuschauer` berechnet, die Gleichung gilt für jede
+Umsetzung. Und der Grenzfall setzte `baustelle` im Singular, ein Rest des
+verworfenen Entwurfs, den kein Code liest; die halbfertige Baustelle, die der
+Testname verspricht, kam nie vor.
+
+**Geprüft:** `npm test` 147/147 (vorher 144). Drei neue Regressionen: die
+Stimmung fällt bei Voreinstellung in keiner Ligastufe, der Deckel hält auch mit
+Plakette, und **jedes VC-Extra muss über einen Schlüssel wirken, den jemand
+liest** — die Prüfung, die „Scoutnetz" verhindert hätte.
+
+**Offen für Codex:** `bonus.aufnahmen` in den Abschluss-BONI hat keinen Leser.
+Das ist bestehender Code, nicht aus dieser Runde — deshalb nur vermerkt.
+
+## Nachbesserung nach Gegenlesen — Anschluss (Claude, 17.09.2026)
+
+Vier Befunde aus dem Gegenlesen betreffen diesen Zweig. Wie bei der Wurzel gilt:
+keiner ist von den Regressionen gefunden worden.
+
+**1. Nach einem Aufstieg war das Vorstandsziel unerreichbar.** Der Kommentar
+behauptete „nach einem Aufstieg ist Klassenerhalt die Ansage, nicht der Titel" —
+die Rechnung reichte aber nur die neue Ligastufe weiter und weiterhin den
+**alten Tabellenplatz**, aus dem `zielSetzen` das Ziel ableitet. Ein Meister,
+der aufstieg, bekam „Um den Titel spielen" mit Soll 1 in der Liga darüber, und
+die Prämie wurde nie gezahlt. Umgekehrt bekam ein Absteiger „Klassenerhalt" in
+einer Liga, die er vermutlich dominiert. Ein Tabellenplatz aus einer anderen
+Liga ist keine Aussage über die neue: ein Aufsteiger gilt jetzt als Letzter, ein
+Absteiger als Dritter.
+
+**2. Die Gehälter wurden mit dem gealterten Kader gerechnet.** Die
+Entwicklungsschleife ändert Alter und Stärke **in place** und reicht dieselben
+Objekte weiter; die Abrechnung bekam damit die Stärken der KOMMENDEN Saison.
+Schon ein gewöhnlicher Zuwachs von +2 verteuert 18 Erstligaspieler von 30,0 auf
+33,6 Mio — jedes Jahr, von der Gehaltsratsche weiter aufgeschlagen. Jetzt wird
+der Kader kopiert, bevor irgendetwas altert.
+
+**3. Zwei Sponsorenwirkungen hatten keinen Leser.** `medizin` (Vitalis: „wirkt
+wie eine Stufe Medizin") und `jugend` (Almgut: „Nachwuchs entwickelt sich etwas
+schneller") wurden von `wirkung` summiert und von niemandem abgeholt — die
+Verträge versprachen etwas, das nicht geschah. Beide werden jetzt in der
+Entwicklungsschleife gelesen.
+
+**4. Die abgeleitete Ligastufe landete im Spielstand.** `mitWirtschaft` schreibt
+sie auf das zurückgegebene Objekt, und mehrere dieser Objekte werden gespeichert
+— nach einem Aufstieg stünde dort ein veralteter Wert. Noch liest niemand das
+rohe Feld, aber es war eine geladene Waffe. `ohneAbgeleitetes` entfernt sie am
+Speicherrand.
+
+**Noch offen aus diesem Befundsatz:** die Wirtschaftszahlen der Chronik haben
+weiterhin nur einen Leser (`ausgelaufen`). Die Anzeige braucht `geldText` und
+zieht deshalb nach WIRT-P0-03 um.
+
+**Geprüft:** `npm test` 157/157 (vorher 152), `npm run build` erfolgreich. Fünf
+neue Regressionen, darunter ein Lauf, der bis zu einem echten Aufstieg spielt
+und prüft, dass das neue Ziel kein Soll 1 trägt.
+
+## Nachbesserung nach Gegenlesen — Ausbau (Claude, 17.09.2026)
+
+Zwei Punkte aus dem Befundsatz, die erst hier möglich waren:
+
+**1. Die Chronik zeigt die Wirtschaft des Jahres.** Die Kurzfassung lag seit
+WIRT-P0-02 im Spielstand und hatte genau einen Leser (`ausgelaufen`) — acht
+weitere Felder wurden in jeden Spielstand geschrieben und von niemandem
+gelesen. Das ist der Fehler, den dieses Projekt selbst zweimal anschreibt
+(„Ein Feld ohne Leser waere wieder nur eine Zahl"). Jetzt steht im Chronikjahr
+Ergebnis, Kassenstand, Zuschauerzahl, Stimmung, Gehaltsniveau, das
+Vorstandsziel samt Ausgang, die Ereignisse und ausgelaufene Verträge. Die
+Anzeige braucht `geldText` und war deshalb in P0-02 nicht möglich.
+
+**2. Bauen und VC-Extras speichern nichts Abgeleitetes mehr.** `bauStarten`
+und `extraKaufen` geben ein `mitWirtschaft`-Ergebnis zurück, das direkt in den
+Spielstand wandert — samt der abgeleiteten Ligastufe. `ohneAbgeleitetes`
+entfernt sie jetzt an beiden Stellen.
+
+**Dazu nachgezogen:** die Zahl der VC-Extras von vier auf drei. „Scoutnetz" ist
+bei der Nachbesserung des Wirtschaftskerns ersatzlos entfernt worden, weil es
+für 70 VC über ein Feld wirkte, das niemand liest.
+
+**Geprüft:** `npm test` 164/164, `npm run build` erfolgreich. Zwei neue
+Regressionen: die Chronik zeigt Kasse, Zuschauer und Stimmung ohne NaN, und
+weder Bau noch Extrakauf legen die Ligastufe in den Spielstand.
+
+## Nachbesserung nach Gegenlesen — Sponsoren (Claude, 17.09.2026)
+
+**1. Der angezeigte Betrag war nicht der, der ankommt.** Die Abrechnung bucht
+`betrag × kommerz` der Rechtsform — ein e.V. bekommt 92 Prozent, und da es
+keine Oberfläche für die Rechtsform gibt, ist jeder Verein im Spiel ein e.V.
+Die Oberfläche zeigte den Bruttobetrag: ein Angebot über 2,97 Mio tauchte im
+Beleg als 2,73 Mio auf, und bei einem Vierjahresvertrag lag die genannte
+Gesamtsumme rund eine Million daneben. Wer Angebote vergleicht, verglich Zahlen,
+die nie eintreffen — und das ist die einzige Entscheidung, die dieses Paket
+erzeugt. `werbeErtrag` rechnet es jetzt an einer Stelle, für Buchung wie
+Anzeige; ein Satz im Reiter sagt auch, warum weniger ankommt als verhandelt.
+
+**2. Alle Angebote unterschrieben hiess: drei neue.** `mitAngeboten` prüfte
+`Array.isArray(angebote) && angebote.length` und legte bei einer LEEREN Liste
+nach. Wer alle drei Angebote einer Saison annahm, bekam beim nächsten Blick auf
+den Bildschirm sofort drei frische — genau der Automat, den das Paket
+verhindern soll, und die Zeile „Für diese Saison liegt nichts mehr vor." war
+unerreichbarer toter Code. Jetzt wird nur ein FEHLENDES Feld nachgelegt; alte
+Spielstände bekommen weiterhin ihre Auswahl.
+
+**Geprüft:** `npm test` 170/170, `npm run build` erfolgreich. Zwei neue
+Regressionen: der angezeigte Betrag stimmt mit dem gebuchten Posten überein,
+und eine leergeräumte Angebotsliste bleibt leer.
