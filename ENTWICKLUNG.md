@@ -1682,3 +1682,66 @@ fehlt derselbe Umbruch — der fehlt aber schon auf `main` und stammt nicht aus
 dieser Runde. Vermerkt statt nebenbei miterledigt.
 
 **Geprüft:** `npm test` 148/148 (vorher 147).
+
+## Nachtrag aus dem Gerätetest: Null ist nicht „0 Tsd" (Claude, 18.09.2026)
+
+**Basis-Commit:** `23a7052` (Kopf dieses Zweigs).
+
+Beim Rundgang durch die fertige Kette im Browser (siehe `BETA-HINWEIS.md` auf
+`claude/beta-35.193`) stand die leere Vereinskasse als **„0 Tsd €"** da — im
+Partnerkopf sogar in Erfolgsgrün. Das ist keine Aussage, das liest sich wie ein
+Messfehler; „Tsd" sagt einem Leser, dass etwas gemessen wurde und klein ausfiel,
+und genau das stimmt bei null nicht.
+
+Die Ursache liegt hier und nicht in der Oberfläche: `geldText` fällt für alles
+unter einer Million in den `Tsd`-Zweig, und null ist unter einer Million. Der
+Sonderfall steht jetzt **vor** der Staffelung, damit er auch in Währungen greift,
+deren Kurs die Null streckt (`0 × 160` ist in Yen ebenfalls null, landete vorher
+aber genauso im `Tsd`-Zweig).
+
+**Änderung:** eine Zeile in `geldText` — `x === 0` liefert `"0 €"` bzw. `"0"`.
+
+**Geprüft:** `npm test` 148/148, unverändert grün; drei neue Zusicherungen in
+der bestehenden Währungsprüfung (`€`, `¥`, ohne Symbol). **Gegenprobe:** nimmt
+man die Zeile wieder heraus, wird `not ok 1 — Währung: Anzeige folgt dem Land,
+Rechnung bleibt in Euro` rot.
+
+**Warum der Vermerk hier und nicht auf dem Beta-Zweig:** gefunden wurde es dort,
+zu Hause ist es hier. Läge die Korrektur nur in der Beta, ginge sie beim
+Zusammenführen dieses Pull Requests verloren und der Fehler stünde in `main`.
+
+**Offen, ausdrücklich nicht miterledigt:** die Oberfläche schreibt „Stärke 55.2"
+mit Punkt, während Geld „11,6" mit Komma schreibt. Bestehender Code, nicht aus
+dieser Runde.
+
+## Nachtrag aus dem Gerätetest: die Lücke, die keine war (Claude, 18.09.2026)
+
+**Basis-Commit:** Kopf dieses Zweigs nach dem Nachziehen von
+`claude/wirt-p0-02` (enthält die `geldText`-Korrektur aus #6).
+
+Im Ausbaureiter stand bei leerer Kasse zweimal dieselbe Zahl untereinander:
+
+```
+Bauen · 4 Mio €
+Dafür fehlen 4 Mio €
+```
+
+Das ist logisch richtig und trotzdem unbrauchbar. Die Zeile „Dafür fehlen" wurde
+in #11 gerade deshalb eingeführt, damit ein gesperrter Knopf nicht wortlos
+dasteht — aber sie sagt nur dann etwas Neues, wenn schon **etwas** in der Kasse
+liegt. Bei null ist die Lücke definitionsgemäß der Preis, und die Wiederholung
+liest sich wie ein Stottern.
+
+**Änderung:** die Zeile erscheint nur noch bei `VEREIN.kasse(v) > 0`. Der Preis
+selbst steht unverändert auf dem Knopf, der Knopf bleibt gesperrt.
+
+**Geprüft:** `npm test` 165/165, `npm run build` erfolgreich. Die bestehende
+Prüfung des Ausbaureiters prüft die Grenze jetzt **von beiden Seiten** — bei
+Kasse 0 darf die Zeile nicht erscheinen, bei Kasse 2 muss sie es. Nur die erste
+Hälfte zu prüfen wäre der bequeme Fehler gewesen: eine Zeile, die nie mehr
+erscheint, hätte sie ebenfalls bestanden. **Gegenprobe:** stellt man die alte
+Bedingung wieder her, wird `not ok 54 — Der Ausbaureiter zeigt Geld und VC
+getrennt, ohne NaN` rot.
+
+**Gefunden beim Rundgang durch die Oberfläche im Browser**, nicht im Prüfstand:
+der prüfte, dass die Zeile da ist, nicht ob sie etwas beiträgt.

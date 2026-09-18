@@ -9944,7 +9944,13 @@ function VereinScreen({ v, aka, onAendern, onZurueck, onAbschluss, startReiter }
                       : laeuft ? "Im Bau · noch " + laeuft.rest + (laeuft.rest === 1 ? " Saison" : " Saisons")
                       : "Bauen · " + VEREIN.geldText(k, v.land)}
                   </button>
-                  {k != null && !laeuft && fehlt > 0 && (
+                  {/* „Dafür fehlen" nur, wenn es etwas zu ergänzen GIBT. Bei
+                      leerer Kasse ist die Lücke genau der Preis — die Zeile
+                      wiederholte dann die Zahl direkt über sich. Beim Rundgang
+                      durch die Oberfläche als Stottern aufgefallen: „Bauen ·
+                      4 Mio €" / „Dafür fehlen 4 Mio €". Ist schon etwas da,
+                      aber nicht genug, sagt sie etwas Neues. */}
+                  {k != null && !laeuft && fehlt > 0 && VEREIN.kasse(v) > 0 && (
                     <div className="m" style={{ fontSize: 11, marginTop: 4 }}>
                       Dafür fehlen {VEREIN.geldText(fehlt, v.land)}</div>)}
                 </div>);
