@@ -2169,3 +2169,76 @@ sie steht als Kommentar an der Regression.
 - **Kein Schuldenschnitt.** Ein Insolvenzverfahren würde die Schulden kürzen;
   das wäre eine eigene Entscheidung und hier bewusst nicht getroffen.
 - **Kein Gerätetest.**
+
+## WIRT-P0-05-UI — Vereinsführung bedienbar machen (Claude, 18.09.2026)
+
+**Basis-Commit:** `2a483b1` (`claude/wirt-p1-04b-lizenzentzug`). Zur Abnahme
+durch Astra.
+
+### Drei fertige Systeme, die im Spiel nicht vorkamen
+
+Seit WIRT-P0-05 rechnen Preise, Rechtsform und Vorstandsziel vollständig mit —
+Elastizität nach Ansehen, Gastrostufe, Sortiment, Rechtsform und Stimmung; vier
+Rechtsformen mit Einlage, Wechselkosten, Vermarktungsfaktor und Zielhärte; ein
+Vorstandsziel je Saison mit Prämie. Geprüft war alles.
+
+**Bedienen konnte man nichts davon.** Nachgezählt am Stand vor dieser Runde:
+
+| | Vorkommen in `App.jsx` |
+|---|---|
+| `preisSetzen` | 0 (existierte nicht) |
+| `rechtsformWechseln` | **0 Aufrufer** |
+| `zielSetzen` | 0 (nur 4× in `verein.js`) |
+
+Praktische Folge: `preisFaktor` las an jeder Stelle die Voreinstellung 1. Die
+51-Werte-Rechnung in `bestPreis`, über die im Vermerk vom 17.09.2026 steht „der
+Hinweis ist damit keine Schätzung mehr, sondern ein Versprechen", hatte
+niemanden, dem sie etwas versprechen konnte.
+
+### Was gebaut wurde
+
+1. **Preise — drei Regler** mit dem gerechneten Ertragsmaximum als Hinweis. Wer
+   darüber geht, sieht es in Rot und zahlt jede Saison Stimmung. **Der Hinweis
+   ist kein Zwang:** Überteuern kann eine bewusste Entscheidung sein, und die
+   Rechnung dahinter war immer schon darauf ausgelegt.
+2. **Rechtsform** — der jeweils nächste Schritt mit Einlage, Kosten und
+   Wirkung. Ist er nicht möglich, steht der Grund **auf dem Knopf**
+   („Dafür ist der Verein zu klein — nötig ist mindestens Liga 4").
+3. **Vorstandsziel** — sichtbar, **bevor** es entschieden ist. Ein Ziel, das
+   man erst aus dem Abschlussbericht erfährt, ist keines. Gewählt wird es
+   weiterhin nicht; der Vorstand gibt es vor.
+
+**Die Durchreichungen stehen in `verein.js`**, nicht in `App.jsx` — dieselbe
+Linie wie bei `bauStarten` und `extraKaufen`: die Oberfläche importiert `WIRT`
+nicht selbst.
+
+**Der Reiter heisst jetzt „Führung"** statt „Ausbau". Ein **siebter** Reiter kam
+nicht in Frage: bei 320 Pixeln lag schon der sechste zwei Wischer entfernt
+(gemessen beim Rundgang am 18.09.2026, Befund aus #13). Der Reiter trägt
+stattdessen mehr, und der Ausbau bekommt eine eigene Überschrift darin.
+
+### Geprüft
+
+- `npm test` **194/194** (vorher 189), `npm run build` erfolgreich.
+- Fünf neue Regressionen. Die erste ist die wichtige: **sie prüft die
+  Einnahme, nicht das Feld.** Ein Regler, der einen Wert speichert, den die
+  Rechnung nicht liest, wäre dieselbe Sorte Placebo wie „Scoutnetz" und
+  „Bekannte Adresse" — nur mit Schieberegler. Gemessen wird deshalb über zwei
+  echte Saisons, dass der billigere Eintritt das Stadion stärker füllt.
+  Dazu: Klemmung und Prüfung vor dem Schreiben; der Hinweis liegt in den
+  Grenzen; die Rechtsform wechselt nur nach vorn, nur mit Liga und Geld, bucht
+  Kosten und Einlage richtig und lässt **kein abgeleitetes `ligastufe` im
+  Spielstand**; der Reiter rendert alles ohne NaN und ein alter Stand ohne
+  Ziel zeigt keine leere Kachel.
+- **Drei Gegenproben, alle rot:** schreibt `preisSetzen` in ein Feld, das
+  niemand liest, fallen zwei Prüfungen; fehlt die Klemmung, fällt eine;
+  wandert `ligastufe` in den Spielstand, fällt die Rechtsformprüfung.
+
+### Ausdrücklich offen
+
+- **Das Vorstandsziel bleibt eine Vorgabe, keine Wahl.** So ist es entworfen;
+  eine Auswahl unter mehreren Zielen wäre ein eigenes Paket.
+- **Die Preise wirken erst in der nächsten Abrechnung.** Es gibt keine
+  Vorschau, was ein Reglerwert konkret einbringt — nur das Maximum als Marke.
+- **Kein Gerätetest.** Die Regler sind im Prüfstand gerendert, aber niemand hat
+  sie gezogen.
