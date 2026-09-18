@@ -11,16 +11,20 @@ const gespeicherteZuege=async(page,spieler)=>page.evaluate((name)=>{
 },spieler);
 
 const touchWisch=async(page,rail,richtung='links')=>{
+ await rail.scrollIntoViewIfNeeded();
  const box=await rail.boundingBox();
  expect(box).not.toBeNull();
+ const viewport=page.viewportSize();
+ expect(viewport).not.toBeNull();
+ const x=Math.max(2,Math.min(viewport.width-2,Math.round(box.x+box.width/2)));
+ const y=Math.max(2,Math.min(viewport.height-2,Math.round(box.y+Math.min(box.height/2,44))));
  const cdp=await page.context().newCDPSession(page);
- /* Chromiums Synthese erzeugt die eigentliche Touch-Scrollgeste. Ein nacktes
-    dispatchTouchEvent feuert zwar Touch-Events, löst in headless Chromium
-    aber nicht zuverlässig das native Scrollen eines Overflow-Containers aus. */
+ /* Chromiums Synthese erzeugt die eigentliche Touch-Scrollgeste. Der Start
+    wird vorher in den realen Viewport gebracht: "visible" allein bedeutet
+    bei Playwright nicht, dass CDP-Koordinaten bereits im Viewport liegen. */
  await cdp.send('Input.synthesizeScrollGesture',{
-  x:Math.round(box.x+box.width/2),
-  y:Math.round(box.y+box.height/2),
-  xDistance:Math.round(box.width*.58)*(richtung==='links'?-1:1),
+  x,y,
+  xDistance:Math.round(Math.min(box.width,viewport.width)*.58)*(richtung==='links'?-1:1),
   speed:650,
   preventFling:true,
   gestureSourceType:'touch'
