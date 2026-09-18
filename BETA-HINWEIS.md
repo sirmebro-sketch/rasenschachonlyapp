@@ -97,6 +97,35 @@ Das sind die Punkte, die kein Prüfstand beantworten kann:
 5. **Nach fünfzehn Jahren:** Ist im Abschluss erkennbar, dass die Restkasse
    mitgezählt hat?
 
+## Nachbesserung vom 17.09.2026 — was seit dem ersten Bau anders ist
+
+Nach dem Bau der Kette habe ich den eigenen Diff systematisch gegengelesen.
+**Fünfzehn Befunde, keiner davon von den Regressionen gefunden** — sie prüfen,
+dass die Rechnung in sich stimmt, nicht ob sie das Richtige rechnet. Die
+wichtigsten sieben sind behoben und stecken in dieser Fassung:
+
+1. **Die Stimmung fiel jede Saison, ohne dass jemand etwas tat.** Der
+   Stimmungsschaden mass den Abstand zum ertragreichsten Preis — der liegt fast
+   überall unter 1, und 1 ist die Voreinstellung. Gemessen: 60 → 23 in acht
+   Saisons, mit Wirkung auf Auslastung und Merchandising, also eine
+   Abwärtsspirale ohne Hebel. Jetzt steigt sie im selben Lauf: 65 → 78 → 98.
+2. **Der angezeigte Werbebetrag war nicht der, der ankommt** (brutto statt der
+   92 Prozent, die ein e.V. bekommt).
+3. **Nach einem Aufstieg war das Vorstandsziel unerreichbar** („Um den Titel
+   spielen" mit Soll 1 in der neuen Liga), die Prämie wurde nie gezahlt.
+4. **Drei bezahlte Wirkungen taten nichts.** „Scoutnetz" (70 VC) ist ersatzlos
+   entfernt, weil es über ein Feld wirkte, das niemand liest; die
+   Sponsorenwirkungen `medizin` und `jugend` haben jetzt Leser.
+5. **Die Vermächtnisplakette hob den Punktedeckel an** (288 statt 250).
+6. **Die Gehälter wurden mit dem gealterten Kader gerechnet** — rund 12 Prozent
+   zu viel, jedes Jahr.
+7. **Stimmung und Gehaltsniveau werden jetzt genannt.** Beide treiben die ganze
+   Wirtschaft und tauchten vorher nirgends im Spiel auf. Sie stehen im
+   Karrierebericht mit Richtung und im Chronikjahr.
+
+Die Chronik zeigt jetzt außerdem je Jahr Ergebnis, Kassenstand, Zuschauerzahl,
+Stimmung, Gehaltsniveau, das Vorstandsziel samt Ausgang und die Ereignisse.
+
 ## Ausdrücklich offen
 
 - **Folgen einer leeren Kasse** gibt es nicht (WIRT-P1-04). Die Kasse darf ins
