@@ -1,0 +1,70 @@
+name: Beta-APK fuer PR
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  beta-apk:
+    # Keine Secrets, keine Release-Signatur und keine produktive App-ID.
+    # Fremde Fork-PRs werden fuer diesen Testbuild bewusst ausgeschlossen.
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: android-actions/setup-android@v3
+        with:
+          packages: 'platform-tools platforms;android-35 build-tools;35.0.0'
+      - run: npm ci --no-audit --no-fund
+      - run: npm test
+      - name: Web-App bauen und Android synchronisieren
+        run: |
+          set -euo pipefail
+          npm run build
+          npx --no-install cap sync android
+          node tools/android-version.cjs android/app/build.gradle package.json
+      - name: Getrennte Beta-App-ID setzen
+        run: |
+          set -euo pipefail
+          sed -i 's/applicationId "de.rasenschach.xi"/applicationId "de.rasenschach.xi.beta"/' android/app/build.gradle
+          sed -i 's/>Rasenschach XI</>Rasenschach XI Beta</g' android/app/src/main/res/values/strings.xml
+          sed -i 's/>de\.rasenschach\.xi</>de.rasenschach.xi.beta</g' android/app/src/main/res/values/strings.xml
+          grep -q 'applicationId "de.rasenschach.xi.beta"' android/app/build.gradle
+      - name: Debug-Beta bauen
+        working-directory: android
+        run: |
+          set -euo pipefail
+          SDK_PATH="${ANDROID_SDK_ROOT:-${ANDROID_HOME:-}}"
+          test -n "$SDK_PATH"
+          printf 'sdk.dir=%s\n' "$SDK_PATH" > local.properties
+          chmod +x gradlew
+          ./gradlew assembleDebug --no-daemon
+      - name: Beta-Artefakt vorbereiten
+        run: |
+          set -euo pipefail
+          APK=android/app/build/outputs/apk/debug/app-debug.apk
+          test -s "$APK"
+          mkdir -p beta
+          SHORT_SHA=$(printf '%s' "${GITHUB_SHA}" | cut -c1-8)
+          cp "$APK" "beta/Rasenschach-XI-Beta-${SHORT_SHA}.apk"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Rasenschach-XI-Beta-APK
+          path: beta/*.apk
+          if-no-files-found: error
+          retention-days: 7
