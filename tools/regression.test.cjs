@@ -426,7 +426,6 @@ const spielbereiterVerein=(zu={})=>{
  return E.VEREIN.autoAufstellen({...r.v,kader,...zu});
 };
 
-<<<<<<< HEAD
 test('Ausbau kostet Geld: die alte VC-Funktion ist weg, ein Katalog statt zwei',()=>{
  /* Kevins Vorgabe: „Das man keine VC in etwas versenkt was nach 15 Saison eh
     verschwindet." Die alte Funktion muss VERSCHWUNDEN sein, nicht nur
@@ -466,7 +465,11 @@ test('Bauen: prüft vor dem Schreiben, bucht genau einmal ab und dauert an',()=>
 
 test('VC kaufen nur noch die vier Extras, jedes einmal',()=>{
  const ids=E.VEREIN.VC_EXTRAS.map(x=>x.id);
- assert.equal(ids.length,4,'bewusst wenige');
+ /* Drei, nicht vier: „Scoutnetz" versprach für 70 VC eine Wirkung über ein
+    Feld, das niemand liest, und ist beim Gegenlesen ersatzlos entfernt worden.
+    Lieber drei Posten, die wirken, als vier mit einem Placebo. */
+ assert.equal(ids.length,3,'bewusst wenige — und jeder mit Wirkung');
+ assert(!ids.includes('scoutnetz'),'das Placebo ist weg und bleibt weg');
  const v={land:'GER',kasse:0,extras:[]};
  assert(E.VEREIN.extraKaufen(v,'startkapital',10).fehler,'zu wenig VC');
  assert.equal(E.VEREIN.extraKaufen(v,'startkapital',10).v.kasse,0,'abgelehnt heisst unverändert');
@@ -503,7 +506,8 @@ test('Der Ausbaureiter zeigt Geld und VC getrennt, ohne NaN',()=>{
  const arm=E.renderVerein(E.VEREIN.mitWirtschaft(spielbereiterVerein({kasse:0})),
    {...E.leereAkademie(),vc:0},'ausbau');
  assert(arm.includes('Dafür fehlen'));assert(!arm.includes('NaN'));
-=======
+});
+
 test('Nach einem Aufstieg ist Klassenerhalt die Ansage, nicht der Titel',()=>{
  /* DER FEHLER, DEN DIESE PRÜFUNG FESTHÄLT. Der erste Entwurf reichte die neue
     Ligastufe weiter, aber den ALTEN Tabellenplatz — und daraus leitet
@@ -589,7 +593,6 @@ test('Die Chronik traegt die Wirtschaft des Jahres',()=>{
   assert(Number.isFinite(c.wirtschaft[k]),k+' fehlt oder ist keine Zahl');
  assert(Array.isArray(c.wirtschaft.ereignisse));
  /* `ausgelaufen` kommt erst mit den Sponsoren (WIRT-P0-04) dazu. */
->>>>>>> claude/wirt-p0-02
 });
 
 test('Vereinswirtschaft: die Saison rechnet ab und schreibt den Spielstand fort',()=>{
