@@ -159,10 +159,29 @@ gebuchte Posten auch angezeigt wird; lässt man die Ausgaben weg, wird sie rot.
 Ein Bericht ohne Wirtschaftsteil (alter Spielstand) bleibt unverändert
 lesbar — auch das ist geprüft.
 
-### WIRT-P1-02 – Stadionausbau spürbar machen — OFFEN
+### WIRT-P1-02 – Stadionausbau spürbar machen — VORGELEGT (Claude, 18.09.2026)
 
-Plätze, Auslastung und Zuschauerzahl sollen im Spiel sichtbar sein, nicht nur
-in der Rechnung. Ausverkauftes Haus als eigenes Ereignis.
+Eine **Stadionkachel** im Führungsreiter nennt Plätze, die letzte Zuschauerzahl
+mit Auslastung und — der Punkt — **was die nächste Ausbaustufe brächte**
+(„33.000 Plätze, 11.000 mehr"). Bis hierher war der Ausbau eine Zahlung ins
+Ungewisse: man sah danach eine grössere Zahl in der Abrechnung, ohne je erfahren
+zu haben, wie viele Plätze man überhaupt hat.
+
+**Ausverkauft ab 97 % Auslastung**, im Beleg und in der Chronik. Die Schwelle ist
+gemessen, nicht gesetzt: ein Erstligist auf Rang 1 erreicht die Deckelung bei
+99 %, ein Drittligist auf Rang 1 kommt auf 91,7 %, ein Fünftligist auf 86,6 %.
+Erreichbar und trotzdem etwas wert.
+
+**Es zahlt in Stimmung (+3), nicht in Geld.** Die Zuschauer stecken bereits im
+Ticket-, Gastro- und Merchandisingposten; ein Bonus obendrauf wäre dieselbe
+Einnahme zweimal — der Fehler, den WIRT-P1-03 bei der Personalpauschale schon
+einmal hatte.
+
+**Offener Balancebefund, nicht eigenmächtig geändert:** die Auslastung hängt
+überhaupt nicht an der Kapazität. Ein Stadion mit 64.000 Plätzen füllt sich
+zu denselben 99 % wie eines mit 8.000. Ausbauen ist damit reines Aufwärts ohne
+Risiko — realistisch wäre, dass eine Verdopplung der Plätze die Auslastung
+drückt. Das ist eine Balance-Entscheidung des Eigentümers.
 
 ### WIRT-P1-03 – Spielergehälter statt Pauschale — VORGELEGT (Claude, 17.09.2026)
 

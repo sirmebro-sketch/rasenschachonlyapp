@@ -1156,6 +1156,10 @@ export const machVerein = (H) => {
       ziel: beleg.ziel.gesetzt ? { n: beleg.ziel.n, erfuellt: beleg.ziel.erfuellt } : null,
       ereignisse: beleg.ereignisse.map((e) => e.n),
       ausgelaufen: beleg.ausgelaufen,
+      /* Plätze und Ausverkauf in die Chronik (WIRT-P1-02): eine Zuschauerzahl
+         ohne Bezugsgrösse sagt nicht, ob das viel war. */
+      plaetze: beleg.plaetze, ausverkauft: beleg.ausverkauft,
+      auslastung: beleg.auslastung,
       /* Zwei verschiedene Zahlen, beide gebraucht: `abzug` ist, was DIESE
          Saison gekostet hat, `auflage` ist, was die NAECHSTE kosten wird.
          Nur die zweite zu speichern hiesse, dass ein Jahr mit Abzug hinterher
@@ -1801,6 +1805,7 @@ export const machVerein = (H) => {
            SPONSOR_MAX, sponsorAngebote, sponsorAnnehmen, mitAngeboten, werbeErtrag,
            ENTZUG_NACH: WIRT.ENTZUG_NACH,
            PREIS_FELDER, preisSetzen, bestPreis,
+           PLAETZE: WIRT.PLAETZE, plaetze: WIRT.plaetze, AUSVERKAUFT_AB: WIRT.AUSVERKAUFT_AB,
            PREIS_MIN: WIRT.PREIS_MIN, PREIS_MAX: WIRT.PREIS_MAX, preisFaktor: WIRT.preisFaktor,
            RECHTSFORMEN: WIRT.RECHTSFORMEN, rechtsform: WIRT.rechtsform, rechtsformWechseln,
            zielSetzen: WIRT.zielSetzen,

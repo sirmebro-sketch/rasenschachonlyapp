@@ -2242,3 +2242,84 @@ stattdessen mehr, und der Ausbau bekommt eine eigene Überschrift darin.
   Vorschau, was ein Reglerwert konkret einbringt — nur das Maximum als Marke.
 - **Kein Gerätetest.** Die Regler sind im Prüfstand gerendert, aber niemand hat
   sie gezogen.
+
+## WIRT-P1-02 — Stadionausbau spürbar machen (Claude, 18.09.2026)
+
+**Basis-Commit:** `02dade3` (`claude/wirt-vereinsfuehrung-ui`). Zur Abnahme
+durch Astra.
+
+### Was gebaut wurde
+
+1. **Stadionkachel im Führungsreiter:** Plätze, letzte Zuschauerzahl mit
+   Auslastung, und — der eigentliche Punkt — **was die nächste Ausbaustufe
+   brächte** („33.000 Plätze, 11.000 mehr"). Bis hierher war der Stadionausbau
+   eine Zahlung ins Ungewisse: man sah danach eine grössere Zahl in der
+   Abrechnung, ohne je erfahren zu haben, wie viele Plätze man überhaupt hat.
+   Ist alles gebaut, steht das da, statt eine leere Zeile zu zeigen.
+2. **Ausverkauftes Haus ab 97 % Auslastung**, im Saisonbeleg und in der Chronik.
+3. **Der Beleg nennt die Bezugsgrösse.** „Ø 21.780 Zuschauer" sagt nichts;
+   „Ø 21.780 von 22.000 · 99 % ausgelastet" sagt alles.
+
+### Die Schwelle ist gemessen, nicht gesetzt
+
+Vor dem Festlegen durchgerechnet, weil **ein Ereignis, das nie eintritt, wieder
+ein Placebo wäre** — davon hatte dieses Projekt genug:
+
+| Verein | höchste Auslastung |
+|---|---:|
+| Erstligist, Rang 1–3 | **99,0 %** (die Deckelung) |
+| Drittligist, Rang 1 | 91,7 % |
+| Fünftligist, Rang 1 | 86,6 % |
+
+97 % ist also erreichbar und trotzdem etwas wert.
+
+### Es zahlt in Stimmung, nicht in Geld
+
++3 Stimmungspunkte, dieselbe Grössenordnung wie ein fertiges Bauprojekt. **Kein
+Geldposten**, und das ist Absicht: die Zuschauer stecken bereits in Ticket-,
+Gastro- und Merchandisingertrag. Ein Bonus obendrauf wäre dieselbe Einnahme
+zweimal — genau der Fehler, den WIRT-P1-03 bei der Personalpauschale schon
+einmal hatte. Eine Regression hält fest, dass kein Einnahmeposten dieses Namens
+entsteht.
+
+### Eine bestehende Prüfung musste nachgeschärft werden
+
+`Der Stimmungsschaden wächst stetig über dem Normalpreis` wurde rot. **Der Grund
+war kein Fehler, sondern richtiges Verhalten:** ein Kampfpreis von 0,6 füllt das
+Stadion über die Ausverkaufsmarke und hebt die Stimmung um 3. Billige Karten,
+volles Haus, zufriedene Fans.
+
+Die alte Zusicherung lautete „unterhalb und bei 1 sind alle Werte GLEICH" — zu
+stark formuliert für das, was sie eigentlich schützt. Sie schützt die Abkürzung
+in `ueberzogen` (der Überteuerungsschaden ist bei und unter 1 beweisbar null).
+Das wird jetzt genauer getroffen: **0,8 gegen 1,0** — beide unter der
+Ausverkaufsmarke, also ohne Bonus, und deshalb exakt gleich. Dazu neu über die
+ganze Spanne 0,6 bis 1,6: **teurer darf die Stimmung nie heben.** Das ist eine
+stärkere Aussage als vorher, nicht eine schwächere.
+
+### Ein Befund, den ich NICHT geändert habe
+
+**Die Auslastung hängt überhaupt nicht an der Kapazität.** Ein Stadion mit
+64.000 Plätzen füllt sich zu denselben 99 % wie eines mit 8.000 — nachgerechnet
+über alle sechs Ausbaustufen. Der Ausbau ist damit reines Aufwärts ohne Risiko;
+realistisch wäre, dass eine Verdopplung der Plätze die Auslastung drückt.
+
+Das ist eine **Balance-Entscheidung des Eigentümers** und gehörte nicht zu
+diesem Auftrag. Vermerkt statt nebenbei miterledigt.
+
+### Geprüft
+
+- `npm test` **198/198** (vorher 194), `npm run build` erfolgreich.
+- Vier neue Regressionen: die Ausverkaufsmarke ist erreichbar (Spitze) **und
+  nicht geschenkt** (hinten bleibt es darunter); das volle Haus erzeugt keinen
+  Geldposten, hebt aber messbar die Stimmung; die Stadionkachel nennt aktuelle
+  Plätze, die nächste Stufe und den Unterschied, und sagt „voll ausgebaut",
+  wenn nichts mehr kommt; Plätze und Marke wandern aus dem Beleg in die Chronik.
+- **Drei Gegenproben, alle rot:** liegt die Schwelle über der Deckelung, fallen
+  zwei Prüfungen; zahlt das volle Haus in Geld statt Stimmung, fällt eine;
+  nennt die Kachel die nächste Stufe nicht, fällt die Oberflächenprüfung.
+
+### Ausdrücklich offen
+
+- **Die Auslastung ignoriert die Kapazität** (oben, mit Zahlen).
+- **Kein Gerätetest.**
