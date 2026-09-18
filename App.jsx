@@ -9917,6 +9917,32 @@ function VereinScreen({ v, aka, onAendern, onZurueck, onAbschluss, startReiter }
                   {c.aufstieg ? " · Aufstieg" : c.abstieg ? " · Abstieg" : ""}</div>
                 <div className="m" style={{ fontSize: 11.5 }}>Stärke {c.staerke}
                   {c.abgaenge.length ? " · Abgänge: " + c.abgaenge.join(", ") : ""}</div>
+                {/* Die Wirtschaft des Jahres. Die Kurzfassung lag seit
+                    WIRT-P0-02 im Spielstand und wurde von niemandem gelesen —
+                    genau das, was dieses Projekt „ein Feld ohne Leser ist
+                    wieder nur eine Zahl" nennt. Hier beantwortet sie eine
+                    Frage: wie stand der Verein in diesem Jahr da? */}
+                {c.wirtschaft && (
+                  <div className="m" style={{ fontSize: 11.5, marginTop: 3 }}>
+                    <span style={{ color: c.wirtschaft.ergebnis < 0 ? "var(--bad)" : "var(--ok)" }}>
+                      {(c.wirtschaft.ergebnis > 0 ? "+" : "")
+                        + VEREIN.geldText(c.wirtschaft.ergebnis, v.land)}</span>
+                    {" · Kasse " + VEREIN.geldText(c.wirtschaft.kasse, v.land)}
+                    {c.wirtschaft.zuschauer
+                      ? " · " + Math.round(c.wirtschaft.zuschauer).toLocaleString("de-DE") + " Zuschauer"
+                      : ""}
+                    {c.wirtschaft.stimmung != null ? " · Stimmung " + c.wirtschaft.stimmung : ""}
+                    {c.wirtschaft.gehaltsniveau > 1.02
+                      ? " · Gehälter " + Math.round(c.wirtschaft.gehaltsniveau * 100) + " %"
+                      : ""}
+                    {c.wirtschaft.ziel
+                      ? " · " + c.wirtschaft.ziel.n + (c.wirtschaft.ziel.erfuellt ? " erfüllt" : " verfehlt")
+                      : ""}
+                    {(c.wirtschaft.ereignisse || []).length
+                      ? " · " + c.wirtschaft.ereignisse.join(", ") : ""}
+                    {(c.wirtschaft.ausgelaufen || []).length
+                      ? " · Vertrag aus: " + c.wirtschaft.ausgelaufen.join(", ") : ""}
+                  </div>)}
               </div>))}
           </div>)}
 

@@ -492,6 +492,34 @@ test('Die Ausbauwirkungen im Spiel hängen weiter an denselben Kennungen',()=>{
  assert.equal(E.VEREIN.ausbauStufe({},'training'),1,'ohne Angabe Stufe 1');
 });
 
+test('Die Chronik zeigt die Wirtschaft des Jahres',()=>{
+ /* Der Leser, der in WIRT-P0-02 noch fehlte: die Kurzfassung lag im
+    Spielstand und beantwortete keine Frage. Jetzt steht sie im Jahr. */
+ const v0=E.VEREIN.einschreiben(spielbereiterVerein()).v;
+ const r=E.VEREIN.vereinSaison(v0);
+ const html=E.renderVerein(r.v,E.leereAkademie(),'chronik');
+ assert(!html.includes('NaN'));
+ assert(html.includes('Kasse'),'der Kassenstand des Jahres steht da');
+ assert(html.includes('Zuschauer'));
+ assert(html.includes('Stimmung'));
+});
+
+test('Bauen und VC-Extras speichern nichts Abgeleitetes',()=>{
+ /* `mitWirtschaft` schreibt die Ligastufe auf das Ergebnis, und diese
+    Objekte gehen in den Spielstand. Nach einem Aufstieg stünde dort ein
+    veralteter Wert. */
+ const v=spielbereiterVerein({kasse:50,extras:[]});
+ const gebaut=E.VEREIN.bauStarten(v,'stadion');
+ assert(!gebaut.fehler,gebaut.fehler);
+ assert(!('ligastufe' in gebaut.v),'der Bau speichert die Ligastufe nicht');
+ const gekauft=E.VEREIN.extraKaufen(v,'startkapital',100);
+ assert(!gekauft.fehler,gekauft.fehler);
+ assert(!('ligastufe' in gekauft.v),'der Extrakauf speichert sie nicht');
+ /* Die Wirkung bleibt trotzdem vollständig. */
+ assert.equal(gebaut.v.kasse,46);
+ assert(gekauft.v.extras.includes('startkapital'));
+});
+
 test('Der Ausbaureiter zeigt Geld und VC getrennt, ohne NaN',()=>{
  const v=E.VEREIN.mitWirtschaft(spielbereiterVerein({kasse:25.5,extras:[]}));
  const html=E.renderVerein(v,{...E.leereAkademie(),vc:100},'ausbau');

@@ -1191,7 +1191,10 @@ export const machVerein = (H) => {
   /* Ein Bauprojekt beginnen. Prueft VOR dem Schreiben, wie `buchungen.js` es
      fuer Karten und Coins tut: fehlt das Geld, aendert sich gar nichts.
      `mitWirtschaft` faengt den alten Spielstand ab, der keine Kasse kennt. */
-  const bauStarten = (v, id) => WIRT.bauStart(mitWirtschaft(v), id);
+  const bauStarten = (v, id) => {
+    const r = WIRT.bauStart(mitWirtschaft(v), id);
+    return { ...r, v: ohneAbgeleitetes(r.v) };          /* nichts Abgeleitetes speichern */
+  };
   const baustellenText = (v) => WIRT.baustellenText(v);
 
   /* Der EINZIGE verbliebene Weg, auf dem VC in den Verein fliessen. Vier
@@ -1201,7 +1204,10 @@ export const machVerein = (H) => {
      der Akademie, nicht am Verein — deshalb kommt er als Zahl herein und die
      Abbuchung geschieht draussen, genau wie beim Packkauf. */
   const VC_EXTRAS = WIRT.VC_EXTRAS;
-  const extraKaufen = (v, id, vcVorrat) => WIRT.extraKaufen(mitWirtschaft(v), id, vcVorrat);
+  const extraKaufen = (v, id, vcVorrat) => {
+    const r = WIRT.extraKaufen(mitWirtschaft(v), id, vcVorrat);
+    return { ...r, v: ohneAbgeleitetes(r.v) };
+  };
 
   /* Geld in der Waehrung des Landes anzeigen. Gerechnet wird immer in
      Millionen Euro; die Landeswaehrung ist eine reine Anzeigefrage. */

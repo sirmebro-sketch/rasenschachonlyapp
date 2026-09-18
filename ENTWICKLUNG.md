@@ -1493,3 +1493,29 @@ zieht deshalb nach WIRT-P0-03 um.
 **Geprüft:** `npm test` 157/157 (vorher 152), `npm run build` erfolgreich. Fünf
 neue Regressionen, darunter ein Lauf, der bis zu einem echten Aufstieg spielt
 und prüft, dass das neue Ziel kein Soll 1 trägt.
+
+## Nachbesserung nach Gegenlesen — Ausbau (Claude, 17.09.2026)
+
+Zwei Punkte aus dem Befundsatz, die erst hier möglich waren:
+
+**1. Die Chronik zeigt die Wirtschaft des Jahres.** Die Kurzfassung lag seit
+WIRT-P0-02 im Spielstand und hatte genau einen Leser (`ausgelaufen`) — acht
+weitere Felder wurden in jeden Spielstand geschrieben und von niemandem
+gelesen. Das ist der Fehler, den dieses Projekt selbst zweimal anschreibt
+(„Ein Feld ohne Leser waere wieder nur eine Zahl"). Jetzt steht im Chronikjahr
+Ergebnis, Kassenstand, Zuschauerzahl, Stimmung, Gehaltsniveau, das
+Vorstandsziel samt Ausgang, die Ereignisse und ausgelaufene Verträge. Die
+Anzeige braucht `geldText` und war deshalb in P0-02 nicht möglich.
+
+**2. Bauen und VC-Extras speichern nichts Abgeleitetes mehr.** `bauStarten`
+und `extraKaufen` geben ein `mitWirtschaft`-Ergebnis zurück, das direkt in den
+Spielstand wandert — samt der abgeleiteten Ligastufe. `ohneAbgeleitetes`
+entfernt sie jetzt an beiden Stellen.
+
+**Dazu nachgezogen:** die Zahl der VC-Extras von vier auf drei. „Scoutnetz" ist
+bei der Nachbesserung des Wirtschaftskerns ersatzlos entfernt worden, weil es
+für 70 VC über ein Feld wirkte, das niemand liest.
+
+**Geprüft:** `npm test` 164/164, `npm run build` erfolgreich. Zwei neue
+Regressionen: die Chronik zeigt Kasse, Zuschauer und Stimmung ohne NaN, und
+weder Bau noch Extrakauf legen die Ligastufe in den Spielstand.
