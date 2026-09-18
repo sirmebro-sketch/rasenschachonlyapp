@@ -9482,7 +9482,12 @@ function VereinScreen({ v, aka, onAendern, onZurueck, onAbschluss, startReiter }
 
   const REITER = [["kader", "Kader"], ["elf", "Aufstellung"],
     ...(hatRueck ? [["rueck", "Rückblick"]] : []),
-    ["ausbau", "Ausbau"], ["sponsoren", "Sponsoren"], ["chronik", "Chronik"]];
+    /* „Partner" statt „Sponsoren": kürzer, und es ist das Wort, das der
+       Bildschirm selbst in seiner Kopfzeile benutzt („Partner · 0 von 3").
+       Die Reiterleiste ist scrollbar mit Verlaufskante, aber mit fünf
+       Reitern lag „Chronik" auf einem 320er-Gerät zwei Wischer entfernt —
+       gemessen beim Rundgang. Zwei Zeichen weniger holen sie zurück. */
+    ["ausbau", "Ausbau"], ["sponsoren", "Partner"], ["chronik", "Chronik"]];
   const rueckJahre = (v.chronik || []).filter((c) => c.tabelle).map((c) => c.jahr).reverse();
   const [rjahr, setRjahr] = React.useState(null);
   const rc = (v.chronik || []).filter((c) => c.tabelle)
@@ -10016,7 +10021,11 @@ function VereinScreen({ v, aka, onAendern, onZurueck, onAbschluss, startReiter }
                       : laeuft ? "Im Bau · noch " + laeuft.rest + (laeuft.rest === 1 ? " Saison" : " Saisons")
                       : "Bauen · " + VEREIN.geldText(k, v.land)}
                   </button>
-                  {k != null && !laeuft && fehlt > 0 && (
+                  {/* „Dafür fehlen" nur, wenn es etwas zu ergänzen GIBT. Bei
+                      leerer Kasse ist die Lücke genau der Preis, und die Zeile
+                      wiederholte die Zahl direkt über sich — beim Rundgang als
+                      Stottern aufgefallen. */}
+                  {k != null && !laeuft && fehlt > 0 && VEREIN.kasse(v) > 0 && (
                     <div className="m" style={{ fontSize: 11, marginTop: 4 }}>
                       Dafür fehlen {VEREIN.geldText(fehlt, v.land)}</div>)}
                 </div>);
@@ -14718,6 +14727,15 @@ function Optionen({ ruhe, aufRuhe, onBackup, onZu, onAnleitung, hall, aka, laeuf
                     onClick={() => { test.vc(x); haptik("tipp"); }}>
                     +{x} VC</button>))}
               </div>
+              {test.kader && (
+                <div className="optionen-auswahl" style={{ marginTop: 6 }}>
+                  <button className="btn sm" style={{ flex: 1 }}
+                    onClick={() => { test.kader(); haptik("tipp"); }}>
+                    Kader mit Probespielern füllen</button>
+                </div>)}
+              <p style={{ fontSize: 11, color: "var(--mu)", marginTop: 6 }}>
+                Reihenfolge zählt: erst Verein und Akademie gründen, dann
+                springen — sonst verfallen die Jahrgänge.</p>
               {test.log && (
                 <p style={{ fontSize: 11.5, color: "var(--ok)", marginTop: 6 }}>{test.log}</p>)}
             </div>)}
@@ -18538,22 +18556,61 @@ function FlutlichtApp() {
   const testSprung = async (n) => {
     if (buchungAktiv.current) return;
     let A = aka, V = verein, G = { ...(ges || leereBilanz()) };
-    let saisons = 0, abbruch = null;
+    let saisons = 0, abbruch = null, ausgefallen = 0;
+    const akaStand = !!(A && A.gegruendet);
     for (let i = 0; i < n; i++) {
       if (A && A.gegruendet) A = akaVerbuchen(A, 0).a;
       if (VEREIN.spieltMit(V)) {
         const r = VEREIN.vereinSaison(V);
-        if (r.fehler) { abbruch = r.fehler; }
+        if (r.fehler) { abbruch = r.fehler; ausgefallen++; }
         else { V = r.v; saisons++; }
-      }
+      } else if (V && V.gegruendet && V.eingeschrieben) ausgefallen++;
       G.karrieren = (G.karrieren || 0) + 1;
       G.hausKarrieren = (G.hausKarrieren || 0) + 1;
     }
     const daten = { [LIFE_KEY]: JSON.stringify(G), [AKA_KEY]: JSON.stringify(A) };
     if (V) daten[VER_KEY] = JSON.stringify(V);
     await bucheAenderung(daten, () => { setGes(G); setAka(A); if (V) setVerein(V); });
+    /* SAGEN, WAS NICHT PASSIERT IST. Beim Rundgang durch die Oberfläche
+       aufgefallen: wer springt, BEVOR die Akademie steht, verliert die
+       Jahrgänge — `akaVerbuchen` läuft nur für eine bestehende Akademie. Die
+       Zähler steigen trotzdem, und man sucht danach vergeblich nach Spielern.
+       Eine Rückmeldung, die nur Erfolge nennt, ist in einem Testwerkzeug
+       besonders teuer: sie schickt einen auf die falsche Fährte. */
+    /* AUSGEFALLENE SAISONS BENENNEN. Beim Rundgang fielen von fünf Laufbahnen
+       zwei Vereinssaisons aus, weil der Kader unter das Minimum gerutscht war
+       — die Rückmeldung nannte nur „3 gespielt", und die fehlenden zwei
+       musste man aus der Differenz erraten. Der Vereinsbildschirm warnt zwar
+       selbst („noch 1 Spieler nötig"), aber erst, wenn man ihn aufschlägt. */
     setTestLog(n + " Laufbahnen angerechnet · " + saisons + " Vereinssaisons gespielt"
-      + (abbruch ? " · Verein ausgesetzt: " + abbruch : ""));
+      + (ausgefallen ? " · " + ausgefallen + " ausgefallen ("
+          + (abbruch || "Kader zu klein oder nicht aufgestellt") + ")" : "")
+      + (akaStand ? "" : " · OHNE Akademie: keine Jahrgänge, erst gründen"));
+  };
+
+  /* KADER FÜLLEN. Der Sprung allein reicht nicht: die Akademie hält zu wenige
+     Talente gleichzeitig, und wer sie hochzieht, leert sie schneller, als sie
+     nachwächst. Gemessen: nach zwanzig angerechneten Laufbahnen standen acht
+     von sechzehn nötigen Spielern zur Verfügung — der Spielbetrieb, um den es
+     beim Testen geht, war damit gar nicht erreichbar.
+     Die Spieler entstehen hier, statt der Akademie ihre wegzunehmen: ein
+     Testkader soll das Nebenhaus nicht leerräumen. Stärke und Alter streuen,
+     damit Entwicklung und Vertragsende etwas zu tun bekommen. */
+  const testKader = async () => {
+    if (buchungAktiv.current || !verein || !verein.gegruendet) return;
+    const POSTEN = ["TW", "IV", "IV", "AV", "AV", "ZDM", "ZM", "ZM", "AF", "AF", "ST",
+                    "TW", "IV", "ZM", "ST", "AV", "ZOM", "AF"];
+    const vorhanden = (verein.kader || []).length;
+    const neu = POSTEN.slice(0, Math.max(0, 18 - vorhanden)).map((pos, i) => ({
+      id: "test" + Date.now() + "_" + i,
+      name: "Probe " + (vorhanden + i + 1), nat: "GER", flag: "🇩🇪", pos,
+      ovr: 44 + ((i * 7) % 13), pot: 58 + ((i * 5) % 18), alter: 18 + (i % 9),
+      form: 50, fitness: 80, spiele: 0, tore: 0, jahreImVerein: 0,
+    }));
+    const v = VEREIN.autoAufstellen({ ...verein, kader: [...(verein.kader || []), ...neu] });
+    await vereinSichern(v);
+    setTestLog(neu.length + " Probespieler eingesetzt · Kader " + (v.kader || []).length
+      + " · " + (VEREIN.staerke(v).spielbereit ? "spielbereit" : "Aufstellung prüfen"));
   };
   const testVC = async (x) => {
     if (buchungAktiv.current) return;
@@ -18967,7 +19024,7 @@ function FlutlichtApp() {
   })();
 
   if (phase === "menu") return <MenuScreen hall={hall} save={save} karten={karten}
-    test={BETA ? { sprung: testSprung, vc: testVC, log: testLog } : null}
+    test={BETA ? { sprung: testSprung, vc: testVC, kader: testKader, log: testLog } : null}
     speicherFehler={speicherFehler}
     optAuf={optZurueck} onOptAufGesehen={() => setOptZurueck(false)}
     freiHinweis={freiJetzt}

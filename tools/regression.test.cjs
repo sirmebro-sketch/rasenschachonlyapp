@@ -532,10 +532,18 @@ test('Der Ausbaureiter zeigt Geld und VC getrennt, ohne NaN',()=>{
  assert(html.includes('Gründungskapital'),'die VC-Extras stehen im eigenen Abschnitt');
  /* Kein Ausbau darf mehr mit VC ausgezeichnet sein. */
  assert(!html.includes('Ausbauen ·'),'die alte VC-Beschriftung ist weg');
- /* Eine leere Kasse macht den Knopf nicht kaputt, sondern nennt die Lücke. */
+ /* Bei leerer Kasse spricht der Preis für sich: die Zeile „Dafür fehlen"
+    wiederholte dann nur die Zahl direkt über sich. Erst wenn etwas da ist,
+    aber nicht genug, sagt sie etwas Neues. */
  const arm=E.renderVerein(E.VEREIN.mitWirtschaft(spielbereiterVerein({kasse:0})),
    {...E.leereAkademie(),vc:0},'ausbau');
- assert(arm.includes('Dafür fehlen'));assert(!arm.includes('NaN'));
+ assert(!arm.includes('Dafür fehlen'),'bei leerer Kasse keine Wiederholung');
+ assert(arm.includes('Bauen ·'),'der Preis steht trotzdem da');
+ assert(!arm.includes('NaN'));
+ const halb=E.renderVerein(E.VEREIN.mitWirtschaft(spielbereiterVerein({kasse:2})),
+   {...E.leereAkademie(),vc:0},'ausbau');
+ assert(halb.includes('Dafür fehlen'),'mit angefangener Kasse wird die Lücke genannt');
+ assert(!halb.includes('NaN'));
 });
 
 test('Abschluss: die Restkasse wird zu Vermächtnispunkten',()=>{

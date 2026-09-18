@@ -135,3 +135,28 @@ Stimmung, Gehaltsniveau, das Vorstandsziel samt Ausgang und die Ereignisse.
   mit den Vorgabewerten mit; einstellen kann man sie nicht.
 - **Die Abnahme durch Codex steht aus.** Was hier drin ist, kann sich noch
   ändern.
+
+## Rundgang durch die Oberfläche, 18.09.2026
+
+Ein vollständiger Durchgang im echten Browser — Menü, Vereinsgründung,
+Akademie, Profimannschaft, alle Wirtschaftsreiter, fünf gespielte Saisons.
+**Keine Abstürze, keine Konsolenfehler, kein NaN.** Gefunden wurden sieben
+Dinge, fünf davon behoben:
+
+| Befund | Zustand |
+|---|---|
+| Leere Kasse stand als „0 Tsd €" da, im Partnerkopf sogar in Erfolgsgrün | behoben: „0 €" |
+| „Bauen · 4 Mio €" und darunter „Dafür fehlen 4 Mio €" — dieselbe Zahl zweimal | behoben: die Lücke wird nur genannt, wenn schon Geld da ist |
+| Reiter „Sponsoren" schob „Chronik" auf einem 320er-Gerät aus dem Bild | behoben: heißt jetzt „Partner", wie die Kopfzeile des Reiters selbst |
+| Sprung vor der Akademiegründung verlor die Jahrgänge, ohne es zu sagen | behoben: die Rückmeldung sagt es, ein Hinweis nennt die Reihenfolge |
+| Testwerkzeug erreichte den Spielbetrieb nicht (nach 20 Laufbahnen 8 von 16 Spielern) | behoben: neuer Knopf „Kader mit Probespielern füllen" |
+| Ausgefallene Vereinssaisons blieben unerklärt | behoben: die Rückmeldung nennt Zahl und Grund |
+| „Stärke 55.2" mit Punkt statt Komma, während Geld „11,6" schreibt | **offen** — bestehender Code, nicht aus dieser Runde |
+
+Zwei Dinge stehen so im Spiel und sind **kein** Fehler: der Reiterstreifen
+scrollt waagerecht (mit Verlaufskante als Hinweis), und bei der Ligawahl steht
+alphabetisch Ägypten vorn, auch wenn der Verein in Hamburg sitzt.
+
+`tools/browser/beta-wirtschaft.spec.js` hält den Rundgang fest: die
+Wirtschaftsreiter müssen ohne NaN und ohne leere Nullen rendern, und die
+Reiterleiste muss auf 320 und 390 Pixel bedienbar bleiben.

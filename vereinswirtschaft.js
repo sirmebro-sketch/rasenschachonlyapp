@@ -77,6 +77,10 @@ export function geldText(mioEuro, land, mitWaehrung = true) {
   const x = (Number(mioEuro) || 0) * w.kurs;
   const einheit = (n, s) => n.toLocaleString("de-DE", { maximumFractionDigits: s });
   let text;
+  /* NULL IST NICHT "0 Tsd". Eine leere Kasse als „0 Tsd €" zu schreiben liest
+     sich wie ein Messfehler; im Sponsorenkopf stand es sogar in Erfolgsgrün.
+     Beim Rundgang durch die Oberfläche aufgefallen, nicht im Prüfstand. */
+  if (x === 0) return mitWaehrung ? "0 " + w.sym : "0";
   if (Math.abs(x) >= 1000) text = einheit(x / 1000, 2) + " Mrd";
   else if (Math.abs(x) >= 100) text = einheit(x, 0) + " Mio";
   else if (Math.abs(x) >= 1) text = einheit(x, 1) + " Mio";
