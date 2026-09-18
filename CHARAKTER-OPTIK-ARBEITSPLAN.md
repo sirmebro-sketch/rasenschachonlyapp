@@ -124,13 +124,15 @@ Die Reihenfolge ist eine Qualitäts-/Risikoreihenfolge. Der letzte Nutzerauftrag
 
 **Abnahme:** Vergleichsbögen über mehrere Frisuren/Bärte; keine sichtbaren Kiefer-/Haar-Clippingfehler; mobile Lesbarkeit.
 
-### CHAR-P1-02 – Augen/Brauen/Nase/Mund/Wangen mit echter Formvielfalt — SICHTPRÜFUNG
+### CHAR-P1-02 – Augen/Brauen/Nase/Mund/Wangen mit echter Formvielfalt — ERLEDIGT
 
 **Ziel:** Unterschiede sollen das Gesicht erkennbar prägen und nicht nur als benannte Miniabweichungen existieren.
 
 **Vorgehen:** zuerst CHAR-P0-01 nutzen; redundante Formen gezielt auseinanderziehen; neue Formen nur append-only. Übertreibung vermeiden, aber Unterschiede bei Karten-/Avatargröße sichtbar halten.
 
 **Abnahme:** unbeschrifteter Vergleich bei normaler Avatargröße; mindestens mehrere deutlich verschiedene Kombinationen mit gleicher Kopf-/Haarbasis.
+
+**Abschluss 18.09.2026:** Aufbauend auf der ersten CHAR-P1-02-Runde wurden drei eigenständige Mundformen und zwei formtragende Wangen-/Kinnvarianten append-only ergänzt. Die 72/96-px-Rasterprüfung fand die erste Fassung der spitzen Kinnkontur zurecht zu ähnlich zu ID 0; sie wurde vor Abnahme nachgeschärft. Der korrigierte Stand bestand 140/140 Regressionen und 43 Browserprüfungen, die finalen Bögen wurden tatsächlich geöffnet und bei heller/dunkler Haut sowie mit Bart/Brille geprüft. Historische Seed-Ableitung und bestehende IDs bleiben unverändert. Details: `pruefberichte/2026-09-18-char-p1-02-gesichtszuege-02.md`.
 
 ### CHAR-P1-03 – Frisurenkatalog qualitativ verbreitern — ERLEDIGT
 
