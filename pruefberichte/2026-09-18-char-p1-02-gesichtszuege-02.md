@@ -50,6 +50,8 @@ Der Fehlschlag war fachlich berechtigt: Wangen/Kinn-ID 8 war bei 72 px für Mann
 
 Daraufhin wurde ausschließlich ID 8 nachgeschärft: längere V-förmige Kinnkontur, etwas stärkere Strichbreite und höhere Deckkraft. Die Safe-Patch-Brücke übernahm die Korrektur als `64837f746df03c6720416a9da392c07090b9ef86`.
 
+**Korrigierter Produkt-Head für die zweite PR-Abnahme:** `64837f746df03c6720416a9da392c07090b9ef86`. Der folgende Dokumentationscommit ändert keinen Produktcode und dient zugleich dazu, die vollständigen PR-Gates auf dem korrigierten Stand regulär neu auszulösen.
+
 ## Sichtprüfung des ersten Artefakts
 
 Tatsächlich geöffnet wurden unter anderem:
