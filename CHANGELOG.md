@@ -1,5 +1,9 @@
 # Änderungen
 
+## Noch nicht veröffentlicht
+
+- Männerfrisur 27 „Lange Locken“ rahmt das Gesicht mit getrennten Kronen-/Seitenlocken statt einer tiefen geschlossenen Haarfläche; gespeicherte Frisur-ID und übriger Katalog bleiben unverändert.
+
 ## 35.194.1 – Kleine Korrekturen nach unabhängiger Qualitätsprüfung
 
 - Neue Mundformen verwenden eigene Abstandsgrenzen für Lippen, Kinn und Bärte.
