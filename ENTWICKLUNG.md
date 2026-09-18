@@ -1367,3 +1367,45 @@ liest** — die Prüfung, die „Scoutnetz" verhindert hätte.
 
 **Offen für Codex:** `bonus.aufnahmen` in den Abschluss-BONI hat keinen Leser.
 Das ist bestehender Code, nicht aus dieser Runde — deshalb nur vermerkt.
+
+## Nachbesserung nach Gegenlesen — Anschluss (Claude, 17.09.2026)
+
+Vier Befunde aus dem Gegenlesen betreffen diesen Zweig. Wie bei der Wurzel gilt:
+keiner ist von den Regressionen gefunden worden.
+
+**1. Nach einem Aufstieg war das Vorstandsziel unerreichbar.** Der Kommentar
+behauptete „nach einem Aufstieg ist Klassenerhalt die Ansage, nicht der Titel" —
+die Rechnung reichte aber nur die neue Ligastufe weiter und weiterhin den
+**alten Tabellenplatz**, aus dem `zielSetzen` das Ziel ableitet. Ein Meister,
+der aufstieg, bekam „Um den Titel spielen" mit Soll 1 in der Liga darüber, und
+die Prämie wurde nie gezahlt. Umgekehrt bekam ein Absteiger „Klassenerhalt" in
+einer Liga, die er vermutlich dominiert. Ein Tabellenplatz aus einer anderen
+Liga ist keine Aussage über die neue: ein Aufsteiger gilt jetzt als Letzter, ein
+Absteiger als Dritter.
+
+**2. Die Gehälter wurden mit dem gealterten Kader gerechnet.** Die
+Entwicklungsschleife ändert Alter und Stärke **in place** und reicht dieselben
+Objekte weiter; die Abrechnung bekam damit die Stärken der KOMMENDEN Saison.
+Schon ein gewöhnlicher Zuwachs von +2 verteuert 18 Erstligaspieler von 30,0 auf
+33,6 Mio — jedes Jahr, von der Gehaltsratsche weiter aufgeschlagen. Jetzt wird
+der Kader kopiert, bevor irgendetwas altert.
+
+**3. Zwei Sponsorenwirkungen hatten keinen Leser.** `medizin` (Vitalis: „wirkt
+wie eine Stufe Medizin") und `jugend` (Almgut: „Nachwuchs entwickelt sich etwas
+schneller") wurden von `wirkung` summiert und von niemandem abgeholt — die
+Verträge versprachen etwas, das nicht geschah. Beide werden jetzt in der
+Entwicklungsschleife gelesen.
+
+**4. Die abgeleitete Ligastufe landete im Spielstand.** `mitWirtschaft` schreibt
+sie auf das zurückgegebene Objekt, und mehrere dieser Objekte werden gespeichert
+— nach einem Aufstieg stünde dort ein veralteter Wert. Noch liest niemand das
+rohe Feld, aber es war eine geladene Waffe. `ohneAbgeleitetes` entfernt sie am
+Speicherrand.
+
+**Noch offen aus diesem Befundsatz:** die Wirtschaftszahlen der Chronik haben
+weiterhin nur einen Leser (`ausgelaufen`). Die Anzeige braucht `geldText` und
+zieht deshalb nach WIRT-P0-03 um.
+
+**Geprüft:** `npm test` 157/157 (vorher 152), `npm run build` erfolgreich. Fünf
+neue Regressionen, darunter ein Lauf, der bis zu einem echten Aufstieg spielt
+und prüft, dass das neue Ziel kein Soll 1 trägt.

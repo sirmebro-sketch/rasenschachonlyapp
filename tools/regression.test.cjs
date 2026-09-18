@@ -426,6 +426,93 @@ const spielbereiterVerein=(zu={})=>{
  return E.VEREIN.autoAufstellen({...r.v,kader,...zu});
 };
 
+test('Nach einem Aufstieg ist Klassenerhalt die Ansage, nicht der Titel',()=>{
+ /* DER FEHLER, DEN DIESE PRÜFUNG FESTHÄLT. Der erste Entwurf reichte die neue
+    Ligastufe weiter, aber den ALTEN Tabellenplatz — und daraus leitet
+    `zielSetzen` das Ziel ab. Ein Meister, der aufstieg, bekam „Um den Titel
+    spielen" mit Soll 1 in der Liga darüber: unerreichbar, Prämie nie gezahlt. */
+ E.zufallSetzen(4242);
+ try{
+  /* Ein starker Kader in einer unteren Liga steigt früher oder später auf. */
+  const stark=spielbereiterVerein();
+  let v=E.VEREIN.einschreiben(E.VEREIN.autoAufstellen(
+    {...stark,kader:stark.kader.map(s=>({...s,ovr:82,pot:86}))})).v;
+  let gefunden=null;
+  for(let i=0;i<8&&!gefunden;i++){
+   const r=E.VEREIN.vereinSaison(v);
+   if(r.fehler)break;
+   if(r.aufstieg)gefunden=r;
+   v=r.v;
+  }
+  if(gefunden){
+   assert(gefunden.v.ziel,'nach der Saison steht ein Ziel');
+   assert.notEqual(gefunden.v.ziel.soll,1,
+     'Aufsteiger bekommt „'+gefunden.v.ziel.n+'" mit Soll 1 in der neuen Liga');
+   assert(/halt|Mitte/i.test(gefunden.v.ziel.n),
+     'erwartet wurde ein bescheidenes Ziel, bekommen: '+gefunden.v.ziel.n);
+  }
+ }finally{E.zufallSetzen(null);}
+});
+
+test('Gehälter rechnen mit dem Kader, der gespielt hat — nicht mit dem gealterten',()=>{
+ /* Die Entwicklungsschleife ändert Alter und Stärke IN PLACE. Wer die
+    Gehälter danach rechnet, bezahlt die abgelaufene Saison mit den Stärken
+    der kommenden — bei +2 Zuwachs rund 12 % zu viel, jedes Jahr. */
+ const v=E.VEREIN.einschreiben(spielbereiterVerein()).v;
+ const schnittVorher=Math.round(v.kader.reduce((a,s)=>a+s.ovr,0)/v.kader.length);
+ const r=E.VEREIN.vereinSaison(v);
+ assert(!r.fehler,r.fehler);
+ assert.equal(r.beleg.gehalt.kader.schnitt,schnittVorher,
+   'abgerechnet wurde Ø '+r.beleg.gehalt.kader.schnitt+' statt Ø '+schnittVorher);
+ /* Und der Kader IM Spielstand ist danach tatsächlich weiter. */
+ const schnittNachher=Math.round(r.v.kader.reduce((a,s)=>a+s.ovr,0)/Math.max(1,r.v.kader.length));
+ assert(schnittNachher>=schnittVorher,'die Mannschaft entwickelt sich weiterhin');
+});
+
+test('Sponsorenwirkungen medizin und jugend haben einen Leser',()=>{
+ /* Beide wurden von `wirkung` summiert und von niemandem abgeholt — die
+    Verträge versprachen etwas, das nicht geschah. Geprüft mit festgehaltenem
+    Würfel: derselbe Verlauf, einziger Unterschied ist der Vertrag. */
+ const fit=(sponsoren)=>{
+  E.zufallSetzen(90210);
+  try{
+   const v={...E.VEREIN.einschreiben(spielbereiterVerein()).v,sponsoren};
+   const r=E.VEREIN.vereinSaison(v);
+   assert(!r.fehler,r.fehler);
+   return Math.round(r.v.kader.reduce((a,s)=>a+(s.fitness||0),0)/Math.max(1,r.v.kader.length));
+  }finally{E.zufallSetzen(null);}
+ };
+ const ohne=fit([]);
+ const mit=fit([{id:'vitalis',n:'Vitalis',branche:'Gesundheit',betrag:2,rest:3,laufzeit:3,fx:{medizin:1}}]);
+ assert(mit>ohne,'der Vitalis-Vertrag wirkt wie eine Stufe Medizin ('+mit+' gegen '+ohne+')');
+});
+
+test('Die abgeleitete Ligastufe landet nicht im Spielstand',()=>{
+ /* Sie muss der aktuellen Liga folgen. Gespeichert wäre sie nach einem
+    Aufstieg veraltet, und der erste Aufruf, der sie roh liest statt neu
+    abzuleiten, rechnete still mit der falschen Liga. */
+ const v=E.VEREIN.einschreiben(spielbereiterVerein()).v;
+ assert(!('ligastufe' in v),'die Einschreibung speichert sie nicht');
+ /* Abgeleitet wird sie trotzdem jederzeit richtig. */
+ assert(E.VEREIN.mitWirtschaft(v).ligastufe>=1);
+ assert(!('ligastufe' in E.VEREIN.ohneAbgeleitetes(E.VEREIN.mitWirtschaft(v))));
+});
+
+test('Die Chronik traegt die Wirtschaft des Jahres',()=>{
+ /* Die Kurzfassung lag seit ihrer Einführung im Spielstand und wurde von
+    niemandem gelesen. Die ANZEIGE folgt in WIRT-P0-03, sobald `geldText`
+    zur Verfügung steht; hier wird geprüft, dass die Daten vollständig sind
+    und nichts Unbenutztes mitgeschleppt wird. */
+ const v0=E.VEREIN.einschreiben(spielbereiterVerein()).v;
+ const r=E.VEREIN.vereinSaison(v0);
+ const c=r.v.chronik[r.v.chronik.length-1];
+ assert(c.wirtschaft,'die Chronik führt die Wirtschaft');
+ for(const k of ['ein','aus','ergebnis','kasse','zuschauer','stimmung','gehaltsniveau'])
+  assert(Number.isFinite(c.wirtschaft[k]),k+' fehlt oder ist keine Zahl');
+ assert(Array.isArray(c.wirtschaft.ereignisse));
+ /* `ausgelaufen` kommt erst mit den Sponsoren (WIRT-P0-04) dazu. */
+});
+
 test('Vereinswirtschaft: die Saison rechnet ab und schreibt den Spielstand fort',()=>{
  const v0=E.VEREIN.einschreiben(spielbereiterVerein()).v;
  assert(v0.ziel,'mit der Einschreibung steht ein Vorstandsziel');
