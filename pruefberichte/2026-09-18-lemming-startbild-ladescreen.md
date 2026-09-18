@@ -7,11 +7,13 @@
 
 ## Problem und Lösung
 
-Der bisherige Web-Einstieg enthielt nur den React-Root. Dadurch konnte das gewünschte Motiv erst nach zusätzlichem Produktcode erscheinen. Das Paket setzt den Startscreen deshalb bewusst **vor React direkt in `index.html`**. Das Bild ist offline als eingebettetes WebP enthalten; es braucht weder Netzwerk noch einen späteren Asset-Request. Ein kleiner Spinner liegt bei ca. 64 % Bildschirmhöhe unter dem großen „XI“.
+Der native Android-Startscreen verwendet das gelieferte Rasenschach-XI-Motiv bereits in den vorhandenen `splash.png`-Ressourcen. Der bisherige Web-Einstieg enthielt danach jedoch nur den React-Root. Dadurch konnte beim Übergang von Android zur Capacitor-WebView ein leerer/dunkler Zwischenzustand entstehen und es gab keinen sichtbaren Ladeindikator.
 
-`main.jsx` blendet den Screen nach mindestens 2,2 Sekunden weich aus. Braucht der Bundle-Start selbst länger, wird keine weitere künstliche Wartezeit addiert: nach dem ersten Render-Auftrag beginnt die Blende unmittelbar. App-Logik, Speicherformat und Spielinhalte bleiben unverändert.
+Das Paket setzt deshalb denselben vorhandenen 9:16-Bildstand **direkt vor React in `index.html`**. Vite übernimmt die bestehende lokale Ressource `android/app/src/main/res/drawable-port-xhdpi/splash.png` in das Web-Bündel; es gibt keinen Netzabruf und keine zweite Bildkopie im Repository. Ein kleiner rot-weißer Spinner liegt bei ca. 64 % Bildschirmhöhe unter dem großen „XI“.
 
-Der vorhandene native Android-Launchscreen wird in diesem kleinen Paket **nicht ersetzt**. Direkt nach Übergabe an die lokale Capacitor-WebView erscheint der neue Screen. Eine vollständige native Android-12-Splash-Neugestaltung wäre ein eigenes Android-Themenpaket und ist für den beauftragten Web-Ladescreen nicht nötig.
+`main.jsx` blendet den Screen nach mindestens **2,2 Sekunden** weich aus. Braucht der Bundle-Start selbst länger, wird keine zusätzliche volle Wartezeit addiert: nach dem ersten Render-Auftrag beginnt die Blende unmittelbar. App-Logik, Speicherformat und Spielinhalte bleiben unverändert. Bei systemweit reduzierter Bewegung bleibt der Ring sichtbar, rotiert aber nicht.
+
+Damit entsteht auf Android die beabsichtigte Kette: **nativer Start mit Motiv → Web-Ladescreen mit demselben Motiv + Ladekreis → Spiel**. Ein eigener nativer Theme-Umbau ist dafür nicht nötig.
 
 ## Getrennte Beta-APK
 
@@ -22,16 +24,17 @@ Der vorhandene native Android-Launchscreen wird in diesem kleinen Paket **nicht 
 Neu: `tools/startbild.test.cjs` schützt folgende Verträge:
 
 - Startbild steht vor dem React-Root im HTML,
-- Bild ist offline eingebettet,
+- die lokale 9:16-Splashressource wird verwendet,
 - Ladeindikator ist vorhanden und unter dem XI positioniert,
+- reduzierte Bewegung stoppt die Rotation,
 - Mindestdauer beträgt 2,2 Sekunden,
 - Startscreen wird nach der Blende aus dem DOM entfernt.
 
-**Lokal:** In der Lemming-Umgebung war kein Netzwerkzugriff auf GitHub/npm verfügbar; deshalb konnten `npm ci`, `npm test`, `npm run build` und ein lokaler Android-Build nicht glaubwürdig ausgeführt werden. Maßgeblich sind die CI-Läufe am exakten PR-Head. Diese Grenze wird nicht als Erfolg umetikettiert.
+Die vollständigen Projektprüfungen werden am exakten PR-Head von GitHub Actions ausgeführt: Regressionen, Produktionsbuild und Browserprüfungen; der zusätzliche Beta-Workflow baut die getrennte Debug-APK. Ergebnisse werden nach Vorliegen hier bzw. im PR vermerkt.
 
 ## Sichtprüfung
 
-Das vom Nutzer gelieferte Originalmotiv ist 864 × 1536 px. Für die direkte Einbettung wurde eine WebP-Fassung gleicher Auflösung mit hoher Qualität erzeugt. Die zentrale Logo-/XI-Fläche bleibt bei `object-fit: cover` auf typischen Hochformat-Smartphones sichtbar; der Spinner liegt unterhalb des XI. Eine echte Android-Gerätesichtung bleibt bis zur Installation des Beta-Artefakts offen.
+Das gelieferte Originalmotiv ist 864 × 1536 px. Die bereits vorhandene Android-Ressource `drawable-port-xhdpi/splash.png` ist 720 × 1280 px und damit ebenfalls exakt 9:16; Logo, XI, Ball, Spielfeld und Randtexte bleiben im Hochformat erhalten. Der Spinner sitzt unterhalb des XI und oberhalb des unteren Slogans. Eine echte Android-Gerätesichtung bleibt bis zur Installation des Beta-Artefakts offen.
 
 ## Bewusst nicht geändert
 
