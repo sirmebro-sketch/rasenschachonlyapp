@@ -31,9 +31,46 @@
       html { touch-action: pan-x pan-y; -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
       body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent;
              touch-action: pan-x pan-y; }
+
+      /* Das Startbild liegt absichtlich direkt im HTML statt erst in React:
+         Nach dem bereits nativen Android-Startbild kann die lokale WebView
+         dasselbe Motiv ohne Zwischenblitz weiter anzeigen. */
+      #app-startup-splash {
+        position: fixed; inset: 0; z-index: 2147483647; overflow: hidden;
+        background: #050706; opacity: 1; transition: opacity 280ms ease;
+      }
+      #app-startup-splash img {
+        width: 100%; height: 100%; display: block; object-fit: cover;
+        object-position: center center; user-select: none; -webkit-user-drag: none;
+      }
+      #app-startup-splash .startup-spinner {
+        position: absolute; left: 50%; top: 64%; width: 34px; height: 34px;
+        margin: -17px 0 0 -17px; box-sizing: border-box; border-radius: 50%;
+        border: 3px solid rgba(246, 244, 232, .34);
+        border-top-color: #f6f4e8; border-right-color: #b91f1b;
+        filter: drop-shadow(0 0 8px rgba(0,0,0,.65));
+        animation: startup-spin 850ms linear infinite;
+      }
+      #app-startup-splash.is-hiding { opacity: 0; pointer-events: none; }
+      @keyframes startup-spin { to { transform: rotate(360deg); } }
+      @media (prefers-reduced-motion: reduce) {
+        #app-startup-splash { transition-duration: 120ms; }
+        #app-startup-splash .startup-spinner { animation: none; }
+      }
     </style>
   </head>
   <body>
+    <script>window.__RASENSCHACH_SPLASH_STARTED__ = performance.now();</script>
+    <div id="app-startup-splash" role="status" aria-label="Rasenschach XI wird geladen">
+      <img
+        alt=""
+        src="./android/app/src/main/res/drawable-port-xhdpi/splash.png"
+        loading="eager"
+        fetchpriority="high"
+        decoding="sync"
+      />
+      <span class="startup-spinner" aria-hidden="true"></span>
+    </div>
     <div id="root"></div>
     <script type="module" src="./main.jsx"></script>
   </body>
