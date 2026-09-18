@@ -93,6 +93,38 @@ test('CHAR-P0-01: Inventar rendert alle Optionen ohne exakte Struktur-Dubletten'
  expect(errors).toEqual([]);
 });
 
+
+test('CHAR-P0-01: vollständige Sichtbögen über Größen, Köpfe und Farben',async({page},testInfo)=>{
+ test.skip(testInfo.project.name!=='desktop','Die vollständigen CHAR-P0-01-Sichtbögen werden einmal auf Desktop erzeugt.');
+ test.setTimeout(300000);
+ const errors=[];page.on('pageerror',e=>errors.push(e.message));
+ await page.goto('/.preview/charakter-inventar.html');
+ await expect(page.getByRole('heading',{name:'Rasenschach · Charakter-Inventar'})).toBeVisible();
+ const inventar={};
+ for(const gender of ['m','w']){
+  await page.getByRole('combobox',{name:'Geschlecht',exact:true}).selectOption(gender);
+  const fields=await page.getByRole('combobox',{name:'Merkmal',exact:true}).locator('option').evaluateAll(o=>o.map(x=>x.value));
+  inventar[gender]={};
+  for(const field of fields){
+   await page.getByRole('combobox',{name:'Merkmal',exact:true}).selectOption(field);
+   const cards=page.locator('[data-testid="varianten"] article');
+   const variants=await cards.evaluateAll(nodes=>nodes.map(node=>({
+    id:Number(node.getAttribute('data-id')),
+    titel:node.querySelector('.d')?.textContent?.trim()||''
+   })));
+   expect(variants.length,gender+'/'+field).toBeGreaterThan(0);
+   inventar[gender][field]=variants;
+   for(const groesse of ['72','96','145']){
+    await page.getByRole('combobox',{name:'Größe',exact:true}).selectOption(groesse);
+    await expect(cards.locator('svg[aria-label="Spielerporträt"]')).toHaveCount(variants.length*6);
+    await page.getByTestId('varianten').screenshot({path:testInfo.outputPath('char-p0-01-'+gender+'-'+field+'-'+groesse+'.png')});
+   }
+  }
+ }
+ await testInfo.attach('char-p0-01-sichtinventar.json',{body:Buffer.from(JSON.stringify(inventar,null,2)),contentType:'application/json'});
+ expect(errors).toEqual([]);
+});
+
 test('CHAR-P0-02: sichtbare Porträtkette bleibt über Karriere, Halle, Karte und Kader identisch',async({page},testInfo)=>{
  const errors=[];page.on('pageerror',e=>errors.push(e.message));
  await page.goto('/.preview/spieltest.html');
