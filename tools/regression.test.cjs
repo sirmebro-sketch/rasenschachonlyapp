@@ -35,7 +35,7 @@ before(async () => {
     .map(n=>`const ${n}=v=>{out[${JSON.stringify(n.slice(3))}]=v;};`).join('\n');
   const extension = `
 import {renderToStaticMarkup} from 'react-dom/server';
-export {simTable, LEAGUES, karriereZeitraum, verdict, vorsatzBelohnen, vorsatzPunkte, bilanzLaden, bilanzErgaenzen, akaGruenden, SAVE_KEY, AKA_KEY, LIFE_KEY, createPlayer, develop, simulateSeason, vcFuer, vcPosten, vcAusHaeusern, leereAkademie, leereBilanz, KARTEN, VEREIN, zufallSetzen, rerollWildcard, ladenGesperrt, saisonSchlagzeile, saisonIndex, EVENTS, strangDran, strangWeiter, laufStand, laufWeiter};
+export {simTable, LEAGUES, karriereZeitraum, verdict, vorsatzBelohnen, vorsatzPunkte, bilanzLaden, bilanzErgaenzen, akaGruenden, akaVerbuchen, SAVE_KEY, AKA_KEY, LIFE_KEY, createPlayer, develop, simulateSeason, vcFuer, vcPosten, vcAusHaeusern, leereAkademie, leereBilanz, KARTEN, VEREIN, zufallSetzen, rerollWildcard, ladenGesperrt, saisonSchlagzeile, saisonIndex, EVENTS, strangDran, strangWeiter, laufStand, laufWeiter};
 export const renderCreate=()=>renderToStaticMarkup(<CreateScreen meta={{}} onStart={()=>{}} onBack={()=>{}}/>);
 export const renderPortraits=()=>renderToStaticMarkup(<>{['m','w'].flatMap(g=>Array.from({length:4},(_,i)=><Avatar key={g+i} seed={1} g={g} zuege={{...zuegeAusKennung(1,g,'GER',{}),stil:2,haut:10+i,haar:9+i,frisur:(g==='w'?14:16)+i,details:i,bart:g==='w'?0:10+i%3}}/>))}</>);
 export const renderEnd=p=>renderToStaticMarkup(<EndScreen p={p} onNew={()=>{}}/>);
@@ -512,4 +512,51 @@ test('Rücktritt vor/nach Saison und Angebotsannahme hat gleiche Kalendergrenzen
   assert.equal(out.Hall[0].von,expected.von);assert.equal(out.Hall[0].bis,expected.bis);
   assert(E.renderEnd(out.P).includes('Karriereende '+expected.bis));
  }
+});
+
+/* --------------------------------------- Vermaechtnisbonus "Bekannte Adresse"
+   Bis 18.09.2026 war das Extra fuer 350 Abschlusspunkte ein Placebo: `fx:
+   { aufnahmen: 1 }` wanderte ueber `neuerVerein` nach `v.bonus.aufnahmen`,
+   wurde im Vereinsbildschirm angezeigt — und von niemandem gelesen. Dieselbe
+   Sorte Fehler wie das entfernte "Scoutnetz", nur teurer. */
+
+test('Der Aufnahmebonus wirkt im Rechenkern der Akademie',()=>{
+ /* Direkt am Modul: gleiche Saat, gleiche Akademie, einmal mit und einmal
+    ohne Bonus. Die Zahl der Aufnahmen muss sich um genau den Bonus
+    unterscheiden — alles andere waere Zufall statt Wirkung. */
+ const messe=(bonus)=>{
+  E.zufallSetzen(4242);
+  const a0=E.akaGruenden(E.leereAkademie(),'Testakademie',2026);
+  const vorher=a0.bilanz.aufgenommen;
+  const a1=E.akaVerbuchen(a0,0,undefined,bonus).a;
+  return a1.bilanz.aufgenommen-vorher;
+ };
+ const ohne=messe(undefined);
+ assert(ohne>0,'ohne Bonus kommen ueberhaupt Talente: '+ohne);
+ assert.equal(messe(1),ohne+1,'ein Bonus, ein Talent mehr');
+ assert.equal(messe(2),ohne+2,'zwei Bonus, zwei mehr');
+ /* Kaputte Staende duerfen nicht zum Geschenk und nicht zum Schaden werden. */
+ assert.equal(messe(0),ohne);
+ assert.equal(messe(-3),ohne,'ein negativer Bonus nimmt nichts weg');
+ assert.equal(messe('kaputt'),ohne);
+});
+
+test('Der Aufnahmebonus kommt ueber den echten Karriereabschluss in der Akademie an',async()=>{
+ /* DIE EIGENTLICHE ZUSICHERUNG. Der Bonus liegt am VEREIN und wirkt in der
+    AKADEMIE; dazwischen liegt der Abschluss-Handler in App.jsx. Genau dort
+    stehen ZWEI Bindungen namens `verein` — die Vereinsablage (useState) und
+    eine Zeichenkette in einer Renderfunktion. Greift die falsche, ist der
+    Bonus still wieder wirkungslos und der Prueflauf am Modul bliebe gruen.
+    Deshalb wird hier durch den echten Handler gemessen, nicht am Modul. */
+ const lauf=async(bonus)=>{
+  E.zufallSetzen(20260918);
+  const aka=E.akaGruenden(E.leereAkademie(),'Testakademie',2026);
+  const verein=bonus==null?null:{...E.VEREIN.leererVerein(),gegruendet:true,bonus:{aufnahmen:bonus}};
+  const r=await E.runFinish(player(6),{aka,verein});
+  return r.Aka.bilanz.aufgenommen-aka.bilanz.aufgenommen;
+ };
+ const ohne=await lauf(null);
+ assert(ohne>0,'ohne Verein nimmt die Akademie trotzdem auf: '+ohne);
+ assert.equal(await lauf(0),ohne,'ein Verein ohne Bonus aendert nichts');
+ assert.equal(await lauf(1),ohne+1,'der Bonus kommt an');
 });
