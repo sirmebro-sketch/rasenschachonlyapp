@@ -15130,7 +15130,12 @@ function CreateScreen({ onStart, onBack, meta }) {
   const kategoriePosition = (el=kategorieLeiste.current) => {
     if (!el) return;
     const max = Math.max(0, el.scrollWidth - el.clientWidth);
-    const next = {start:el.scrollLeft <= 2,end:max <= 2 || el.scrollLeft >= max - 2};
+    /* Chromium kann die Grid-/Snap-Leiste beim Oeffnen um wenige Pixel
+       einrasten (im mobilen Prüfweg reproduzierbar: 4 px). Das ist optisch
+       weiterhin der Anfang und darf den Hinweis nicht schon auf "beide"
+       umschalten. Derselbe kleine Toleranzrand gilt am rechten Ende. */
+    const rand = 8;
+    const next = {start:el.scrollLeft <= rand,end:max <= rand || el.scrollLeft >= max - rand};
     setKategorieRand((alt) => alt.start === next.start && alt.end === next.end ? alt : next);
   };
   useEffect(() => {
