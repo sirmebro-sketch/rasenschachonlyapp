@@ -1,5 +1,12 @@
 # Änderungen
 
+## Noch nicht veröffentlicht
+
+- Neues Rasenschach-XI-Motiv ersetzt das bisherige App-Icon vollflächig; Android liefert nur noch die jeweilige Launcher-Maske, ohne zweiten Innenrand.
+- PR-Beta kann als getrennte Debug-App `de.rasenschach.xi.beta` neben der produktiven App installiert werden.
+- Launcher-Regression prüft WebP-RIFF-Länge, 432×432-Maße und die tatsächlich verwendeten Android-Icon-Verweise.
+
+
 ## 35.194.1 – Kleine Korrekturen nach unabhängiger Qualitätsprüfung
 
 - Neue Mundformen verwenden eigene Abstandsgrenzen für Lippen, Kinn und Bärte.

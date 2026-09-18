@@ -348,11 +348,19 @@ und ohne Bewegung ab, einschließlich Abschlussbutton und Text im Sichtbereich.
 
 ### App-Icon
 
-`artwork/app-icon.svg` ist die scharfe Vektorfassung. `python tools/app-icon.py`
-erzeugt daraus beziehungsweise aus derselben Geometrie das native Android-
-Foreground und die Legacy-PNGs in allen Dichten. Benötigt Python fonttools
-mit WOFF2-Unterstützung und Inkscape. Die Buchstaben stammen aus der bereits
-eingebetteten Spielschrift; keine externe Ersatzschrift.
+`artwork/app-icon-source.webp` ist seit 18.09.2026 die freigegebene vollflächige
+Rasterquelle des Launcher-Icons. `artwork/app-icon.svg` ist nur ein dünner
+Vorschau-Wrapper auf diese Datei. `python tools/app-icon.py` kopiert die Quelle
+in die Android-Ressourcen, richtet Legacy- und Adaptive-Icon-Verweise ein und
+entfernt die früheren Legacy-PNG-Dubletten. Das Skript benötigt nur Python aus
+der Standardbibliothek.
+
+Die freigegebene Quelle ist eine quadratische 432-px-WebP. Der Generator prüft
+RIFF-Länge und Bildmaße, bevor er sie in die Android-Ressourcen übernimmt.
+Beim Adaptive Icon ist das vollständige Motiv die einzige sichtbare Bildebene;
+der Foreground bleibt transparent und Android liefert allein die äußere Rund-/
+Squircle-Maske. Dadurch gibt es weder eine zweite skalierte Bildkopie noch einen
+künstlichen Innenrand oder eine Naht.
 
 ### Isolierter Spieltest (35.191)
 
