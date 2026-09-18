@@ -1,5 +1,6 @@
 import { WildcardPraegung, WildcardBuehne, WILDCARD_CSS } from "./wildcardoptik.jsx";
 import { Bartform } from "./bartformen.jsx";
+import { gesichtsAnker } from "./gesichtsanker.js";
 import { AufdeckLicht, AUFDECK_CSS } from "./aufdeckeffekte.jsx";
 import { Haarform } from "./haarformen.jsx";
 import { KartenEffekt } from "./karteneffekte.jsx";
@@ -2891,6 +2892,7 @@ function Avatar({ seed = 1, zuege, club, size = 72, ring, g, nat, meta }) {
   const lidH = z.augen === 1 ? 2.6 : z.augen === 4 ? 4.2 : z.augen === 5 ? 3.9 : z.augen === 6 ? 2.9
     : z.augen === 7 ? 4.25 : z.augen === 8 ? 3.15 : 3.4;   /* Lidspalt */
   const kinnY = kopf.kinn;
+  const gesicht = gesichtsAnker(kopf,z.nase,z.mund);
   const kj = kinnBreite(kopf);   /* Kieferbreite am Kinn — siehe kinnBreite */
   /* Lidschatten nimmt einen Ton aus der Haut auf, statt eine feste Farbe zu
      setzen — sonst passt er auf hellen und dunklen Tönen nie zugleich. */
@@ -3264,6 +3266,7 @@ function Avatar({ seed = 1, zuege, club, size = 72, ring, g, nat, meta }) {
           </g>))}
 
         {/* ---- Nase ---- */}
+        <g transform={`translate(0 ${gesicht.naseDy})`}>
         {(() => {
           const y0 = z.nase===8?51:49, y1 = 56 + (z.nase === 3 ? 1.5 : z.nase===8?-1:0);
           /* Ab Index 5 angehaengt (34.29) — nie umsortieren, der Index steckt
@@ -3273,18 +3276,18 @@ function Avatar({ seed = 1, zuege, club, size = 72, ring, g, nat, meta }) {
              Alt-Dubletten 0/4 und 2/7 bleiben für Spielstände erhalten,
              werden aber in portraetOptionen nicht mehr neu angeboten. */
           if (z.nase === 10) return (<g>
-            <path d={"M49.2,51 C48.2,53.6 45.3,55.4 45.5,57.4 Q50,61 54.5,57.4 C54.7,55.4 51.8,53.6 50.8,51 Z"}
+            <path d={"M49.2,50.5 C48.3,52.6 45.5,54.4 45.8,56.2 Q50,58.3 54.2,56.2 C54.5,54.4 51.7,52.6 50.8,50.5 Z"}
               fill={schatten} opacity=".5" />
-            <path d="M46.4,55.9 Q50,54.1 53.6,55.9" fill="none" stroke={tief} strokeWidth=".85" opacity=".6" />
-            <ellipse cx="47" cy="57.2" rx="1.25" ry=".78" fill={tief} />
-            <ellipse cx="53" cy="57.2" rx="1.25" ry=".78" fill={tief} />
+            <path d="M46.6,55.1 Q50,53.8 53.4,55.1" fill="none" stroke={tief} strokeWidth=".85" opacity=".6" />
+            <ellipse cx="47" cy="56.4" rx="1.25" ry=".78" fill={tief} />
+            <ellipse cx="53" cy="56.4" rx="1.25" ry=".78" fill={tief} />
           </g>);
           if (z.nase === 11) return (<g>
-            <path d="M49.2,47 C48.4,50.2 48.2,54.6 47.2,58 Q50,59.7 52.8,58 C51.8,54.6 51.6,50.2 50.8,47 Z"
+            <path d="M49.2,47 C48.4,50.2 48.2,54 47.4,56.9 Q50,58.8 52.6,56.9 C51.8,54 51.6,50.2 50.8,47 Z"
               fill={schatten} opacity=".48" />
-            <path d="M50,47.6 V55.3" fill="none" stroke={shade(haut, 24)} strokeWidth=".8" opacity=".55" />
-            <ellipse cx="48.1" cy="57.6" rx=".85" ry=".68" fill={tief} />
-            <ellipse cx="51.9" cy="57.6" rx=".85" ry=".68" fill={tief} />
+            <path d="M50,47.6 V55" fill="none" stroke={shade(haut, 24)} strokeWidth=".8" opacity=".55" />
+            <ellipse cx="48.1" cy="56.8" rx=".85" ry=".68" fill={tief} />
+            <ellipse cx="51.9" cy="56.8" rx=".85" ry=".68" fill={tief} />
           </g>);
           return (<g>
             <path d={"M50," + y0 + " C" + (50 - br * .5) + "," + (y0 + 6) + " " + (50 - br) + "," + (y1 - 3)
@@ -3293,10 +3296,12 @@ function Avatar({ seed = 1, zuege, club, size = 72, ring, g, nat, meta }) {
             <ellipse cx={50 - br * .75} cy={y1 - .4} rx=".9" ry=".7" fill={tief} />
             <ellipse cx={50 + br * .75} cy={y1 - .4} rx=".9" ry=".7" fill={tief} />
           </g>); })()}
+        </g>
 
         {/* ---- Mund ---- */}
+        <g transform={`translate(50 ${gesicht.mundY}) scale(1 ${gesicht.mundScale}) translate(-50 ${-gesicht.mundY})`}>
         {(() => {
-          const y = kinnY - 8;
+          const y = gesicht.mundY;
           /* Lippenstift verschiebt den Lippenton ins Warme, statt ihn durch
              eine Signalfarbe zu ersetzen — das Heft kennt keine Neontöne. */
           const lippe = w
@@ -3305,7 +3310,7 @@ function Avatar({ seed = 1, zuege, club, size = 72, ring, g, nat, meta }) {
               : shade(haut, -48))
             : shade(haut, -58);
           if(z.mund===7)return <path d={`M43 ${y} Q50 ${y+2} 57 ${y-.8}`} fill="none" stroke={lippe} strokeWidth="1.4" strokeLinecap="round"/>;
-          if(z.mund===8)return <><path d={`M42 ${y-1} Q50 ${y+1} 58 ${y-1} Q50 ${y+8} 42 ${y-1} Z`} fill={lippe}/><path d={`M44 ${y} Q50 ${y+1} 56 ${y} Q50 ${y+3} 44 ${y} Z`} fill="#EFE4D6"/></>;
+          if(z.mund===8)return <><path d={`M42 ${y-1} Q50 ${y+1} 58 ${y-1} Q50 ${y+5.5} 42 ${y-1} Z`} fill={lippe}/><path d={`M44 ${y} Q50 ${y+1} 56 ${y} Q50 ${y+2.4} 44 ${y} Z`} fill="#EFE4D6"/></>;
           if (z.mund === 0) return <path d={"M43," + y + " Q50," + (y + 4) + " 57," + y}
             fill="none" stroke={lippe} strokeWidth="2" strokeLinecap="round" />;
           if (z.mund === 1) return <rect x="43" y={y - 1} width="14" height="2.4" rx="1.2" fill={lippe} />;
@@ -3313,11 +3318,11 @@ function Avatar({ seed = 1, zuege, club, size = 72, ring, g, nat, meta }) {
             + " Q50," + (y + 2) + " 42.5," + (y + 1) + " Z"} fill={lippe} />;
           if (z.mund === 3) return <><path d={"M43.5," + y + " q6.5,3.4 13,0 q-6.5,2.4 -13,0 Z"} fill={shade(haut, -70)} />
             <path d={"M43.5," + y + " q6.5,-1 13,0"} fill="none" stroke={lippe} strokeWidth="1.5" strokeLinecap="round" /></>;
-          if (z.mund === 5) return <><path d={"M42," + (y - 1) + " Q50," + (y - 4.2) + " 58," + (y - 1)
-            + " Q50," + (y + 4.4) + " 42," + (y - 1) + " Z"} fill={lippe} />
+          if (z.mund === 5) return <><path d={"M42," + (y - 1) + " Q50," + (y - 3.3) + " 58," + (y - 1)
+            + " Q50," + (y + 3.8) + " 42," + (y - 1) + " Z"} fill={lippe} />
             <path d={"M42," + (y - 1) + " q8,1.5 16,0"} fill="none" stroke={tief} strokeWidth=".8" opacity=".55" /></>;
-          if (z.mund === 6) return <><path d={"M41.2," + (y - 1.2) + " Q50," + (y - 5) + " 58.8," + (y - 1.2)
-            + " Q50," + (y + 5.2) + " 41.2," + (y - 1.2) + " Z"} fill={lippe} />
+          if (z.mund === 6) return <><path d={"M41.2," + (y - 1.2) + " Q50," + (y - 3.8) + " 58.8," + (y - 1.2)
+            + " Q50," + (y + 4.2) + " 41.2," + (y - 1.2) + " Z"} fill={lippe} />
             <path d={"M41.2," + (y - 1.2) + " q8.8,1.7 17.6,0"} fill="none" stroke={tief} strokeWidth=".9" opacity=".55" />
             <path d={"M46," + (y - 2.6) + " q4,-1.4 8,0"} fill="none" stroke={shade(haut, -20)}
               strokeWidth=".7" opacity=".5" /></>;
@@ -3325,6 +3330,7 @@ function Avatar({ seed = 1, zuege, club, size = 72, ring, g, nat, meta }) {
             + " 43," + (y - .6) + " Z"} fill={lippe} />
             <path d={"M43," + (y - .6) + " q7,1.2 14,0"} fill="none" stroke={tief} strokeWidth=".7" opacity=".6" /></>;
         })()}
+        </g>
 
         {/* ---- Bartwuchs ----
             0 keiner · 1 Stoppeln · 2 Drei-Tage · 3 Schnauzer · 4 Kinnbart
@@ -3372,7 +3378,7 @@ function Avatar({ seed = 1, zuege, club, size = 72, ring, g, nat, meta }) {
               <path d={"M" + (50 + kopf.b - 7) + ",37 h11 l-8.4," + (y - 49) + " h-2.6 Z"} /></>}
           </g>); })()}
 
-        {modern && !w && z.bart>0 && <Bartform index={z.bart} kopf={kopf} farbe={haar} hell={haarHell} clipId={'kf'+kennung}/>}
+        {modern && !w && z.bart>0 && <Bartform index={z.bart} kopf={kopf} nase={z.nase} mund={z.mund} farbe={haar} hell={haarHell} clipId={'kf'+kennung}/>}
         {/* ---- Schmuck ---- */}
         {z.schmuck === 1 && <><circle cx={50 - kopf.b + 1} cy="52" r="1.8" fill="#C8A24B" />
           <circle cx={50 + kopf.b - 1} cy="52" r="1.8" fill="#C8A24B" /></>}
