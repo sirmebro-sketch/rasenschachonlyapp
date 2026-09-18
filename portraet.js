@@ -12,7 +12,7 @@ export function portraetOptionen(basis,g){
     Neuauswahl/Würfelung nutzt die tragfähigeren Formen plus neue IDs. */
  if(a.nase)a.nase=a.nase.filter(i=>i!==4&&i!==7);
  if(a.wangen)a.wangen=a.wangen.filter(i=>i!==4);
- for(const [k,neu] of Object.entries({brauen:[5,6],augen:[5,6,7,8],nase:[8,9,10,11],mund:[7,8],ohren:[3,4],wangen:[3,5,6]}))if(a[k])a[k]=[...a[k],...neu];
+ for(const [k,neu] of Object.entries({brauen:[5,6],augen:[5,6,7,8],nase:[8,9,10,11],mund:[7,8,9,10,11],ohren:[3,4],wangen:[3,5,6,7,8]}))if(a[k])a[k]=[...a[k],...neu];
  if(g==='w'&&a.schminke)a.schminke=[...a.schminke,5,6];
  if(basis.schmuck>2)a.schmuck=[...a.schmuck,6,7];
  a.details=[0,1,2,3,4,5,6,7,8];return a;
@@ -26,9 +26,9 @@ export const PORTRAET_NAMEN={
  brauen:['Gerade','Geschwungen','Markant','Fein','Breit geschwungen','Weich auslaufend','Sanfter Bogen'],
  augen:['Mandelförmig','Schmal','Betont','Tief liegend','Offen','Sanft rund','Leicht angehoben','Angehobene Außenkante','Abgesenkte Außenkante'],
  nase:['Ausgeglichen','Breit','Schmal','Lang','Gerade','Rund','Kräftig','Fein','Kurze Nasenspitze','Sanfter Nasenrücken','Breite Stupsnase','Hoher Nasenrücken'],
- mund:['Lächelnd','Gerade','Schmal geschwungen','Entspannt','Ausgeglichen','Voll','Breit','Leichtes Lächeln','Offenes Lächeln'],
+ mund:['Lächelnd','Gerade','Schmal geschwungen','Entspannt','Ausgeglichen','Voll','Breit','Leichtes Lächeln','Offenes Lächeln','Herzförmig','Kompakt','Breites Grinsen'],
  ohren:['Klein','Mittel','Groß','Anliegend','Rund'],
- wangen:['Weich','Kinngrübchen','Wangenknochen','Dezente Kontur','Wangengrübchen','Hohe Wangenkontur','Weiche Wangenfülle'],
+ wangen:['Weich','Kinngrübchen','Wangenknochen','Dezente Kontur','Wangengrübchen','Hohe Wangenkontur','Weiche Wangenfülle','Markante Kieferkante','Spitze Kinnkontur'],
  haut:['Hell warm','Hell golden','Mittel golden','Bronze','Braun warm','Dunkel warm','Sehr hell','Hell rosig','Mittel rosig','Kupfer','Braun neutral','Dunkel neutral','Tiefbraun','Sehr dunkel'],
  haar:['Schwarzbraun','Dunkelbraun','Braun','Hellbraun','Goldblond','Grau','Kupferrot','Hellblond','Dunkelblond','Kastanie','Dunkelrot','Silbergrau','Weiß'],
  bart:['Glatt','Stoppeln','Dreitagebart','Schnurrbart','Kinnbart','Ziegenbart','Kurzer Vollbart','Langer Vollbart','Kinnriemen','Koteletten','Schnurrbart und Stoppeln','Breiter Schnurrbart','Konturierter Bart','Spitzer Vollbart','Ankerbart','Breiter Vollbart'],
