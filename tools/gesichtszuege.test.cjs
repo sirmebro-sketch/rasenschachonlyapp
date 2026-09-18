@@ -22,14 +22,20 @@ test('CHAR-P1-02: neue Gesichtsformen hängen hinten an, schwache Altformen blei
  const o=portraetOptionen(BASIS,'m');
  assert.deepEqual(o.augen,[0,1,2,3,4,5,6,7,8]);
  assert.deepEqual(o.nase,[0,1,2,3,5,6,8,9,10,11]);
- assert.deepEqual(o.wangen,[0,1,2,3,5,6]);
+ assert.deepEqual(o.wangen,[0,1,2,3,5,6,7,8]);
  assert.deepEqual(o.details,[0,1,2,3,4,5,6,7,8]);
+ assert.deepEqual(o.mund,[0,1,2,3,4,5,6,7,8,9,10,11]);
  assert.equal(PORTRAET_NAMEN.nase[4],'Gerade');
  assert.equal(PORTRAET_NAMEN.nase[7],'Fein');
  assert.equal(PORTRAET_NAMEN.wangen[4],'Wangengrübchen');
  assert.equal(PORTRAET_NAMEN.augen[7],'Angehobene Außenkante');
  assert.equal(PORTRAET_NAMEN.nase[10],'Breite Stupsnase');
  assert.equal(PORTRAET_NAMEN.wangen[5],'Hohe Wangenkontur');
+ assert.equal(PORTRAET_NAMEN.mund[9],'Herzförmig');
+ assert.equal(PORTRAET_NAMEN.mund[10],'Kompakt');
+ assert.equal(PORTRAET_NAMEN.mund[11],'Breites Grinsen');
+ assert.equal(PORTRAET_NAMEN.wangen[7],'Markante Kieferkante');
+ assert.equal(PORTRAET_NAMEN.wangen[8],'Spitze Kinnkontur');
  assert.equal(PORTRAET_NAMEN.details[7],'Leichte Augenringe');
 });
 
