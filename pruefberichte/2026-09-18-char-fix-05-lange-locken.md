@@ -61,9 +61,46 @@ erzeugt je Größe einen Screenshot. Die Vorschau wird über
   Seed-Ableitung oder Speicherformat.
 - Keine Versionserhöhung durch Lemming; Astra entscheidet die Integrationsversion.
 
-## Prüfstatus
+## Ausgeführte Eigenprüfung
 
-Automatische Prüfungen und die Nachher-Sichtprüfung werden am PR-Head ergänzt,
-sobald die GitHub-CI den Branch verarbeitet hat.
+Erster vollständiger Produkt-Head vor diesem Abschlussvermerk:
+`ba96d1e8ffdeaf5819c496e023cda955159111c4`.
 
-Status: umgesetzt, Eigenprüfung läuft; unabhängige Astra-Abnahme offen.
+- GitHub „Spielregressionen“ Run `35325820048`: **140/140 bestanden,
+  0 fehlgeschlagen**; `npm run build` erfolgreich (Vite: 2,30 s).
+- GitHub „Visuelle Browsertests“ Run `35325820053`: **46 bestanden,
+  26 planmäßig übersprungen, 0 fehlgeschlagen**.
+- Browserartefakt `Rasenschach-Browsertest`, ID `10538343710`,
+  Digest `sha256:1915d1108d83fa1e4c0cf63db6c90138c39fc257e73ab4d2cb3e902d2ce2155f`.
+
+### Tatsächlich geöffnete Nachherbilder
+
+Die drei von `CHAR-FIX-05` erzeugten Screenshots wurden tatsächlich geöffnet und
+visuell bewertet, nicht nur über den Exitcode:
+- **72 px:** alle 14 Köpfe × vier Farbkontexte; Augen/Brauen bleiben frei,
+  seitliche Locken bleiben auch klein als lange Frisur lesbar.
+- **96 px:** gleiche Vollmatrix; keine neue Stirn-/Schläfenspalte, die seitlichen
+  Strähnen rahmen breite wie schmale Köpfe plausibel.
+- **145 px:** gleiche Vollmatrix; die getrennte Kronen-/Seitengeometrie ist klar
+  erkennbar, ohne große Haarfläche über Augen, Nase oder Wangen.
+
+Direkter Vorher/Nachher-Befund: Vorher reichte die geschlossene Vorderform bei
+mehreren Köpfen bis unter die Augen und teilweise tief über die Wangen; nachher
+liegt die Lockenmasse oben und seitlich. Die Gesichtszüge erscheinen damit nicht
+mehr auf eine Haarplatte gezeichnet. Helle/dunkle Haarfarben sowie helle/dunkle
+Haut zeigen keinen neuen Kontrast- oder Konturblocker.
+
+Die Matrix enthält sämtliche Kopf-IDs 0–13. Damit sind auch die neueren Formen
+Trapez, Langkantig, Diamant und Kurzbreit sowie die älteren schmalen/breiten
+Konturen im selben Verfahren geprüft.
+
+## Grenzen
+
+- Kein physischer Android-Gerätetest; für dieses reine SVG-Geometriepaket wurde
+  Browser-/Rendererprüfung nach LEMMING.md durchgeführt.
+- Keine allgemeine Neubewertung anderer Frisuren, Bärte oder des Porträt-Renderers.
+- Dieser Vermerk erzeugt einen neuen, dokumentationsbedingt anderen PR-Head.
+  Die CI wird deshalb am finalen Head erneut geprüft; der Produktcode selbst
+  bleibt gegenüber dem oben visuell geprüften Head unverändert.
+
+Status: umgesetzt und eigengeprüft; unabhängige Astra-Abnahme offen.
