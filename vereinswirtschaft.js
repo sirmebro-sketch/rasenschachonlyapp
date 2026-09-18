@@ -660,16 +660,28 @@ export function saisonAbrechnung(v, erg = {}, saat = 0) {
     + bau.fertig.length * 3
     + ereignisse.reduce((a, e) => a + (e.stimmung || 0), 0))));
 
+  /* Die Lizenzprüfung steht ganz am Ende und rechnet mit der Kasse NACH der
+     Abrechnung: geprüft wird die Lage, in der der Verein in die neue Saison
+     geht, nicht die, mit der er hereinkam. Die Einnahmen werden durchgereicht
+     statt neu gerechnet. */
+  const lizenz = lizenzPruefung({ ...v, kasse }, erg, ein.summe);
+
   return {
     v: { ...v, kasse, sponsoren, stimmung: stimmungNeu, gehaltsniveau: gehaltNeu,
-         ausbau: bau.ausbau, baustellen: bau.baustellen, ziel: null },
+         ausbau: bau.ausbau, baustellen: bau.baustellen, ziel: null,
+         /* Was die kommende Saison kostet. `verein.js` liest es beim Anpfiff
+            und zieht es von der Tabelle ab. */
+         abzug: lizenz.punkte },
     beleg: { kasseVorher, einnahmen: ein.posten, ausgaben: aus.posten,
              summeEin: ein.summe, summeAus: aus.summe, ergebnis, kasse,
              zuschauer: ein.zuschauer, auslastung: ein.auslastung,
              ausgelaufen: ausgelaufen.map((s) => s.n),
              ereignisse, ziel, bau, stimmung: stimmungNeu,
              stimmungVorher: v?.stimmung ?? 60,
-             gehalt: { vorher: aus.niveau, neu: gehaltNeu, kader: aus.kader } },
+             gehalt: { vorher: aus.niveau, neu: gehaltNeu, kader: aus.kader },
+             /* Der Abzug, der die ABGELAUFENE Saison gekostet hat, kommt von
+                `verein.js` dazu — der Rechenkern kennt die Tabelle nicht. */
+             lizenz },
   };
 }
 
@@ -758,6 +770,81 @@ export function abschlussWirtschaft(v) {
      Arbeitsplan „gedeckelt bei 250" behaupteten. Der Deckel ist die Aussage,
      der Faktor ein Vorteil darunter. */
   return { kasse, punkte: Math.min(PUNKTE_DECKEL, Math.round(roh * faktor)), faktor };
+}
+
+/* -------------------------------------------------- Lizenzauflage (P1-04)
+   Bis hierher durfte die Kasse beliebig tief ins Minus laufen, ohne dass
+   irgendetwas geschah. Gemessen am echten Spielablauf, fünfzehn Saisons, Kader
+   aus dem Nachwuchs aufgefüllt:
+
+   | Kaderstärke | ab Jahr im Minus | tiefster Stand |
+   |------------:|-----------------:|---------------:|
+   |          48 |                – |              0 |
+   |          55 |               14 |            −10 |
+   |          62 |              4–5 |           −135 |
+   |          70 |              3–4 |           −285 |
+   |          78 |            **1** |       **−703** |
+
+   Ein Spitzenkader steht ab der ERSTEN Saison im Minus und endet bei einer
+   dreiviertel Milliarde Schulden. Das ist kein Randfall, sondern der Normalfall
+   ab Stärke 62.
+
+   DAS MITTEL IST PUNKTABZUG, und zwar auf Kevins ausdrückliche Entscheidung
+   vom 18.09.2026. Ich hatte zu einer Staffelung aus Zins und Zwangsverkauf
+   geraten, mit dem Einwand, Punktabzug allein löse das wirtschaftliche Problem
+   nicht. Der Einwand war falsch, und das gehört hierher, weil sonst der
+   nächste ihn wiederholt: Punktabzug wirkt sehr wohl wirtschaftlich, nur über
+   den sportlichen Weg. Ein Abzug drückt den Verein in der Tabelle, das führt
+   zum Abstieg — und ein Abstieg HALBIERT die Gehälter (`kaderKosten` teilt
+   durch die Ligastufe) und senkt die Gehaltsratsche gleich dreifach: über
+   `ligaTeil`, über `platzTeil` und über den Abstiegsmalus in `gehaltsZiel`.
+   Der Weg aus den Schulden führt also nach unten, und das ist die ehrlichste
+   Antwort, die dieses System geben kann.
+
+   DER RAHMEN HÄNGT AN DEN EINNAHMEN, NICHT AN EINER FESTEN ZAHL. 20 Mio sind
+   für einen Erstligisten nichts und für einen Fünftligisten das Ende. Geduldet
+   wird eine halbe Saisoneinnahme — das ist ungefähr das, was ein Kreditgeber
+   ansetzen würde, und es sorgt dafür, dass BAUEN nicht sofort bestraft wird:
+   wer sein Geld in eine Tribüne steckt, steht kurz im Minus und verdient
+   danach mehr.
+
+   DIE STAFFELUNG 3/6/9 ist keine erfundene Zahl. Sie ist die Staffel, die
+   DFL und DFB bei Lizenzverstössen tatsächlich verhängen.
+
+   GEMESSEN IN RAHMEN, NICHT IN MILLIONEN. Ein Abzug, der an einem festen
+   Betrag hinge, träfe die untere Liga ungleich härter — dieselbe Falle wie
+   beim Gehaltsteiler, die dieses Projekt schon einmal erlebt hat. */
+export const RAHMEN_ANTEIL = 0.5;
+export const RAHMEN_MIN = 2;
+/* Je Stufe: bis zu wie vielen Rahmen unter der Linie, und was das kostet. */
+export const ABZUG_STUFEN = [{ bis: 1, punkte: 3 }, { bis: 3, punkte: 6 },
+                             { bis: Infinity, punkte: 9 }];
+
+/* `einnahmen` wird durchgereicht, wenn der Aufrufer sie schon hat. Die
+   Abrechnung rechnet sie ohnehin — sie hier ein zweites Mal zu holen wäre
+   derselbe Fehler wie in `ueberzogen`, wo 153 vollständige Einnahmerechnungen
+   je Saison für einen einzigen Skalar anfielen. Ohne das Argument rechnet die
+   Funktion selbst, damit sie auch isoliert benutzbar bleibt. */
+export function kreditrahmen(v, erg = {}, einnahmen) {
+  const ein = Number.isFinite(einnahmen) ? einnahmen : saisonEinnahmen(v, erg).summe;
+  return Math.round(Math.max(RAHMEN_MIN, ein * RAHMEN_ANTEIL) * 100) / 100;
+}
+
+/* Die Lizenzprüfung. Sie entscheidet über die KOMMENDE Saison — die
+   abgelaufene ist gespielt, ihre Tabelle steht. Der Fussball macht es genauso:
+   die Auflage trifft das Jahr nach dem Verstoss. */
+export function lizenzPruefung(v, erg = {}, einnahmen) {
+  const kasse = Math.round((Number(v?.kasse) || 0) * 100) / 100;
+  const rahmen = kreditrahmen(v, erg, einnahmen);
+  const schulden = Math.max(0, -kasse);
+  /* Im Rahmen: keine Auflage. Eine Warnung gibt es trotzdem, sobald die Kasse
+     überhaupt negativ ist — wer erst beim Abzug erfährt, dass er zu tief steht,
+     hatte nie die Gelegenheit gegenzusteuern. */
+  const ueber = (schulden - rahmen) / rahmen;
+  if (ueber <= 0) return { punkte: 0, rahmen, kasse, ueber: 0, warnung: kasse < 0 };
+  const stufe = ABZUG_STUFEN.find((x) => ueber <= x.bis) || ABZUG_STUFEN[ABZUG_STUFEN.length - 1];
+  return { punkte: stufe.punkte, rahmen, kasse,
+           ueber: Math.round(ueber * 100) / 100, warnung: true };
 }
 
 /* ------------------------------------------------------- Vorstandsziel

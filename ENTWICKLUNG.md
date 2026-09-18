@@ -1909,3 +1909,154 @@ Der kann hier nicht mitkommen, weil er die Testwerkzeuge der Beta braucht, um
 **Offen für Codex:** falls später ein siebter Reiter dazukommt, ist die
 Kürzung verbraucht. Dann trägt die Leiste eher ein Überlaufzeichen als noch
 kürzere Wörter.
+
+## WIRT-P1-04 — Folgen einer leeren Kasse: Lizenzauflage (Claude, 18.09.2026)
+
+**Basis-Commit:** `060a225` (`claude/wirt-p1-05`). Zur Abnahme durch Codex.
+
+### Warum das Paket nötig war
+
+Bis hierher durfte die Kasse beliebig tief ins Minus laufen, ohne dass etwas
+geschah. Gemessen am echten Spielablauf (`VEREIN.vereinSaison`, fünfzehn
+Saisons, Kader je Saison aus dem Nachwuchs aufgefüllt, zwei Saaten):
+
+| Kaderstärke | ab Jahr im Minus | tiefster Stand |
+|------------:|-----------------:|---------------:|
+| 48 | – | 0 |
+| 55 | 14 | −10 |
+| 62 | 4–5 | −135 |
+| 70 | 3–4 | −285 |
+| 78 | **1** | **−703** |
+
+Ein Spitzenkader steht **ab der ersten Saison** im Minus und endet bei einer
+dreiviertel Milliarde Schulden. Kein Randfall, sondern der Normalfall ab
+Stärke 62.
+
+### Die Entscheidung und ein eigener Irrtum
+
+Ich habe drei Mittel vorgelegt und zu einer Staffelung aus Zins und
+Zwangsverkauf geraten, mit dem Einwand, Punktabzug allein löse das
+wirtschaftliche Problem nicht. **Kevin hat Punktabzug gewählt.**
+
+Der Einwand war **teilweise falsch**, und das gehört in den Vermerk, weil ihn
+sonst der Nächste wiederholt: Punktabzug wirkt sehr wohl wirtschaftlich, nur
+über den sportlichen Weg. Ein Abzug drückt in der Tabelle, das führt zum
+Abstieg — und ein Abstieg **halbiert die Gehälter** (`kaderKosten` teilt durch
+die Ligastufe) und senkt die Ratsche gleich dreifach über `ligaTeil`,
+`platzTeil` und den Abstiegsmalus in `gehaltsZiel`.
+
+**Er war aber auch nicht ganz falsch, und das ist der wichtigste Befund dieser
+Runde.** Siehe „Was gemessen wurde".
+
+### Was gebaut wurde
+
+1. **`lizenzPruefung` im Rechenkern** (`vereinswirtschaft.js`, Leaf-Modul, reine
+   Rechnung). Geduldet wird `max(2 Mio, halbe Saisoneinnahme)`. Darunter kostet
+   es 3, 6 oder 9 Punkte, gestaffelt nach **Rahmen** unter der Linie.
+   - **Der Rahmen hängt an den Einnahmen, nicht an einer festen Zahl.** 20 Mio
+     sind für einen Erstligisten nichts und für einen Fünftligisten das Ende —
+     dieselbe Falle wie beim Gehaltsteiler, die dieses Projekt schon einmal
+     erlebt hat. Eine Regression prüft, dass gleich tief *in Rahmen* in jeder
+     Liga gleich teuer ist.
+   - **Der Rahmen sorgt dafür, dass Bauen nicht bestraft wird.** Wer sein Geld
+     in eine Tribüne steckt, steht kurz im Minus und verdient danach mehr.
+   - **3/6/9 ist keine erfundene Zahl**, sondern die Staffel, die DFL und DFB
+     bei Lizenzverstössen tatsächlich verhängen.
+   - **Die Einnahmen werden durchgereicht, nicht neu gerechnet.** Die Abrechnung
+     hat sie ohnehin; sie ein zweites Mal zu holen wäre derselbe Fehler wie in
+     `ueberzogen`, wo 153 vollständige Einnahmerechnungen je Saison für einen
+     einzigen Skalar anfielen.
+2. **`abzugAnwenden` in `verein.js`** zieht die Punkte ab, **sortiert die
+   Tabelle neu und vergibt die Plätze neu**. Das ist der Kern: ein Abzug, der
+   als Zahl danebensteht, während der Verein seinen erspielten Platz behält,
+   wäre Kosmetik — genau die Sorte Feld ohne Leser, von der dieses Projekt
+   schon mehrere hatte. Sortiert wird mit **demselben Vergleich** wie
+   `ligaSpielen`; zwei Sortierungen für dieselbe Tabelle laufen auseinander,
+   sobald jemand eine davon anfasst.
+3. **Die Auflage trifft die kommende Saison**, nicht die abgelaufene. So macht
+   es der Fussball auch, und anders ginge es gar nicht: die Tabelle steht schon.
+4. **Drei Zustände, drei Aussagen in der Oberfläche.** Kasse im Plus: nichts.
+   Kasse im Minus, aber im Rahmen: Vorwarnung. Auflage beschlossen: die Zahl,
+   stehend im Vereinsbildschirm und im Saisonbeleg, dazu die abgelaufene
+   Auflage in der Chronik. **Eine Strafe, die erst auffällt, wenn sie schon
+   wirkt, lässt dem Spieler keine Gegenwehr.**
+
+### Was gemessen wurde — auch das Unangenehme
+
+Gegenprobe über acht Läufe, gleiche Saat, gleiche Saisonzahl, einmal mit und
+einmal ohne Auflage:
+
+| Stärke | Saat | ohne | mit | Punkte | Abstiege mit |
+|---:|---:|---:|---:|---:|---:|
+| 55 | beide | 0 / −10 | 0 / −10 | 0 | unverändert |
+| 62 | 20260917 | −135 | **−107** | 48 | 3 (vorher 2) |
+| 62 | 4711 | −53 | −53 | 12 | 3 |
+| 70 | 20260917 | −269 | −323 | 84 | 1 (vorher 0) |
+| 70 | 4711 | −285 | −293 | 66 | 1 |
+| 78 | 20260917 | −703 | −662 | 84 | **0** |
+| 78 | 4711 | −530 | −600 | 72 | **0** |
+
+**Sportlich wirkt die Auflage, wirtschaftlich nicht.** Über eine Laufbahn
+werden 48 bis 84 Punkte abgezogen, der 78er-Verein fällt im Schnitt von Platz
+~2 auf 5,9 — das kostet Titel, Prämien und Stimmung. Auf die Schulden ist die
+Wirkung dagegen **Rauschen in beide Richtungen** (+21 %, 0 %, −20 %, −3 %,
++6 %, −13 %).
+
+**Der Grund ist gemessen, nicht vermutet:** der 78er-Verein steht **52 Punkte**
+über dem Abstiegsplatz. Neun Punkte schließen ein Sechstel davon. Ein Kader,
+der seiner Liga so weit davongelaufen ist, ist durch Punktabzug **nicht
+absteigbar** — das ist keine Kalibrierfrage, sondern eine Grenze des Mittels.
+Die Staffel höher zu drehen kauft nichts: auch dreissig Punkte reichten nicht,
+und eine Tabelle mit dreissig Minuspunkten liest sich wie ein Anzeigefehler.
+
+**Ich habe die Staffel deshalb nicht nachgeschärft.** Sie ist dort richtig, wo
+sie verhältnismässig ist (Stärke 62: drei statt zwei Abstiege, Schulden von
+−135 auf −107), und mehr ist mit diesem Mittel nicht zu holen.
+
+### Geprüft
+
+- `npm test` **184/184** (vorher 177), `npm run build` erfolgreich.
+- Sieben neue Regressionen: der Rahmen hängt an den Einnahmen und behandelt
+  alle Ligen gleich tief gleich teuer; die Staffel 3/6/9 samt Deckel und der
+  Warnung innerhalb des Rahmens; die Abrechnung beschliesst aus der Kasse
+  **nach** der Saison; der Abzug sortiert die Tabelle **wirklich** um (Platz,
+  nicht Punktzahl, samt Tordifferenz-Gleichstand und Klemmung bei null); die
+  Auflage der Vorsaison trifft die nächste und steht in der Chronik; alte
+  Spielstände starten ohne Auflage und ein negativer Abzug wird nicht zum
+  Geschenk; die Oberfläche unterscheidet die drei Zustände.
+- **Die Zusicherung, die mir am wichtigsten ist:** die bestehende
+  Fünfzehn-Jahres-Kalibrierung prüft jetzt zusätzlich, dass der **gewöhnliche
+  Weg nie eine Auflage bekommt** (Liga 1 bis 5). Eine Strafe, die den
+  Normalfall trifft, wäre ein Fehler, auch wenn sie richtig rechnet.
+- **Drei Gegenproben, alle rot:** wird der Abzug nur durchgereicht statt
+  angewandt, wird `not ok 66` rot; wird die Tabelle nicht neu sortiert,
+  `not ok 65`; ist der Rahmen eine feste Zahl statt aus den Einnahmen,
+  `not ok 152`.
+
+### Zwei eigene Fehler auf dem Weg
+
+Beide lagen in den **Prüfungen**, nicht im Code, und beide sind dieselbe Sorte:
+Kopfrechnen an einer Staffel.
+
+1. `kasse: -(rahmen*2)` sind **zwei Rahmen Schulden**, also **einer** unter der
+   Linie — 3 Punkte, nicht 6. Die Prüfung erwartete 6.
+2. 63 − 6 = 57 stand in der Testtabelle **gleich** mit dem Vierten, und die
+   bessere Tordifferenz (+23 gegen +8) hielt den Verein auf Platz 3. Die
+   Prüfung erwartete 4.
+
+Beide stehen jetzt als Kommentar an der jeweiligen Prüfung. Der zweite ist
+nachträglich der nützlichere Fall: er zeigt, dass **einsortiert** und nicht nur
+abgezogen wird.
+
+### Ausdrücklich offen
+
+- **Lizenzentzug — Zwangsabstieg statt Punktabzug**, wenn die Auflage mehrere
+  Saisons hintereinander greift. Dasselbe Verfahren, nur seine letzte Stufe,
+  und nach der Messung das Einzige, was den extremen Fall schliesst. **Nicht
+  gebaut, weil nicht beauftragt** — Entscheidung des Eigentümers.
+- **Preise, Rechtsform und Vorstandsziel haben weiterhin keine Oberfläche.**
+  Gerade beim Punktabzug fällt das auf: der Preishebel wäre eine der wenigen
+  Stellschrauben, mit der ein verschuldeter Verein gegensteuern könnte.
+- **WIRT-P1-02 — Stadionausbau spürbar machen.**
+- **Kein Gerätetest.** Die Oberflächenteile sind im Prüfstand gerendert, aber
+  niemand hat die Auflage im Spiel gesehen.

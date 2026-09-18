@@ -547,6 +547,98 @@ test('Der Ausbaureiter zeigt Geld und VC getrennt, ohne NaN',()=>{
  assert(!halb.includes('NaN'));
 });
 
+/* ------------------------------------------------ Lizenzauflage (P1-04) */
+
+test('Der Punktabzug sortiert die Tabelle wirklich um, nicht nur die Anzeige',()=>{
+ /* DAS IST DIE EIGENTLICHE ZUSICHERUNG. Ein Abzug, der als Zahl danebensteht,
+    waehrend der Verein seinen erspielten Platz behaelt, waere Kosmetik — und
+    genau die Sorte Feld ohne Leser, von der dieses Projekt schon mehrere
+    hatte. Geprueft wird deshalb der PLATZ, nicht die Punktzahl. */
+ const tab=[{name:'A',pos:1,sp:34,w:20,u:6,n:8,gf:60,ga:30,pkt:66,me:false},
+            {name:'Ich',pos:2,sp:34,w:19,u:6,n:9,gf:55,ga:32,pkt:63,me:true},
+            {name:'C',pos:3,sp:34,w:18,u:6,n:10,gf:50,ga:35,pkt:60,me:false},
+            {name:'D',pos:4,sp:34,w:17,u:6,n:11,gf:48,ga:40,pkt:57,me:false}];
+ const erg={tabelle:tab,rang:2,punkte:63,N:4};
+ const ohne=E.VEREIN.abzugAnwenden(erg,0);
+ assert.equal(ohne.rang,2,'ohne Auflage bleibt alles, wie es erspielt wurde');
+ assert.equal(ohne.abzug,0);
+ /* SECHS Punkte bringen den Verein auf 57 — gleichauf mit D, aber mit der
+    besseren Tordifferenz (+23 gegen +8), also Platz 3 und nicht 4. Der erste
+    Entwurf dieser Pruefung erwartete 4 und uebersah den Gleichstand; der
+    Fehler lag in der Pruefung, nicht im Code. Er steht hier, weil er genau
+    das zeigt, worauf es ankommt: der Abzug wird richtig EINSORTIERT, nicht
+    stumpf durchgereicht. */
+ const mit=E.VEREIN.abzugAnwenden(erg,6);
+ assert.equal(mit.punkte,57,'sechs Punkte weg');
+ assert.equal(mit.rang,3,'gleichauf mit D, aber bessere Differenz');
+ assert.equal(mit.abzug,6);
+ /* NEUN Punkte reichen dann wirklich nach unten durch: 54 liegt unter beiden. */
+ const tief=E.VEREIN.abzugAnwenden(erg,9);
+ assert.equal(tief.punkte,54);
+ assert.equal(tief.rang,4,'und damit vom zweiten auf den letzten Platz');
+ /* Der Platz steht auch IN der Tabelle neu, sonst zeigt der Rueckblick etwas
+    anderes als der Bericht. */
+ const meine=mit.tabelle.find(r=>r.me);
+ assert.equal(meine.pos,3,'die Tabelle selbst traegt den neuen Platz');
+ assert.deepEqual(mit.tabelle.map(r=>r.pos),[1,2,3,4],'die Plaetze bleiben fortlaufend');
+ assert.equal(mit.tabelle[0].name,'A','die anderen ruecken nach');
+ /* Bei Gleichstand entscheidet die Tordifferenz — derselbe Vergleich wie in
+    `ligaSpielen`. Mit 3 Punkten Abzug steht „Ich" bei 60 wie C, hat aber die
+    bessere Differenz (+23 gegen +15) und bleibt davor. */
+ const gleich=E.VEREIN.abzugAnwenden(erg,3);
+ assert.equal(gleich.rang,2,'bei Punktgleichheit entscheidet die Tordifferenz');
+ /* Punkte werden bei null geklemmt, nicht negativ. */
+ assert.equal(E.VEREIN.abzugAnwenden(erg,99).punkte,0,'keine Minuspunkte in der Tabelle');
+});
+
+test('Die Auflage aus der Vorsaison trifft die naechste und wandert in die Chronik',()=>{
+ /* Die Auflage kostet das Jahr NACH dem Verstoss — so macht es der Fussball
+    auch, und anders ginge es gar nicht: die abgelaufene Tabelle steht schon. */
+ E.zufallSetzen(20260918);
+ const v0=E.VEREIN.einschreiben(spielbereiterVerein({kasse:-400})).v;
+ const r=E.VEREIN.vereinSaison({...v0,abzug:9});
+ assert(!r.fehler,'die Saison laeuft: '+r.fehler);
+ assert.equal(r.abzug,9,'der mitgebrachte Abzug wurde angewandt');
+ assert.equal(r.tabelle.find(z=>z.me).pos,r.rang,'Tabelle und Rang sagen dasselbe');
+ const c=r.v.chronik.at(-1).wirtschaft;
+ assert.equal(c.abzug,9,'was diese Saison gekostet hat');
+ assert(c.auflage>0,'und was die naechste kosten wird — zwei verschiedene Zahlen');
+ assert.equal(r.v.abzug,c.auflage,'die neue Auflage haengt am Verein');
+ /* Ein Verein mit voller Kasse schleppt keine Auflage mit sich herum. */
+ E.zufallSetzen(20260918);
+ const reich=E.VEREIN.vereinSaison(E.VEREIN.einschreiben(spielbereiterVerein({kasse:300})).v);
+ assert.equal(reich.abzug,0);
+ assert.equal(reich.v.abzug,0);
+ assert.equal((reich.v.chronik.at(-1).wirtschaft||{}).abzug,0);
+});
+
+test('Alte Spielstaende ohne Lizenzfeld starten ohne Auflage',()=>{
+ /* Ergaenzt wird beim LESEN, nicht beim Speichern — dieselbe Regel wie fuer
+    die uebrigen Wirtschaftsfelder. Und ein negativer Abzug waere ein Geschenk. */
+ assert.equal(E.VEREIN.mitWirtschaft({}).abzug,0);
+ assert.equal(E.VEREIN.mitWirtschaft({abzug:'kaputt'}).abzug,0);
+ assert.equal(E.VEREIN.mitWirtschaft({abzug:-5}).abzug,0,'kein Geschenk aus einem kaputten Stand');
+ assert.equal(E.VEREIN.mitWirtschaft({abzug:6}).abzug,6);
+});
+
+test('Die Oberflaeche nennt Auflage und Vorwarnung, statt sie stumm zu verrechnen',()=>{
+ /* Eine Strafe, die erst auffaellt, wenn sie schon wirkt, laesst dem Spieler
+    keine Gegenwehr. Drei Zustaende, drei verschiedene Aussagen. */
+ const gesund=E.renderVerein(E.VEREIN.mitWirtschaft(spielbereiterVerein({kasse:40})),
+   E.leereAkademie(),'ausbau');
+ assert(!gesund.includes('Lizenzauflage'),'wer im Plus steht, wird nicht gewarnt');
+ assert(!gesund.includes('Kasse ist im Minus'));
+ const warnung=E.renderVerein(E.VEREIN.mitWirtschaft(spielbereiterVerein({kasse:-3})),
+   E.leereAkademie(),'ausbau');
+ assert(warnung.includes('Kasse ist im Minus'),'ein Minus wird angesagt');
+ assert(!warnung.includes('Lizenzauflage'),'aber noch nicht als Auflage');
+ const auflage=E.renderVerein(E.VEREIN.mitWirtschaft(spielbereiterVerein({kasse:-400,abzug:9})),
+   E.leereAkademie(),'ausbau');
+ assert(auflage.includes('Lizenzauflage'),'eine beschlossene Auflage steht da');
+ assert(auflage.includes('9 Punkte Abzug'),'mit der Zahl');
+ assert(!auflage.includes('NaN'));
+});
+
 test('Abschluss: die Restkasse wird zu Vermächtnispunkten',()=>{
  /* WIRT-P1-05. Bis hierher verfiel, was am Ende in der Kasse lag — damit war
     Wirtschaften ab dem Jahr, in dem alles gebaut war, gleichgültig, und genau
