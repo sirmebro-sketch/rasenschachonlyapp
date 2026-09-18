@@ -219,6 +219,8 @@ Die Reihenfolge ist eine Qualitäts-/Risikoreihenfolge. Der letzte Nutzerauftrag
 
 ### WILD-P0-01 – Wildcard-Seltenheiten als konsistente Familie — SICHTPRÜFUNG
 
+**Teilstand 18.09.2026 – mobile Aufdeckung umgesetzt / Astra-Abnahme offen:** Alle sieben Seltenheiten wurden bei 320/390 px mit und ohne Spielanimation anhand langer realer Katalogtexte sichtbar geprüft. Kein Produktfehler war reproduzierbar; Produkt- und Effektcode blieben unverändert. Galerie und Browserregression prüfen jetzt Text-/Buttongrenzen, Bühnenstabilität sowie Material-/Prägungskontur und erzeugen die vollständige mobile Screenshot-Matrix. Der Vergleich im Pass und eine Android-Nachkontrolle bleiben außerhalb dieser begrenzten Teilrunde offen. Details: `pruefberichte/2026-09-18-wild-p0-01-aufdeckung.md`.
+
 **Ziel:** alle Seltenheitsstufen teilen dieselbe Informationslogik; höhere Stufen steigern Material/Bühne, nicht Unlesbarkeit.
 
 **Prüfung:** Vorderseite im Pass und bei Enthüllung vergleichen; Welt/GOAT/HSV mit eigener Bühne; Ruhemodus; Weiter-Button und vollständiger Text im Sichtbereich.
