@@ -36,7 +36,7 @@ export function gesichtsAnker(kopf={},nase=0,mund=0){
 
  // Nur kuerzere Koepfe ziehen die Nase nach oben. Lange Koepfe behalten die
  // vertraute Augen-/Nasenlage; zusaetzliche Laenge liegt unterhalb davon.
- const naseDy=Math.min(0,(kinn-70)*.45);
+ const naseDy=Math.min(0,(kinn-70)*.6);
  const naseBottom=NASEN_UNTERKANTE[naseId]+naseDy;
 
  // Auf kurzen Koepfen liegt der Mund naeher am Kinn, auf langen etwas hoeher.
@@ -57,7 +57,7 @@ export function gesichtsAnker(kopf={},nase=0,mund=0){
  // Schnurrbart liegt direkt oberhalb der Oberlippe, aber nie auf der Nase.
  // schnurrbartY ist die Basislinie des Pfades; dessen oberster Punkt liegt
  // rund drei Einheiten darueber.
- const schnurrbartY=Math.max(mundY-1.3,naseBottom+3.2);
+ const schnurrbartY=Math.min(mundY-1.5,Math.max(naseBottom+2.25,mundY-2));
  return {kinn,naseDy,naseBottom,mundY,mundScale,mundTop,mundBottom,schnurrbartY};
 }
 
