@@ -1,5 +1,10 @@
 # Änderungen
 
+## Noch nicht veröffentlicht
+
+- Neues Rasenschach-XI-Startmotiv erscheint beim Appstart als kurzer Ladescreen mit dezentem Ladekreis unter dem XI.
+- Separater PR-Beta-Build mit eigener App-ID ermöglicht die Installation neben der produktiven Android-App, ohne Release oder main-Merge.
+
 ## 35.194.1 – Kleine Korrekturen nach unabhängiger Qualitätsprüfung
 
 - Neue Mundformen verwenden eigene Abstandsgrenzen für Lippen, Kinn und Bärte.
