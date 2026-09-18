@@ -4,6 +4,7 @@
 
 - Neues Rasenschach-XI-Startmotiv erscheint beim Appstart als kurzer Ladescreen mit dezentem Ladekreis unter dem XI.
 - Separater PR-Beta-Build mit eigener App-ID ermöglicht die Installation neben der produktiven Android-App, ohne Release oder main-Merge.
+- Neues App-Icon verwendet das gelieferte Rasenschach-XI-Stadionmotiv vollflächig; Androids Launcher-Maske ist die einzige Außenform, ohne eingebauten Innenrand oder zweite Plakette.
 
 ## 35.194.1 – Kleine Korrekturen nach unabhängiger Qualitätsprüfung
 
