@@ -32,8 +32,10 @@ function bartBand({l,r,j,k,top=46,innenY=54,innenHalb=10,kieferLift=9,freiraumY}
 }
 
 function schnurrbartPfad(y,width=11,yOffset=0,drop=0){
- const basis=y+yOffset,w=width;
- return `M50 ${basis+1} C${50-w*.24} ${basis-3} ${50-w*.7} ${basis-4+drop} ${50-w} ${basis-1+drop} C${50-w*.72} ${basis+2+drop} ${50-w*.28} ${basis+2} 50 ${basis+1} C${50+w*.28} ${basis+2} ${50+w*.72} ${basis+2+drop} ${50+w} ${basis-1+drop} C${50+w*.7} ${basis-4+drop} ${50+w*.24} ${basis-3} 50 ${basis+1} Z`;
+ const basis=y+yOffset,w=width,d=drop*.2;
+ // Kompakte Oberlippenform: die alte Kurve war bis zu sechs SVG-Einheiten
+ // hoch und konnte auf kurzen Köpfen zugleich Nase und Mund berühren.
+ return `M50 ${basis+.35} C${50-w*.24} ${basis-1.25} ${50-w*.7} ${basis-1.8+d} ${50-w} ${basis-.45+d} C${50-w*.72} ${basis+.75+d} ${50-w*.28} ${basis+.8} 50 ${basis+.35} C${50+w*.28} ${basis+.8} ${50+w*.72} ${basis+.75+d} ${50+w} ${basis-.45+d} C${50+w*.7} ${basis-1.8+d} ${50+w*.24} ${basis-1.25} 50 ${basis+.35} Z`;
 }
 
 export function Bartform({index=0,kopf={},nase=0,mund=0,farbe='#38241B',hell='#E7C19F',clipId}){
@@ -109,7 +111,7 @@ export function Bartform({index=0,kopf={},nase=0,mund=0,farbe='#38241B',hell='#E
    moustacheNode=moustache(10.5,0,0);
    break;
   case 11: // Breiter Schnurrbart – deutlich breiter und stärker herabhängend.
-   moustacheNode=<g>{moustache(14,-.5,2,'schnurrbart-breit')}<path d={`M37 ${face.schnurrbartY-1} Q35 ${face.schnurrbartY+4} 40 ${face.schnurrbartY+5} M63 ${face.schnurrbartY-1} Q65 ${face.schnurrbartY+4} 60 ${face.schnurrbartY+5}`} fill="none" stroke={farbe} strokeWidth="2.2" strokeLinecap="round"/></g>;
+   moustacheNode=<g>{moustache(14,-.35,2,'schnurrbart-breit')}<path d={`M37 ${face.schnurrbartY-.4} Q35 ${face.schnurrbartY+1.1} 40 ${face.schnurrbartY+1.45} M63 ${face.schnurrbartY-.4} Q65 ${face.schnurrbartY+1.1} 60 ${face.schnurrbartY+1.45}`} fill="none" stroke={farbe} strokeWidth="1.8" strokeLinecap="round"/></g>;
    break;
   case 12: // Konturierter Bart – hohe scharfe Wangenkante, schlanker Mund-/Kinnbereich.
    body=<g {...clip}>
