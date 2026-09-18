@@ -1628,3 +1628,27 @@ für 70 VC über ein Feld wirkte, das niemand liest.
 **Geprüft:** `npm test` 164/164, `npm run build` erfolgreich. Zwei neue
 Regressionen: die Chronik zeigt Kasse, Zuschauer und Stimmung ohne NaN, und
 weder Bau noch Extrakauf legen die Ligastufe in den Spielstand.
+
+## Nachbesserung nach Gegenlesen — Sponsoren (Claude, 17.09.2026)
+
+**1. Der angezeigte Betrag war nicht der, der ankommt.** Die Abrechnung bucht
+`betrag × kommerz` der Rechtsform — ein e.V. bekommt 92 Prozent, und da es
+keine Oberfläche für die Rechtsform gibt, ist jeder Verein im Spiel ein e.V.
+Die Oberfläche zeigte den Bruttobetrag: ein Angebot über 2,97 Mio tauchte im
+Beleg als 2,73 Mio auf, und bei einem Vierjahresvertrag lag die genannte
+Gesamtsumme rund eine Million daneben. Wer Angebote vergleicht, verglich Zahlen,
+die nie eintreffen — und das ist die einzige Entscheidung, die dieses Paket
+erzeugt. `werbeErtrag` rechnet es jetzt an einer Stelle, für Buchung wie
+Anzeige; ein Satz im Reiter sagt auch, warum weniger ankommt als verhandelt.
+
+**2. Alle Angebote unterschrieben hiess: drei neue.** `mitAngeboten` prüfte
+`Array.isArray(angebote) && angebote.length` und legte bei einer LEEREN Liste
+nach. Wer alle drei Angebote einer Saison annahm, bekam beim nächsten Blick auf
+den Bildschirm sofort drei frische — genau der Automat, den das Paket
+verhindern soll, und die Zeile „Für diese Saison liegt nichts mehr vor." war
+unerreichbarer toter Code. Jetzt wird nur ein FEHLENDES Feld nachgelegt; alte
+Spielstände bekommen weiterhin ihre Auswahl.
+
+**Geprüft:** `npm test` 170/170, `npm run build` erfolgreich. Zwei neue
+Regressionen: der angezeigte Betrag stimmt mit dem gebuchten Posten überein,
+und eine leergeräumte Angebotsliste bleibt leer.

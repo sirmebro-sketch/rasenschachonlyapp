@@ -1234,6 +1234,16 @@ export const machVerein = (H) => {
      Laufs. */
   const SPONSOR_MAX = 3;
 
+  /* WAS TATSAECHLICH ANKOMMT. Die Abrechnung bucht `betrag * kommerz` der
+     Rechtsform — ein e.V. bekommt 92 Prozent. Die Oberfläche zeigte den
+     Bruttobetrag: ein Angebot über 2,97 Mio tauchte im Beleg als 2,73 Mio auf,
+     und bei einem Vierjahresvertrag lag die Gesamtsumme rund eine Million
+     daneben. Wer Angebote vergleicht, vergleicht damit Zahlen, die nie
+     eintreffen. Es gibt nur eine Stelle, an der der Ertrag entsteht — hier ist
+     sie auch für die Anzeige. */
+  const werbeErtrag = (v, betrag) =>
+    Math.round((Number(betrag) || 0) * WIRT.rechtsform(mitWirtschaft(v)).kommerz * 100) / 100;
+
   /* Frische Angebote fuer die laufende Saison. Idempotent: derselbe Verein im
      selben Jahr bekommt dieselben drei. */
   const sponsorAngebote = (v) => WIRT.sponsorAngebote(mitWirtschaft(v), wSaat(v));
@@ -1243,7 +1253,12 @@ export const machVerein = (H) => {
      ohne dass irgendwo ein Sonderfall steht. */
   const mitAngeboten = (v) => {
     const vw = mitWirtschaft(v);
-    return Array.isArray(vw.angebote) && vw.angebote.length
+    /* NUR EIN FEHLENDES Feld wird nachgelegt, keine LEERE Liste. Der erste
+       Entwurf prüfte zusätzlich auf `.length` — wer alle drei Angebote einer
+       Saison unterschrieb, bekam damit beim nächsten Blick auf den Bildschirm
+       sofort drei neue. Genau der Automat, den das Paket verhindern soll; und
+       die Zeile „Für diese Saison liegt nichts mehr vor." war unerreichbar. */
+    return Array.isArray(vw.angebote)
       ? vw : { ...vw, angebote: sponsorAngebote(vw) };
   };
 
@@ -1629,6 +1644,6 @@ export const machVerein = (H) => {
            FREI_AKADEMIE, FREI_VEREIN, freigeschaltet,
            VEREIN_AUSBAU, AUSBAU_MAX, ausbauStufe, ausbauKosten,
            bauStarten, baustellenText, VC_EXTRAS, extraKaufen, geldText, kasse,
-           SPONSOR_MAX, sponsorAngebote, sponsorAnnehmen, mitAngeboten,
+           SPONSOR_MAX, sponsorAngebote, sponsorAnnehmen, mitAngeboten, werbeErtrag,
            BONI, punkte, abschluss, neuerVerein };
 };

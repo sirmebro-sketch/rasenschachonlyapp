@@ -604,6 +604,45 @@ test('Sponsoren: Verträge laufen ab, bringen Geld und werden nachgemeldet',()=>
  }
 });
 
+test('Der angezeigte Werbebetrag ist der, der ankommt',()=>{
+ /* Die Abrechnung bucht `betrag * kommerz` der Rechtsform — ein e.V. bekommt
+    92 Prozent. Die Oberfläche zeigte brutto: ein Angebot über 2,97 Mio tauchte
+    im Beleg als 2,73 Mio auf, bei vier Saisons lag die Gesamtsumme rund eine
+    Million daneben. Wer Angebote vergleicht, verglich Zahlen, die nie
+    eintreffen. */
+ let v=E.VEREIN.einschreiben(spielbereiterVerein()).v;
+ const an=v.angebote[0];
+ assert(E.VEREIN.werbeErtrag(v,an.betrag)<an.betrag,'der e.V. bekommt weniger als vereinbart');
+ const r=E.VEREIN.sponsorAnnehmen(v,an.id);
+ assert(!r.fehler,r.fehler);
+ const beleg=E.VEREIN.vereinSaison(r.v).beleg;
+ const posten=beleg.einnahmen.find(p=>p.k.includes(an.n));
+ assert(posten,'der Vertrag steht als Posten im Beleg');
+ assert(Math.abs(posten.v-E.VEREIN.werbeErtrag(v,an.betrag))<0.02,
+   'gebucht wurden '+posten.v+', angezeigt würde '+E.VEREIN.werbeErtrag(v,an.betrag));
+ /* Und die Oberfläche nennt genau diese Zahl. */
+ const html=E.renderVerein(v,E.leereAkademie(),'sponsoren');
+ assert(html.includes(E.VEREIN.geldText(E.VEREIN.werbeErtrag(v,an.betrag),v.land)),
+   'der Reiter zeigt den Betrag, der ankommt');
+});
+
+test('Alle Angebote unterschrieben heisst nicht: drei neue',()=>{
+ /* Der erste Entwurf prüfte zusätzlich auf `.length`. Wer alle drei Angebote
+    einer Saison unterschrieb, bekam beim nächsten Blick sofort drei neue —
+    genau der Automat, den das Paket verhindern soll. */
+ let v=E.VEREIN.einschreiben(spielbereiterVerein()).v;
+ for(const a of [...v.angebote]){const r=E.VEREIN.sponsorAnnehmen(v,a.id);if(!r.fehler)v=r.v;}
+ assert.equal(v.sponsoren.length,E.VEREIN.SPONSOR_MAX,'drei Plätze belegt');
+ assert.equal(v.angebote.length,0,'nichts liegt mehr vor');
+ assert.equal(E.VEREIN.mitAngeboten(v).angebote.length,0,'und es wird auch nichts nachgelegt');
+ /* Die Zeile dafür ist damit erreichbar statt toter Code. */
+ const html=E.renderVerein(v,E.leereAkademie(),'sponsoren');
+ assert(html.includes('liegt nichts mehr vor'));
+ /* Ein FEHLENDES Feld wird weiterhin nachgelegt — alte Spielstände. */
+ const alt={...v,angebote:undefined};
+ assert(E.VEREIN.mitAngeboten(alt).angebote.length>0,'alte Spielstände bekommen eine Auswahl');
+});
+
 test('Der Sponsorenreiter zeigt Angebote und laufende Verträge, ohne NaN',()=>{
  const v=E.VEREIN.einschreiben(spielbereiterVerein()).v;
  const html=E.renderVerein(v,E.leereAkademie(),'sponsoren');
