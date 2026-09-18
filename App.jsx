@@ -9844,11 +9844,13 @@ function VereinScreen({ v, aka, onAendern, onZurueck, onAbschluss, startReiter }
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
                   <span className="eb">Partner · {laufend.length} von {VEREIN.SPONSOR_MAX}</span>
                   <span className="d" style={{ fontSize: 16, color: "var(--ok)" }}>
-                    {VEREIN.geldText(Math.round(jeSaison * 100) / 100, v.land)} je Saison</span>
+                    {VEREIN.geldText(VEREIN.werbeErtrag(v, jeSaison), v.land)} je Saison</span>
                 </div>
                 <div className="m" style={{ fontSize: 11.5, marginTop: 2 }}>
                   Ein langer Vertrag zahlt je Saison weniger, hält den Platz aber
-                  besetzt. Wer aufsteigt, hätte neu verhandeln können.</div>
+                  besetzt. Wer aufsteigt, hätte neu verhandeln können.
+                  {" Genannt ist, was nach der Rechtsform ankommt — ein e.V. "
+                    + "vermarktet zurückhaltender als eine AG."}</div>
                 {raus.length > 0 && (
                   <div className="m" style={{ fontSize: 11.5, marginTop: 6, color: "var(--bad)" }}>
                     Ausgelaufen: {raus.join(", ")}</div>)}
@@ -9862,7 +9864,7 @@ function VereinScreen({ v, aka, onAendern, onZurueck, onAbschluss, startReiter }
                       noch {sp.rest} {sp.rest === 1 ? "Saison" : "Saisons"}</span>
                   </div>
                   <div className="m" style={{ fontSize: 11.5, marginTop: 2 }}>
-                    {sp.branche} · {VEREIN.geldText(sp.betrag, v.land)} je Saison
+                    {sp.branche} · {VEREIN.geldText(VEREIN.werbeErtrag(v, sp.betrag), v.land)} je Saison
                     {sp.vorteil ? " · " + sp.vorteil : ""}</div>
                 </div>))}
 
@@ -9879,12 +9881,17 @@ function VereinScreen({ v, aka, onAendern, onZurueck, onAbschluss, startReiter }
                 <div key={an.id} className="pan pad" style={{ marginTop: 8 }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
                     <span className="d" style={{ fontSize: 15 }}>{an.n}</span>
+                    {/* DER BETRAG, DER ANKOMMT — nicht der vereinbarte. Die
+                        Abrechnung zieht den Faktor der Rechtsform ab; die
+                        Anzeige zeigte vorher brutto und damit eine Zahl, die
+                        nie eintrifft. */}
                     <span className="d" style={{ fontSize: 14, color: "var(--ok)" }}>
-                      {VEREIN.geldText(an.betrag, v.land)}</span>
+                      {VEREIN.geldText(VEREIN.werbeErtrag(v, an.betrag), v.land)}</span>
                   </div>
                   <div className="m" style={{ fontSize: 11.5, marginTop: 2 }}>
                     {an.branche} · {an.laufzeit} {an.laufzeit === 1 ? "Saison" : "Saisons"}
-                    {" · insgesamt " + VEREIN.geldText(Math.round(an.betrag * an.laufzeit * 100) / 100, v.land)}</div>
+                    {" · insgesamt " + VEREIN.geldText(
+                      Math.round(VEREIN.werbeErtrag(v, an.betrag) * an.laufzeit * 100) / 100, v.land)}</div>
                   {an.vorteil && <div className="m" style={{ fontSize: 11.5 }}>{an.vorteil}</div>}
                   <button className="btn sm" style={{ marginTop: 6 }} disabled={voll}
                     onClick={() => { const r = VEREIN.sponsorAnnehmen(v, an.id); if (!r.fehler) onAendern(r.v); }}>
@@ -9984,6 +9991,32 @@ function VereinScreen({ v, aka, onAendern, onZurueck, onAbschluss, startReiter }
                   {c.aufstieg ? " · Aufstieg" : c.abstieg ? " · Abstieg" : ""}</div>
                 <div className="m" style={{ fontSize: 11.5 }}>Stärke {c.staerke}
                   {c.abgaenge.length ? " · Abgänge: " + c.abgaenge.join(", ") : ""}</div>
+                {/* Die Wirtschaft des Jahres. Die Kurzfassung lag seit
+                    WIRT-P0-02 im Spielstand und wurde von niemandem gelesen —
+                    genau das, was dieses Projekt „ein Feld ohne Leser ist
+                    wieder nur eine Zahl" nennt. Hier beantwortet sie eine
+                    Frage: wie stand der Verein in diesem Jahr da? */}
+                {c.wirtschaft && (
+                  <div className="m" style={{ fontSize: 11.5, marginTop: 3 }}>
+                    <span style={{ color: c.wirtschaft.ergebnis < 0 ? "var(--bad)" : "var(--ok)" }}>
+                      {(c.wirtschaft.ergebnis > 0 ? "+" : "")
+                        + VEREIN.geldText(c.wirtschaft.ergebnis, v.land)}</span>
+                    {" · Kasse " + VEREIN.geldText(c.wirtschaft.kasse, v.land)}
+                    {c.wirtschaft.zuschauer
+                      ? " · " + Math.round(c.wirtschaft.zuschauer).toLocaleString("de-DE") + " Zuschauer"
+                      : ""}
+                    {c.wirtschaft.stimmung != null ? " · Stimmung " + c.wirtschaft.stimmung : ""}
+                    {c.wirtschaft.gehaltsniveau > 1.02
+                      ? " · Gehälter " + Math.round(c.wirtschaft.gehaltsniveau * 100) + " %"
+                      : ""}
+                    {c.wirtschaft.ziel
+                      ? " · " + c.wirtschaft.ziel.n + (c.wirtschaft.ziel.erfuellt ? " erfüllt" : " verfehlt")
+                      : ""}
+                    {(c.wirtschaft.ereignisse || []).length
+                      ? " · " + c.wirtschaft.ereignisse.join(", ") : ""}
+                    {(c.wirtschaft.ausgelaufen || []).length
+                      ? " · Vertrag aus: " + c.wirtschaft.ausgelaufen.join(", ") : ""}
+                  </div>)}
               </div>))}
           </div>)}
 
@@ -17396,6 +17429,19 @@ function EndScreen({ p, onNew }) {
                         {(w.ergebnis > 0 ? "+" : "") + geld(w.ergebnis)}</span>
                     </div>
 
+                    {/* Stimmung und Gehaltsniveau mit RICHTUNG, nicht nur als
+                        Stand — ein Wert, der sich bewegt, ist erst als
+                        Bewegung eine Auskunft. */}
+                    {(w.stimmung != null || w.gehalt) && (
+                      <div className="m" style={{ fontSize: 11, marginTop: 5, color: "var(--mu)" }}>
+                        {w.stimmung != null ? "Stimmung " + w.stimmung
+                          + (w.stimmungVorher != null && w.stimmungVorher !== w.stimmung
+                             ? " (" + (w.stimmung > w.stimmungVorher ? "+" : "")
+                               + (w.stimmung - w.stimmungVorher) + ")" : "") : ""}
+                        {w.gehalt && w.stimmung != null ? " · " : ""}
+                        {w.gehalt ? "Gehaltsniveau " + Math.round(w.gehalt.neu * 100) + " %"
+                          + (w.gehalt.neu > w.gehalt.vorher ? " und steigend" : "") : ""}
+                      </div>)}
                     {w.ziel && !w.ziel.erfuellt && (
                       <div className="m" style={{ fontSize: 11, marginTop: 5, color: "var(--mu)" }}>
                         Vorstandsziel verfehlt: {w.ziel.n} — keine Prämie.</div>)}
@@ -18086,6 +18132,13 @@ function FlutlichtApp() {
             ergebnis: VS.beleg.ergebnis, kasse: VS.beleg.kasse,
             zuschauer: VS.beleg.zuschauer, auslastung: VS.beleg.auslastung,
             ereignisse: (VS.beleg.ereignisse || []).map((e) => ({ n: e.n, t: e.t, geld: e.geld })),
+            /* Die beiden Werte, die die ganze Wirtschaft treiben, fehlten hier
+               — und sie tauchen auch sonst nirgends auf. Der Spieler sah
+               Zuschauer und Merchandising Jahr für Jahr sinken (über die
+               Stimmung) und die Gehaltszeile steigen (über die Ratsche), ohne
+               dass eine der beiden Zahlen je genannt wurde. */
+            stimmung: VS.beleg.stimmung, stimmungVorher: VS.beleg.stimmungVorher,
+            gehalt: VS.beleg.gehalt ? { vorher: VS.beleg.gehalt.vorher, neu: VS.beleg.gehalt.neu } : null,
             ziel: VS.beleg.ziel && VS.beleg.ziel.gesetzt
               ? { n: VS.beleg.ziel.n, erfuellt: VS.beleg.ziel.erfuellt, praemie: VS.beleg.ziel.praemie }
               : null,

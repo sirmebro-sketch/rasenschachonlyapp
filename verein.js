@@ -192,6 +192,14 @@ export const machVerein = (H) => {
      auf eine endliche Zahl statt auf Wahrheitswert.
      `ligastufe` ist die eine Ausnahme: sie wird IMMER neu bestimmt, weil sie
      der aktuellen Liga folgen muss und nicht dem Stand beim Speichern. */
+  /* ABGELEITETES GEHOERT NICHT IN DEN SPIELSTAND. `mitWirtschaft` schreibt
+     `ligastufe` auf das zurueckgegebene Objekt, weil die Rechnung sie braucht
+     — und mehrere dieser Objekte werden gespeichert. Nach einem Aufstieg
+     stuende dort dann ein veralteter Wert, und der erste kuenftige Aufruf, der
+     ihn roh liest statt neu abzuleiten, rechnete still mit der falschen Liga.
+     Am Speicherrand wird sie deshalb wieder entfernt. */
+  const ohneAbgeleitetes = (v) => { const { ligastufe: _weg, ...rest } = v || {}; return rest; };
+
   const mitWirtschaft = (v0) => {
     const v = v0 || {};
     const zahl = (x, ersatz) => (Number.isFinite(Number(x)) ? Number(x) : ersatz);
@@ -843,6 +851,15 @@ export const machVerein = (H) => {
   /* --------------------------------------------------------- Eine Saison */
   const vereinSaison = (v0, opt = {}) => {
     const v = { ...v0, kader: (v0.kader || []).map((s) => ({ ...s })) };
+    /* DER KADER, WIE ER GESPIELT HAT. Die Entwicklungsschleife weiter unten
+       aendert Alter und Staerke IN PLACE und reicht dieselben Objekte an
+       `bleiben` weiter. Wer die Gehaelter aus dem Kader NACH dieser Schleife
+       rechnet, bezahlt die abgelaufene Saison mit den Staerken der kommenden:
+       schon ein gewoehnlicher Zuwachs von +2 verteuert 18 Spieler der ersten
+       Liga von 30,0 auf 33,6 Mio — jedes Jahr, und von der Gehaltsratsche
+       weiter aufgeschlagen. Deshalb hier eine echte Kopie, bevor irgendetwas
+       altert. */
+    const kaderGespielt = v.kader.map((s) => ({ ...s }));
     const st = staerke(v);
     if (!st.spielbereit)
       return { v: v0, fehler: "Nicht spielbereit: " + (kaderVoll(v0) ? "" : "zu wenige Spieler, ") +
@@ -860,6 +877,10 @@ export const machVerein = (H) => {
        Die Eichung gegen die alte Verteilung steht bei `SAISONFORM`.
        `simTable` bleibt unangetastet — die Spielerlaufbahn benutzt sie
        weiter, und die ist von diesem Umbau nicht betroffen. */
+    /* Laufende Sponsoren- und Extrawirkungen, einmal fuer die ganze Saison. */
+    const wFx = WIRT.wirkung(v);
+    const medStufe = Math.min(AUSBAU_MAX, ausbauStufe(v, "medizin") + (wFx.medizin || 0));
+
     const erg = saisonSpielen(v);
     const N = erg.N;
     const rang = erg.rang == null ? N : erg.rang;
@@ -923,19 +944,24 @@ export const machVerein = (H) => {
          die Verlaengerung. Ein Feld ohne Leser waere wieder nur eine Zahl. */
       const last = zs ? zs.spiele / Math.max(1, spieltage) : 0;
       const altLast = Math.max(0, s.alter - 29) * 2.4;
-      const med = (ausbauStufe(v, "medizin") - 1) * 1.8;
+      /* Die Sponsorenwirkung `medizin` (Vitalis: „wirkt wie eine Stufe
+         Medizin") wird hier gelesen — vorher summierte `wirkung` sie und
+         niemand holte sie ab, der Vertrag versprach also etwas, das nicht
+         geschah. Dasselbe gilt unten fuer `jugend` (Almgut). */
+      const med = (medStufe - 1) * 1.8;
       s.fitness = Math.round(clamp((s.fitness == null ? 80 : s.fitness)
         + 7 - last * 9 - altLast + med, 35, 99));
       s.alter += 1; s.jahreImVerein += 1;
       /* Trainingszentrum und der Vermaechtnisbonus "Fussballschule" wirken
          beide auf den Zuwachs — der Bonus ist absichtlich schwaecher als eine
          Ausbaustufe, sonst waere Ausbauen sinnlos. */
-      const zusatz = (ausbauStufe(v, "training") - 1) + ((v.bonus && v.bonus.zuwachs) || 0);
+      const zusatz = (ausbauStufe(v, "training") - 1) + ((v.bonus && v.bonus.zuwachs) || 0)
+        + (wFx.jugend || 0);
       if (s.alter <= 28) s.ovr = Math.min(s.pot, s.ovr + ri(1, 3) + zusatz);
       else if (s.alter >= 31) s.ovr = Math.max(30, s.ovr - ri(1, 3));
       /* Die medizinische Abteilung verlaengert Laufbahnen — je zwei Stufen ein
          Jahr. Bei Vollausbau spielt man bis 37 statt bis 35. */
-      const laenger = Math.floor((ausbauStufe(v, "medizin") - 1) / 2);
+      const laenger = Math.floor((medStufe - 1) / 2);
       if (s.alter >= 35 + laenger || (s.alter >= 33 + laenger && s.ovr < 55)) weg.push(s); else bleiben.push(s);
     });
 
@@ -1042,15 +1068,27 @@ export const machVerein = (H) => {
        Der Kader geht mit. Dadurch rechnet `kaderKosten` mit den echten
        Staerken statt mit der Schaetzung je Ligastufe — die war fuer den
        isolierten Rechenkern gedacht, nicht fuer das Spiel. */
-    const wVor = { ...mitWirtschaft(v), kader: noch, bilanz: neueBilanz };
+    const wVor = { ...mitWirtschaft(v), kader: kaderGespielt, bilanz: neueBilanz };
     const { v: wNach, beleg } = WIRT.saisonAbrechnung(
       wVor, { rang, N, aufstieg, abstieg }, wSaat(v));
 
     /* Das Ziel fuer die KOMMENDE Saison steht in der NEUEN Liga: nach einem
-       Aufstieg ist Klassenerhalt die Ansage, nicht der Titel. `zielSetzen`
-       bekommt deshalb die neue Stufe, nicht die gerade gespielte. */
+       Aufstieg ist Klassenerhalt die Ansage, nicht der Titel.
+
+       DER ERSTE ENTWURF BEHAUPTETE DAS NUR. Er reichte zwar die neue Stufe
+       weiter, aber weiterhin den alten Tabellenplatz — und `zielSetzen`
+       leitet das Ziel genau daraus ab. Ein Meister, der aufsteigt, kam mit
+       Rang 1 herein und bekam „Um den Titel spielen" mit Soll 1 in der Liga
+       darueber: unerreichbar, Praemie nie ausgezahlt. Umgekehrt bekam ein
+       Absteiger „Klassenerhalt" in einer Liga, die er vermutlich dominiert.
+
+       Ein Tabellenplatz aus einer anderen Liga ist keine Aussage ueber die
+       neue. Ein Aufsteiger gilt deshalb als Letzter (Ziel: Klassenerhalt),
+       ein Absteiger als Dritter (Ziel: vorne angreifen — nicht als Erster,
+       sonst faengt er sofort wieder beim Titel an). */
+    const zielRang = aufstieg ? N : abstieg ? 3 : rang;
     const zielNeu = WIRT.zielSetzen(
-      { ...wNach, ligastufe: ligastufe(v.land, neueLiga) }, rang, N);
+      { ...wNach, ligastufe: ligastufe(v.land, neueLiga) }, zielRang, N);
 
     /* In die Chronik wandert die KURZFASSUNG. Fuenfzehn volle Belege mit
        allen Posten laegen dauerhaft im Spielstand, gelesen wird davon die
@@ -1158,7 +1196,10 @@ export const machVerein = (H) => {
   /* Ein Bauprojekt beginnen. Prueft VOR dem Schreiben, wie `buchungen.js` es
      fuer Karten und Coins tut: fehlt das Geld, aendert sich gar nichts.
      `mitWirtschaft` faengt den alten Spielstand ab, der keine Kasse kennt. */
-  const bauStarten = (v, id) => WIRT.bauStart(mitWirtschaft(v), id);
+  const bauStarten = (v, id) => {
+    const r = WIRT.bauStart(mitWirtschaft(v), id);
+    return { ...r, v: ohneAbgeleitetes(r.v) };          /* nichts Abgeleitetes speichern */
+  };
   const baustellenText = (v) => WIRT.baustellenText(v);
 
   /* Der EINZIGE verbliebene Weg, auf dem VC in den Verein fliessen. Vier
@@ -1168,7 +1209,10 @@ export const machVerein = (H) => {
      der Akademie, nicht am Verein — deshalb kommt er als Zahl herein und die
      Abbuchung geschieht draussen, genau wie beim Packkauf. */
   const VC_EXTRAS = WIRT.VC_EXTRAS;
-  const extraKaufen = (v, id, vcVorrat) => WIRT.extraKaufen(mitWirtschaft(v), id, vcVorrat);
+  const extraKaufen = (v, id, vcVorrat) => {
+    const r = WIRT.extraKaufen(mitWirtschaft(v), id, vcVorrat);
+    return { ...r, v: ohneAbgeleitetes(r.v) };
+  };
 
   /* ============================== Sponsoren ============================== */
   /* WIRT-P0-04. Kevin: Geld „durch Werbedeals (die man pro Saison aus einer
@@ -1190,6 +1234,16 @@ export const machVerein = (H) => {
      Laufs. */
   const SPONSOR_MAX = 3;
 
+  /* WAS TATSAECHLICH ANKOMMT. Die Abrechnung bucht `betrag * kommerz` der
+     Rechtsform — ein e.V. bekommt 92 Prozent. Die Oberfläche zeigte den
+     Bruttobetrag: ein Angebot über 2,97 Mio tauchte im Beleg als 2,73 Mio auf,
+     und bei einem Vierjahresvertrag lag die Gesamtsumme rund eine Million
+     daneben. Wer Angebote vergleicht, vergleicht damit Zahlen, die nie
+     eintreffen. Es gibt nur eine Stelle, an der der Ertrag entsteht — hier ist
+     sie auch für die Anzeige. */
+  const werbeErtrag = (v, betrag) =>
+    Math.round((Number(betrag) || 0) * WIRT.rechtsform(mitWirtschaft(v)).kommerz * 100) / 100;
+
   /* Frische Angebote fuer die laufende Saison. Idempotent: derselbe Verein im
      selben Jahr bekommt dieselben drei. */
   const sponsorAngebote = (v) => WIRT.sponsorAngebote(mitWirtschaft(v), wSaat(v));
@@ -1199,7 +1253,12 @@ export const machVerein = (H) => {
      ohne dass irgendwo ein Sonderfall steht. */
   const mitAngeboten = (v) => {
     const vw = mitWirtschaft(v);
-    return Array.isArray(vw.angebote) && vw.angebote.length
+    /* NUR EIN FEHLENDES Feld wird nachgelegt, keine LEERE Liste. Der erste
+       Entwurf prüfte zusätzlich auf `.length` — wer alle drei Angebote einer
+       Saison unterschrieb, bekam damit beim nächsten Blick auf den Bildschirm
+       sofort drei neue. Genau der Automat, den das Paket verhindern soll; und
+       die Zeile „Für diese Saison liegt nichts mehr vor." war unerreichbar. */
+    return Array.isArray(vw.angebote)
       ? vw : { ...vw, angebote: sponsorAngebote(vw) };
   };
 
@@ -1323,7 +1382,8 @@ export const machVerein = (H) => {
        gibt es keine Platzierung, `zielSetzen` nimmt dann die Tabellenmitte
        an — die ehrlichste Annahme fuer einen Verein, den noch niemand kennt. */
     const vw = mitAngeboten(v);
-    return { v: { ...vw, eingeschrieben: true, ziel: vw.ziel || WIRT.zielSetzen(vw, null) } };
+    return { v: ohneAbgeleitetes({ ...vw, eingeschrieben: true,
+                                   ziel: vw.ziel || WIRT.zielSetzen(vw, null) }) };
   };
 
   /* Laeuft am Ende einer Laufbahn eine Saison? Genau dann, wenn eingeschrieben,
@@ -1592,7 +1652,7 @@ export const machVerein = (H) => {
            karteEinsetzen, karteEntfernen, packPlatz, packImKader, PACK_ANTEIL,
            feldReihen, reihenOrdnen,
            staerke, autoAufstellen, vereinSaison, einschreiben, spieltMit,
-           ligastufe, mitWirtschaft,
+           ligastufe, mitWirtschaft, ohneAbgeleitetes,
            ligaSpielen, erwarteteTore, poisson, saisonSpielen,
            kandidaten, aufstellen, freimachen, aufstellungSaeubern, ueberzeugt,
            zustimmen, ablehnen, auslaufenLassen, bleibeLust, spVertrag,
@@ -1600,6 +1660,6 @@ export const machVerein = (H) => {
            FREI_AKADEMIE, FREI_VEREIN, freigeschaltet,
            VEREIN_AUSBAU, AUSBAU_MAX, ausbauStufe, ausbauKosten,
            bauStarten, baustellenText, VC_EXTRAS, extraKaufen, geldText, kasse,
-           SPONSOR_MAX, sponsorAngebote, sponsorAnnehmen, mitAngeboten,
+           SPONSOR_MAX, sponsorAngebote, sponsorAnnehmen, mitAngeboten, werbeErtrag,
            BONI, punkte, abschluss, neuerVerein };
 };

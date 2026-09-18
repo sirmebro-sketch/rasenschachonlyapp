@@ -38,7 +38,10 @@ test('Einnahmen entstehen nur aus belegten Posten und die Summe stimmt', () => {
   const summe = e.posten.reduce((a, x) => a + x.v, 0);
   assert(Math.abs(summe - e.summe) < 0.02, 'Summe ist die Summe der Posten');
   assert(e.auslastung > 0.35 && e.auslastung <= 0.99);
-  assert.equal(e.zuschauer, Math.round(W.plaetze(v) * e.auslastung));
+  /* NICHT gegen `plaetze * auslastung` prüfen — `auslastung` wird AUS
+     `zuschauer` berechnet, die Gleichung gilt damit für jede Umsetzung, auch
+     eine falsche. Geprüft wird gegen das, was unabhängig gelten muss. */
+  assert(e.zuschauer > 0 && e.zuschauer <= W.plaetze(v), 'nie mehr Zuschauer als Plätze');
 });
 
 test('Ausbau wirkt auf die Einnahmen: mehr Stufen, mehr Geld', () => {
@@ -526,11 +529,61 @@ test('Fünfzehn Saisons: der Weg nach oben bleibt begehbar, oben reisst der Deck
     'der Überschuss reisst den Deckel wieder (' + eins.kasse + ' Mio, ' + eins.punkte + ' Punkte)');
 });
 
+test('Stimmung: der voreingestellte Preis kostet keine Stimmung', () => {
+  /* DER FEHLER, DEN DIESE PRÜFUNG FESTHÄLT. Der Stimmungsschaden mass den
+     Abstand zum ertragreichsten Preis. Der liegt fast überall UNTER 1 — und
+     1 ist die Voreinstellung, hinter der keine Entscheidung des Spielers
+     steht. Jeder Verein verlor damit jede Saison Stimmung, ohne dass jemand
+     etwas getan hatte: gemessen 60 → 23 in acht Saisons, mit Wirkung auf
+     Auslastung und Merchandising, also eine Abwärtsspirale ohne Hebel. */
+  for (const stufe of [1, 2, 3, 4, 5]) {
+    let v = verein({ ligastufe: stufe, ausbau: {}, stimmung: 60 });
+    for (let i = 0; i < 8; i++) v = W.saisonAbrechnung(v, erg({ rang: 9 }), i).v;
+    assert(v.stimmung >= 55, 'Liga ' + stufe + ': Stimmung fällt ohne Zutun auf ' + v.stimmung);
+  }
+  /* Wer AKTIV über den Normalpreis geht und nichts zu bieten hat, zahlt weiter. */
+  const teuer = verein({ ligastufe: 4, ausbau: {}, stimmung: 80,
+    preise: { ticket: 1.6, gastro: 1.6, merch: 1.6 } });
+  const nach = W.saisonAbrechnung(teuer, erg({ rang: 9 }), 1).v;
+  assert(nach.stimmung < 80, 'Überteuerung kostet weiterhin Stimmung');
+});
+
+test('Der Punktedeckel hält auch mit der Vermächtnisplakette', () => {
+  /* Vorher wurde der Faktor NACH der Deckelung angewandt und hob den Deckel
+     selbst an: aus 250 wurden 288, während drei Stellen „gedeckelt bei 250"
+     behaupteten. */
+  assert.equal(W.abschlussWirtschaft(verein({ kasse: 99999 })).punkte, W.PUNKTE_DECKEL);
+  assert.equal(W.abschlussWirtschaft(verein({ kasse: 99999, extras: ['ewigkeit'] })).punkte,
+    W.PUNKTE_DECKEL, 'die Plakette ist ein Vorteil unter dem Deckel, nicht über ihm');
+  /* Unterhalb des Deckels wirkt sie unverändert. */
+  const ohne = W.abschlussWirtschaft(verein({ kasse: 100 })).punkte;
+  assert.equal(W.abschlussWirtschaft(verein({ kasse: 100, extras: ['ewigkeit'] })).punkte,
+    Math.round(ohne * 1.15));
+});
+
+test('Jedes VC-Extra hat einen Leser — kein Posten, der nur etwas verspricht', () => {
+  /* „Scoutnetz" versprach für 70 VC eine Wirkung über ein Feld, das niemand
+     liest. Diese Prüfung hält fest, dass jedes Extra eine messbare Spur
+     hinterlässt — entweder in `wirkung` mit einem bekannten Schlüssel oder
+     unmittelbar in der Kasse. */
+  const gelesen = ['kasse', 'ticketFaktor', 'gastroFaktor', 'merchFaktor',
+                   'punkteFaktor', 'reichweite', 'medizin', 'jugend'];
+  for (const e of W.VC_EXTRAS) {
+    const schluessel = Object.keys(e.fx || {});
+    assert(schluessel.length > 0, e.id + ' verspricht etwas ohne jede Wirkung');
+    for (const k of schluessel)
+      assert(gelesen.includes(k), e.id + ' wirkt über "' + k + '", das niemand liest');
+  }
+});
+
 test('Alles bleibt endlich, auch mit allen neuen Systemen', () => {
   const faelle = [
     verein({ ligastufe: 1, rechtsform: 'ag', stimmung: 100, preise: { ticket: 1.6, gastro: 1.6, merch: 1.6 },
              ausbau: { stadion: 6, gastro: 6, sortiment: 6, reichweite: 6, training: 6, medizin: 6 },
-             baustelle: { id: 'stadion', stufe: 6, dauer: 3, rest: 1 },
+             /* `baustellen` im PLURAL und je Abteilung — der Singular war ein
+                Rest des verworfenen Entwurfs mit einer Baustelle insgesamt und
+                wurde stillschweigend ignoriert, der Grenzfall also nie geprüft. */
+             baustellen: { stadion: { stufe: 6, dauer: 2, rest: 1 } },
              ziel: { id: 'titel', n: 'Titel', soll: 1, praemie: 9 } }),
     verein({ ligastufe: 9, stimmung: 0, preise: { ticket: 0.6, gastro: 0.6, merch: 0.6 }, ausbau: {} }),
     { land: 'JPN' }, {},
