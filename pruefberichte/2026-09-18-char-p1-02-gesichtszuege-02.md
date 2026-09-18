@@ -4,7 +4,9 @@
 **Bearbeiter:** ChatGPT/Codex  
 **Basis:** `main` `f431f74c6e4810ac2e65a1fc0253777eaf03d09b` / 35.193.0  
 **Arbeitsbranch:** `chatgpt/char-p1-02-gesichtszuege-02`  
-**Pull Request:** #25
+**Pull Request:** #25  
+**Spielversion:** `35.194.0`  
+**Status:** fachlich und visuell abgenommen; Post-Merge-CI/Android-Build bleiben normales Integrationsgate.
 
 ## Anlass und Entscheidung
 
@@ -69,12 +71,29 @@ Befund:
 - Wangen/Kinn-ID 7 ist als Kieferkontur erkennbar.
 - Wangen/Kinn-ID 8 war in der ersten Fassung zu schwach und wurde deshalb **nicht** abgenommen, sondern korrigiert.
 
-## Noch ausstehend vor Integration
+## Korrigierter PR-Lauf und finale Sichtabnahme
 
-- vollständiger PR-Lauf auf dem korrigierten Stand;
-- erneutes Öffnen der neuen 72/96-px-Screenshots, insbesondere ID 8;
-- Versions-/CHANGELOG-Aktualisierung erst nach erfolgreicher Sichtabnahme;
-- Merge erst, wenn der Branch nicht hinter `main` liegt;
-- danach Regression, Browsertests und Android-Build auf dem neuen `main` prüfen.
+Dokumentations-Head `212f6b0150ddb640ebb5617dccf661ecd38f3f0e` enthält denselben korrigierten Produktcode wie `64837f746df03c6720416a9da392c07090b9ef86` und löste die vollständigen PR-Gates regulär neu aus.
 
-Ein physischer Android-Gerätetest wurde nicht durchgeführt und wird nicht behauptet.
+- Spielregressionen Run `35320111345`: **140/140 bestanden**, 0 Fehler.
+- Produktionsbuild: erfolgreich.
+- Visuelle Browsertests Run `35320111337`: **43 bestanden, 23 planmäßig übersprungen, 0 fehlgeschlagen**.
+- CHAR-P1-02-Rastermetrik: erfolgreich; keine pixelidentischen aktiven Varianten mehr bei 72/96 px in den geprüften Geschlecht-/Hauttonkontexten.
+- Browser-Artefakt: `10536434215`.
+- Digest: `sha256:adb0b77d25d517666dc7d8dd9e41891770433c67aead7c2940eced63c97b80a4`.
+
+Das finale Artefakt wurde tatsächlich entpackt und geöffnet. Geprüft wurden erneut Mann/hell/72 px für Wangen/Kinn und Münder, Frau/dunkel/96 px für Wangen/Kinn sowie der 96-px-Bart-/Brillen-Überlagerungscheck. ID 8 zeigt nun schon bei 72 px eine klar eigene V-/Kinnkontur; bei dunkler Haut bleibt sie bei 96 px lesbar. Die drei neuen Mundformen bleiben unterscheidbar, Vollbart sowie Ankerbart + Brille erzeugen keine störende Kollision.
+
+## Kompatibilität
+
+- keine bestehende Gesichts-ID gelöscht, umnummeriert oder neu belegt;
+- historische `ZUEGE_ANZAHL`-Seedbasis bleibt bei `mund: 7` und `wangen: 3`;
+- neue IDs werden ausschließlich über `portraetOptionen(...)` append-only angeboten;
+- alte Seed→Porträt-Zuordnungen bleiben unverändert;
+- Porträtidentitäts- und übrige Regressionen bleiben grün.
+
+## Ergebnis
+
+CHAR-P1-02 erfüllt die Abnahmekriterien. Die Runde erhöht nicht bloß die Anzahl, sondern ergänzt bei Spielgröße erkennbare Mund- und Kinnformensprache. Ein zunächst zu schwacher Kandidat wurde durch die Qualitätsprüfung abgefangen und vor Integration sichtbar nachgebessert.
+
+Ein physischer Android-Gerätetest wurde nicht durchgeführt und wird nicht behauptet. Nach Merge werden Regression, Browser und signierter Android-Build auf dem neuen `main` geprüft.
