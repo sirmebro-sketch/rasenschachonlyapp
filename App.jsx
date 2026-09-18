@@ -10170,6 +10170,21 @@ function VereinAbschluss({ v, ergebnis, ges, onNeu, onZurueck }) {
           <div className="d" style={{ fontSize: 30, color: "var(--go)" }}>
             <Zahl v={ergebnis.vc} dauer={900} suffix=" VC" /></div>
           <div className="m" style={{ fontSize: 11.5 }}>{ergebnis.punkte} Vermächtnispunkte</div>
+          {/* WIRT-P1-05: woraus die Punkte bestehen. Ohne diese Zeile sähe der
+              Spieler nur eine gewachsene Zahl und wüsste nicht, dass seine
+              Kasse darin steckt — und würde beim nächsten Verein wieder alles
+              bis zur letzten Mark verbauen. */}
+          {ergebnis.wirtschaft && (
+            <div className="m" style={{ fontSize: 10.5, color: "var(--mu)", marginTop: 2 }}>
+              {ergebnis.wirtschaft.punkte > 0
+                ? ergebnis.sportlich + " sportlich · " + ergebnis.wirtschaft.punkte
+                  + " aus der Kasse (" + VEREIN.geldText(ergebnis.wirtschaft.kasse, v.land) + ")"
+                : "Alles sportlich — die Kasse war am Ende leer."}
+              {ergebnis.wirtschaft.faktor > 1
+                ? " · Vermächtnisplakette +"
+                  + Math.round((ergebnis.wirtschaft.faktor - 1) * 100) + " %"
+                : ""}
+            </div>)}
           {/* DER DRITTE TOTE ZAEHLER BEKOMMT EINEN LESER (35.103).
               `vereinPunkteSumme` wurde seit 35.74 fortgeschrieben und von
               niemandem gelesen — nicht einmal von einer Errungenschaft, anders

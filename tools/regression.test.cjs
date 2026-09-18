@@ -39,6 +39,7 @@ export {simTable, LEAGUES, karriereZeitraum, verdict, vorsatzBelohnen, vorsatzPu
 export const renderCreate=()=>renderToStaticMarkup(<CreateScreen meta={{}} onStart={()=>{}} onBack={()=>{}}/>);
 export const renderPortraits=()=>renderToStaticMarkup(<>{['m','w'].flatMap(g=>Array.from({length:4},(_,i)=><Avatar key={g+i} seed={1} g={g} zuege={{...zuegeAusKennung(1,g,'GER',{}),stil:2,haut:10+i,haar:9+i,frisur:(g==='w'?14:16)+i,details:i,bart:g==='w'?0:10+i%3}}/>))}</>);
 export const renderEnd=p=>renderToStaticMarkup(<EndScreen p={p} onNew={()=>{}}/>);
+export const renderVereinAbschluss=(v,ergebnis,ges)=>renderToStaticMarkup(<VereinAbschluss v={v} ergebnis={ergebnis} ges={ges||{}} onNeu={()=>{}} onZurueck={()=>{}}/>);
 export const renderVerein=(v,aka,reiter)=>renderToStaticMarkup(<VereinScreen v={v} aka={aka} startReiter={reiter} onAendern={()=>{}} onZurueck={()=>{}} onAbschluss={()=>{}}/>);
 export const renderPacks=(pool,reiter='laden',verein=null)=>renderToStaticMarkup(<Packladen vc={100} pool={pool} verein={verein} gratis={1} startpaket={false} startReiter={reiter} onKauf={()=>{}} onGratis={()=>{}} onStartpaket={()=>{}} onEinsetzen={()=>{}} onEntfernen={()=>{}} onVerkauf={()=>{}} onZurueck={()=>{}}/>);
 export const renderPortraitCard=k=>renderToStaticMarkup(<Spielerkarte karte={k}/>);
@@ -543,6 +544,84 @@ test('Der Ausbaureiter zeigt Geld und VC getrennt, ohne NaN',()=>{
    {...E.leereAkademie(),vc:0},'ausbau');
  assert(halb.includes('Dafür fehlen'),'angefangene Kasse: die Lücke wird genannt');
  assert(!halb.includes('NaN'));
+});
+
+test('Abschluss: die Restkasse wird zu Vermächtnispunkten',()=>{
+ /* WIRT-P1-05. Bis hierher verfiel, was am Ende in der Kasse lag — damit war
+    Wirtschaften ab dem Jahr, in dem alles gebaut war, gleichgültig, und genau
+    das sollte die Umstellung auf Geld abschaffen. */
+ const bilanz={saisons:15,aufstiege:1,abstiege:0,meister:0,tore:600,gegentore:500,
+   punkte:700,bestePlatzierung:2};
+ const leer=E.VEREIN.abschluss({bilanz,kader:[],kasse:0,extras:[]});
+ const voll=E.VEREIN.abschluss({bilanz,kader:[],kasse:100,extras:[]});
+ assert(voll.punkte>leer.punkte,'die Kasse zählt');
+ assert.equal(voll.punkte-leer.punkte,25,'4 Mio je Punkt');
+ assert.equal(voll.wirtschaft.punkte,25);
+ assert.equal(voll.sportlich,leer.sportlich,'der sportliche Teil bleibt derselbe');
+ /* Schulden zählen nicht negativ — der Abschluss soll nicht zweimal bestrafen. */
+ const schulden=E.VEREIN.abschluss({bilanz,kader:[],kasse:-80,extras:[]});
+ assert.equal(schulden.punkte,leer.punkte);
+ /* Der Deckel verhindert, dass eine nie ausgegebene Kasse den Sport ersetzt. */
+ const reich=E.VEREIN.abschluss({bilanz,kader:[],kasse:99999,extras:[]});
+ assert.equal(reich.wirtschaft.punkte,250);
+ /* Mehr Punkte heissen auch mehr VC — das ist die gewollte Folge, nicht ein
+    Nebeneffekt: Wirtschaften lohnt bis zur letzten Saison. */
+ assert(voll.vc>=leer.vc);
+});
+
+test('Abschluss: die Vermächtnisplakette wirkt auf beide Teile, jeden genau einmal',()=>{
+ /* Das VC-Extra verspricht „+15 % Abschlusspunkte" — nicht „+15 % auf den
+    Kassenanteil". Beide Teile werden erhöht, keiner doppelt. */
+ const bilanz={saisons:15,aufstiege:1,abstiege:0,meister:1,tore:600,gegentore:500,
+   punkte:700,bestePlatzierung:1};
+ const ohne=E.VEREIN.abschluss({bilanz,kader:[],kasse:100,extras:[]});
+ const mit=E.VEREIN.abschluss({bilanz,kader:[],kasse:100,extras:['ewigkeit']});
+ assert.equal(ohne.wirtschaft.faktor,1);
+ assert.equal(mit.wirtschaft.faktor,1.15);
+ assert.equal(mit.sportlich,Math.round(ohne.sportlich*1.15),'sportlicher Teil einmal erhöht');
+ assert.equal(mit.wirtschaft.punkte,Math.round(ohne.wirtschaft.punkte*1.15),'Kassenteil einmal erhöht');
+ assert.equal(mit.punkte,mit.sportlich+mit.wirtschaft.punkte,'die Summe ist die Summe');
+ /* Nicht mehr als 15 % insgesamt — ein doppelt angewandter Faktor wäre 32 %. */
+ const verhaeltnis=mit.punkte/ohne.punkte;
+ assert(verhaeltnis>1.14&&verhaeltnis<1.16,'genau einmal angewandt, war '+verhaeltnis.toFixed(3));
+});
+
+test('Der Abschlussbildschirm sagt, woraus die Punkte bestehen',()=>{
+ /* Ohne diese Zeile sähe der Spieler nur eine gewachsene Zahl und wüsste
+    nicht, dass seine Kasse darin steckt — und würde beim nächsten Verein
+    wieder alles bis zur letzten Mark verbauen. */
+ const v={...spielbereiterVerein({kasse:100,extras:[],jahr:15}),
+   bilanz:{saisons:15,aufstiege:1,abstiege:0,meister:1,tore:600,gegentore:480,
+     punkte:720,bestePlatzierung:1},chronik:[]};
+ const erg=E.VEREIN.abschluss(v);
+ const html=E.renderVereinAbschluss(v,erg,{});
+ assert(!html.includes('NaN'));
+ assert(html.includes('Vermächtnis'));
+ assert(html.includes('aus der Kasse'),'der Kassenanteil wird benannt');
+ assert(html.includes(String(erg.wirtschaft.punkte)));
+ /* Leere Kasse: der Bildschirm sagt es, statt die Zeile wegzulassen. */
+ const arm={...v,kasse:0};
+ const html2=E.renderVereinAbschluss(arm,E.VEREIN.abschluss(arm),{});
+ assert(html2.includes('Kasse war am Ende leer'));
+ assert(!html2.includes('NaN'));
+ /* Mit Plakette wird sie genannt — sonst weiss niemand, wofür die 120 VC waren. */
+ const mit={...v,extras:['ewigkeit']};
+ const html3=E.renderVereinAbschluss(mit,E.VEREIN.abschluss(mit),{});
+ assert(html3.includes('Vermächtnisplakette'));
+ assert(html3.includes('15 %'));
+});
+
+test('Abschluss: ein Verein ohne Wirtschaftsfelder bleibt rechenbar',()=>{
+ /* Ein Spielstand aus 35.192 hat keine Kasse. Er muss abschliessbar bleiben
+    und darf dabei nichts erfinden. */
+ const alt={bilanz:{saisons:15,aufstiege:0,abstiege:1,meister:0,tore:400,
+   gegentore:520,punkte:480,bestePlatzierung:6},kader:[]};
+ const erg=E.VEREIN.abschluss(alt);
+ assert(Number.isFinite(erg.punkte)&&erg.punkte>=0);
+ assert.equal(erg.wirtschaft.punkte,0,'keine Kasse, keine Punkte daraus');
+ assert.equal(erg.wirtschaft.kasse,0);
+ assert.equal(erg.punkte,erg.sportlich);
+ assert(erg.vc>=60,'die VC-Ausschüttung bleibt unberührt');
 });
 
 test('Saisonabrechnung: der Karrierebericht zeigt, woher das Geld kam und wohin es ging',async()=>{

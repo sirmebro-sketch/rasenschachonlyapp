@@ -1309,7 +1309,23 @@ export const machVerein = (H) => {
 
   const abschluss = (v) => {
     const b = v.bilanz || {};
-    const pkt = punkte(b);
+    /* WIRT-P1-05: DIE RESTKASSE ZAEHLT. Kevin zum Restgeld: „Das finde ich
+       gut was du mit dem Restgeld vorhast."
+
+       Bis hierher verfiel, was am Ende in der Kasse lag. Damit war
+       Wirtschaften ab dem Jahr, in dem alles gebaut war, gleichgueltig — und
+       genau das sollte die Umstellung auf Geld abschaffen. Vier Millionen
+       ergeben einen Punkt, gedeckelt bei 250 (ein Aufstieg wiegt 120, eine
+       Meisterschaft 90): spuerbar, aber kein Ersatz fuer Sport.
+
+       DER PLAKETTENFAKTOR WIRKT AUF BEIDE TEILE. Das VC-Extra
+       „Vermaechtnisplakette" verspricht „+15 % Abschlusspunkte" — nicht „+15 %
+       auf den Kassenanteil". `abschlussWirtschaft` rechnet ihn bereits in
+       seinen eigenen Punktwert ein; der sportliche Teil wird hier einmal
+       damit multipliziert. Jeder Teil genau einmal, keiner doppelt. */
+    const w = WIRT.abschlussWirtschaft(mitWirtschaft(v));
+    const sportlich = Math.round(punkte(b) * w.faktor);
+    const pkt = sportlich + w.punkte;
     /* VC-Ausschuettung. Zum Vergleich: eine Laufbahn bringt rund 107 VC, ein
        Vereinsdurchlauf dauert 15 davon. Die Ausschuettung soll spuerbar sein,
        aber die Akademie nicht ersetzen — deshalb etwa ein bis drei Laufbahnen
@@ -1321,7 +1337,7 @@ export const machVerein = (H) => {
       return a;
     }, {});
     return {
-      punkte: pkt, vc, boni, wirkung,
+      punkte: pkt, sportlich, wirtschaft: w, vc, boni, wirkung,
       urteil: pkt >= 1100 ? "Legendär" : pkt >= 800 ? "Herausragend" : pkt >= 550 ? "Stark"
             : pkt >= 350 ? "Solide" : pkt >= 150 ? "Ordentlich" : "Ein Anfang",
       /* Wer noch im Kader steht, taucht kuenftig in der Akademie als jemand
