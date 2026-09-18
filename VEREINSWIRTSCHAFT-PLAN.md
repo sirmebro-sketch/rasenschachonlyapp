@@ -159,10 +159,29 @@ gebuchte Posten auch angezeigt wird; lässt man die Ausgaben weg, wird sie rot.
 Ein Bericht ohne Wirtschaftsteil (alter Spielstand) bleibt unverändert
 lesbar — auch das ist geprüft.
 
-### WIRT-P1-02 – Stadionausbau spürbar machen — OFFEN
+### WIRT-P1-02 – Stadionausbau spürbar machen — VORGELEGT (Claude, 18.09.2026)
 
-Plätze, Auslastung und Zuschauerzahl sollen im Spiel sichtbar sein, nicht nur
-in der Rechnung. Ausverkauftes Haus als eigenes Ereignis.
+Eine **Stadionkachel** im Führungsreiter nennt Plätze, die letzte Zuschauerzahl
+mit Auslastung und — der Punkt — **was die nächste Ausbaustufe brächte**
+(„33.000 Plätze, 11.000 mehr"). Bis hierher war der Ausbau eine Zahlung ins
+Ungewisse: man sah danach eine grössere Zahl in der Abrechnung, ohne je erfahren
+zu haben, wie viele Plätze man überhaupt hat.
+
+**Ausverkauft ab 97 % Auslastung**, im Beleg und in der Chronik. Die Schwelle ist
+gemessen, nicht gesetzt: ein Erstligist auf Rang 1 erreicht die Deckelung bei
+99 %, ein Drittligist auf Rang 1 kommt auf 91,7 %, ein Fünftligist auf 86,6 %.
+Erreichbar und trotzdem etwas wert.
+
+**Es zahlt in Stimmung (+3), nicht in Geld.** Die Zuschauer stecken bereits im
+Ticket-, Gastro- und Merchandisingposten; ein Bonus obendrauf wäre dieselbe
+Einnahme zweimal — der Fehler, den WIRT-P1-03 bei der Personalpauschale schon
+einmal hatte.
+
+**Offener Balancebefund, nicht eigenmächtig geändert:** die Auslastung hängt
+überhaupt nicht an der Kapazität. Ein Stadion mit 64.000 Plätzen füllt sich
+zu denselben 99 % wie eines mit 8.000. Ausbauen ist damit reines Aufwärts ohne
+Risiko — realistisch wäre, dass eine Verdopplung der Plätze die Auslastung
+drückt. Das ist eine Balance-Entscheidung des Eigentümers.
 
 ### WIRT-P1-03 – Spielergehälter statt Pauschale — VORGELEGT (Claude, 17.09.2026)
 
@@ -210,10 +229,53 @@ absteigbar — das ist keine Kalibrierfrage, sondern eine Grenze des Mittels.
 Die Gegenprobe über acht Läufe ergibt auf die Schulden Rauschen in beide
 Richtungen (+21 %, 0 %, −20 %, −3 %, +6 %, −13 %).
 
-**Offen bleibt deshalb der Lizenzentzug** — Zwangsabstieg statt Punktabzug,
-wenn die Auflage mehrere Saisons hintereinander greift. Das ist dasselbe
-Verfahren, nur seine letzte Stufe, und es ist das Einzige, was den extremen
-Fall schließt. Entscheidung des Eigentümers, nicht nebenbei gebaut.
+### WIRT-P0-05-UI – Vereinsführung bedienbar machen — VORGELEGT (Claude, 18.09.2026)
+
+Preise, Rechtsform und Vorstandsziel rechneten seit WIRT-P0-05 mit und hatten
+keine Oberfläche. Folge: `preisFaktor` las **immer** die Voreinstellung 1, die
+ganze Elastizitätsrechnung lief gegen einen festen Wert, `rechtsformWechseln`
+hatte **null Aufrufer**, und das Vorstandsziel tauchte erst NACH der Saison im
+Beleg auf.
+
+- **Preise:** drei Regler (0,6 bis 1,6) mit dem gerechneten Ertragsmaximum als
+  Hinweis. Darüber zu gehen bleibt erlaubt und kostet Stimmung — eine
+  Entscheidung, keine Automatik.
+- **Rechtsform:** der nächste Schritt mit Einlage, Kosten und Wirkung; die
+  Sperre nennt ihren Grund, statt den Knopf wortlos abzuschalten.
+- **Vorstandsziel:** sichtbar, **bevor** es entschieden ist.
+
+Der Reiter heißt deshalb **„Führung"** statt „Ausbau". Ein siebter Reiter kam
+nicht in Frage — bei 320 Pixeln lag schon der sechste zwei Wischer entfernt.
+
+### WIRT-P1-04b – Lizenzentzug als letzte Stufe — VORGELEGT (Claude, 18.09.2026)
+
+Die Antwort auf die Grenze oben, auf Kevins Auftrag vom 18.09.2026. **Drei
+Saisons in Folge auf der höchsten Abzugsstufe** (mehr als drei Kreditrahmen
+unter der Linie) heißt Lizenzentzug: Zwangsabstieg, unabhängig von der
+Tabelle. Der Zähler springt auf null, sobald der Verein die höchste Stufe
+verlässt — Besserung genügt, gesund werden muss er nicht. Zwei volle Saisons
+Vorwarnung, sichtbar im Vereinsbildschirm.
+
+Gemessen, gleiche Läufe wie oben:
+
+| Stärke | ohne Entzug | mit Entzug | Entzüge | Endliga |
+|---:|---:|---:|---:|---|
+| 62 | −107 / −53 | −105 / −51 | 1 / 0 | unverändert |
+| 70 | −323 / −293 | **−228 / −243** | 2 / 2 | unverändert |
+| 78 | −662 / −600 | **−575 / −486** | 3 / 2 | **eine Liga tiefer** |
+
+13 bis 29 Prozent weniger Schulden genau dort, wo der Punktabzug allein nichts
+ausrichtete. **Geheilt ist der Verein nicht:** er pendelt, weil er sportlich zu
+stark für unten und finanziell zu schwach für oben ist. Jede Runde nach unten
+halbiert aber die Gehälter, und das ist die Wirkung.
+
+Nebenbefund aus dem Prüfstand: ein Verein in der untersten Liga, dem die Lizenz
+fehlt, wurde bei gutem Ergebnis **befördert**. Wer keine Lizenz für seine Liga
+bekommt, bekommt erst recht keine für die darüber — er bleibt jetzt, wo er ist.
+
+**Offen bleibt der Ausschluss aus dem Spielbetrieb** als Stufe unter dem
+Entzug. In der untersten Liga bleibt es beim Punktabzug; der Beleg sagt das,
+statt stumm nichts zu tun.
 
 ### WIRT-P1-05 – Abschluss und Vermächtnis nachziehen — VORGELEGT (Claude, 17.09.2026)
 

@@ -9487,7 +9487,11 @@ function VereinScreen({ v, aka, onAendern, onZurueck, onAbschluss, startReiter }
        Reiterleiste scrollt zwar waagerecht, aber mit dem sechsten Reiter lag
        „Chronik" auf einem 320er-Gerät zwei Wischer entfernt — beim Rundgang
        durch die Oberfläche gemessen. Zwei Zeichen weniger holen sie zurück. */
-    ["ausbau", "Ausbau"], ["sponsoren", "Partner"], ["chronik", "Chronik"]];
+    /* „Führung" statt „Ausbau": der Reiter trägt seit WIRT-P0-05-UI auch
+       Vorstandsziel, Preise und Rechtsform. Ein SIEBTER Reiter kam nicht in
+       Frage — bei 320 Pixeln lag schon der sechste zwei Wischer entfernt,
+       gemessen beim Rundgang am 18.09.2026. */
+    ["ausbau", "Führung"], ["sponsoren", "Partner"], ["chronik", "Chronik"]];
   const rueckJahre = (v.chronik || []).filter((c) => c.tabelle).map((c) => c.jahr).reverse();
   const [rjahr, setRjahr] = React.useState(null);
   const rc = (v.chronik || []).filter((c) => c.tabelle)
@@ -10003,6 +10007,20 @@ function VereinScreen({ v, aka, onAendern, onZurueck, onAbschluss, startReiter }
                   <b>Lizenzauflage: {v.abzug} Punkte Abzug.</b> Sie wird am Ende
                   dieser Saison auf die Tabelle angerechnet. Weniger Schulden
                   heisst kleinere Auflage im nächsten Jahr.</div>)}
+              {/* DER ZÄHLER MUSS SICHTBAR SEIN (WIRT-P1-04b). Ein Zwangsabstieg,
+                  der ohne Ansage kommt, wäre Willkür — und er kommt frühestens
+                  im dritten Jahr, also gibt es zwei volle Saisons Vorwarnung.
+                  Die Zeile nennt auch den Ausweg: die höchste Stufe verlassen
+                  genügt, gesund werden muss der Verein nicht. */}
+              {v.lizenzJahre > 0 && (
+                <div className="m" style={{ fontSize: 11.5, marginTop: 4, color: "var(--bad)" }}>
+                  <b>Ohne Lizenz seit {v.lizenzJahre}{" von "}{VEREIN.ENTZUG_NACH} Saisons.</b>{" "}
+                  {v.lizenzJahre >= VEREIN.ENTZUG_NACH - 1
+                    ? "Noch eine Saison so, und der Verein steigt zwangsweise ab — unabhängig von der Tabelle."
+                    : "Bleibt es dabei, folgt nach " + VEREIN.ENTZUG_NACH
+                      + " Saisons der Zwangsabstieg."}{" "}
+                  Der Zähler springt auf null, sobald die Schulden wieder unter
+                  drei Kreditrahmen liegen.</div>)}
               {v.abzug <= 0 && VEREIN.kasse(v) < 0 && (
                 <div className="m" style={{ fontSize: 11.5, marginTop: 6, color: "var(--mu)" }}>
                   Die Kasse ist im Minus. Ein Überziehen bis zur Hälfte einer
@@ -10015,6 +10033,166 @@ function VereinScreen({ v, aka, onAendern, onZurueck, onAbschluss, startReiter }
                 </div>)}
             </div>
 
+            {/* ---- STADION (WIRT-P1-02) ---------------------------------
+                Plätze, Auslastung und Zuschauerzahl standen bisher nur in der
+                Rechnung. Wer eine Stufe kauft, sah danach eine grössere Zahl in
+                der Abrechnung, ohne je erfahren zu haben, wie viele Plätze er
+                überhaupt hat — der Ausbau war eine Zahlung ins Ungewisse.
+                Genannt wird deshalb auch, was die NÄCHSTE Stufe bringt. */}
+            {(() => {
+              const stufe = VEREIN.ausbauStufe(v, "stadion");
+              const jetzt = VEREIN.PLAETZE[stufe] || 0;
+              const naechste = VEREIN.PLAETZE[stufe + 1] || null;
+              const letzte = (v.chronik || []).filter((c) => c.wirtschaft
+                && c.wirtschaft.zuschauer).slice(-1)[0];
+              const w = letzte && letzte.wirtschaft;
+              return (
+                <div className="pan pad" style={{ marginTop: 8 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
+                    <span className="eb">Stadion</span>
+                    <span className="d" style={{ fontSize: 15 }}>
+                      {jetzt.toLocaleString("de-DE")} Plätze</span>
+                  </div>
+                  {w ? (
+                    <div className="m" style={{ fontSize: 11.5, marginTop: 2 }}>
+                      Zuletzt Ø {Math.round(w.zuschauer).toLocaleString("de-DE")} Zuschauer
+                      {w.auslastung ? " · " + Math.round(w.auslastung * 100) + " % ausgelastet" : ""}
+                      {w.ausverkauft ? " · ausverkauft" : ""}</div>
+                  ) : (
+                    <div className="m" style={{ fontSize: 11.5, marginTop: 2 }}>
+                      Noch keine Saison gespielt.</div>)}
+                  {naechste ? (
+                    <div className="m" style={{ fontSize: 11, marginTop: 4, color: "var(--mu)" }}>
+                      Die nächste Ausbaustufe bringt {naechste.toLocaleString("de-DE")} Plätze
+                      — {(naechste - jetzt).toLocaleString("de-DE")} mehr.</div>
+                  ) : (
+                    <div className="m" style={{ fontSize: 11, marginTop: 4, color: "var(--mu)" }}>
+                      Voll ausgebaut.</div>)}
+                  <div className="m" style={{ fontSize: 11, marginTop: 4, color: "var(--mu)" }}>
+                    Ab {Math.round(VEREIN.AUSVERKAUFT_AB * 100)} % Auslastung gilt das Haus als
+                    ausverkauft — das hebt die Stimmung.</div>
+                </div>);
+            })()}
+
+            {/* ---- VORSTANDSZIEL (WIRT-P0-05-UI) -------------------------
+                Es wurde seit dem Wirtschaftskern jede Saison gesetzt und
+                geprüft — sichtbar war es aber erst HINTERHER, im Beleg und in
+                der Chronik. Ein Ziel, das man erst erfährt, wenn es entschieden
+                ist, ist keines. Gewählt wird es nicht: der Vorstand gibt es
+                vor, abgeleitet aus der letzten Platzierung und verschärft von
+                der Rechtsform. */}
+            {v.ziel && (
+              <div className="pan pad" style={{ marginTop: 8 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
+                  <span className="eb">Vorstandsziel</span>
+                  <span className="d" style={{ fontSize: 13, color: "var(--ok)" }}>
+                    +{VEREIN.geldText(v.ziel.praemie, v.land)}</span>
+                </div>
+                <div className="d" style={{ fontSize: 15, marginTop: 2 }}>{v.ziel.n}</div>
+                <div className="m" style={{ fontSize: 11.5, marginTop: 2 }}>
+                  Mindestens Platz {v.ziel.soll} am Saisonende. Erfüllt bringt es
+                  die Prämie, verfehlt kostet es nichts — der Vorstand fordert,
+                  er bestraft nicht.</div>
+                <div className="m" style={{ fontSize: 11, marginTop: 4, color: "var(--mu)" }}>
+                  Die Vorgabe folgt der letzten Platzierung; eine strengere
+                  Rechtsform verschärft sie.</div>
+              </div>)}
+
+            {/* ---- PREISE (WIRT-P0-05-UI) -------------------------------
+                `preisFaktor` las bis hierher immer die Voreinstellung 1, weil
+                niemand etwas anderes setzen konnte. Die ganze Elastizitäts-
+                rechnung — Ansehen, Gastrostufe, Sortiment, Rechtsform,
+                Stimmung — lief also gegen einen festen Wert.
+
+                DER HINWEIS IST GERECHNET, NICHT GESCHÄTZT. `bestPreis` probiert
+                51 Werte durch und nennt den ertragreichsten. Er ist trotzdem
+                nur ein Hinweis: darüber zu gehen bringt kurzfristig mehr und
+                kostet Stimmung, und das darf der Spieler entscheiden. */}
+            <div className="pan pad" style={{ marginTop: 14 }}>
+              <div className="eb">Preise</div>
+              <div className="m" style={{ fontSize: 11.5, marginTop: 2 }}>
+                Faktor auf den Normalpreis. Höher heisst mehr je Einheit und
+                weniger Abnehmer — wie viel weniger, hängt davon ab, was der
+                Verein zu bieten hat.</div>
+            </div>
+            {VEREIN.PREIS_FELDER.map((f) => {
+              const jetzt = VEREIN.preisFaktor(VEREIN.mitWirtschaft(v), f.id);
+              const best = VEREIN.bestPreis(v, f.id);
+              const ueber = jetzt > best + 0.005;
+              return (
+                <div key={f.id} className="pan pad" style={{ marginTop: 8 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
+                    <span className="d" style={{ fontSize: 15 }}>{f.n}</span>
+                    <span className="d" style={{ fontSize: 15,
+                      color: ueber ? "var(--bad)" : "var(--tx)" }}>
+                      {Math.round(jetzt * 100)} %</span>
+                  </div>
+                  <div className="m" style={{ fontSize: 11.5, marginTop: 2 }}>{f.t}</div>
+                  <input type="range" style={{ width: "100%", marginTop: 6 }}
+                    min={VEREIN.PREIS_MIN} max={VEREIN.PREIS_MAX} step="0.02" value={jetzt}
+                    aria-label={f.n + " Preisfaktor"}
+                    onChange={(e) => { const r = VEREIN.preisSetzen(v, f.id, e.target.value);
+                                       if (!r.fehler) onAendern(r.v); }} />
+                  <div className="m" style={{ fontSize: 11, color: ueber ? "var(--bad)" : "var(--mu)" }}>
+                    {ueber
+                      ? "Über dem Ertragsmaximum von " + Math.round(best * 100)
+                        + " %. Bringt weniger ein und kostet jede Saison Stimmung."
+                      : "Ertragsmaximum bei " + Math.round(best * 100) + " %."}</div>
+                </div>);
+            })}
+
+            {/* ---- RECHTSFORM (WIRT-P0-05-UI) ---------------------------
+                `rechtsformWechseln` war vollständig gebaut und geprüft und
+                hatte null Aufrufer. Der Weg führt nur nach vorn und nur, wenn
+                der Verein gross genug ist — beides sagt der Bildschirm jetzt,
+                statt den Knopf wortlos zu sperren. */}
+            {(() => {
+              const jetzt = VEREIN.rechtsform(VEREIN.mitWirtschaft(v));
+              const alle = VEREIN.RECHTSFORMEN;
+              const i = alle.findIndex((r) => r.id === jetzt.id);
+              const naechste = alle[i + 1] || null;
+              const probe = naechste ? VEREIN.rechtsformWechseln(v, naechste.id) : null;
+              return (
+                <>
+                  <div className="pan pad" style={{ marginTop: 14 }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
+                      <span className="eb">Rechtsform</span>
+                      <span className="d" style={{ fontSize: 15 }}>{jetzt.n}</span>
+                    </div>
+                    <div className="m" style={{ fontSize: 11.5, marginTop: 2 }}>{jetzt.t}</div>
+                    <div className="m" style={{ fontSize: 11, marginTop: 4, color: "var(--mu)" }}>
+                      Vermarktung {Math.round(jetzt.kommerz * 100)} % · Fans vertragen
+                      {jetzt.toleranz >= 0 ? " mehr" : " weniger"} · Vorstand fordert
+                      {jetzt.zielHaerte > 1 ? " mehr" : jetzt.zielHaerte < 1 ? " weniger" : " normal"}
+                    </div>
+                  </div>
+                  {naechste && (
+                    <div className="pan pad" style={{ marginTop: 8 }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
+                        <span className="d" style={{ fontSize: 15 }}>Umwandeln in {naechste.n}</span>
+                        <span className="d" style={{ fontSize: 13, color: "var(--ok)" }}>
+                          +{VEREIN.geldText(naechste.einlage, v.land)}</span>
+                      </div>
+                      <div className="m" style={{ fontSize: 11.5, marginTop: 2 }}>{naechste.t}</div>
+                      <div className="m" style={{ fontSize: 11.5 }}>
+                        Kostet {VEREIN.geldText(naechste.wechselKosten, v.land)} und acht Punkte
+                        Stimmung. Der Weg führt nur nach vorn.</div>
+                      <button className="btn sm" style={{ marginTop: 6 }}
+                        disabled={!!(probe && probe.fehler)}
+                        onClick={() => { const r = VEREIN.rechtsformWechseln(v, naechste.id);
+                                         if (!r.fehler) onAendern(r.v); }}>
+                        {probe && probe.fehler ? probe.fehler : "Umwandeln"}
+                      </button>
+                    </div>)}
+                </>);
+            })()}
+
+            <div className="pan pad" style={{ marginTop: 14 }}>
+              <div className="eb">Ausbau</div>
+              <div className="m" style={{ fontSize: 11.5, marginTop: 2 }}>
+                Sechs Abteilungen, jede baut für sich. Eine Stufe wirkt erst ab
+                der Saison nach ihrer Fertigstellung.</div>
+            </div>
             {VEREIN.VEREIN_AUSBAU.map((ab) => {
               const stufe = VEREIN.ausbauStufe(v, ab.id);
               const k = VEREIN.ausbauKosten(v, ab.id);
@@ -10102,6 +10280,7 @@ function VereinScreen({ v, aka, onAendern, onZurueck, onAbschluss, startReiter }
                     {c.wirtschaft.zuschauer
                       ? " · " + Math.round(c.wirtschaft.zuschauer).toLocaleString("de-DE") + " Zuschauer"
                       : ""}
+                    {c.wirtschaft.ausverkauft ? " · ausverkauft" : ""}
                     {c.wirtschaft.stimmung != null ? " · Stimmung " + c.wirtschaft.stimmung : ""}
                     {c.wirtschaft.gehaltsniveau > 1.02
                       ? " · Gehälter " + Math.round(c.wirtschaft.gehaltsniveau * 100) + " %"
@@ -10121,6 +10300,10 @@ function VereinScreen({ v, aka, onAendern, onZurueck, onAbschluss, startReiter }
                 {!!(c.wirtschaft && c.wirtschaft.abzug) && (
                   <div className="m" style={{ fontSize: 11.5, marginTop: 3, color: "var(--bad)" }}>
                     Lizenzauflage: {c.wirtschaft.abzug} Punkte abgezogen</div>)}
+                {!!(c.wirtschaft && c.wirtschaft.entzogen) && (
+                  <div className="m" style={{ fontSize: 11.5, marginTop: 3,
+                    color: "var(--bad)", fontWeight: 600 }}>
+                    Lizenz entzogen — Zwangsabstieg</div>)}
               </div>))}
           </div>)}
 
@@ -17550,7 +17733,12 @@ function EndScreen({ p, onNew }) {
                     {w.zuschauer > 0 && (
                       <div className="m" style={{ fontSize: 10, color: "var(--mu)", marginBottom: 4 }}>
                         Ø {Math.round(w.zuschauer).toLocaleString("de-DE")} Zuschauer
+                        {w.plaetze ? " von " + w.plaetze.toLocaleString("de-DE") : ""}
                         {w.auslastung ? " · " + Math.round(w.auslastung * 100) + " % ausgelastet" : ""}</div>)}
+                    {!!w.ausverkauft && (
+                      <div className="m" style={{ fontSize: 11.5, marginBottom: 4, color: "var(--ok)" }}>
+                        <b>Ausverkauftes Haus.</b> Jedes Heimspiel voll — die Fans danken es
+                        mit Stimmung.</div>)}
 
                     <div style={{ marginTop: 6 }}>
                       {(w.einnahmen || []).map((x) => zeile(x.k, "+" + geld(x.v), "var(--ok)"))}
@@ -17598,6 +17786,19 @@ function EndScreen({ p, onNew }) {
                       <div className="m" style={{ fontSize: 11, marginTop: 3, color: "var(--bad)" }}>
                         Die Kasse steht {geld(Math.abs(w.lizenz.kasse))} im Minus, geduldet sind
                         {" " + geld(w.lizenz.rahmen)}. Kommende Saison: {w.lizenz.punkte} Punkte Abzug.</div>)}
+                    {!!(w.lizenz && w.lizenz.entzogen) && (
+                      <div className="m" style={{ fontSize: 11.5, marginTop: 5,
+                        color: "var(--bad)", fontWeight: 600 }}>
+                        Die Lizenz wurde entzogen: Zwangsabstieg, unabhängig vom
+                        Tabellenplatz. In der neuen Liga kostet der Kader rund
+                        die Hälfte — das ist der Weg zurück.</div>)}
+                    {!!(w.lizenz && w.lizenz.entzugOhneWirkung) && (
+                      <div className="m" style={{ fontSize: 11.5, marginTop: 5, color: "var(--bad)" }}>
+                        Die Lizenz wäre entzogen — tiefer geht es aber nicht.
+                        Es bleibt beim Punktabzug.</div>)}
+                    {!!(w.lizenz && w.lizenz.jahre > 0 && !w.lizenz.entzogen) && (
+                      <div className="m" style={{ fontSize: 11, marginTop: 3, color: "var(--bad)" }}>
+                        Ohne Lizenz seit {w.lizenz.jahre} von {VEREIN.ENTZUG_NACH} Saisons.</div>)}
                     {!!(w.lizenz && !w.lizenz.punkte && w.lizenz.warnung) && (
                       <div className="m" style={{ fontSize: 11, marginTop: 3, color: "var(--mu)" }}>
                         Die Kasse ist im Minus. Bis {geld(w.lizenz.rahmen)} ist das geduldet —
@@ -18288,6 +18489,7 @@ function FlutlichtApp() {
             summeEin: VS.beleg.summeEin, summeAus: VS.beleg.summeAus,
             ergebnis: VS.beleg.ergebnis, kasse: VS.beleg.kasse,
             zuschauer: VS.beleg.zuschauer, auslastung: VS.beleg.auslastung,
+            plaetze: VS.beleg.plaetze, ausverkauft: VS.beleg.ausverkauft,
             ereignisse: (VS.beleg.ereignisse || []).map((e) => ({ n: e.n, t: e.t, geld: e.geld })),
             /* Die beiden Werte, die die ganze Wirtschaft treiben, fehlten hier
                — und sie tauchen auch sonst nirgends auf. Der Spieler sah

@@ -421,6 +421,13 @@ const stufeVon = (v, id) => Math.max(1, Math.min(AUSBAU_MAX, ((v?.ausbau || {})[
 /* Plätze je Stadionstufe. Bewusst überproportional: die ersten Ausbaustufen
    sind billig und bringen wenig, die letzten teuer und viel. */
 export const PLAETZE = [0, 8000, 14000, 22000, 33000, 47000, 64000];
+/* AUSVERKAUFT (WIRT-P1-02). Die Auslastung ist bei .99 gedeckelt; alles ab 97 %
+   gilt als volles Haus. Gemessen, bevor die Schwelle gesetzt wurde: ein
+   Erstligist auf Rang 1 bis 3 erreicht die Deckelung, ein Drittligist auf Rang 1
+   kommt auf 91,7 %, ein Fünftligist auf 86,6 %. Die Marke ist also erreichbar
+   und trotzdem etwas wert — ein Ereignis, das nie eintritt, wäre wieder ein
+   Placebo, und davon hatte dieses Projekt schon genug. */
+export const AUSVERKAUFT_AB = 0.97;
 export const plaetze = (v) => PLAETZE[stufeVon(v, "stadion")];
 
 /* Eine Saison abrechnen. `erg` ist das Ergebnis aus `vereinSaison`:
@@ -637,6 +644,11 @@ export function saisonAbrechnung(v, erg = {}, saat = 0) {
   const ereignisGeld = ereignisse.reduce((a, e) => a + (e.geld || 0), 0);
   const ziel = zielPruefen(v, erg);
   const bau = bauTicken(v);
+  /* Das volle Haus wird NICHT extra bezahlt: die Zuschauer stecken bereits im
+     Ticket-, Gastro- und Merchandisingposten, ein Bonus obendrauf wäre dieselbe
+     Einnahme zweimal. Was es bringt, ist Stimmung — und die trägt sich in die
+     nächste Saison. */
+  const ausverkauft = ein.auslastung >= AUSVERKAUFT_AB;
 
   /* Das Gehaltsniveau der ABGELAUFENEN Saison steckt in `aus`; hier entsteht
      das der kommenden. Bezahlt wird, was vorher vereinbart war — der Erfolg
@@ -658,6 +670,7 @@ export function saisonAbrechnung(v, erg = {}, saat = 0) {
     + (erg.aufstieg ? 6 : 0) - (erg.abstieg ? 8 : 0)
     - ueberzogen(v, erg) * 22
     + bau.fertig.length * 3
+    + (ausverkauft ? 3 : 0)
     + ereignisse.reduce((a, e) => a + (e.stimmung || 0), 0))));
 
   /* Die Lizenzprüfung steht ganz am Ende und rechnet mit der Kasse NACH der
@@ -671,10 +684,17 @@ export function saisonAbrechnung(v, erg = {}, saat = 0) {
          ausbau: bau.ausbau, baustellen: bau.baustellen, ziel: null,
          /* Was die kommende Saison kostet. `verein.js` liest es beim Anpfiff
             und zieht es von der Tabelle ab. */
-         abzug: lizenz.punkte },
+         abzug: lizenz.punkte,
+         /* Wie viele Saisons in Folge der Verein schon auf der höchsten Stufe
+            steht. `verein.js` liest daraus den Zwangsabstieg. */
+         lizenzJahre: lizenz.jahre },
     beleg: { kasseVorher, einnahmen: ein.posten, ausgaben: aus.posten,
              summeEin: ein.summe, summeAus: aus.summe, ergebnis, kasse,
              zuschauer: ein.zuschauer, auslastung: ein.auslastung,
+             /* Plätze und Auslastung gehören in den Beleg, nicht nur in die
+                Rechnung: sonst sieht der Spieler eine Zuschauerzahl, ohne zu
+                wissen, ob das viel ist (WIRT-P1-02). */
+             plaetze: plaetze(v), ausverkauft,
              ausgelaufen: ausgelaufen.map((s) => s.n),
              ereignisse, ziel, bau, stimmung: stimmungNeu,
              stimmungVorher: v?.stimmung ?? 60,
@@ -833,18 +853,46 @@ export function kreditrahmen(v, erg = {}, einnahmen) {
 /* Die Lizenzprüfung. Sie entscheidet über die KOMMENDE Saison — die
    abgelaufene ist gespielt, ihre Tabelle steht. Der Fussball macht es genauso:
    die Auflage trifft das Jahr nach dem Verstoss. */
+/* DER LIZENZENTZUG — die letzte Stufe desselben Verfahrens (WIRT-P1-04b).
+
+   Gemessen in P1-04: der Punktabzug wirkt sportlich, aber ein Kader, der seiner
+   Liga weit davongelaufen ist, steht **52 Punkte** über dem Abstiegsplatz. Neun
+   Punkte schließen ein Sechstel davon; ein 78er-Verein blieb über fünfzehn
+   Saisons oben und verschuldet, bei null Abstiegen. Die Staffel höher zu drehen
+   kauft nichts — auch dreissig Punkte reichten nicht.
+
+   Deshalb dieselbe Antwort, die der Fussball kennt: wer die Lizenz über Jahre
+   nicht erfüllt, bekommt keine mehr und steigt ab, ganz gleich, wie er gespielt
+   hat. 1860 München und Rangers sind genau das.
+
+   DREI SAISONS AUF DER HÖCHSTEN STUFE, nicht drei mit irgendeiner Auflage. Wer
+   knapp unter der Linie steht, hat ein Problem; wer mehr als drei Kreditrahmen
+   darunter steht, hat keinen Betrieb mehr, den man genehmigen könnte. Der
+   Zähler springt auf null zurück, sobald der Verein die höchste Stufe verlässt
+   — es genügt also, sich zu bessern, man muss nicht gesund werden.
+
+   ZWEI VORWARNUNGEN. Der Spieler sieht den Zähler ab dem ersten Jahr. Ein
+   Zwangsabstieg, der ohne Ansage kommt, wäre Willkür. */
+export const ENTZUG_NACH = 3;
+
 export function lizenzPruefung(v, erg = {}, einnahmen) {
   const kasse = Math.round((Number(v?.kasse) || 0) * 100) / 100;
   const rahmen = kreditrahmen(v, erg, einnahmen);
   const schulden = Math.max(0, -kasse);
+  const jahreVorher = Math.max(0, Math.round(Number(v?.lizenzJahre) || 0));
   /* Im Rahmen: keine Auflage. Eine Warnung gibt es trotzdem, sobald die Kasse
      überhaupt negativ ist — wer erst beim Abzug erfährt, dass er zu tief steht,
      hatte nie die Gelegenheit gegenzusteuern. */
   const ueber = (schulden - rahmen) / rahmen;
-  if (ueber <= 0) return { punkte: 0, rahmen, kasse, ueber: 0, warnung: kasse < 0 };
-  const stufe = ABZUG_STUFEN.find((x) => ueber <= x.bis) || ABZUG_STUFEN[ABZUG_STUFEN.length - 1];
+  if (ueber <= 0) return { punkte: 0, rahmen, kasse, ueber: 0, warnung: kasse < 0,
+                           jahre: 0, entzug: false };
+  const i = ABZUG_STUFEN.findIndex((x) => ueber <= x.bis);
+  const stufe = ABZUG_STUFEN[i < 0 ? ABZUG_STUFEN.length - 1 : i];
+  const hoechste = (i < 0 ? ABZUG_STUFEN.length - 1 : i) === ABZUG_STUFEN.length - 1;
+  const jahre = hoechste ? jahreVorher + 1 : 0;
   return { punkte: stufe.punkte, rahmen, kasse,
-           ueber: Math.round(ueber * 100) / 100, warnung: true };
+           ueber: Math.round(ueber * 100) / 100, warnung: true,
+           jahre, entzug: jahre >= ENTZUG_NACH };
 }
 
 /* ------------------------------------------------------- Vorstandsziel

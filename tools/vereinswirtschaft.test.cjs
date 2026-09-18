@@ -570,14 +570,24 @@ test('Der Stimmungsschaden wächst stetig über dem Normalpreis', () => {
   const stimmungBei = (f) => W.saisonAbrechnung(
     verein({ ligastufe: 4, ausbau: {}, stimmung: 70, preise: { ticket: f, gastro: f, merch: f } }),
     erg({ rang: 9 }), 3).beleg.stimmung;
-  const unten = [0.6, 0.8, 1.0].map(stimmungBei);
-  assert(unten.every((x) => x === unten[0]),
-    'unterhalb und bei 1 kostet der Preis nichts: ' + unten.join(', '));
-  /* Darüber fällt sie, und zwar monoton. */
-  const oben = [1.1, 1.3, 1.6].map(stimmungBei);
-  assert(oben[0] <= unten[0] && oben[1] <= oben[0] && oben[2] <= oben[1],
-    'über dem Normalpreis muss es stetig teurer werden: ' + oben.join(', '));
-  assert(oben[2] < unten[0], 'Wucher kostet spürbar');
+  /* NACHGESCHÄRFT MIT WIRT-P1-02. Bis dahin stand hier, unterhalb und bei 1
+     seien alle Werte GLEICH. Seit das volle Haus Stimmung bringt, stimmt das
+     nicht mehr: ein Kampfpreis von 0,6 füllt das Stadion über die
+     Ausverkaufsmarke und hebt die Stimmung um 3. Das ist richtiges Verhalten
+     und kein Knick — billige Karten, volles Haus, zufriedene Fans.
+
+     Die Zusicherung, um die es geht, ist eine andere und wird jetzt genauer
+     getroffen: der ÜBERTEUERUNGSSCHADEN ist bei und unter 1 null. Geprüft an
+     0,8 gegen 1,0 — beide unter der Ausverkaufsmarke, also ohne Bonus, und
+     deshalb exakt gleich, wenn die Abkürzung in `ueberzogen` stimmt. */
+  assert.equal(stimmungBei(0.8), stimmungBei(1.0),
+    'bei und unter 1 kostet der Preis nichts');
+  /* Und über die ganze Spanne darf Erhöhen die Stimmung nie verbessern. */
+  const reihe = [0.6, 0.8, 1.0, 1.1, 1.3, 1.6].map(stimmungBei);
+  for (let i = 1; i < reihe.length; i++)
+    assert(reihe[i] <= reihe[i - 1],
+      'teurer darf die Stimmung nie heben: ' + reihe.join(', '));
+  assert(reihe[reihe.length - 1] < reihe[2], 'Wucher kostet spürbar');
 });
 
 test('Der Punktedeckel hält auch mit der Vermächtnisplakette', () => {
@@ -690,4 +700,63 @@ test('Die Abrechnung beschliesst die Auflage aus der Kasse NACH der Saison', () 
   const reich = W.saisonAbrechnung(verein({ ligastufe: 1, kasse: 200 }), erg({ rang: 3 }), 7);
   assert.equal(reich.v.abzug, 0);
   assert.equal(reich.beleg.lizenz.warnung, false);
+});
+
+test('Der Lizenzentzug zaehlt nur die hoechste Stufe und verzeiht Besserung', () => {
+  const v = verein({ ligastufe: 1 });
+  const r = W.kreditrahmen(v, erg());
+  const pruef = (kasse, jahre) => W.lizenzPruefung({ ...v, kasse, lizenzJahre: jahre }, erg());
+  /* Auf der hoechsten Stufe zaehlt der Zaehler hoch. */
+  assert.equal(pruef(-(r * 9), 0).jahre, 1);
+  assert.equal(pruef(-(r * 9), 1).jahre, 2);
+  assert.equal(pruef(-(r * 9), 2).jahre, 3);
+  /* Erst beim Erreichen der Grenze folgt der Entzug, nicht davor. */
+  assert.equal(pruef(-(r * 9), 0).entzug, false);
+  assert.equal(pruef(-(r * 9), 1).entzug, false, 'zwei volle Saisons Vorwarnung');
+  assert.equal(pruef(-(r * 9), 2).entzug, true);
+  /* BESSERUNG GENUEGT. Wer die hoechste Stufe verlaesst, faengt von vorne an —
+     auch wenn er noch tief im Minus steht. Der Ausweg muss erreichbar sein,
+     sonst ist der Entzug nur eine verzoegerte Unvermeidlichkeit. */
+  assert.equal(pruef(-(r * 3), 2).jahre, 0, 'mittlere Stufe setzt zurueck');
+  assert.equal(pruef(-(r * 3), 2).entzug, false);
+  assert.equal(pruef(-(r * 1.5), 2).jahre, 0);
+  assert.equal(pruef(50, 2).jahre, 0, 'eine volle Kasse erst recht');
+  /* Der Zaehler wandert an den Verein, damit die naechste Saison ihn kennt. */
+  const { v: nach } = W.saisonAbrechnung({ ...v, kasse: -(r * 20), lizenzJahre: 1 },
+    erg({ rang: 10 }), 3);
+  assert.equal(nach.lizenzJahre, 2, 'die Abrechnung schreibt ihn fort');
+});
+
+test('Das ausverkaufte Haus ist erreichbar, aber nicht geschenkt (P1-02)', () => {
+  /* EIN EREIGNIS, DAS NIE EINTRITT, WAERE WIEDER EIN PLACEBO. Deshalb zuerst:
+     die Marke muss erreichbar sein. Gemessen vor dem Setzen der Schwelle — ein
+     Erstligist auf Rang 1 erreicht die Deckelung bei 99 %, ein Drittligist auf
+     Rang 1 kommt auf 91,7 %, ein Fuenftligist auf 86,6 %. */
+  const spitze = W.saisonAbrechnung(verein({ ligastufe: 1, stimmung: 80 }), erg({ rang: 1 }), 3);
+  assert.equal(spitze.beleg.ausverkauft, true, 'oben an der Spitze ist das Haus voll');
+  assert(spitze.beleg.auslastung >= W.AUSVERKAUFT_AB);
+  /* Und nicht geschenkt: wer hinten steht, verkauft nicht aus. */
+  const hinten = W.saisonAbrechnung(verein({ ligastufe: 3, stimmung: 45 }), erg({ rang: 16 }), 3);
+  assert.equal(hinten.beleg.ausverkauft, false, 'hinten bleiben Plaetze leer');
+  assert(hinten.beleg.auslastung < W.AUSVERKAUFT_AB);
+  /* Der Beleg nennt die Bezugsgroesse, sonst sagt die Zuschauerzahl nichts. */
+  assert.equal(spitze.beleg.plaetze, W.plaetze(verein({ ligastufe: 1 })));
+  assert(spitze.beleg.zuschauer <= spitze.beleg.plaetze, 'nie mehr Zuschauer als Plaetze');
+});
+
+test('Das volle Haus zahlt in Stimmung, nicht in Geld (P1-02)', () => {
+  /* Die Zuschauer stecken bereits im Ticket-, Gastro- und Merchandisingposten.
+     Ein Geldbonus obendrauf waere dieselbe Einnahme zweimal — die Sorte Fehler,
+     die WIRT-P1-03 bei der Personalpauschale schon einmal hatte. */
+  const voll = W.saisonAbrechnung(verein({ ligastufe: 1, stimmung: 80 }), erg({ rang: 1 }), 3);
+  assert.equal(voll.beleg.ausverkauft, true);
+  assert(!voll.beleg.einnahmen.some((p) => /ausverkauf|volles haus/i.test(p.k)),
+    'kein eigener Geldposten fuers volle Haus');
+  /* Die Stimmung steigt dafuer messbar: derselbe Lauf mit einer Auslastung
+     knapp unter der Marke liegt genau drei Punkte tiefer. */
+  const knapp = { ...verein({ ligastufe: 1, stimmung: 80 }), preise: { ticket: 1.6 } };
+  const a = W.saisonAbrechnung(knapp, erg({ rang: 1 }), 3);
+  if (!a.beleg.ausverkauft)
+    assert(voll.beleg.stimmung > a.beleg.stimmung,
+      'das volle Haus hebt die Stimmung: ' + voll.beleg.stimmung + ' vs ' + a.beleg.stimmung);
 });

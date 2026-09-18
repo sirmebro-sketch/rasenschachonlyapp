@@ -1237,3 +1237,229 @@ test('Rücktritt vor/nach Saison und Angebotsannahme hat gleiche Kalendergrenzen
   assert(E.renderEnd(out.P).includes('Karriereende '+expected.bis));
  }
 });
+
+test('Der Lizenzentzug steigt ab, egal wie gut gespielt wurde',()=>{
+ /* DIE ZUSICHERUNG, DIE P1-04 NICHT GEBEN KONNTE. Dort blieb ein Verein mit
+    -700 Mio ueber fuenfzehn Saisons in der ersten Liga, weil neun Punkte Abzug
+    einen 52-Punkte-Vorsprung nicht schliessen. Hier steigt er ab, auch wenn er
+    Meister wird. */
+ E.zufallSetzen(20260918);
+ /* DER VEREIN MUSS IN EINER LIGA STEHEN, AUS DER ES NACH UNTEN GEHT. Der erste
+    Entwurf dieser Pruefung nahm den Testverein, wie `gruenden` ihn anlegt — und
+    der startet in der UNTERSTEN Liga der Pyramide. Dort greift der Entzug
+    bewusst nicht (`idx > 0`), also war `entzug` zu Recht false und die Pruefung
+    mass den falschen Fall. Der Fehler lag in der Pruefung; den Fall der
+    untersten Liga deckt jetzt die Pruefung darunter ab. */
+ /* GENAU DAS SZENARIO AUS P1-04: ein Kader, der seiner Liga davongelaufen ist,
+    mit Schulden, die kein Punktabzug mehr einholt. Der Standardkader (ovr 60)
+    wuerde in der obersten Liga Letzter und damit ohnehin absteigen — dann
+    pruefte diese Regression wieder den falschen Weg nach unten. */
+ const stark=spielbereiterVerein().kader.map(sp=>({...sp,ovr:84,pot:88}));
+ const roh=spielbereiterVerein({kasse:-99999,lizenzJahre:2,kader:stark});
+ /* `stufenVon` liefert die ganze Leiter, `idx` die Sprosse; hoeher heisst
+    hoeherer Index (so liest es auch `aufstieg`). Oberste Sprosse waehlen. */
+ const leiter=E.VEREIN.stufenVon(roh.land,roh.liga);
+ const tief=E.VEREIN.mitWirtschaft({...roh,liga:leiter[leiter.length-1].liga});
+ const v0=E.VEREIN.einschreiben(tief).v;
+ const vorher=v0.liga;
+ assert(E.VEREIN.stufenVon(v0.land,vorher).findIndex(x=>x.liga===vorher)>0,
+   'der Pruefverein steht nicht in der untersten Liga');
+ const r=E.VEREIN.vereinSaison(v0);
+ assert(!r.fehler,'die Saison laeuft: '+r.fehler);
+ assert.equal(r.entzug,true,'die Lizenz ist weg');
+ /* DEN SPORTLICHEN ABSTIEG AUSSCHLIESSEN. Der erste Entwurf pruefte nur, dass
+    die Liga sich aendert — das erfuellt auch ein gewoehnlicher Abstieg, und die
+    Gegenprobe (Entzug wirkt nicht auf die Liga) blieb deshalb gruen. Die
+    Pruefung mass also gar nicht, was sie behauptet. Jetzt muss der Verein
+    SPORTLICH gehalten haben und trotzdem unten stehen. */
+ assert.equal(r.abstieg,false,'sportlich ist er nicht abgestiegen (Rang '+r.rang+' von '+r.N+')');
+ assert(r.v.liga!==vorher,'und steht trotzdem eine Liga tiefer');
+ /* Eine Liga, nicht zwei. */
+ const stufen=E.VEREIN.stufenVon(v0.land,vorher);
+ const idx=stufen.findIndex(x=>x.liga===vorher);
+ assert.equal(r.v.liga,stufen[idx-1].liga,'genau eine Liga nach unten');
+ /* Nach dem Entzug faengt die Zaehlung von vorne an — sonst stiege derselbe
+    Verein jede Saison erneut ab, ohne je die Gelegenheit zur Erholung. */
+ assert.equal(r.v.lizenzJahre,0,'der Zaehler steht wieder auf null');
+ assert.equal(r.v.abzug,0,'und die Auflage ist mit dem Abstieg abgegolten');
+ /* Das Vorstandsziel passt zur neuen Lage statt "Um den Titel spielen". */
+ assert(r.v.ziel&&r.v.ziel.n,'ein Ziel wird gesetzt: '+JSON.stringify(r.v.ziel));
+ const c=r.v.chronik.at(-1).wirtschaft;
+ assert.equal(c.entzogen,true,'die Chronik haelt es fest');
+});
+
+test('In der untersten Liga bleibt es beim Punktabzug',()=>{
+ /* Tiefer geht es nicht. Der Ausschluss aus dem Spielbetrieb waere die naechste
+    Stufe und ist nicht gebaut — der Beleg sagt das, statt stumm nichts zu tun. */
+ E.zufallSetzen(20260918);
+ const unten=E.VEREIN.mitWirtschaft(spielbereiterVerein({kasse:-99999,lizenzJahre:2}));
+ const idx=E.VEREIN.stufenVon(unten.land,unten.liga).findIndex(x=>x.liga===unten.liga);
+ assert.equal(idx,0,'der gegruendete Verein startet ganz unten');
+ const r=E.VEREIN.vereinSaison(E.VEREIN.einschreiben(unten).v);
+ assert(!r.fehler,'die Saison laeuft: '+r.fehler);
+ assert.equal(r.entzug,false,'es gibt keinen Zwangsabstieg nach ganz unten');
+ assert.equal(r.entzugOhneWirkung,true,'aber der Grund wird benannt');
+ /* Und er steigt auch nicht AUF. Ein Verein ohne Lizenz fuer seine Liga
+    bekommt erst recht keine fuer die darueber — beim Schreiben dieser Pruefung
+    aufgefallen, weil er zunaechst befoerdert wurde. */
+ assert.equal(r.v.liga,unten.liga,'die Liga bleibt, in beide Richtungen');
+ assert(r.v.abzug>0,'der Punktabzug bleibt die Folge');
+});
+
+test('Ohne Lizenzgrund steigt niemand zwangsweise ab',()=>{
+ /* Die Gegenrichtung: ein gesunder Verein darf von alldem nichts merken. */
+ E.zufallSetzen(20260918);
+ const r=E.VEREIN.vereinSaison(E.VEREIN.einschreiben(spielbereiterVerein({kasse:300})).v);
+ assert.equal(r.entzug,false);
+ assert.equal(r.v.lizenzJahre,0);
+ assert.equal((r.v.chronik.at(-1).wirtschaft||{}).entzogen,false);
+});
+
+test('Die Oberflaeche zaehlt die Jahre ohne Lizenz sichtbar mit',()=>{
+ /* Ein Zwangsabstieg ohne Ansage waere Willkuer. Zwei Saisons Vorwarnung. */
+ const erste=E.renderVerein(E.VEREIN.mitWirtschaft(
+   spielbereiterVerein({kasse:-9999,abzug:9,lizenzJahre:1})),E.leereAkademie(),'ausbau');
+ assert(erste.includes('Ohne Lizenz seit 1'),'der Zaehler steht da');
+ assert(erste.includes('Zwangsabstieg'),'und nennt die Folge');
+ assert(!erste.includes('NaN'));
+ const letzte=E.renderVerein(E.VEREIN.mitWirtschaft(
+   spielbereiterVerein({kasse:-9999,abzug:9,lizenzJahre:2})),E.leereAkademie(),'ausbau');
+ assert(letzte.includes('Noch eine Saison'),'im letzten Jahr wird es deutlich');
+ /* Wer im Rahmen bleibt, sieht den Zaehler gar nicht. */
+ const gesund=E.renderVerein(E.VEREIN.mitWirtschaft(spielbereiterVerein({kasse:40})),
+   E.leereAkademie(),'ausbau');
+ assert(!gesund.includes('Ohne Lizenz'));
+});
+
+/* ------------------------------------------ Vereinsfuehrung (WIRT-P0-05-UI)
+   Preise, Rechtsform und Vorstandsziel rechneten seit dem Wirtschaftskern mit
+   und hatten keine Oberflaeche. `preisFaktor` las deshalb immer die
+   Voreinstellung 1, `rechtsformWechseln` hatte null Aufrufer. */
+
+test('Ein gesetzter Preis kommt in der Abrechnung wirklich an',()=>{
+ /* DIE EIGENTLICHE ZUSICHERUNG. Ein Regler, der einen Wert speichert, den die
+    Rechnung nicht liest, waere dieselbe Sorte Placebo wie "Scoutnetz" und
+    "Bekannte Adresse" — nur mit Schieberegler. Geprueft wird deshalb die
+    EINNAHME, nicht das Feld. */
+ const v0=E.VEREIN.mitWirtschaft(spielbereiterVerein({kasse:50,ausbau:{stadion:3,gastro:3}}));
+ const teuer=E.VEREIN.preisSetzen(v0,'ticket',1.6);
+ assert.equal(teuer.fehler,null);
+ assert.equal(teuer.v.preise.ticket,1.6,'der Wert wird gespeichert');
+ /* Gespeichert ist nicht gelesen: der Faktor muss aus dem Verein kommen. */
+ assert.equal(E.VEREIN.preisFaktor(E.VEREIN.mitWirtschaft(teuer.v),'ticket'),1.6);
+ assert.equal(E.VEREIN.preisFaktor(v0,'ticket'),1,'ohne Setzen bleibt es bei 100 %');
+ /* Und die Zuschauerzahl muss sich unterscheiden — sonst rechnet niemand damit. */
+ const billig=E.VEREIN.preisSetzen(v0,'ticket',0.6).v;
+ const a=E.VEREIN.vereinSaison(E.VEREIN.einschreiben(E.VEREIN.mitWirtschaft(billig)).v);
+ const b=E.VEREIN.vereinSaison(E.VEREIN.einschreiben(E.VEREIN.mitWirtschaft(teuer.v)).v);
+ assert(!a.fehler&&!b.fehler);
+ assert(a.beleg.zuschauer>b.beleg.zuschauer,
+   'billiger fuellt das Stadion staerker: '+a.beleg.zuschauer+' vs '+b.beleg.zuschauer);
+});
+
+test('Preise werden geklemmt und pruefen vor dem Schreiben',()=>{
+ const v=spielbereiterVerein();
+ assert.equal(E.VEREIN.preisSetzen(v,'ticket',99).v.preise.ticket,E.VEREIN.PREIS_MAX);
+ assert.equal(E.VEREIN.preisSetzen(v,'ticket',-5).v.preise.ticket,E.VEREIN.PREIS_MIN);
+ assert(E.VEREIN.preisSetzen(v,'erfunden',1).fehler,'unbekanntes Feld wird abgelehnt');
+ assert(E.VEREIN.preisSetzen(v,'ticket','abc').fehler,'Unfug wird abgelehnt');
+ /* Ein abgelehnter Aufruf aendert gar nichts. */
+ assert.deepEqual(E.VEREIN.preisSetzen(v,'erfunden',1).v,v);
+});
+
+test('Der Preishinweis nennt das gerechnete Ertragsmaximum',()=>{
+ /* `bestPreis` probiert 51 Werte durch — der Hinweis ist ein Versprechen, kein
+    Schaetzwert. Hier wird nur geprueft, dass die Oberflaeche ihn ueberhaupt
+    bekommt und dass er in den Grenzen liegt; die Richtigkeit haelt
+    tools/vereinswirtschaft.test.cjs fest. */
+ for(const feld of ['ticket','gastro','merch']){
+  const b=E.VEREIN.bestPreis(spielbereiterVerein(),feld);
+  assert(Number.isFinite(b),feld+': '+b);
+  assert(b>=E.VEREIN.PREIS_MIN&&b<=E.VEREIN.PREIS_MAX,feld+' liegt in den Grenzen: '+b);
+ }
+});
+
+test('Die Rechtsform wechselt nur nach vorn und nur mit Groesse und Geld',()=>{
+ const klein=E.VEREIN.mitWirtschaft(spielbereiterVerein({kasse:500}));
+ /* Ein Verein in der untersten Liga kommt nicht an die Boerse. */
+ assert(E.VEREIN.rechtsformWechseln(klein,'ag').fehler,'zu klein fuer die AG');
+ /* Rueckwaerts geht gar nicht. */
+ assert(E.VEREIN.rechtsformWechseln({...klein,rechtsform:'gmbh'},'ev').fehler,
+   'der Weg fuehrt nur nach vorn');
+ /* Mit Liga und Geld geht es, und die Einlage kommt an. */
+ const gross={...klein,ligastufe:1,kasse:500};
+ const r=E.VEREIN.rechtsformWechseln(gross,'gmbh');
+ assert.equal(r.fehler,null,'Wechsel moeglich: '+r.fehler);
+ assert.equal(r.v.rechtsform,'gmbh');
+ const rf=E.VEREIN.RECHTSFORMEN.find(x=>x.id==='gmbh');
+ assert.equal(r.v.kasse,Math.round((500-rf.wechselKosten+rf.einlage)*100)/100,
+   'Kosten ab, Einlage drauf');
+ assert(r.v.stimmung<(gross.stimmung??60),'und es kostet Stimmung');
+ /* `ligastufe` ist abgeleitet und darf NICHT im Spielstand landen. */
+ assert.equal(r.v.ligastufe,undefined,'kein abgeleitetes Feld im Stand');
+ /* Ohne Geld kein Wechsel, und der Stand bleibt unberuehrt. */
+ const arm={...gross,kasse:0};
+ const nein=E.VEREIN.rechtsformWechseln(arm,'gmbh');
+ assert(nein.fehler,'ohne Geld kein Wechsel');
+ assert.equal(nein.v.rechtsform,'ev');
+});
+
+test('Der Fuehrungsreiter zeigt Ziel, Preise und Rechtsform ohne NaN',()=>{
+ const v=E.VEREIN.mitWirtschaft(spielbereiterVerein({kasse:60,
+   ziel:E.VEREIN.zielSetzen({ligastufe:2},8,18)}));
+ const html=E.renderVerein(v,{...E.leereAkademie(),vc:100},'ausbau');
+ assert(!html.includes('NaN'));
+ assert(!html.includes('undefined'));
+ assert(html.includes('Vorstandsziel'),'das Ziel steht da, bevor es entschieden ist');
+ assert(html.includes('Preise'));
+ assert(html.includes('Eintritt')&&html.includes('Gastronomie')&&html.includes('Fanartikel'));
+ assert(html.includes('Ertragsmaximum'),'der Hinweis wird genannt');
+ assert(html.includes('Rechtsform')&&html.includes('e.V.'));
+ assert(html.includes('Umwandeln'),'der naechste Schritt wird angeboten');
+ /* Der Reiter heisst jetzt "Fuehrung", weil er mehr traegt als Ausbau — und
+    "Chronik" muss weiter daneben stehen (320-Pixel-Befund aus #13). */
+ const leiste=html.split('Vereinskasse')[0];
+ assert(leiste.includes('>Führung<'),'der Reiter traegt den neuen Namen');
+ assert(!leiste.includes('>Ausbau<'),'der alte ist weg');
+ assert(leiste.includes('>Chronik<')&&leiste.includes('>Partner<'));
+ /* Ein Verein ohne Ziel (alter Stand) rendert trotzdem. */
+ const ohne=E.renderVerein(E.VEREIN.mitWirtschaft(spielbereiterVerein()),E.leereAkademie(),'ausbau');
+ assert(!ohne.includes('NaN'));
+ assert(!ohne.includes('Vorstandsziel'),'ohne Ziel keine leere Kachel');
+});
+
+test('Der Fuehrungsreiter macht das Stadion sichtbar (P1-02)',()=>{
+ /* Wer eine Ausbaustufe kauft, sah danach eine groessere Zahl in der
+    Abrechnung, ohne je erfahren zu haben, wie viele Plaetze er hat. Der Ausbau
+    war eine Zahlung ins Ungewisse. */
+ const v=E.VEREIN.mitWirtschaft(spielbereiterVerein({kasse:60,ausbau:{stadion:3,training:1,medizin:1}}));
+ const html=E.renderVerein(v,E.leereAkademie(),'ausbau');
+ assert(!html.includes('NaN'));
+ assert(html.includes('Stadion'));
+ assert(html.includes('22.000'),'die aktuellen Plaetze stehen da');
+ assert(html.includes('33.000'),'und was die naechste Stufe braechte');
+ assert(html.includes('11.000'),'samt Unterschied');
+ assert(html.includes('Noch keine Saison gespielt'),'ohne Chronik wird das gesagt');
+ /* Voll ausgebaut sagt es ebenfalls, statt eine leere Zeile zu zeigen. */
+ const max=E.VEREIN.mitWirtschaft(spielbereiterVerein({ausbau:{stadion:6,training:1,medizin:1}}));
+ const hmax=E.renderVerein(max,E.leereAkademie(),'ausbau');
+ assert(hmax.includes('64.000')&&hmax.includes('Voll ausgebaut'));
+ assert(!hmax.includes('NaN'));
+});
+
+test('Ausverkauft steht im Bericht und in der Chronik (P1-02)',()=>{
+ E.zufallSetzen(20260918);
+ const stark=spielbereiterVerein().kader.map(sp=>({...sp,ovr:86,pot:90}));
+ const v0=E.VEREIN.einschreiben(E.VEREIN.mitWirtschaft(
+   spielbereiterVerein({kader:stark,stimmung:85,kasse:50,
+     ausbau:{stadion:2,training:1,medizin:1}}))).v;
+ const r=E.VEREIN.vereinSaison(v0);
+ assert(!r.fehler,'die Saison laeuft: '+r.fehler);
+ /* Der Beleg traegt Plaetze und Marke, ganz gleich wie es ausging. */
+ assert(Number.isFinite(r.beleg.plaetze)&&r.beleg.plaetze>0,'Plaetze im Beleg');
+ assert.equal(typeof r.beleg.ausverkauft,'boolean');
+ const c=r.v.chronik.at(-1).wirtschaft;
+ assert.equal(c.plaetze,r.beleg.plaetze,'und wandern in die Chronik');
+ assert.equal(c.ausverkauft,r.beleg.ausverkauft);
+ assert(Number.isFinite(c.auslastung));
+});

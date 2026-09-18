@@ -2060,3 +2060,266 @@ abgezogen wird.
 - **WIRT-P1-02 — Stadionausbau spürbar machen.**
 - **Kein Gerätetest.** Die Oberflächenteile sind im Prüfstand gerendert, aber
   niemand hat die Auflage im Spiel gesehen.
+
+## WIRT-P1-04b — Lizenzentzug als letzte Stufe (Claude, 18.09.2026)
+
+**Basis-Commit:** `f86ad78` (`claude/wirt-p1-04`). Zur Abnahme durch Astra.
+
+### Warum es das Paket braucht
+
+P1-04 hat seine eigene Grenze gemessen und offengelegt: der Punktabzug wirkt
+sportlich, aber ein Kader, der seiner Liga weit davongelaufen ist, steht **52
+Punkte** über dem Abstiegsplatz. Neun Punkte schließen ein Sechstel davon. Ein
+78er-Verein blieb über fünfzehn Saisons oben und verschuldet, bei **null**
+Abstiegen. Die Staffel höher zu drehen kauft nichts — auch dreissig Punkte
+reichten nicht, und eine Tabelle mit dreissig Minuspunkten liest sich wie ein
+Anzeigefehler.
+
+### Die Regel
+
+**Drei Saisons in Folge auf der höchsten Abzugsstufe** — also mehr als drei
+Kreditrahmen unter der Linie — heisst Lizenzentzug: Zwangsabstieg, unabhängig
+von der Tabelle. Dasselbe Verfahren wie in P1-04, nur seine letzte Stufe; 1860
+München und Rangers sind genau das.
+
+Vier Entscheidungen, die den Unterschied machen:
+
+1. **Nur die höchste Stufe zählt.** Wer knapp unter der Linie steht, hat ein
+   Problem; wer mehr als drei Rahmen darunter steht, hat keinen Betrieb mehr,
+   den man genehmigen könnte.
+2. **Besserung genügt, Gesundung nicht nötig.** Der Zähler springt auf null,
+   sobald der Verein die höchste Stufe verlässt. Ein Ausweg, der nur über eine
+   volle Kasse führte, wäre kein Ausweg, sondern eine verzögerte
+   Unvermeidlichkeit.
+3. **Zwei volle Saisons Vorwarnung**, sichtbar im Vereinsbildschirm mit Zähler
+   und Ausweg. Ein Zwangsabstieg ohne Ansage wäre Willkür.
+4. **Nach dem Entzug beginnt die Zählung von vorn**, und die offene Auflage ist
+   abgegolten. Sonst stiege derselbe Verein jede Saison erneut ab, ohne je die
+   Gelegenheit zu bekommen, sich unten zu fangen — und genau dort halbieren
+   sich die Gehälter (`kaderKosten` teilt durch die Ligastufe). Das ist die
+   eigentliche Wirkung dieser Stufe.
+
+**Der Entzug schlägt das sportliche Ergebnis**, aber es bleibt bei **einer**
+Liga: zweimal für dasselbe Jahr nach unten wäre Doppelbestrafung.
+
+### Ein Nebenbefund aus dem Prüfstand
+
+Beim Schreiben der Regression fiel auf: **ein Verein in der untersten Liga, dem
+die Lizenz fehlt, wurde bei gutem Ergebnis befördert.** Der Entzug greift dort
+mangels tieferer Liga nicht, und `neueLiga` zeigte munter nach oben. Wer keine
+Lizenz für seine Liga bekommt, bekommt erst recht keine für die darüber — er
+bleibt jetzt, wo er ist. Gefunden nicht durch Nachdenken, sondern weil die
+Prüfung eine Zahl lieferte, die nicht passte.
+
+### Was gemessen wurde
+
+Gleiche Läufe wie in P1-04, gleiche Saaten, einmal mit und einmal ohne die
+letzte Stufe:
+
+| Stärke | Saat | ohne | mit | Entzüge | Endliga |
+|---:|---:|---:|---:|---:|---|
+| 62 | 20260917 | −107 | −105 | 1 | unverändert |
+| 62 | 4711 | −53 | −51 | 0 | unverändert |
+| 70 | 20260917 | −323 | **−228** | 2 | unverändert |
+| 70 | 4711 | −293 | **−243** | 2 | unverändert |
+| 78 | 20260917 | −662 | **−575** | 3 | **2. Bundesliga** statt Bundesliga |
+| 78 | 4711 | −600 | **−486** | 2 | unverändert |
+
+**13 bis 29 Prozent weniger Schulden genau dort, wo der Punktabzug allein
+nichts ausrichtete** — und der Spitzenverein steht am Ende tatsächlich eine
+Liga tiefer, statt fünfzehn Jahre unbehelligt oben zu bleiben.
+
+**Geheilt ist er nicht, und das steht hier, weil es wichtig ist:** er pendelt.
+Sportlich ist er zu stark für unten, finanziell zu schwach für oben, also
+steigt er ab, kommt zurück, verliert die Lizenz wieder. Jede Runde nach unten
+halbiert die Gehälter — deshalb die Besserung. Wer das für falsch hält, hat
+einen Punkt; es ist aber eine kohärente Vereinsgeschichte und keine Sackgasse.
+
+### Geprüft
+
+- `npm test` **189/189** (vorher 184), `npm run build` erfolgreich.
+- Vier neue Regressionen: der Zähler zählt nur die höchste Stufe und verzeiht
+  Besserung (alle drei unteren Stufen setzen zurück); der Entzug steigt ab,
+  obwohl der Verein sportlich gehalten hat; in der untersten Liga bleibt es
+  beim Punktabzug **und der Verein steigt auch nicht auf**; die Oberfläche
+  zählt die Jahre sichtbar mit und wird im letzten Jahr deutlich.
+- **Drei Gegenproben, alle rot:** wirkt der Entzug nicht auf die Liga, wird
+  `not ok 99` rot; setzt der Zähler bei Besserung nicht zurück, `not ok 159`;
+  darf ein Verein ohne Lizenz aufsteigen, `not ok 100`.
+
+### Ein eigener Fehler, der wichtiger ist als das Paket
+
+Die erste Fassung der Entzugs-Regression prüfte nur, **dass sich die Liga
+ändert**. Das erfüllt auch ein gewöhnlicher sportlicher Abstieg — und der
+Testverein (Kader 60) wurde in der obersten Liga Letzter, stieg also ohnehin
+ab. Die Gegenprobe „Entzug wirkt nicht auf die Liga" blieb deshalb **grün**:
+die Prüfung mass gar nicht, was sie behauptete.
+
+Behoben durch zweierlei: ein Kader, der sportlich hält (Stärke 84, also genau
+das P1-04-Szenario), und eine ausdrückliche Zusicherung `abstieg === false`.
+Erst damit isoliert sie den Zwangsabstieg. **Eine Gegenprobe, die grün bleibt,
+ist ein Befund über die Prüfung, nicht über den Code** — das ist die Lehre, und
+sie steht als Kommentar an der Regression.
+
+### Ausdrücklich offen
+
+- **Der Ausschluss aus dem Spielbetrieb** als Stufe unter dem Entzug. In der
+  untersten Liga bleibt es beim Punktabzug; der Beleg sagt das, statt stumm
+  nichts zu tun.
+- **Kein Schuldenschnitt.** Ein Insolvenzverfahren würde die Schulden kürzen;
+  das wäre eine eigene Entscheidung und hier bewusst nicht getroffen.
+- **Kein Gerätetest.**
+
+## WIRT-P0-05-UI — Vereinsführung bedienbar machen (Claude, 18.09.2026)
+
+**Basis-Commit:** `2a483b1` (`claude/wirt-p1-04b-lizenzentzug`). Zur Abnahme
+durch Astra.
+
+### Drei fertige Systeme, die im Spiel nicht vorkamen
+
+Seit WIRT-P0-05 rechnen Preise, Rechtsform und Vorstandsziel vollständig mit —
+Elastizität nach Ansehen, Gastrostufe, Sortiment, Rechtsform und Stimmung; vier
+Rechtsformen mit Einlage, Wechselkosten, Vermarktungsfaktor und Zielhärte; ein
+Vorstandsziel je Saison mit Prämie. Geprüft war alles.
+
+**Bedienen konnte man nichts davon.** Nachgezählt am Stand vor dieser Runde:
+
+| | Vorkommen in `App.jsx` |
+|---|---|
+| `preisSetzen` | 0 (existierte nicht) |
+| `rechtsformWechseln` | **0 Aufrufer** |
+| `zielSetzen` | 0 (nur 4× in `verein.js`) |
+
+Praktische Folge: `preisFaktor` las an jeder Stelle die Voreinstellung 1. Die
+51-Werte-Rechnung in `bestPreis`, über die im Vermerk vom 17.09.2026 steht „der
+Hinweis ist damit keine Schätzung mehr, sondern ein Versprechen", hatte
+niemanden, dem sie etwas versprechen konnte.
+
+### Was gebaut wurde
+
+1. **Preise — drei Regler** mit dem gerechneten Ertragsmaximum als Hinweis. Wer
+   darüber geht, sieht es in Rot und zahlt jede Saison Stimmung. **Der Hinweis
+   ist kein Zwang:** Überteuern kann eine bewusste Entscheidung sein, und die
+   Rechnung dahinter war immer schon darauf ausgelegt.
+2. **Rechtsform** — der jeweils nächste Schritt mit Einlage, Kosten und
+   Wirkung. Ist er nicht möglich, steht der Grund **auf dem Knopf**
+   („Dafür ist der Verein zu klein — nötig ist mindestens Liga 4").
+3. **Vorstandsziel** — sichtbar, **bevor** es entschieden ist. Ein Ziel, das
+   man erst aus dem Abschlussbericht erfährt, ist keines. Gewählt wird es
+   weiterhin nicht; der Vorstand gibt es vor.
+
+**Die Durchreichungen stehen in `verein.js`**, nicht in `App.jsx` — dieselbe
+Linie wie bei `bauStarten` und `extraKaufen`: die Oberfläche importiert `WIRT`
+nicht selbst.
+
+**Der Reiter heisst jetzt „Führung"** statt „Ausbau". Ein **siebter** Reiter kam
+nicht in Frage: bei 320 Pixeln lag schon der sechste zwei Wischer entfernt
+(gemessen beim Rundgang am 18.09.2026, Befund aus #13). Der Reiter trägt
+stattdessen mehr, und der Ausbau bekommt eine eigene Überschrift darin.
+
+### Geprüft
+
+- `npm test` **194/194** (vorher 189), `npm run build` erfolgreich.
+- Fünf neue Regressionen. Die erste ist die wichtige: **sie prüft die
+  Einnahme, nicht das Feld.** Ein Regler, der einen Wert speichert, den die
+  Rechnung nicht liest, wäre dieselbe Sorte Placebo wie „Scoutnetz" und
+  „Bekannte Adresse" — nur mit Schieberegler. Gemessen wird deshalb über zwei
+  echte Saisons, dass der billigere Eintritt das Stadion stärker füllt.
+  Dazu: Klemmung und Prüfung vor dem Schreiben; der Hinweis liegt in den
+  Grenzen; die Rechtsform wechselt nur nach vorn, nur mit Liga und Geld, bucht
+  Kosten und Einlage richtig und lässt **kein abgeleitetes `ligastufe` im
+  Spielstand**; der Reiter rendert alles ohne NaN und ein alter Stand ohne
+  Ziel zeigt keine leere Kachel.
+- **Drei Gegenproben, alle rot:** schreibt `preisSetzen` in ein Feld, das
+  niemand liest, fallen zwei Prüfungen; fehlt die Klemmung, fällt eine;
+  wandert `ligastufe` in den Spielstand, fällt die Rechtsformprüfung.
+
+### Ausdrücklich offen
+
+- **Das Vorstandsziel bleibt eine Vorgabe, keine Wahl.** So ist es entworfen;
+  eine Auswahl unter mehreren Zielen wäre ein eigenes Paket.
+- **Die Preise wirken erst in der nächsten Abrechnung.** Es gibt keine
+  Vorschau, was ein Reglerwert konkret einbringt — nur das Maximum als Marke.
+- **Kein Gerätetest.** Die Regler sind im Prüfstand gerendert, aber niemand hat
+  sie gezogen.
+
+## WIRT-P1-02 — Stadionausbau spürbar machen (Claude, 18.09.2026)
+
+**Basis-Commit:** `02dade3` (`claude/wirt-vereinsfuehrung-ui`). Zur Abnahme
+durch Astra.
+
+### Was gebaut wurde
+
+1. **Stadionkachel im Führungsreiter:** Plätze, letzte Zuschauerzahl mit
+   Auslastung, und — der eigentliche Punkt — **was die nächste Ausbaustufe
+   brächte** („33.000 Plätze, 11.000 mehr"). Bis hierher war der Stadionausbau
+   eine Zahlung ins Ungewisse: man sah danach eine grössere Zahl in der
+   Abrechnung, ohne je erfahren zu haben, wie viele Plätze man überhaupt hat.
+   Ist alles gebaut, steht das da, statt eine leere Zeile zu zeigen.
+2. **Ausverkauftes Haus ab 97 % Auslastung**, im Saisonbeleg und in der Chronik.
+3. **Der Beleg nennt die Bezugsgrösse.** „Ø 21.780 Zuschauer" sagt nichts;
+   „Ø 21.780 von 22.000 · 99 % ausgelastet" sagt alles.
+
+### Die Schwelle ist gemessen, nicht gesetzt
+
+Vor dem Festlegen durchgerechnet, weil **ein Ereignis, das nie eintritt, wieder
+ein Placebo wäre** — davon hatte dieses Projekt genug:
+
+| Verein | höchste Auslastung |
+|---|---:|
+| Erstligist, Rang 1–3 | **99,0 %** (die Deckelung) |
+| Drittligist, Rang 1 | 91,7 % |
+| Fünftligist, Rang 1 | 86,6 % |
+
+97 % ist also erreichbar und trotzdem etwas wert.
+
+### Es zahlt in Stimmung, nicht in Geld
+
++3 Stimmungspunkte, dieselbe Grössenordnung wie ein fertiges Bauprojekt. **Kein
+Geldposten**, und das ist Absicht: die Zuschauer stecken bereits in Ticket-,
+Gastro- und Merchandisingertrag. Ein Bonus obendrauf wäre dieselbe Einnahme
+zweimal — genau der Fehler, den WIRT-P1-03 bei der Personalpauschale schon
+einmal hatte. Eine Regression hält fest, dass kein Einnahmeposten dieses Namens
+entsteht.
+
+### Eine bestehende Prüfung musste nachgeschärft werden
+
+`Der Stimmungsschaden wächst stetig über dem Normalpreis` wurde rot. **Der Grund
+war kein Fehler, sondern richtiges Verhalten:** ein Kampfpreis von 0,6 füllt das
+Stadion über die Ausverkaufsmarke und hebt die Stimmung um 3. Billige Karten,
+volles Haus, zufriedene Fans.
+
+Die alte Zusicherung lautete „unterhalb und bei 1 sind alle Werte GLEICH" — zu
+stark formuliert für das, was sie eigentlich schützt. Sie schützt die Abkürzung
+in `ueberzogen` (der Überteuerungsschaden ist bei und unter 1 beweisbar null).
+Das wird jetzt genauer getroffen: **0,8 gegen 1,0** — beide unter der
+Ausverkaufsmarke, also ohne Bonus, und deshalb exakt gleich. Dazu neu über die
+ganze Spanne 0,6 bis 1,6: **teurer darf die Stimmung nie heben.** Das ist eine
+stärkere Aussage als vorher, nicht eine schwächere.
+
+### Ein Befund, den ich NICHT geändert habe
+
+**Die Auslastung hängt überhaupt nicht an der Kapazität.** Ein Stadion mit
+64.000 Plätzen füllt sich zu denselben 99 % wie eines mit 8.000 — nachgerechnet
+über alle sechs Ausbaustufen. Der Ausbau ist damit reines Aufwärts ohne Risiko;
+realistisch wäre, dass eine Verdopplung der Plätze die Auslastung drückt.
+
+Das ist eine **Balance-Entscheidung des Eigentümers** und gehörte nicht zu
+diesem Auftrag. Vermerkt statt nebenbei miterledigt.
+
+### Geprüft
+
+- `npm test` **198/198** (vorher 194), `npm run build` erfolgreich.
+- Vier neue Regressionen: die Ausverkaufsmarke ist erreichbar (Spitze) **und
+  nicht geschenkt** (hinten bleibt es darunter); das volle Haus erzeugt keinen
+  Geldposten, hebt aber messbar die Stimmung; die Stadionkachel nennt aktuelle
+  Plätze, die nächste Stufe und den Unterschied, und sagt „voll ausgebaut",
+  wenn nichts mehr kommt; Plätze und Marke wandern aus dem Beleg in die Chronik.
+- **Drei Gegenproben, alle rot:** liegt die Schwelle über der Deckelung, fallen
+  zwei Prüfungen; zahlt das volle Haus in Geld statt Stimmung, fällt eine;
+  nennt die Kachel die nächste Stufe nicht, fällt die Oberflächenprüfung.
+
+### Ausdrücklich offen
+
+- **Die Auslastung ignoriert die Kapazität** (oben, mit Zahlen).
+- **Kein Gerätetest.**
