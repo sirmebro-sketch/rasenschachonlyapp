@@ -29,9 +29,7 @@ function CharFix04Probe(){
    </svg><span>{g.toUpperCase()} F{frisur}</span>
   </div>;
  };
- return <div className="fl"><style>{CSS+`
- body{margin:0}.cf4{max-width:1580px;margin:auto;padding:18px}.cf4 h1{margin-top:24px}.kopf{margin:0 0 12px}.kopf h2{font-size:16px;margin:0 0 7px}.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(78px,1fr));gap:6px;align-items:end}.grid.big{grid-template-columns:repeat(auto-fill,minmax(154px,1fr))}.probe,.diag{text-align:center;min-width:0}.probe svg,.diag svg{margin:auto}.probe span,.diag span{display:block;font-size:8px;color:var(--mu);margin-top:2px}.diag{background:#181a17;padding:4px;border-radius:7px}.paar{border-top:1px solid rgba(255,255,255,.08);padding-top:7px;margin-top:8px}.paar h3{font-size:11px;color:var(--mu);margin:0 0 5px}.note{max-width:1050px;color:var(--mu)}
- `}</style><main className="cf4">
+ return <div className="fl"><style>{CSS+' body{margin:0}.cf4{max-width:1580px;margin:auto;padding:18px}.cf4 h1{margin-top:24px}.kopf{margin:0 0 12px}.kopf h2{font-size:16px;margin:0 0 7px}.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(78px,1fr));gap:6px;align-items:end}.grid.big{grid-template-columns:repeat(auto-fill,minmax(154px,1fr))}.probe,.diag{text-align:center;min-width:0}.probe svg,.diag svg{margin:auto}.probe span,.diag span{display:block;font-size:8px;color:var(--mu);margin-top:2px}.diag{background:#181a17;padding:4px;border-radius:7px}.paar{border-top:1px solid rgba(255,255,255,.08);padding-top:7px;margin-top:8px}.paar h3{font-size:11px;color:var(--mu);margin:0 0 5px}.note{max-width:1050px;color:var(--mu)}'}</style><main className="cf4">
   <h1>CHAR-FIX-04 · Bart-/Kurzhaar-Restpassung</h1>
   <p className="note">Gezielter Sichtbogen nach Nutzersichtung von CHAR-FIX-03. Rot gestrichelte Diagnosekonturen markieren die echte Kopfmaske; sichtbare Haut darf bei rasiert/fade/licht beabsichtigt sein, nicht als offener Spalt zwischen Haarfläche und Schädelkontur.</p>
 
