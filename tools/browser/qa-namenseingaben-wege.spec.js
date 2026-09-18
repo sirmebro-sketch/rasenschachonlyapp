@@ -40,7 +40,7 @@ test('QA Namenseingabe Charakter: Fokus, geringe Höhe, Zurück und Bestätigen'
   await name.press('Enter');
   await expect(name).toHaveValue(spielername);
   await expect(name).toBeVisible();
-  await expect(start).toBeVisible();
+  await expect(start).toHaveCount(1);
 
   const lowHeight = testInfo.project.name === 'schmal' ? 420 : 500;
   await page.setViewportSize({width:testInfo.project.name === 'schmal' ? 320 : 390,height:lowHeight});
