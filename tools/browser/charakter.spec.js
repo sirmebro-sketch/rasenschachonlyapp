@@ -116,7 +116,7 @@ test('CHAR-P0-01: vollständige Sichtbögen über Größen, Köpfe und Farben',a
    inventar[gender][field]=variants;
    for(const groesse of ['72','96','145']){
     await page.getByRole('combobox',{name:'Größe',exact:true}).selectOption(groesse);
-    await expect(cards.locator('svg[aria-label="Spielerporträt"]')).toHaveCount(variants.length*6);
+    await expect(cards.locator('svg[aria-label="Spielerporträt"]')).toHaveCount(variants.length*7);
     await page.getByTestId('varianten').screenshot({path:testInfo.outputPath('char-p0-01-'+gender+'-'+field+'-'+groesse+'.png')});
    }
   }

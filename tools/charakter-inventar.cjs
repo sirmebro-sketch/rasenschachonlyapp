@@ -14,9 +14,9 @@ function CharakterInventar(){
  const aktuell=optionen(geschlecht,frei),regler=PORTRAET_REGLER(geschlecht);
  React.useEffect(()=>{if(!regler.some(([,k])=>k===merkmal))setMerkmal(regler[0][1]);},[geschlecht]);
  const werte=aktuell[merkmal]||[];
- const name=(feld,i,g)=>feld==='kopf'?KOPFFORM[i]?.n:feld==='augenfarbe'?AUGENFARBE[i]?.n:feld==='frisur'&&i>=(g==='w'?14:16)?NEUE_FRISUREN[i-(g==='w'?14:16)]:feld==='frisur'?FRISUR_NAMEN[g]?.[i]:PORTRAET_NAMEN[feld]?.[i]||((labelMap.get(feld)||feld)+' '+(i+1));
+ const name=(feld,i,g)=>feld==='kopf'?KOPFFORM[i]?.n:feld==='augenfarbe'?AUGENFARBE[i]?.n:feld==='frisur'?frisurName(i,g):PORTRAET_NAMEN[feld]?.[i]||((labelMap.get(feld)||feld)+' '+(i+1));
  const idText=(arr)=>arr.length&&arr.every((v,i)=>v===i)?'0–'+(arr.length-1):arr.join(', ');
- const refs=[\n  {kopf:3,haut:0,haar:12,t:'schmal · hell/dunkles Haar'},\n  {kopf:6,haut:13,haar:0,t:'breit · dunkel/helles Haar'},\n  {kopf:10,haut:7,haar:4,t:'Trapez · mittel'},\n  {kopf:11,haut:12,haar:1,t:'Langkantig · dunkel'},\n  {kopf:12,haut:1,haar:11,t:'Diamant · hell'},\n  {kopf:13,haut:9,haar:2,t:'Kurzbreit · mittel/dunkel'},\n ];
+ const refs=[\n  {kopf:0,haut:4,haar:6,t:'oval · Kupfer'},\n  {kopf:3,haut:0,haar:12,t:'schmal · hell/weißes Haar'},\n  {kopf:6,haut:13,haar:0,t:'breit · dunkel/helles Haar'},\n  {kopf:10,haut:7,haar:4,t:'Trapez · mittel'},\n  {kopf:11,haut:12,haar:1,t:'Langkantig · dunkel'},\n  {kopf:12,haut:1,haar:11,t:'Diamant · hell'},\n  {kopf:13,haut:9,haar:2,t:'Kurzbreit · mittel/dunkel'},\n ];
  const basis=zuegeAusKennung(7331,geschlecht,'GER',mkMeta(frei));
  return <div className="fl"><style>{CSS}</style><main style={{maxWidth:1180,margin:'auto',padding:18}}>
   <h1>Rasenschach · Charakter-Inventar</h1>
