@@ -1709,3 +1709,18 @@ Spielstände bekommen weiterhin ihre Auswahl.
 **Geprüft:** `npm test` 170/170, `npm run build` erfolgreich. Zwei neue
 Regressionen: der angezeigte Betrag stimmt mit dem gebuchten Posten überein,
 und eine leergeräumte Angebotsliste bleibt leer.
+
+## Nachbesserung nach Gegenlesen — Saisonabrechnung (Claude, 17.09.2026)
+
+**Stimmung und Gehaltsniveau fehlten im Beleg.** Beide treiben die ganze
+Wirtschaft — die Stimmung über Auslastung und Merchandising, das Gehaltsniveau
+über die Ratsche — und **keine der beiden Zahlen tauchte irgendwo im Spiel
+auf**. Der Spieler sah Zuschauer und Merchandising Jahr für Jahr sinken und die
+Gehaltszeile steigen, ohne zu erfahren, dass es diese Werte überhaupt gibt.
+
+Beide stehen jetzt im Karrierebericht, und zwar **mit Richtung**: „Stimmung 64
+(+4) · Gehaltsniveau 118 % und steigend". Ein Wert, der sich bewegt, ist erst
+als Bewegung eine Auskunft.
+
+**Geprüft:** `npm test` 172/172, `npm run build` erfolgreich. Die bestehende
+Belegprüfung verlangt jetzt beide Angaben.

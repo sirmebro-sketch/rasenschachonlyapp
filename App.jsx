@@ -17414,6 +17414,19 @@ function EndScreen({ p, onNew }) {
                         {(w.ergebnis > 0 ? "+" : "") + geld(w.ergebnis)}</span>
                     </div>
 
+                    {/* Stimmung und Gehaltsniveau mit RICHTUNG, nicht nur als
+                        Stand — ein Wert, der sich bewegt, ist erst als
+                        Bewegung eine Auskunft. */}
+                    {(w.stimmung != null || w.gehalt) && (
+                      <div className="m" style={{ fontSize: 11, marginTop: 5, color: "var(--mu)" }}>
+                        {w.stimmung != null ? "Stimmung " + w.stimmung
+                          + (w.stimmungVorher != null && w.stimmungVorher !== w.stimmung
+                             ? " (" + (w.stimmung > w.stimmungVorher ? "+" : "")
+                               + (w.stimmung - w.stimmungVorher) + ")" : "") : ""}
+                        {w.gehalt && w.stimmung != null ? " · " : ""}
+                        {w.gehalt ? "Gehaltsniveau " + Math.round(w.gehalt.neu * 100) + " %"
+                          + (w.gehalt.neu > w.gehalt.vorher ? " und steigend" : "") : ""}
+                      </div>)}
                     {w.ziel && !w.ziel.erfuellt && (
                       <div className="m" style={{ fontSize: 11, marginTop: 5, color: "var(--mu)" }}>
                         Vorstandsziel verfehlt: {w.ziel.n} — keine Prämie.</div>)}
@@ -18104,6 +18117,13 @@ function FlutlichtApp() {
             ergebnis: VS.beleg.ergebnis, kasse: VS.beleg.kasse,
             zuschauer: VS.beleg.zuschauer, auslastung: VS.beleg.auslastung,
             ereignisse: (VS.beleg.ereignisse || []).map((e) => ({ n: e.n, t: e.t, geld: e.geld })),
+            /* Die beiden Werte, die die ganze Wirtschaft treiben, fehlten hier
+               — und sie tauchen auch sonst nirgends auf. Der Spieler sah
+               Zuschauer und Merchandising Jahr für Jahr sinken (über die
+               Stimmung) und die Gehaltszeile steigen (über die Ratsche), ohne
+               dass eine der beiden Zahlen je genannt wurde. */
+            stimmung: VS.beleg.stimmung, stimmungVorher: VS.beleg.stimmungVorher,
+            gehalt: VS.beleg.gehalt ? { vorher: VS.beleg.gehalt.vorher, neu: VS.beleg.gehalt.neu } : null,
             ziel: VS.beleg.ziel && VS.beleg.ziel.gesetzt
               ? { n: VS.beleg.ziel.n, erfuellt: VS.beleg.ziel.erfuellt, praemie: VS.beleg.ziel.praemie }
               : null,

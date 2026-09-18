@@ -557,7 +557,9 @@ test('Saisonabrechnung: der Karrierebericht zeigt, woher das Geld kam und wohin 
     summeEin:b.summeEin,summeAus:b.summeAus,ergebnis:b.ergebnis,kasse:b.kasse,
     zuschauer:b.zuschauer,auslastung:b.auslastung,
     ereignisse:(b.ereignisse||[]).map(e=>({n:e.n,t:e.t,geld:e.geld})),
-    ziel:null,fertig:[],ausgelaufen:[]}}};
+    ziel:null,fertig:[],ausgelaufen:[],
+    stimmung:b.stimmung,stimmungVorher:b.stimmungVorher,
+    gehalt:b.gehalt?{vorher:b.gehalt.vorher,neu:b.gehalt.neu}:null}}};
  const html=E.renderEnd(p);
  assert(!html.includes('NaN'),'keine kaputte Zahl');
  assert(html.includes('Saisonabrechnung'));
@@ -567,6 +569,11 @@ test('Saisonabrechnung: der Karrierebericht zeigt, woher das Geld kam und wohin 
  for(const x of b.einnahmen)assert(html.includes(x.k.split(' ·')[0]),'Einnahme fehlt: '+x.k);
  for(const x of b.ausgaben)assert(html.includes(x.k.split(' ·')[0]),'Ausgabe fehlt: '+x.k);
  assert(html.includes('Zuschauer'));
+ /* Die beiden Werte, die die ganze Wirtschaft treiben, müssen genannt werden —
+    sonst sieht der Spieler Zuschauer und Merchandising sinken und die
+    Gehaltszeile steigen, ohne dass eine der Zahlen je auftaucht. */
+ assert(html.includes('Stimmung'),'die Stimmung wird genannt');
+ assert(html.includes('Gehaltsniveau'),'das Gehaltsniveau wird genannt');
  /* Ohne Wirtschaftsteil bleibt der Bericht wie vorher — alte Spielstände
     haben keinen Beleg, und der Bildschirm darf daran nicht zerbrechen. */
  const ohne={...p,vereinBericht:{...p.vereinBericht,wirtschaft:null}};
