@@ -9410,7 +9410,12 @@ function VereinScreen({ v, aka, onAendern, onZurueck, onAbschluss, startReiter }
 
   const REITER = [["kader", "Kader"], ["elf", "Aufstellung"],
     ...(hatRueck ? [["rueck", "Rückblick"]] : []),
-    ["ausbau", "Ausbau"], ["chronik", "Chronik"]];
+    /* „Partner" statt „Sponsoren": kürzer, und es ist das Wort, das der Reiter
+       in seiner eigenen Kopfzeile benutzt („Partner · 0 von 3"). Die
+       Reiterleiste scrollt zwar waagerecht, aber mit dem sechsten Reiter lag
+       „Chronik" auf einem 320er-Gerät zwei Wischer entfernt — beim Rundgang
+       durch die Oberfläche gemessen. Zwei Zeichen weniger holen sie zurück. */
+    ["ausbau", "Ausbau"], ["sponsoren", "Partner"], ["chronik", "Chronik"]];
   const rueckJahre = (v.chronik || []).filter((c) => c.tabelle).map((c) => c.jahr).reverse();
   const [rjahr, setRjahr] = React.useState(null);
   const rc = (v.chronik || []).filter((c) => c.tabelle)
@@ -9826,6 +9831,80 @@ function VereinScreen({ v, aka, onAendern, onZurueck, onAbschluss, startReiter }
                   </div>))}
               </div>)}
           </div>)}
+
+        {/* WIRT-P0-04: Werbeverträge. Die Angebote stehen im Spielstand, nicht
+            im Augenblick — wer den Bildschirm zumacht und wieder aufschlägt,
+            findet dieselben drei vor. Sonst wäre die Auswahl kein Entschluss,
+            sondern ein Automat, den man bis zum besten Angebot drückt. */}
+        {reiter === "sponsoren" && (() => {
+          const vs = VEREIN.mitAngeboten(v);
+          const laufend = vs.sponsoren || [];
+          const jeSaison = laufend.reduce((a, x) => a + (x.betrag || 0), 0);
+          const voll = laufend.length >= VEREIN.SPONSOR_MAX;
+          const letzte = (v.chronik || [])[(v.chronik || []).length - 1];
+          const raus = (letzte && letzte.wirtschaft && letzte.wirtschaft.ausgelaufen) || [];
+          return (
+            <div style={{ marginTop: 10 }}>
+              <div className="pan pad">
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
+                  <span className="eb">Partner · {laufend.length} von {VEREIN.SPONSOR_MAX}</span>
+                  <span className="d" style={{ fontSize: 16, color: "var(--ok)" }}>
+                    {VEREIN.geldText(VEREIN.werbeErtrag(v, jeSaison), v.land)} je Saison</span>
+                </div>
+                <div className="m" style={{ fontSize: 11.5, marginTop: 2 }}>
+                  Ein langer Vertrag zahlt je Saison weniger, hält den Platz aber
+                  besetzt. Wer aufsteigt, hätte neu verhandeln können.
+                  {" Genannt ist, was nach der Rechtsform ankommt — ein e.V. "
+                    + "vermarktet zurückhaltender als eine AG."}</div>
+                {raus.length > 0 && (
+                  <div className="m" style={{ fontSize: 11.5, marginTop: 6, color: "var(--bad)" }}>
+                    Ausgelaufen: {raus.join(", ")}</div>)}
+              </div>
+
+              {laufend.map((sp) => (
+                <div key={sp.id} className="pan pad" style={{ marginTop: 8 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
+                    <span className="d" style={{ fontSize: 15 }}>{sp.n}</span>
+                    <span className="m" style={{ fontSize: 12 }}>
+                      noch {sp.rest} {sp.rest === 1 ? "Saison" : "Saisons"}</span>
+                  </div>
+                  <div className="m" style={{ fontSize: 11.5, marginTop: 2 }}>
+                    {sp.branche} · {VEREIN.geldText(VEREIN.werbeErtrag(v, sp.betrag), v.land)} je Saison
+                    {sp.vorteil ? " · " + sp.vorteil : ""}</div>
+                </div>))}
+
+              <div className="pan pad" style={{ marginTop: 14 }}>
+                <div className="eb">Angebote für diese Saison</div>
+                <div className="m" style={{ fontSize: 11.5, marginTop: 2 }}>
+                  {voll ? "Alle Plätze belegt — erst wenn ein Vertrag ausläuft, ist wieder einer frei."
+                        : "Die Beträge richten sich nach Liga, Erfolg und Ansehen des Vereins."}</div>
+              </div>
+              {(vs.angebote || []).length === 0 && (
+                <div className="pan pad m" style={{ marginTop: 8, fontSize: 12 }}>
+                  Für diese Saison liegt nichts mehr vor.</div>)}
+              {(vs.angebote || []).map((an) => (
+                <div key={an.id} className="pan pad" style={{ marginTop: 8 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
+                    <span className="d" style={{ fontSize: 15 }}>{an.n}</span>
+                    {/* DER BETRAG, DER ANKOMMT — nicht der vereinbarte. Die
+                        Abrechnung zieht den Faktor der Rechtsform ab; die
+                        Anzeige zeigte vorher brutto und damit eine Zahl, die
+                        nie eintrifft. */}
+                    <span className="d" style={{ fontSize: 14, color: "var(--ok)" }}>
+                      {VEREIN.geldText(VEREIN.werbeErtrag(v, an.betrag), v.land)}</span>
+                  </div>
+                  <div className="m" style={{ fontSize: 11.5, marginTop: 2 }}>
+                    {an.branche} · {an.laufzeit} {an.laufzeit === 1 ? "Saison" : "Saisons"}
+                    {" · insgesamt " + VEREIN.geldText(
+                      Math.round(VEREIN.werbeErtrag(v, an.betrag) * an.laufzeit * 100) / 100, v.land)}</div>
+                  {an.vorteil && <div className="m" style={{ fontSize: 11.5 }}>{an.vorteil}</div>}
+                  <button className="btn sm" style={{ marginTop: 6 }} disabled={voll}
+                    onClick={() => { const r = VEREIN.sponsorAnnehmen(v, an.id); if (!r.fehler) onAendern(r.v); }}>
+                    {voll ? "Kein Platz frei" : "Unterschreiben"}
+                  </button>
+                </div>))}
+            </div>);
+        })()}
 
         {/* WIRT-P0-03: Ausbau kostet Geld, VC nur noch die vier Extras. Die
             Trennung ist auch optisch eine: zwei Abschnitte, zwei Währungen,

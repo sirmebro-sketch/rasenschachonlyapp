@@ -545,6 +545,140 @@ test('Der Ausbaureiter zeigt Geld und VC getrennt, ohne NaN',()=>{
  assert(!halb.includes('NaN'));
 });
 
+test('Sponsoren: die Angebote liegen im Spielstand, nicht im Augenblick',()=>{
+ /* WIRT-P0-04. Würden die Angebote beim Zeichnen erzeugt, bekäme man bei
+    jedem Aufschlagen des Bildschirms neue — und die Auswahl wäre kein
+    Entschluss, sondern ein Automat, den man bis zum besten Angebot drückt. */
+ const v=E.VEREIN.einschreiben(spielbereiterVerein()).v;
+ assert(Array.isArray(v.angebote)&&v.angebote.length>0,'die Einschreibung legt die erste Auswahl bereit');
+ /* Zweimal nachsehen ergibt dieselben drei. */
+ assert.deepEqual(E.VEREIN.mitAngeboten(v).angebote.map(a=>a.id),v.angebote.map(a=>a.id));
+ /* Auch nach einem Neuladen, also aus dem rohen gespeicherten Stand heraus. */
+ const geladen=JSON.parse(JSON.stringify(v));
+ assert.deepEqual(E.VEREIN.mitAngeboten(geladen).angebote.map(a=>a.id),v.angebote.map(a=>a.id));
+ /* Ein anderer Verein bekommt andere Angebote — sonst hinge die Saat nicht
+    am Verein, sondern wäre eine Konstante. */
+ const anders=E.VEREIN.mitAngeboten({...v,name:'Ganz anderer Verein',angebote:null});
+ assert.notDeepEqual(anders.angebote.map(a=>a.id),v.angebote.map(a=>a.id));
+ /* Jedes Angebot ist vollständig beschrieben: ohne Betrag und Laufzeit kann
+    man nicht wählen. */
+ for(const a of v.angebote){
+  assert(a.id&&a.n&&a.branche);
+  assert(a.betrag>0&&Number.isFinite(a.betrag));
+  assert(a.laufzeit>=1&&a.laufzeit<=4);
+ }
+});
+
+test('Sponsoren: unterschreiben prüft vor dem Schreiben und belegt einen Platz',()=>{
+ let v=E.VEREIN.einschreiben(spielbereiterVerein()).v;
+ assert(E.VEREIN.sponsorAnnehmen(v,'gibtesnicht').fehler,'ein Angebot, das nicht vorliegt');
+ assert.equal(E.VEREIN.sponsorAnnehmen(v,'gibtesnicht').v,v,'abgelehnt heisst unverändert');
+ const erste=v.angebote[0];
+ const r=E.VEREIN.sponsorAnnehmen(v,erste.id);
+ assert(!r.fehler,r.fehler);
+ assert.equal(r.v.sponsoren.length,1);
+ assert.equal(r.v.sponsoren[0].id,erste.id);
+ assert.equal(r.v.sponsoren[0].rest,erste.laufzeit,'die Laufzeit beginnt vollständig');
+ assert(!r.v.angebote.some(a=>a.id===erste.id),'das Angebot ist vom Tisch');
+ /* Dieselbe Firma nicht zweimal. */
+ assert(E.VEREIN.sponsorAnnehmen({...r.v,angebote:[erste]},erste.id).fehler);
+ /* Die Plätze sind begrenzt, sonst wäre Wählen Einsammeln. */
+ const voll={...v,sponsoren:Array.from({length:E.VEREIN.SPONSOR_MAX},(_,i)=>({id:'x'+i,rest:2,betrag:1}))};
+ const abgelehnt=E.VEREIN.sponsorAnnehmen(voll,erste.id);
+ assert(abgelehnt.fehler,'bei vollen Plätzen wird abgelehnt');
+ assert(abgelehnt.fehler.includes(String(E.VEREIN.SPONSOR_MAX)));
+});
+
+test('Sponsoren: Verträge laufen ab, bringen Geld und werden nachgemeldet',()=>{
+ let v=E.VEREIN.einschreiben(spielbereiterVerein()).v;
+ const ohne=E.VEREIN.vereinSaison(v).beleg.summeEin;
+ /* Denselben Verein einmal mit zwei Verträgen. */
+ let mit=v;
+ for(const a of mit.angebote.slice(0,2)){const r=E.VEREIN.sponsorAnnehmen(mit,a.id);if(!r.fehler)mit=r.v;}
+ assert.equal(mit.sponsoren.length,2);
+ const r=E.VEREIN.vereinSaison(mit);
+ assert(r.beleg.summeEin>ohne,'Werbeverträge bringen Geld: '+r.beleg.summeEin+' gegen '+ohne);
+ /* Nach der Saison ist jeder Vertrag ein Jahr kürzer, und es liegen neue
+    Angebote für die kommende Saison bereit. */
+ for(const sp of r.v.sponsoren)assert(sp.rest>=1,'abgelaufene fallen raus statt auf 0 zu stehen');
+ const vorher=mit.sponsoren.find(s=>s.laufzeit>1);
+ if(vorher)assert.equal(r.v.sponsoren.find(s=>s.id===vorher.id).rest,vorher.laufzeit-1);
+ assert(Array.isArray(r.v.angebote)&&r.v.angebote.length>0,'neue Saison, neue Angebote');
+ assert.notDeepEqual(r.v.angebote.map(a=>a.id),mit.angebote.map(a=>a.id),'nicht dieselben wie im Vorjahr');
+ /* Ein Einjahresvertrag taucht in der Chronik als ausgelaufen auf. */
+ const einjahr=mit.sponsoren.find(s=>s.laufzeit===1);
+ if(einjahr){
+  const c=r.v.chronik[r.v.chronik.length-1];
+  assert(c.wirtschaft.ausgelaufen.includes(einjahr.n),'ausgelaufene Verträge werden gemeldet');
+ }
+});
+
+test('Der angezeigte Werbebetrag ist der, der ankommt',()=>{
+ /* Die Abrechnung bucht `betrag * kommerz` der Rechtsform — ein e.V. bekommt
+    92 Prozent. Die Oberfläche zeigte brutto: ein Angebot über 2,97 Mio tauchte
+    im Beleg als 2,73 Mio auf, bei vier Saisons lag die Gesamtsumme rund eine
+    Million daneben. Wer Angebote vergleicht, verglich Zahlen, die nie
+    eintreffen. */
+ let v=E.VEREIN.einschreiben(spielbereiterVerein()).v;
+ const an=v.angebote[0];
+ assert(E.VEREIN.werbeErtrag(v,an.betrag)<an.betrag,'der e.V. bekommt weniger als vereinbart');
+ const r=E.VEREIN.sponsorAnnehmen(v,an.id);
+ assert(!r.fehler,r.fehler);
+ const beleg=E.VEREIN.vereinSaison(r.v).beleg;
+ const posten=beleg.einnahmen.find(p=>p.k.includes(an.n));
+ assert(posten,'der Vertrag steht als Posten im Beleg');
+ assert(Math.abs(posten.v-E.VEREIN.werbeErtrag(v,an.betrag))<0.02,
+   'gebucht wurden '+posten.v+', angezeigt würde '+E.VEREIN.werbeErtrag(v,an.betrag));
+ /* Und die Oberfläche nennt genau diese Zahl. */
+ const html=E.renderVerein(v,E.leereAkademie(),'sponsoren');
+ assert(html.includes(E.VEREIN.geldText(E.VEREIN.werbeErtrag(v,an.betrag),v.land)),
+   'der Reiter zeigt den Betrag, der ankommt');
+});
+
+test('Alle Angebote unterschrieben heisst nicht: drei neue',()=>{
+ /* Der erste Entwurf prüfte zusätzlich auf `.length`. Wer alle drei Angebote
+    einer Saison unterschrieb, bekam beim nächsten Blick sofort drei neue —
+    genau der Automat, den das Paket verhindern soll. */
+ let v=E.VEREIN.einschreiben(spielbereiterVerein()).v;
+ for(const a of [...v.angebote]){const r=E.VEREIN.sponsorAnnehmen(v,a.id);if(!r.fehler)v=r.v;}
+ assert.equal(v.sponsoren.length,E.VEREIN.SPONSOR_MAX,'drei Plätze belegt');
+ assert.equal(v.angebote.length,0,'nichts liegt mehr vor');
+ assert.equal(E.VEREIN.mitAngeboten(v).angebote.length,0,'und es wird auch nichts nachgelegt');
+ /* Die Zeile dafür ist damit erreichbar statt toter Code. */
+ const html=E.renderVerein(v,E.leereAkademie(),'sponsoren');
+ assert(html.includes('liegt nichts mehr vor'));
+ /* Ein FEHLENDES Feld wird weiterhin nachgelegt — alte Spielstände. */
+ const alt={...v,angebote:undefined};
+ assert(E.VEREIN.mitAngeboten(alt).angebote.length>0,'alte Spielstände bekommen eine Auswahl');
+});
+
+test('Der Sponsorenreiter zeigt Angebote und laufende Verträge, ohne NaN',()=>{
+ const v=E.VEREIN.einschreiben(spielbereiterVerein()).v;
+ const html=E.renderVerein(v,E.leereAkademie(),'sponsoren');
+ assert(!html.includes('NaN'));
+ assert(html.includes('Partner'));
+ assert(html.includes('Angebote für diese Saison'));
+ assert(html.includes('Unterschreiben'));
+ assert(html.includes(v.angebote[0].n),'die Firma steht mit Namen da');
+ /* Mit vollen Plätzen wird der Knopf gesperrt und gesagt, warum. */
+ const voll={...v,sponsoren:Array.from({length:E.VEREIN.SPONSOR_MAX},(_,i)=>
+   ({id:'x'+i,n:'Partner '+i,branche:'Industrie',betrag:2.5,rest:2,laufzeit:3}))};
+ const html2=E.renderVerein(voll,E.leereAkademie(),'sponsoren');
+ assert(html2.includes('Kein Platz frei'));
+ assert(html2.includes('Alle Plätze belegt'));
+ assert(!html2.includes('NaN'));
+ /* Der Reiter heißt „Partner", nicht „Sponsoren". Mit dem sechsten Reiter lag
+    „Chronik" auf einem 320er-Gerät zwei Wischer entfernt; kürzer holt sie
+    zurück, und es ist ohnehin das Wort, das die Kopfzeile des Reiters selbst
+    benutzt. Gemessen wurde das im Browser — diese Prüfung hält nur die
+    Entscheidung fest, damit sie nicht stillschweigend zurückgedreht wird.
+    Ein Zeichenbudget wäre eine Scheingenauigkeit: die Schrift ist proportional. */
+ const leiste=html.split('Angebote für diese Saison')[0];
+ assert(leiste.includes('>Partner<'),'der Reiter trägt die kurze Beschriftung');
+ assert(!leiste.includes('>Sponsoren<'),'die lange Beschriftung ist weg');
+ assert(leiste.includes('>Chronik<'),'und „Chronik" steht weiter in der Leiste');
+});
+
 test('Nach einem Aufstieg ist Klassenerhalt die Ansage, nicht der Titel',()=>{
  /* DER FEHLER, DEN DIESE PRÜFUNG FESTHÄLT. Der erste Entwurf reichte die neue
     Ligastufe weiter, aber den ALTEN Tabellenplatz — und daraus leitet
