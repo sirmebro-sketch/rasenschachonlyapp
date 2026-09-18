@@ -87,14 +87,25 @@ Fünf Systeme, vom Eigentümer am 17.09.2026 einzeln bestätigt:
 Dazu **Stimmung** (0–100) als einziger neuer sichtbarer Wert: sie wächst mit
 Erfolg, sinkt bei Überteuerung, und wirkt auf Auslastung und Merchandising.
 
-### WIRT-P0-02 – Anschluss an den Spielablauf — BEREIT
+### WIRT-P0-02 – Anschluss an den Spielablauf — VORGELEGT (Claude, 17.09.2026)
 
-`leererVerein` um `kasse`, `sponsoren`, `extras`, `ligastufe` erweitern;
-`vereinSaison` ruft die Abrechnung und legt den Beleg in die Chronik.
-Ligastufe aus `pyramide(land)` ableiten, nicht raten. Alte Spielstände ohne
-diese Felder müssen weiterlaufen — Ladeverträglichkeit ist Teil des Pakets.
+`leererVerein` trägt jetzt `kasse`, `sponsoren`, `extras`, `stimmung`,
+`rechtsform`, `preise`, `baustellen`, `gehaltsniveau` und `ziel`.
+`vereinSaison` ruft die Abrechnung, schreibt den Spielstand fort, setzt das
+Vorstandsziel der kommenden Saison in der NEUEN Liga und legt eine Kurzfassung
+des Belegs in die Chronik; der volle Beleg kommt als Rückgabewert.
 
-### WIRT-P0-03 – Ausbau auf Geld umstellen — BEREIT
+Die **Ligastufe wird abgeleitet, nicht gespeichert** (`ligastufe(land, liga)`
+aus `stufenVon`), damit ein Auf- oder Abstieg sie sofort mitführt. Die
+**Saat kommt aus dem Verein selbst** (FNV-1a über Name, Land, Liga, Jahr),
+damit ein Neuladen keine neuen Sponsorenangebote würfelt.
+**Ladeverträglichkeit** über `mitWirtschaft`: ergänzt wird beim Lesen, nicht
+beim Speichern; eine gespeicherte 0 gilt nicht als fehlender Wert.
+
+**Wichtig für die Reihenfolge:** siehe Abschnitt 6 — P0-02 allein darf einen
+Spieler nicht erreichen.
+
+### WIRT-P0-03 – Ausbau auf Geld umstellen — BEREIT, jetzt zwingend
 
 `VEREIN.ausbauen` (VC) durch `ausbauKaufen` (Geld) ersetzen; der Aufrufer
 steht in `App.jsx` im Vereinsbildschirm. VC-Extras als eigener, klar
@@ -172,7 +183,34 @@ gleichen Lauf bei 667 statt 1.435 Mio, das sind 167 statt 250 Abschlusspunkte
 wirtschaftlich eine Entscheidung. Der Weg von unten bleibt begehbar: Liga 2
 weiterhin 30/30, Liga 5 22/30.
 
-**Neu offen: der Kader ist noch geschätzt.** Die Gehälter rechnen je Ligastufe
-mit einem Durchschnittsspieler, weil `verein.js` keinen Kader führt. Sobald er
-da ist, wird die Zahl individuell — und die Kalibrierung ist erneut zu
-prüfen.
+**Erledigt (17.09.2026): der Kader wird gelesen, nicht geschätzt.** Mit P0-02
+reicht `vereinSaison` den echten Kader an `kaderKosten` durch. Die Schätzung je
+Ligastufe bleibt nur noch für den isoliert laufenden Rechenkern.
+
+**Neu und ernst: P0-02 allein macht jeden Verein zahlungsunfähig.** Gemessen am
+echten Spielablauf, fünfzehn Jahre, Kader aus Spielern mit Stärke 70,
+festgehaltener Würfel (Verfahren im Vermerk zu P0-02):
+
+| Jahr | Liga | Plätze | Einnahmen | Kosten | davon Gehälter | Kasse |
+|---:|---|---:|---:|---:|---:|---:|
+| 1 | 3. Liga | 8.000 | 18,3 | 17,2 | 11,1 | 7 |
+| 2 | 2. Bundesliga | 8.000 | 32,3 | 29,0 | 21,6 | 16 |
+| 3 | Bundesliga | 8.000 | 35,1 | 62,5 | 52,3 | −1 |
+| 15 | Bundesliga | 8.000 | 32,4 | 75,7 | 64,0 | **−289** |
+
+Die Ursache steht in der Spalte **Plätze**: sie ändert sich nie. Bauen kann
+der Verein nicht, weil `bauStart` und `ausbauKaufen` noch keinen Aufrufer
+haben — das ist P0-03. Die Einnahmen bleiben damit auf dem Stand des
+Gründungsstadions, während die Gehälter der Liga folgen. Ein Erstligist mit
+8.000 Plätzen und 64 Mio Gehältern geht zugrunde, und zwar zu Recht — nur
+kann der Spieler nichts dagegen tun.
+
+**Daraus folgt eine Reihenfolgeregel, keine Kalibrierung:** P0-02 und P0-03
+gehören in derselben Auslieferung zum Spieler. Die Zahlen oben sind kein
+Fehler im Anschluss, sondern der Beweis, dass die Ausgabeseite fehlt. Wer P0-02
+allein freigibt, liefert eine Wirtschaft, die nur verlieren kann.
+
+**Danach erneut zu prüfen:** ob ein Verein, der sich hocharbeitet, den Ausbau
+schnell genug bezahlen kann, um den Gehaltssprung beim Aufstieg zu überleben
+(Stufe 2 → 1 verdreifachte die Gehälter von 21,6 auf 52,3, während die
+Einnahmen nur um 2,8 stiegen). Das ist die nächste echte Balance-Frage.

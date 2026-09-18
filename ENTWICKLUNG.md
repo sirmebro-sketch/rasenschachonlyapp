@@ -1234,6 +1234,96 @@ schliessen. Beide Dateien stehen jetzt auf dieser Fassung.
   darunter. Nachschärfen ginge über die Obergrenze des Niveaus (2,00) oder
   das Tempo nach oben (halber Abstand).
 
+## WIRT-P0-02 — Wirtschaft am Spielablauf (Claude, 17.09.2026)
+
+**Basis-Commit:** `1ac1f18` (Zweig `claude/vereinswirtschaft`, Pull Request #6).
+**Branch:** `claude/wirt-p0-02`. **Vorgelegt zur Abnahme, nicht zusammengeführt.**
+Dieser Zweig setzt auf #6 auf, weil `vereinswirtschaft.js` nur dort existiert.
+
+**Auftrag.** Kevin: „Dann mache mit WIRT-P0-02 weiter". Der Rechenkern lief bis
+hierher isoliert — geprüft, aber von niemandem aufgerufen.
+
+**Was geändert wurde** (`verein.js`):
+
+1. **Gewöhnlicher Import statt Fabrik.** `vereinswirtschaft.js` braucht keinen
+   Namen aus `App.jsx`, importiert selbst nichts und kann deshalb ohne
+   Ringimport eingebunden werden. Die Zusicherung steht als Kommentar an der
+   Importzeile, damit sie nicht versehentlich gebrochen wird.
+2. **`leererVerein` trägt die Wirtschaft:** `kasse`, `sponsoren`, `extras`,
+   `stimmung`, `rechtsform`, `preise`, `baustellen`, `gehaltsniveau`, `ziel`.
+   Die alten Ausbaukennungen `training`, `stadion`, `medizin` bleiben
+   unverändert — sie sind Vertrag.
+3. **Die Ligastufe wird abgeleitet, nicht gespeichert.** `ligastufe(land, liga)`
+   dreht die Pyramide aus `stufenVon` um, sodass 1 die höchste Liga ist. Ein
+   Auf- oder Abstieg führt sie sofort mit, und kein Land braucht eine gepflegte
+   Tabelle.
+4. **Die Saat kommt aus dem Verein**, nicht aus `rnd()`: FNV-1a über Name,
+   Land, Liga und Jahr. Ein Neuladen würfelt damit keine neuen
+   Sponsorenangebote — die Zusage aus WIRT-P0-04.
+5. **`vereinSaison` rechnet ab.** Mit der Liga der abgelaufenen Saison, der
+   Bilanz einschliesslich dieser Saison und dem **echten Kader** — damit
+   rechnet `kaderKosten` erstmals mit wirklichen Stärken statt der Schätzung.
+   Das Ziel der kommenden Saison wird in der NEUEN Liga gesetzt.
+6. **Chronik: Kurzfassung, nicht voller Beleg.** Fünfzehn vollständige Belege
+   lägen dauerhaft im Spielstand; gelesen wird die Summe. Dieselbe Abwägung wie
+   bei den Einzelspielen. Der volle Beleg kommt als Rückgabewert.
+7. **`mitWirtschaft` für alte Spielstände.** Ergänzt wird beim **Lesen**, nicht
+   beim Speichern: ein Spielstand aus 35.192 muss sich öffnen lassen, ohne dass
+   ihn vorher jemand anfasst. Geprüft wird auf endliche Zahl statt auf
+   Wahrheitswert, damit eine gespeicherte 0 nicht als „fehlt" gilt.
+
+**Geprüft:** `npm test` **149/149** (vorher 144), `npm run build` erfolgreich.
+Fünf neue Regressionen in `tools/regression.test.cjs`, also am zusammengebauten
+`App.jsx` und nicht an einer Nachbildung: Abrechnung und Fortschreibung,
+abgeleitete Ligastufe, alter Spielstand ohne jedes Wirtschaftsfeld,
+Reproduzierbarkeit bei festgehaltenem Würfel, fünfzehn Jahre am Stück ohne
+NaN. **Gegenprobe gemacht:** lässt man die Kasse aus der Fortschreibung weg,
+werden Prüfung 48 und 50 rot; lässt man die Chronik-Kurzfassung weg, Prüfung 48.
+
+**DER WICHTIGE BEFUND — bitte vor der Abnahme lesen.**
+
+Der Anschluss funktioniert. Genau deshalb zeigt er etwas, das vorher niemand
+sehen konnte. Fünfzehn Jahre durch den echten Spielablauf, Kader aus Spielern
+der Stärke 70, `zufallSetzen(20260917)`:
+
+| Jahr | Liga | Plätze | Einnahmen | Kosten | davon Gehälter | Kasse |
+|---:|---|---:|---:|---:|---:|---:|
+| 1 | 3. Liga | 8.000 | 18,3 | 17,2 | 11,1 | 7 |
+| 2 | 2. Bundesliga | 8.000 | 32,3 | 29,0 | 21,6 | 16 |
+| 3 | Bundesliga | 8.000 | 35,1 | 62,5 | 52,3 | −1 |
+| 15 | Bundesliga | 8.000 | 32,4 | 75,7 | 64,0 | **−289** |
+
+Über fünf Kaderstärken gerechnet, gleiches Verfahren: Stärke 48 endet bei +27,
+Stärke 55 bei −10, 62 bei −55, 70 bei −289, 78 bei −556.
+
+Die Ursache steht in der Spalte **Plätze**: sie ändert sich nie. `bauStart` und
+`ausbauKaufen` haben noch keinen Aufrufer — das ist WIRT-P0-03. Die Einnahmen
+bleiben deshalb auf dem Stand des Gründungsstadions, während die Gehälter der
+Liga folgen. Ein Erstligist mit 8.000 Plätzen und 64 Mio Gehältern geht
+zugrunde, und das ist sachlich richtig — nur kann der Spieler nichts dagegen
+tun, solange er nicht bauen darf.
+
+**Das ist kein Fehler im Anschluss, sondern der Beweis, dass die Ausgabeseite
+fehlt.** Ich habe es deshalb NICHT wegkalibriert: die Gehälter so weit zu
+senken, dass ein Verein ohne Stadion überlebt, würde genau die Entscheidung
+entwerten, die P0-03 erzeugen soll.
+
+**Daraus eine Reihenfolgeregel, die ich zur Abnahme mitvorlege:** P0-02 und
+P0-03 gehören in derselben Auslieferung zum Spieler. Wer P0-02 allein
+freigibt, liefert eine Wirtschaft, die nur verlieren kann. Nach `main` darf
+dieser Zweig trotzdem — sichtbar wird davon nichts, solange der
+Vereinsbildschirm die Kasse nicht anzeigt.
+
+**Offen bleibt:**
+
+- **WIRT-P0-03 ist jetzt zwingend**, nicht mehr nur der nächste Punkt.
+- **Der Gehaltssprung beim Aufstieg** ist die nächste echte Balance-Frage:
+  Stufe 2 → 1 verdreifachte die Gehälter (21,6 → 52,3), die Einnahmen stiegen
+  um 2,8. Ob ein Aufsteiger das mit Ausbau auffangen kann, ist erst nach P0-03
+  messbar.
+- **Folgen einer leeren Kasse** gibt es weiterhin keine (WIRT-P1-04). Die Kasse
+  läuft ins Minus, ohne dass etwas passiert — bewusst, aber jetzt sichtbarer.
+- **Kein Gerätetest**, keine Oberfläche. Der Spieler sieht von all dem nichts.
 ## Nachbesserung nach Gegenlesen — Wirtschaftskern (Claude, 17.09.2026)
 
 Nach dem Bau der ganzen Kette habe ich den eigenen Diff systematisch
@@ -1278,6 +1368,47 @@ liest** — die Prüfung, die „Scoutnetz" verhindert hätte.
 **Offen für Codex:** `bonus.aufnahmen` in den Abschluss-BONI hat keinen Leser.
 Das ist bestehender Code, nicht aus dieser Runde — deshalb nur vermerkt.
 
+## Nachbesserung nach Gegenlesen — Anschluss (Claude, 17.09.2026)
+
+Vier Befunde aus dem Gegenlesen betreffen diesen Zweig. Wie bei der Wurzel gilt:
+keiner ist von den Regressionen gefunden worden.
+
+**1. Nach einem Aufstieg war das Vorstandsziel unerreichbar.** Der Kommentar
+behauptete „nach einem Aufstieg ist Klassenerhalt die Ansage, nicht der Titel" —
+die Rechnung reichte aber nur die neue Ligastufe weiter und weiterhin den
+**alten Tabellenplatz**, aus dem `zielSetzen` das Ziel ableitet. Ein Meister,
+der aufstieg, bekam „Um den Titel spielen" mit Soll 1 in der Liga darüber, und
+die Prämie wurde nie gezahlt. Umgekehrt bekam ein Absteiger „Klassenerhalt" in
+einer Liga, die er vermutlich dominiert. Ein Tabellenplatz aus einer anderen
+Liga ist keine Aussage über die neue: ein Aufsteiger gilt jetzt als Letzter, ein
+Absteiger als Dritter.
+
+**2. Die Gehälter wurden mit dem gealterten Kader gerechnet.** Die
+Entwicklungsschleife ändert Alter und Stärke **in place** und reicht dieselben
+Objekte weiter; die Abrechnung bekam damit die Stärken der KOMMENDEN Saison.
+Schon ein gewöhnlicher Zuwachs von +2 verteuert 18 Erstligaspieler von 30,0 auf
+33,6 Mio — jedes Jahr, von der Gehaltsratsche weiter aufgeschlagen. Jetzt wird
+der Kader kopiert, bevor irgendetwas altert.
+
+**3. Zwei Sponsorenwirkungen hatten keinen Leser.** `medizin` (Vitalis: „wirkt
+wie eine Stufe Medizin") und `jugend` (Almgut: „Nachwuchs entwickelt sich etwas
+schneller") wurden von `wirkung` summiert und von niemandem abgeholt — die
+Verträge versprachen etwas, das nicht geschah. Beide werden jetzt in der
+Entwicklungsschleife gelesen.
+
+**4. Die abgeleitete Ligastufe landete im Spielstand.** `mitWirtschaft` schreibt
+sie auf das zurückgegebene Objekt, und mehrere dieser Objekte werden gespeichert
+— nach einem Aufstieg stünde dort ein veralteter Wert. Noch liest niemand das
+rohe Feld, aber es war eine geladene Waffe. `ohneAbgeleitetes` entfernt sie am
+Speicherrand.
+
+**Noch offen aus diesem Befundsatz:** die Wirtschaftszahlen der Chronik haben
+weiterhin nur einen Leser (`ausgelaufen`). Die Anzeige braucht `geldText` und
+zieht deshalb nach WIRT-P0-03 um.
+
+**Geprüft:** `npm test` 157/157 (vorher 152), `npm run build` erfolgreich. Fünf
+neue Regressionen, darunter ein Lauf, der bis zu einem echten Aufstieg spielt
+und prüft, dass das neue Ziel kein Soll 1 trägt.
 ## Nachbesserung, zweiter Durchgang (Claude, 18.09.2026)
 
 Die beiden letzten offenen Punkte aus dem Gegenlesen.
