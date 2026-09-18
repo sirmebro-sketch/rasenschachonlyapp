@@ -1,0 +1,12 @@
+diff --git a/App.jsx b/App.jsx
+--- a/App.jsx
++++ b/App.jsx
+@@ -3006,7 +3006,7 @@
+           + (50 + kopf.b - 10) + ",16 Z"} clipPath={modern ? "url(#kf"+kennung+")" : undefined} fill={schatten} opacity=".2" />
+ 
+         {/* Wangenknochen / Kinngrübchen */}
+-        {z.wangen === 1 && <ellipse cx="50" cy={Math.min(kinnY - 2, gesicht.mundBottom + 1.4)} rx="3.2" ry="1.45" fill={schatten} opacity=".68" />}
++        {z.wangen === 1 && (()=>{const y=Math.min(kinnY - 2.1, gesicht.mundBottom + 1.25);return <path d={`M47.5 ${y} Q50 ${y+1.45} 52.5 ${y}`} fill="none" stroke={tief} strokeWidth="1.25" strokeLinecap="round" opacity=".82"/>;})()}
+         {z.wangen === 2 && <><path d={"M" + (50 - kopf.j - 1) + "," + (kinnY - 16) + " q4,7 7,10"} fill="none"
+           stroke={schatten} strokeWidth="1.4" strokeLinecap="round" opacity=".6" />
+           <path d={"M" + (50 + kopf.j + 1) + "," + (kinnY - 16) + " q-4,7 -7,10"} fill="none"
