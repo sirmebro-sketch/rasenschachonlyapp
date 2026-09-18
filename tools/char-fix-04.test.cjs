@@ -24,8 +24,8 @@ const KOEPFE=[
  {n:'Kurzbreit',b:30,j:27,kinn:64,profil:'kurzbreit'},
 ];
 const PAARE=[[3,5],[10,6],[11,8],[6,3]];
-const M_KRIT=[0,1,2,3,6,12,13,14,15,20,21,23];
-const W_KRIT=[0,3,7,9,19,21];
+const M_KRIT=[0,1,2,3,6,12,13,14,15,20,21,23,30];
+const W_KRIT=[0,3,7,9,19,21,24,25,26];
 let E,temp;
 
 const attr=(svg,name)=>{
@@ -60,12 +60,12 @@ test('CHAR-FIX-04: alle Frisuren auf Kopf 10–13 rendern und die Fokusformen nu
  let count=0;
  for(let kopfId=10;kopfId<=13;kopfId++){
   const kopf=KOEPFE[kopfId];
-  for(let id=0;id<26;id++){
+  for(let id=0;id<31;id++){
    const svg=E.cf4Haar(id,'m',kopfId);count++;
    assert.doesNotMatch(svg,/NaN|undefined/);
    if(id!==11)assert.match(svg,/data-haar-typ=/);
   }
-  for(let id=0;id<24;id++){
+  for(let id=0;id<31;id++){
    const svg=E.cf4Haar(id,'w',kopfId);count++;
    assert.doesNotMatch(svg,/NaN|undefined/);
    assert.match(svg,/data-haar-typ=/);
@@ -83,7 +83,7 @@ test('CHAR-FIX-04: alle Frisuren auf Kopf 10–13 rendern und die Fokusformen nu
    assert(Number(attr(svg,'data-haar-breite'))>=kopf.b+.79,kopf.n+' W'+id+' ist horizontal zu klein');
   }
  }
- assert.equal(count,200);
+ assert.equal(count,248);
 });
 
 test('CHAR-FIX-04: alte Köpfe behalten bei kopfnahen Kurzformen ihre bisherige Breitenbasis',()=>{
