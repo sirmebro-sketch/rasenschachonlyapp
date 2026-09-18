@@ -34,21 +34,32 @@
 
       /* Das Startbild liegt absichtlich direkt im HTML statt erst in React:
          Nach dem kurzen systemseitigen Android-Start kann die lokale WebView
-         sofort Kevins app-eigenes Motiv anzeigen. */
+         sofort Kevins app-eigenes Motiv anzeigen. Das scharfe 9:16-Motiv bleibt
+         auf hoeheren Smartphone-Displays vollstaendig sichtbar; eine weich
+         vergroesserte Kopie fuellt nur den zusaetzlichen Randbereich. */
       #app-startup-splash {
         position: fixed; inset: 0; z-index: 2147483647; overflow: hidden;
         background: #050706; opacity: 1; transition: opacity 280ms ease;
       }
       #app-startup-splash img {
-        width: 100%; height: 100%; display: block; object-fit: cover;
-        object-position: center center; user-select: none; -webkit-user-drag: none;
+        position: absolute; display: block; user-select: none; -webkit-user-drag: none;
+      }
+      #app-startup-splash .startup-splash-backdrop {
+        inset: -5%; width: 110%; height: 110%; object-fit: cover;
+        filter: blur(22px) brightness(.56) saturate(.92);
+        transform: scale(1.03);
+      }
+      #app-startup-splash .startup-splash-image {
+        inset: 0; width: 100%; height: 100%; object-fit: contain;
+        object-position: center center; z-index: 1;
       }
       #app-startup-splash .startup-spinner {
-        position: absolute; left: 50%; top: 64%; width: 34px; height: 34px;
-        margin: -17px 0 0 -17px; box-sizing: border-box; border-radius: 50%;
+        position: absolute; left: 50%; top: 50%; z-index: 2;
+        width: 34px; height: 34px; margin: -17px 0 0 -17px;
+        box-sizing: border-box; border-radius: 50%;
         border: 3px solid rgba(246, 244, 232, .34);
         border-top-color: #f6f4e8; border-right-color: #b91f1b;
-        filter: drop-shadow(0 0 8px rgba(0,0,0,.65));
+        filter: drop-shadow(0 0 8px rgba(0,0,0,.75));
         animation: startup-spin 850ms linear infinite;
       }
       #app-startup-splash.is-hiding { opacity: 0; pointer-events: none; }
@@ -69,12 +80,23 @@
     <script src="./startbild/part-06.js"></script>
     <script src="./startbild/part-07.js"></script>
     <script src="./startbild/part-08.js"></script>
+    <script src="./startbild/part-09.js"></script>
+    <script src="./startbild/part-10.js"></script>
+    <script src="./startbild/part-11.js"></script>
+    <script src="./startbild/part-12.js"></script>
+    <script src="./startbild/part-13.js"></script>
+    <script src="./startbild/part-14.js"></script>
+    <script src="./startbild/part-15.js"></script>
+    <script src="./startbild/part-16.js"></script>
     <div id="app-startup-splash" role="status" aria-label="Rasenschach XI wird geladen">
-      <img id="startup-splash-image" alt="" loading="eager" fetchpriority="high" decoding="sync" />
+      <img class="startup-splash-backdrop" data-startup-splash-image alt="" aria-hidden="true" />
+      <img id="startup-splash-image" class="startup-splash-image" data-startup-splash-image alt="" loading="eager" fetchpriority="high" decoding="sync" />
       <span class="startup-spinner" aria-hidden="true"></span>
     </div>
     <script>
-      document.getElementById("startup-splash-image").src = window.__RASENSCHACH_STARTBILD__;
+      document.querySelectorAll("[data-startup-splash-image]").forEach((image) => {
+        image.src = window.__RASENSCHACH_STARTBILD__;
+      });
       delete window.__RASENSCHACH_STARTBILD__;
     </script>
     <div id="root"></div>
