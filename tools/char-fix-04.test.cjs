@@ -5,6 +5,7 @@ const path=require('node:path');
 const os=require('node:os');
 const {build}=require('esbuild');
 
+// Der Safe-Patch-Lauf dient zusätzlich als vollständiges CHAR-FIX-04 Regression-/Build-Gate.
 const root=path.resolve(__dirname,'..');
 const KOEPFE=[
  {n:'Oval',b:25,j:15,kinn:71},
