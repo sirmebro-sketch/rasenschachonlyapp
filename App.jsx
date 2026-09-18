@@ -15122,6 +15122,27 @@ function CreateScreen({ onStart, onBack, meta }) {
   const [fein, setFein] = useState(false);
   const [merkmal,setMerkmal] = useState("frisur");
   const [fest,setFest] = useState({});
+  /* CHAR-P1-05 Nachlauf: Die mobile Kategorienleiste war zwar wischbar, aber
+     der abgeschnittene Folgebutton war als Hinweis zu dezent. Der Zustand
+     beschreibt nur die Scrollposition und aendert weder Auswahl noch IDs. */
+  const kategorieLeiste = useRef(null);
+  const [kategorieRand,setKategorieRand] = useState({start:true,end:false});
+  const kategoriePosition = (el=kategorieLeiste.current) => {
+    if (!el) return;
+    const max = Math.max(0, el.scrollWidth - el.clientWidth);
+    const next = {start:el.scrollLeft <= 2,end:max <= 2 || el.scrollLeft >= max - 2};
+    setKategorieRand((alt) => alt.start === next.start && alt.end === next.end ? alt : next);
+  };
+  useEffect(() => {
+    if (!fein) return;
+    const frame = requestAnimationFrame(() => kategoriePosition());
+    const neuMessen = () => kategoriePosition();
+    window.addEventListener("resize", neuMessen);
+    return () => {
+      cancelAnimationFrame(frame);
+      window.removeEventListener("resize", neuMessen);
+    };
+  }, [fein, gender]);
   const [statur, setStatur] = useState("normal");
   /* Die Statur zieht den Kopf schmal oder breit. OHNE diesen Effekt wäre sie
      im Gesicht wirkungslos — genau die Sorte Merkmal, die in diesem Projekt
@@ -15200,8 +15221,19 @@ function CreateScreen({ onStart, onBack, meta }) {
         {fein && <div id={formularId + "-feinheiten"} className="pan pad" style={{marginTop:10}}>
           <div className="eb">Dein Spielerporträt</div>
           <p style={{fontSize:12,color:"var(--mu)"}}>Wähle ein Merkmal und tippe auf deine Variante. Festgehaltene Merkmale bleiben beim Würfeln erhalten.</p>
-          <div style={{display:"flex",gap:6,flexWrap:"wrap",marginBottom:12}}>
+          <div ref={kategorieLeiste} data-char-kategorien="true"
+            data-am-anfang={kategorieRand.start?"true":"false"} data-am-ende={kategorieRand.end?"true":"false"}
+            onScroll={(e)=>kategoriePosition(e.currentTarget)}
+            style={{display:"flex",gap:6,flexWrap:"wrap",marginBottom:12}}>
             {PORTRAET_REGLER(gender).map(([lbl,feld])=><button key={feld} className="btn sm" aria-pressed={merkmal===feld} onClick={()=>setMerkmal(feld)} style={{borderColor:merkmal===feld?"var(--ac)":undefined}}>{lbl}{fest[feld]?" · fest":""}</button>)}
+          </div>
+          <div className="char-kategorie-hinweis" aria-hidden="true"
+            data-richtung={kategorieRand.start&&!kategorieRand.end?"weiter":kategorieRand.end&&!kategorieRand.start?"zurueck":"beide"}>
+            {kategorieRand.start&&!kategorieRand.end
+              ?"Wischen · weitere Kategorien →"
+              :kategorieRand.end&&!kategorieRand.start
+                ?"← Frühere Kategorien · wischen"
+                :"← Kategorien wischen →"}
           </div>
           {(()=>{const feld=PORTRAET_REGLER(gender).some(x=>x[1]===merkmal)?merkmal:"frisur";
             const optionen=portraetOptionen({...ZUEGE_ANZAHL(meta,gender==="w"),haut:SKIN_EDIT.length,haar:HAIRC_EDIT.length},gender)[feld];
