@@ -38,6 +38,19 @@ function schnurrbartPfad(y,width=11,yOffset=0,drop=0){
  return `M50 ${basis+.35} C${50-w*.24} ${basis-1.25} ${50-w*.7} ${basis-1.8+d} ${50-w} ${basis-.45+d} C${50-w*.72} ${basis+.75+d} ${50-w*.28} ${basis+.8} 50 ${basis+.35} C${50+w*.28} ${basis+.8} ${50+w*.72} ${basis+.75+d} ${50+w} ${basis-.45+d} C${50+w*.7} ${basis-1.8+d} ${50+w*.24} ${basis-1.25} 50 ${basis+.35} Z`;
 }
 
+// CHAR-FIX-04: Kinnbart, Ziegenbart und Ankerbart teilen dieselbe echte
+// Mund→Kinn-Zone. Die alte reine k-minus-X-Geometrie wurde auf kurzen Köpfen
+// von Mundmaske und Kopfclip fast vollständig weggeschnitten. Die neue Zone
+// beginnt garantiert unter der sichtbaren Unterlippe, reagiert auf die reale
+// Kieferbreite und darf in der Mitte kontrolliert unter das Kinn wachsen.
+function kinnZone(j,k,face){
+ const frei=clamp(k-face.mundBottom,.8,7);
+ const halb=clamp(4.6+j*.17,5.8,9);
+ const oben=Math.min(k-.3,face.mundBottom+clamp(frei*.32,.45,1.35));
+ const unten=k+clamp(1.65+(j-12)*.045,1.65,2.35);
+ return {x:50,halb,oben,unten,frei};
+}
+
 export function Bartform({index=0,kopf={},nase=0,mund=0,farbe='#38241B',hell='#E7C19F',clipId}){
  const id=clamp(Math.trunc(num(index,0)),0,BART_MAX_ID);
  if(id===0)return null;
@@ -49,6 +62,7 @@ export function Bartform({index=0,kopf={},nase=0,mund=0,farbe='#38241B',hell='#E
  const moustache=(width=11,yOffset=0,drop=0,part='schnurrbart')=><path data-bart-part={part} d={schnurrbartPfad(face.schnurrbartY,width,yOffset,drop)}/>;
  const stoppelLinie=`M${l+2} 50 C${l+4} 58 ${50-j} ${k-7} ${50-j} ${k-5} Q50 ${k+1} ${50+j} ${k-5} C${50+j} ${k-7} ${r-4} 58 ${r-2} 50`;
  const freiraumY=face.mundBottom+.75;
+ const kinn=kinnZone(j,k,face);
  let body=null,moustacheNode=null;
 
  switch(id){
@@ -67,21 +81,18 @@ export function Bartform({index=0,kopf={},nase=0,mund=0,farbe='#38241B',hell='#E
   case 3: // Klassischer Schnurrbart.
    moustacheNode=moustache(11,0,0);
    break;
-  case 4: // Kinnbart – breiter, kompakter Kinnblock mit stumpfem Abschluss.
-   body=<g {...clip}>
-    <path data-bart-part="kinnbart" d={`M42 ${k-8} Q50 ${k-11} 58 ${k-8} L57 ${k-3} Q50 ${k+1} 43 ${k-3} Z`}/>
-    <path d={`M46 ${k-12} Q50 ${k-14} 54 ${k-12} L53 ${k-9} Q50 ${k-10} 47 ${k-9} Z`} opacity=".82"/>
-   </g>;
+  case 4: { // Kinnbart – kompakter Block am tatsächlichen Kinnzentrum.
+   const h=kinn.halb;
+   body=<path data-bart-part="kinnbart" data-bart-chin-top={kinn.oben.toFixed(2)} data-bart-chin-bottom={kinn.unten.toFixed(2)} data-bart-chin-half={h.toFixed(2)}
+    d={`M${50-h} ${kinn.oben} Q50 ${kinn.oben-.55} ${50+h} ${kinn.oben} L${50+h*.82} ${k-.15} Q50 ${kinn.unten} ${50-h*.82} ${k-.15} Z`}/>;
    break;
-  case 5: // Ziegenbart – bewusst schmaler und sichtbar unter das Kinn verlängert.
-   body=<>
-    <g {...clip}>
-     <path data-bart-part="ziegenbart-basis" d={`M46 ${k-8} Q50 ${k-10} 54 ${k-8} Q53 ${k-2} 50 ${k} Q47 ${k-2} 46 ${k-8} Z`}/>
-     <path d={`M48 ${k-13} Q50 ${k-15} 52 ${k-13} L52 ${k-10} Q50 ${k-11} 48 ${k-10} Z`}/>
-    </g>
-    <path data-bart-part="ziegenbart-spitze" d={`M47 ${k-4} Q50 ${k-1} 53 ${k-4} Q52 ${k+4} 50 ${k+9} Q48 ${k+4} 47 ${k-4} Z`}/>
-   </>;
+  }
+  case 5: { // Ziegenbart – dieselbe Kinnzone, aber deutlich schmaler und länger.
+   const h=clamp(kinn.halb*.5,3,4.4);
+   body=<path data-bart-part="ziegenbart-basis" data-bart-chin-top={kinn.oben.toFixed(2)} data-bart-chin-bottom={(k+8).toFixed(2)} data-bart-chin-half={h.toFixed(2)}
+    d={`M${50-h} ${kinn.oben} Q50 ${kinn.oben-.7} ${50+h} ${kinn.oben} L${50+h*.65} ${k-.2} Q52 ${k+4.8} 50 ${k+8} Q48 ${k+4.8} ${50-h*.65} ${k-.2} Z`}/>;
    break;
+  }
   case 6: // Kurzer Vollbart – niedrige Wangenlinie, kurzer sauberer Abschluss.
    body=<g {...clip}><path data-bart-part="vollbart-kurz" d={bartBand({l,r,j,k,top:47,innenY:54,innenHalb:11,kieferLift:9,freiraumY})}/></g>;
    moustacheNode=moustache(10.5,0,0);
@@ -128,13 +139,15 @@ export function Bartform({index=0,kopf={},nase=0,mund=0,farbe='#38241B',hell='#E
    </>;
    moustacheNode=moustache(10.5,0,0);
    break;
-  case 14: // Ankerbart – Schnurrbart plus schmale, ankerförmige Mund-/Kinnkontur.
-   body=<g {...clip}>
-    <path data-bart-part="anker" d={`M46 ${k-10} Q43 ${k-6} 45 ${k-2} Q47 ${k+1} 50 ${k+7} Q53 ${k+1} 55 ${k-2} Q57 ${k-6} 54 ${k-10} L52 ${k-9} Q54 ${k-5} 52 ${k-2} L50 ${k+2} L48 ${k-2} Q46 ${k-5} 48 ${k-9} Z`}/>
-    <path d={`M42 ${k-1} Q50 ${k+6} 58 ${k-1}`} fill="none" stroke={farbe} strokeWidth="2.4" strokeLinecap="round"/>
+  case 14: { // Ankerbart – Oberlippe plus echter Mund→Kinn-Steg und Ankerbogen.
+   const h=clamp(kinn.halb*.88,5,7.7);
+   body=<g data-bart-part="anker" data-bart-chin-top={kinn.oben.toFixed(2)} data-bart-chin-bottom={(k+3.2).toFixed(2)} data-bart-chin-half={h.toFixed(2)}>
+    <path data-bart-part="anker-steg" d={`M47.8 ${kinn.oben} Q50 ${kinn.oben-.55} 52.2 ${kinn.oben} L52.25 ${k-.75} Q50 ${k+1.35} 47.75 ${k-.75} Z`}/>
+    <path data-bart-part="anker-bogen" d={`M${50-h} ${k-1.35} Q${50-h*.55} ${k+1.2} 50 ${k+3.2} Q${50+h*.55} ${k+1.2} ${50+h} ${k-1.35}`} fill="none" stroke={farbe} strokeWidth="2.45" strokeLinecap="round"/>
    </g>;
    moustacheNode=moustache(10,0,0);
    break;
+  }
   case 15: // Breiter Vollbart – tiefe Wangenlinie, maximaler Kieferkörper, breiter Abschluss.
    body=<>
     <g {...clip}><path data-bart-part="vollbart-breit-basis" d={bartBand({l,r,j,k,top:43,innenY:55,innenHalb:13,kieferLift:8,freiraumY})}/></g>
@@ -145,7 +158,7 @@ export function Bartform({index=0,kopf={},nase=0,mund=0,farbe='#38241B',hell='#E
    break;
  }
  const mundX=38.5,mundW=23,mundY=face.mundTop-.7,mundH=Math.max(2.4,face.mundBottom-face.mundTop+1.4);
- return <g data-bart-id={id} data-bart-profil={kopf?.profil||'standard'} data-bart-nase={nase} data-bart-mund={mund} data-bart-mundy={face.mundY.toFixed(2)} data-bart-nasebottom={face.naseBottom.toFixed(2)} fill={farbe} strokeLinejoin="round">
+ return <g data-bart-id={id} data-bart-profil={kopf?.profil||'standard'} data-bart-nase={nase} data-bart-mund={mund} data-bart-mundy={face.mundY.toFixed(2)} data-bart-nasebottom={face.naseBottom.toFixed(2)} data-bart-mundbottom={face.mundBottom.toFixed(2)} data-bart-kinn-y={k.toFixed(2)} data-bart-kiefer={j.toFixed(2)} fill={farbe} strokeLinejoin="round">
   <defs><mask id={mundMask} maskUnits="userSpaceOnUse"><rect x="0" y="0" width="100" height="110" fill="white"/><rect x={mundX} y={mundY} width={mundW} height={mundH} rx="4" fill="black"/></mask></defs>
   {body&&<g mask={`url(#${mundMask})`}>{body}</g>}
   {moustacheNode}

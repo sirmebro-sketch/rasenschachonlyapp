@@ -7,7 +7,7 @@
     "build": "vite build",
     "test": "node --test tools/*.test.cjs",
     "dev": "vite",
-    "preview:gallery": "node tools/visuelle-vorschau.cjs && node tools/charakter-inventar.cjs && node tools/kopfformen-vorschau.cjs && node tools/gesichtszuege-vorschau.cjs && node tools/char-fix-01-vorschau.cjs && node tools/baerte-vorschau.cjs && node tools/char-fix-03-vorschau.cjs && node tools/spieltest.cjs",
+    "preview:gallery": "node tools/visuelle-vorschau.cjs && node tools/charakter-inventar.cjs && node tools/kopfformen-vorschau.cjs && node tools/gesichtszuege-vorschau.cjs && node tools/char-fix-01-vorschau.cjs && node tools/baerte-vorschau.cjs && node tools/char-fix-03-vorschau.cjs && node tools/char-fix-04-vorschau.cjs && node tools/spieltest.cjs",
     "test:browser": "playwright test"
   },
   "dependencies": {
