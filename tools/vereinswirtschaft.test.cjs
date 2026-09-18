@@ -28,6 +28,12 @@ test('Währung: Anzeige folgt dem Land, Rechnung bleibt in Euro', () => {
   assert.equal(W.geldText(1.5, 'GER'), '1,5 Mio €');
   assert.equal(W.geldText(-3, 'GER', false), '-3 Mio', 'Minusbeträge bleiben lesbar');
   assert.equal(W.geldText(10, 'JPN'), '1,6 Mrd ¥', 'grosse Landeswährungen wechseln auf Milliarden');
+  /* Null bekommt keine Einheit. „0 Tsd €" für eine leere Kasse las sich beim
+     Rundgang durch die Oberfläche wie ein Messfehler; im Partnerkopf stand es
+     sogar in Erfolgsgrün. Gilt in jeder Währung, auch ohne Symbol. */
+  assert.equal(W.geldText(0, 'GER'), '0 €', 'die leere Kasse sagt einfach null');
+  assert.equal(W.geldText(0, 'JPN'), '0 ¥', 'auch dort, wo der Kurs die Null streckt');
+  assert.equal(W.geldText(0, 'GER', false), '0', 'ohne Symbol bleibt die blanke Null');
 });
 
 test('Einnahmen entstehen nur aus belegten Posten und die Summe stimmt', () => {
