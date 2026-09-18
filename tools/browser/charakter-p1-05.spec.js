@@ -10,32 +10,80 @@ const gespeicherteZuege=async(page,spieler)=>page.evaluate((name)=>{
  return null;
 },spieler);
 
-for(const url of ['/', '/.preview/spieltest.html'])test('CHAR-P1-05: Feineinstellung bleibt bei 320/390 px bedienbar und speichert die Auswahl '+url,async({page},testInfo)=>{
- test.skip(!['schmal','handy'].includes(testInfo.project.name),'CHAR-P1-05 nimmt die beiden geforderten Smartphone-Breiten ab.');
- const errors=[];page.on('pageerror',e=>errors.push(e.message));
- await page.goto(url);
- await page.getByRole('button',{name:'Überspringen'}).click();
- await page.getByRole('button',{name:'NEUE LAUFBAHN ab Seite 3'}).click();
+const touchWisch=async(page,rail,richtung='links')=>{
+ const box=await rail.boundingBox();
+ expect(box).not.toBeNull();
+ const cdp=await page.context().newCDPSession(page);
+ const y=Math.round(box.y+box.height/2);
+ const von=Math.round(box.x+box.width*(richtung==='links'?.82:.18));
+ const bis=Math.round(box.x+box.width*(richtung==='links'?.18:.82));
+ await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x:von,y}]});
+ for(let i=1;i<=6;i++){
+  const x=Math.round(von+(bis-von)*(i/6));
+  await cdp.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[{x,y}]});
+  await page.waitForTimeout(18);
+ }
+ await cdp.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});
+ await cdp.detach();
+ await page.waitForTimeout(260);
+};
 
- const spieler='Alex P105';
- await page.getByRole('textbox',{name:'Name der Spielerin oder des Spielers'}).fill(spieler);
+const oeffneErstellung=async(page,url)=>{
+ await page.goto(url);
+ if(url.includes('sichtprobe')){
+  await page.getByRole('button',{name:'erstellung',exact:true}).click();
+ }else{
+  await page.getByRole('button',{name:'Überspringen'}).click();
+  await page.getByRole('button',{name:'NEUE LAUFBAHN ab Seite 3'}).click();
+ }
  const fein=page.getByRole('button',{name:'Feinheiten',exact:true});
  await fein.click();
  await expect(fein).toHaveAttribute('aria-expanded','true');
  const panel=page.locator('[id$="-feinheiten"]');
  await expect(panel).toBeVisible();
+ const rail=panel.locator('[data-char-kategorien="true"]');
+ const hinweis=panel.locator('.char-kategorie-hinweis');
+ await expect(rail).toBeVisible();
+ await expect(hinweis).toBeVisible();
+ return {panel,rail,hinweis};
+};
 
- // Die Seite selbst darf nicht seitlich weglaufen. Nur die Kategorien haben
- // bewusst ihre eigene horizontale Wischspur. Der Container wird ueber einen
- // stabil benannten echten Knopf verankert statt ueber einen :has-Locator.
+const bisZumEndeWischen=async(page,rail)=>{
+ for(let i=0;i<6 && await rail.getAttribute('data-am-ende')!=='true';i++)await touchWisch(page,rail,'links');
+ await expect(rail).toHaveAttribute('data-am-ende','true');
+};
+
+for(const url of ['/', '/.preview/spieltest.html'])test('CHAR-P1-05: Feineinstellung bleibt bedienbar, Wischhinweis reagiert und Auswahl wird gespeichert '+url,async({page},testInfo)=>{
+ test.skip(!['schmal','handy'].includes(testInfo.project.name),'CHAR-P1-05 nimmt die beiden geforderten Smartphone-Breiten ab.');
+ const errors=[];page.on('pageerror',e=>errors.push(e.message));
+ const {panel,rail,hinweis}=await oeffneErstellung(page,url);
+
+ // Am linken Rand sagt die Leiste ausdrücklich, dass rechts weitere Kategorien
+ // folgen. Die Seite selbst darf weiterhin nicht horizontal überlaufen.
  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth+1)).toBe(true);
- const hautKat=page.getByRole('button',{name:/^Hautton(?: · fest)?$/});
- const rail=hautKat.locator('..');
- const railMass=await rail.evaluate(el=>({scrollWidth:el.scrollWidth,clientWidth:el.clientWidth}));
+ const railMass=await rail.evaluate(el=>({scrollWidth:el.scrollWidth,clientWidth:el.clientWidth,scrollLeft:el.scrollLeft}));
  expect(railMass.scrollWidth).toBeGreaterThan(railMass.clientWidth);
+ expect(railMass.scrollLeft).toBeLessThanOrEqual(2);
+ await expect(rail).toHaveAttribute('data-am-anfang','true');
+ await expect(hinweis).toHaveText('Wischen · weitere Kategorien →');
+ await page.screenshot({path:testInfo.outputPath('char-p1-05-wisch-start.png'),fullPage:false});
+
+ // Echter Touch-Wischweg über CDP statt direkter Manipulation von scrollLeft.
+ await touchWisch(page,rail,'links');
+ await expect.poll(()=>rail.evaluate(el=>el.scrollLeft)).toBeGreaterThan(20);
+ await expect(rail).toHaveAttribute('data-am-anfang','false');
+ await expect(rail).toHaveAttribute('data-am-ende','false');
+ await expect(hinweis).toHaveText('← Kategorien wischen →');
+
+ // Zurück zum Anfang wischen; die Auswahl-/Festhalteprüfung beginnt damit in
+ // derselben Ausgangslage wie zuvor.
+ await touchWisch(page,rail,'rechts');
+ await expect.poll(()=>rail.getAttribute('data-am-anfang')).toBe('true');
+ await expect(hinweis).toHaveText('Wischen · weitere Kategorien →');
 
  // Sichtbare aktuelle Auswahl plus Festhalten: zwei Merkmale festlegen, dann
- // wuerfeln. Beide muessen unveraendert markiert bleiben.
+ // würfeln. Beide müssen unverändert markiert bleiben.
+ const hautKat=page.getByRole('button',{name:/^Hautton(?: · fest)?$/});
  const hautKatBox=await hautKat.boundingBox();
  expect(hautKatBox.height).toBeGreaterThanOrEqual(44);
  await hautKat.click();
@@ -58,15 +106,22 @@ for(const url of ['/', '/.preview/spieltest.html'])test('CHAR-P1-05: Feineinstel
  await hautKat.click();
  await expect(haut).toHaveAttribute('aria-pressed','true');
 
- // Auch die spaeten Kategorien muessen ueber dieselbe Wischspur erreichbar
- // bleiben, statt unter einem langen Knopfteppich zu verschwinden.
- await rail.evaluate(el=>{el.scrollLeft=el.scrollWidth;});
+ // Auch der Weg bis ans rechte Ende erfolgt durch echte Touch-Gesten. Dort
+ // dreht der Hinweis sinnvoll um und die späte Kategorie bleibt klickbar.
+ await bisZumEndeWischen(page,rail);
+ await expect(hinweis).toHaveText('← Frühere Kategorien · wischen');
  const details=page.getByRole('button',{name:'Besondere Merkmale',exact:true});
  await details.click();
  await expect(details).toHaveAttribute('aria-pressed','true');
  await expect(panel.locator('button.btn[aria-pressed]:not(.sm)').first()).toBeVisible();
+ await page.screenshot({path:testInfo.outputPath('char-p1-05-wisch-ende.png'),fullPage:false});
 
- // Pflichtaktionen bleiben trotz Sticky-Vorschau und geoeffnetem Panel frei.
+ const endeVorher=await rail.evaluate(el=>el.scrollLeft);
+ await touchWisch(page,rail,'rechts');
+ await expect.poll(()=>rail.evaluate(el=>el.scrollLeft)).toBeLessThan(endeVorher-10);
+ await expect(hinweis).toHaveText('← Kategorien wischen →');
+
+ // Pflichtaktionen bleiben trotz Sticky-Vorschau und geöffnetem Panel frei.
  const start=page.getByRole('button',{name:"Los geht's",exact:true});
  const zurueck=page.getByRole('button',{name:'Zurück',exact:true});
  for(const knopf of [start,zurueck]){
@@ -74,14 +129,50 @@ for(const url of ['/', '/.preview/spieltest.html'])test('CHAR-P1-05: Feineinstel
   const box=await knopf.boundingBox();
   expect(box.height).toBeGreaterThanOrEqual(44);
  }
- await page.screenshot({path:testInfo.outputPath('char-p1-05-feinheiten.png'),fullPage:true});
 
- // Die im Editor gewaehlten stabilen IDs muessen nach dem echten Karrierestart
- // unveraendert im gespeicherten Spieler stehen (Tiefbraun=12, Ankerbart=14).
+ // Die im Editor gewählten stabilen IDs müssen nach dem echten Karrierestart
+ // unverändert im gespeicherten Spieler stehen (Tiefbraun=12, Ankerbart=14).
+ const spieler='Alex P105';
+ await page.getByRole('textbox',{name:'Name der Spielerin oder des Spielers'}).fill(spieler);
  await start.click();
  await expect.poll(()=>gespeicherteZuege(page,spieler)).not.toBeNull();
  const zuege=await gespeicherteZuege(page,spieler);
  expect(zuege.haut).toBe(12);
  expect(zuege.bart).toBe(14);
+ expect(errors).toEqual([]);
+});
+
+test('CHAR-P1-05: isolierte Sichtprobe nutzt denselben Wischhinweis und echte Bedienwege',async({page},testInfo)=>{
+ test.skip(!['schmal','handy'].includes(testInfo.project.name),'CHAR-P1-05 nimmt die beiden geforderten Smartphone-Breiten ab.');
+ const errors=[];page.on('pageerror',e=>errors.push(e.message));
+ const {rail,hinweis}=await oeffneErstellung(page,'/.preview/sichtprobe.html');
+ await expect(hinweis).toHaveText('Wischen · weitere Kategorien →');
+
+ await touchWisch(page,rail,'links');
+ await expect.poll(()=>rail.evaluate(el=>el.scrollLeft)).toBeGreaterThan(20);
+ await expect(hinweis).toHaveText('← Kategorien wischen →');
+
+ const hautKat=page.getByRole('button',{name:/^Hautton(?: · fest)?$/});
+ await hautKat.click();
+ await page.getByRole('button',{name:'Tiefbraun',exact:true}).click();
+ await page.getByRole('button',{name:'Hautton festhalten',exact:true}).click();
+ await expect(hautKat).toHaveAccessibleName('Hautton · fest');
+ await page.getByRole('button',{name:'Freie Merkmale würfeln'}).click();
+ await hautKat.click();
+ await expect(page.getByRole('button',{name:'Tiefbraun',exact:true})).toHaveAttribute('aria-pressed','true');
+
+ await bisZumEndeWischen(page,rail);
+ await expect(hinweis).toHaveText('← Frühere Kategorien · wischen');
+ await page.getByRole('button',{name:'Besondere Merkmale',exact:true}).click();
+
+ // In der Vorschau sind die Callbacks absichtlich leer. Die Buttons werden
+ // trotzdem wirklich geklickt; es darf dabei kein Fehler und keine Pflicht-
+ // zwischenaktion entstehen.
+ const zurueck=page.getByRole('button',{name:'Zurück',exact:true});
+ const start=page.getByRole('button',{name:"Los geht's",exact:true});
+ await expect(zurueck).toBeInViewport();
+ await expect(start).toBeInViewport();
+ await zurueck.click();
+ await start.click();
  expect(errors).toEqual([]);
 });
