@@ -14,18 +14,19 @@ const touchWisch=async(page,rail,richtung='links')=>{
  const box=await rail.boundingBox();
  expect(box).not.toBeNull();
  const cdp=await page.context().newCDPSession(page);
- const y=Math.round(box.y+box.height/2);
- const von=Math.round(box.x+box.width*(richtung==='links'?.82:.18));
- const bis=Math.round(box.x+box.width*(richtung==='links'?.18:.82));
- await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x:von,y}]});
- for(let i=1;i<=6;i++){
-  const x=Math.round(von+(bis-von)*(i/6));
-  await cdp.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[{x,y}]});
-  await page.waitForTimeout(18);
- }
- await cdp.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});
+ /* Chromiums Synthese erzeugt die eigentliche Touch-Scrollgeste. Ein nacktes
+    dispatchTouchEvent feuert zwar Touch-Events, löst in headless Chromium
+    aber nicht zuverlässig das native Scrollen eines Overflow-Containers aus. */
+ await cdp.send('Input.synthesizeScrollGesture',{
+  x:Math.round(box.x+box.width/2),
+  y:Math.round(box.y+box.height/2),
+  xDistance:Math.round(box.width*.58)*(richtung==='links'?-1:1),
+  speed:650,
+  preventFling:true,
+  gestureSourceType:'touch'
+ });
  await cdp.detach();
- await page.waitForTimeout(260);
+ await page.waitForTimeout(180);
 };
 
 const oeffneErstellung=async(page,url)=>{
