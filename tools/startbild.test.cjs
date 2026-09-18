@@ -1,6 +1,20 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
+const crypto = require('node:crypto');
 const fs = require('node:fs');
+
+function startbildDaten() {
+  let b64 = '';
+  for (let i = 1; i <= 8; i++) {
+    const text = fs.readFileSync('public/startbild/part-0' + i + '.js', 'utf8');
+    const match = text.match(i === 1
+      ? /data:image\/webp;base64,([A-Za-z0-9+/=]+)";\s*$/
+      : /\+="([A-Za-z0-9+/=]+)";\s*$/);
+    assert.ok(match, 'Startbildteil ' + i + ' ist nicht lesbar');
+    b64 += match[1];
+  }
+  return Buffer.from(b64, 'base64');
+}
 
 test('Startbild ist vor React vorhanden und hat Ladeanzeige', () => {
   const html = fs.readFileSync('index.html', 'utf8');
@@ -8,30 +22,29 @@ test('Startbild ist vor React vorhanden und hat Ladeanzeige', () => {
   const root = html.indexOf('id="root"');
   assert.ok(splash >= 0, 'Startbild fehlt im HTML');
   assert.ok(root > splash, 'Startbild muss vor dem React-Root stehen');
-  assert.match(html, /src="__RASENSCHACH_STARTBILD__"/);
+  for (let i = 1; i <= 8; i++) {
+    assert.match(html, new RegExp('startbild/part-0' + i + '\\.js'));
+  }
+  assert.match(html, /id="startup-splash-image"/);
+  assert.match(html, /startup-splash-image"\)\.src\s*=\s*window\.__RASENSCHACH_STARTBILD__/);
   assert.match(html, /class="startup-spinner"/);
   assert.match(html, /top:\s*64%/);
   assert.match(html, /prefers-reduced-motion:[^}]+[\s\S]*?startup-spinner\s*\{\s*animation:\s*none;/);
   assert.doesNotMatch(html, /drawable-port-xhdpi\/splash\.png/);
 });
 
-test('Das gelieferte Motiv ist ein vollstaendiges lokales 720x1280-WebP', () => {
-  const b64 = fs.readFileSync('startbild.b64', 'utf8').trim();
-  assert.ok(b64.length > 80000, 'Startbilddaten sind unerwartet klein');
-  const data = Buffer.from(b64, 'base64');
+test('Geliefertes Motiv ist exakt das gepruefte 720x1280-WebP', () => {
+  const data = startbildDaten();
+  assert.equal(data.length, 47528);
   assert.equal(data.subarray(0, 4).toString('ascii'), 'RIFF');
   assert.equal(data.subarray(8, 12).toString('ascii'), 'WEBP');
   assert.equal(data.subarray(12, 16).toString('ascii'), 'VP8 ');
-  const width = data.readUInt16LE(26) & 0x3fff;
-  const height = data.readUInt16LE(28) & 0x3fff;
-  assert.equal(width, 720);
-  assert.equal(height, 1280);
-});
-
-test('Vite bettet genau die lokalen Bilddaten in den Startscreen ein', () => {
-  const vite = fs.readFileSync('vite.config.js', 'utf8');
-  assert.match(vite, /readFileSync\(new URL\("\.\/startbild\.b64"/);
-  assert.match(vite, /html\.replace\(STARTBILD_TOKEN,\s*`data:image\/webp;base64,\$\{startbildBase64\}`\)/);
+  assert.equal(data.readUInt16LE(26) & 0x3fff, 720);
+  assert.equal(data.readUInt16LE(28) & 0x3fff, 1280);
+  assert.equal(
+    crypto.createHash('sha256').update(data).digest('hex'),
+    'a1a72c6bdd14d15564ba63cd5adcfe306f4666ba45eaa2a87329e6d67e2ec927'
+  );
 });
 
 test('Startbild bleibt mindestens kurz sichtbar und wird danach entfernt', () => {
