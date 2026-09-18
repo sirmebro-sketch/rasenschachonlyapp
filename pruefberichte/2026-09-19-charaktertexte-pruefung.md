@@ -92,7 +92,8 @@ verständlich, nennt aber mobile Scrollarbeit als verbleibenden Bedienungsrest.
 - Keine Produktdatei, kein sichtbarer Produkttext, keine Spielregel, keine Version,
   keine App-ID und keine Release-Datei geändert.
 - Für diesen reinen Dokumentations-PR wurden bewusst kein APK-Build und keine
-  Produktregression als neue Evidenz behauptet. Nach dem Commit wird der Branch-Diff
-  gegen `main` kontrolliert.
+  Produktregression als neue Evidenz behauptet.
+- Branch-Diff gegen `main` kontrolliert: genau eine neue Datei unter `pruefberichte/`,
+  keine Änderung an Produkttexten, Produktcode, Version oder Release-Dateien.
 
 **Status: zur Astra-Abnahme; noch nicht integriert. Kein Merge, kein Release.**
