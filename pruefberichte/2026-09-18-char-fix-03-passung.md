@@ -39,4 +39,14 @@ Der erste PR-Browserlauf zeigte:
 
 ## Status
 
-Noch **nicht final abgenommen**. Die zweite Kinngrübchen-Korrektur hat die sichere Patch-Brücke inklusive Regressionen und Produktionsbuild bestanden. Spielregressionen und der vollständige Browserlauf müssen nun auf demselben normalen PR-Head erneut grün sein. Danach werden Artefakt/Screenshots erneut geprüft und dieser Bericht mit finalen Run-IDs ergänzt.
+## Finale Abnahme
+
+**Final abgenommen auf PR-Head `0735e3693bfdb7c227ce71d73cb037798a677183`.**
+
+- Spielregressionen: Run `35302081941` — erfolgreich.
+- Visuelle Browsertests: Run `35302081943` — erfolgreich.
+- Der CHAR-FIX-03-Browserbogen rendert 700 Frisur×Kopf- und 896 kritische Bartdarstellungen ohne Browserfehler/ungültige Geometrie.
+- Die erzeugten Vollmatrizen wurden zusätzlich visuell geprüft: keine offensichtlichen zu kleinen/hochgerutschten Frisuren in den geprüften Kopfprofilen; Schnurrbärte bleiben unterhalb der Nase; Bartkörper respektieren Mund/Kinn; Kopfmasken schneiden seitliche Überstände sauber.
+- Die zuvor pixelidentische Wangen-ID 1 ist nach der zweiten Kinngrübchen-Korrektur in 72/96 px rasterseitig unterscheidbar; der bestehende CHAR-P1-02-Rastertest ist im finalen Browserlauf grün.
+
+Damit ist CHAR-FIX-03 für die hier geprüfte Kombinationsmatrix abgeschlossen. Neue Frisuren/Bärte oder spätere Änderungen an Kopf-, Nasen- oder Mundgeometrie müssen diesen Vollbogen erneut bestehen.
