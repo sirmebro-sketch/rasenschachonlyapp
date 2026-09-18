@@ -61,6 +61,7 @@ for(const url of ['/', '/.preview/spieltest.html'])test('CHAR-P1-05: Feineinstel
  expect(railMass.scrollLeft).toBeLessThanOrEqual(8);
  await expect(rail).toHaveAttribute('data-am-anfang','true');
  await expect(hinweis).toHaveText('Wischen · weitere Kategorien →');
+ await rail.scrollIntoViewIfNeeded();
  await page.screenshot({path:testInfo.outputPath('char-p1-05-wisch-start.png'),fullPage:false});
 
  // Browser-Eingabe auf der Leiste statt direkter Manipulation von scrollLeft.
@@ -142,6 +143,8 @@ test('CHAR-P1-05: isolierte Sichtprobe nutzt denselben Wischhinweis und echte Be
  const errors=[];page.on('pageerror',e=>errors.push(e.message));
  const {rail,hinweis}=await oeffneErstellung(page,'/.preview/sichtprobe.html');
  await expect(hinweis).toHaveText('Wischen · weitere Kategorien →');
+ await rail.scrollIntoViewIfNeeded();
+ await page.screenshot({path:testInfo.outputPath('char-p1-05-vorschau-start.png'),fullPage:false});
 
  await horizontalWisch(page,rail,'links');
  await expect.poll(()=>rail.evaluate(el=>el.scrollLeft)).toBeGreaterThan(20);
@@ -159,6 +162,7 @@ test('CHAR-P1-05: isolierte Sichtprobe nutzt denselben Wischhinweis und echte Be
  await bisZumEndeWischen(page,rail);
  await expect(hinweis).toHaveText('← Frühere Kategorien · wischen');
  await page.getByRole('button',{name:'Besondere Merkmale',exact:true}).click();
+ await page.screenshot({path:testInfo.outputPath('char-p1-05-vorschau-ende.png'),fullPage:false});
 
  // In der Vorschau sind die Callbacks absichtlich leer. Die Buttons werden
  // trotzdem wirklich geklickt; es darf dabei kein Fehler und keine Pflicht-
