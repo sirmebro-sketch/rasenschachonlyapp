@@ -1,63 +1,53 @@
-# Lemming-Paket – Startbild / Ladescreen – 18.09.2026
+# Lemming-Paket – Startbild/Ladescreen – 18.09.2026
 
 **Rolle:** Lemming  
-**Basiscommit:** `703d377e8eaa7932b6f5fed62ca313807ad16486` (`main`, Paketversion 35.194.1)  
+**Basiscommit:** `703d377e8eaa7932b6f5fed62ca313807ad16486`  
 **Branch:** `lemming/startbild-ladescreen`  
-**Auftrag:** Das von Kevin gelieferte Rasenschach-XI-Motiv direkt beim Appstart kurz als hochwertigen Ladescreen zeigen, mit kleinem Ladekreis unter dem „XI“. Zusätzlich soll der Branch als getrennte Beta-APK testbar sein, ohne main-Merge oder Release.
+**Releasezustand:** nicht integriert, kein main-Merge, kein Release.
 
-## Problem und Lösung
+## Auftrag
 
-Die erste Beta-Kontrolle hat einen wichtigen Fehler aufgedeckt: Die vorhandenen Android-`splash.png`-Ressourcen zeigen noch das alte Capacitor-Standardmotiv und sind **nicht** Kevins geliefertes Stadionbild. Diese erste Beta wurde deshalb verworfen und nicht als fertiger Teststand ausgegeben.
+Kevins Rasenschach-XI-Stadionmotiv soll beim Appstart kurz als app-eigener Ladescreen erscheinen. Unter dem großen „XI“ sitzt ein kleiner Ladekreis. Der Branch soll als getrennte Beta installierbar sein.
 
-Das gelieferte Motiv liegt nun in einer auf 720 × 1280 px optimierten WebP-Fassung mit 47.528 Byte vor. Weil der GitHub-Schreibweg in diesem Chat keine Binärdatei direkt annehmen kann, wird es verlustfrei als Base64-Daten in acht lokalen JavaScriptteilen unter `public/startbild/` abgelegt und unmittelbar im HTML zusammengesetzt. Es gibt keinen Netzwerkabruf und keine Abhängigkeit von den falschen Android-Standardgrafiken.
+## Erster Beta-Test: Fehler gefunden
 
-`index.html` setzt das Motiv **direkt vor React** als ersten app-eigenen Bildschirm. Ein kleiner rot-weißer Spinner liegt bei ca. 64 % Bildschirmhöhe unter dem großen „XI“. `main.jsx` blendet den Screen nach mindestens **2,2 Sekunden** weich aus. Braucht der Bundle-Start selbst länger, wird keine zusätzliche volle Wartezeit addiert. Bei systemweit reduzierter Bewegung bleibt der Ring sichtbar, rotiert aber nicht.
+Die erste Beta war technisch grün, auf Kevins Android-Gerät erschien jedoch **nicht** das gewünschte Stadionmotiv. Sichtbar war eine weiße Fläche mit blauem Capacitor-Platzhalter; nur der neue Ladekreis war korrekt vorhanden.
 
-Auf Android 12+ (einschließlich Android 16) ist der kurze systemseitige Android-Startscreen vor dem WebView technisch vorgegeben; das frei gestaltbare Vollbildmotiv kann erst direkt danach als erster app-eigener Screen erscheinen. Dieses Paket verändert den systemseitigen Android-Splash nicht, sondern stellt sicher, dass **unmittelbar danach Kevins Motiv** statt der alten Capacitor-Grafik im app-eigenen Ladescreen erscheint.
+Ursache: Die erste Fassung referenzierte `android/app/src/main/res/drawable-port-xhdpi/splash.png`. Die Annahme, diese vorhandene Ressource enthalte bereits Kevins Motiv, war falsch. Der grüne Build bewies lediglich, dass die Datei ausgeliefert wurde, nicht dass sie die richtige Grafik enthielt. Dieser erste Beta-Lauf gilt für die Bilddarstellung ausdrücklich als verworfen.
 
-## Getrennte Beta-APK
+## Korrigierte Lösung
 
-`.github/workflows/beta-apk.yml` baut bei diesem PR zusätzlich eine **Debug-Beta mit eigener App-ID `de.rasenschach.xi.beta`** und dem Namen „Rasenschach XI Beta“. Sie kann deshalb neben der produktiven App installiert werden und verwendet deren Release-Signatur nicht. Der Workflow enthält keine Signier-Secrets und veröffentlicht keinen Release; er lädt lediglich das kurzlebige Actions-Artefakt `Rasenschach-XI-Beta-APK` hoch.
+Das tatsächlich gelieferte Motiv wurde als 720×1280-WebP für den Ladescreen vorbereitet. Die Bilddaten liegen offline in `startbild.b64` (83.704 Base64-Zeichen). `vite.config.js` liest diese Datei beim Build und ersetzt den Platzhalter `__RASENSCHACH_STARTBILD__` direkt durch eine `data:image/webp;base64,...`-URL in `index.html`.
 
-## Automatische Prüfung
+Damit hängt der app-eigene Ladescreen nicht mehr von einer Android-Splashdatei, einem Netzabruf oder einer Laufzeit-Pfadauflösung ab. `index.html` enthält den Ladescreen vor dem React-Root; `main.jsx` hält ihn ab HTML-Start mindestens 2,2 Sekunden sichtbar und blendet ihn anschließend in 300 ms aus. Dauert der eigentliche Start länger, wird keine weitere volle Wartezeit addiert.
 
-Neu: `tools/startbild.test.cjs` schützt folgende Verträge:
+Der Ladekreis bleibt mittig unter dem XI. Bei `prefers-reduced-motion` rotiert er nicht.
 
-- Startbild steht vor dem React-Root im HTML,
-- das gelieferte 9:16-Motiv wird offline aus acht lokalen Datenblöcken zusammengesetzt,
-- Ladeindikator ist vorhanden und unter dem XI positioniert,
-- reduzierte Bewegung stoppt die Rotation,
-- Mindestdauer beträgt 2,2 Sekunden,
-- Startscreen wird nach der Blende aus dem DOM entfernt.
+## Beta
 
-Die vollständigen Projektprüfungen werden am exakten PR-Head von GitHub Actions ausgeführt: Regressionen, Produktionsbuild und Browserprüfungen; der zusätzliche Beta-Workflow baut die getrennte Debug-APK. Ergebnisse werden nach Vorliegen hier bzw. im PR vermerkt.
+`.github/workflows/beta-apk.yml` baut nur für den Test eine Debug-App mit:
+- App-ID `de.rasenschach.xi.beta`,
+- Name „Rasenschach XI Beta“,
+- Debug-Signatur statt Release-Schlüssel,
+- eigenem App-/Speicherbereich, sodass sie neben der produktiven App installiert werden kann.
 
-## Sichtprüfung
+Kein Release und kein main-Merge.
 
-Das gelieferte Originalmotiv ist 864 × 1536 px. Die für den Ladescreen verwendete Fassung ist 720 × 1280 px und damit ebenfalls exakt 9:16. Logo, XI, Ball, Spielfeld und Randtexte bleiben im Hochformat erhalten; der Spinner sitzt unterhalb des XI und oberhalb des unteren Slogans. Die erste erzeugte Beta wurde durch direkte APK-Inspektion als falsch erkannt (Capacitor-Standardgrafik). Erst ein neuer CI-Build auf dem korrigierten PR-Head darf als Test-Beta ausgegeben werden.
+## Regression
 
-## Bewusst nicht geändert
+`tools/startbild.test.cjs` prüft:
+- Ladescreen vor React,
+- Bild-Platzhalter und Spinner,
+- Spinnerposition und Reduced Motion,
+- exakt vollständige Base64-Daten,
+- RIFF/WEBP-Signatur nach dem Dekodieren,
+- Vite-Einbettung als Data-URL,
+- Mindestdauer und Entfernen des Ladescreens.
 
-- keine Paketversion / kein Android-versionCode,
-- kein `main`-Merge,
-- kein Release und keine Release-Signatur,
-- keine Spiel-, Balance-, Speicher- oder Charakterlogik,
-- keine Übernahme fremder PRs.
+## Noch offen
 
-## Status
+Nach der Korrektur müssen Regression, Produktionsbuild, Browserprüfungen und der Beta-APK-Workflow am **neuen** PR-Head erneut grün sein. Danach bleibt nur der erneute echte Android-Gerätetest durch Kevin/Astra. Browser- oder CI-Erfolg wird nicht als Gerätetest ausgegeben.
 
-Umgesetzt auf eigenem Branch; **Astra-Abnahme und CI am PR-Head offen**, bis die GitHub-Läufe vollständig vorliegen. Android-Gerätetest der Beta bleibt Nutzer-/Astra-Sichtung.
+## Nicht Teil dieses Pakets
 
-
-## Korrektur nach dem ersten Android-Gerätetest
-
-Kevins erster Beta-Test hat einen realen Fehler sichtbar gemacht: **Der Ladekreis erschien, das gewünschte Stadionmotiv aber nicht. Stattdessen war eine weiße Fläche mit blauem Capacitor-Platzhalter zu sehen.** Damit war die frühere Annahme falsch, die vorhandene Android-Datei `drawable-port-xhdpi/splash.png` enthalte bereits das gelieferte Motiv. Der grüne Build konnte nur belegen, dass die referenzierte Datei technisch ausgeliefert wurde – nicht, dass es die richtige Grafik war.
-
-Die Korrektur verwendet deshalb nicht länger eine Android-Ressource als indirekte Quelle. Das tatsächlich von Kevin gelieferte 9:16-Motiv wurde als 720×1280-WebP vorbereitet und sein Inhalt in `startbild.b64` hinterlegt. `vite.config.js` setzt diese Daten beim HTML-Build direkt als `data:image/webp;base64,...` in den Startscreen ein. Damit gibt es im APK **keinen Dateipfad, keinen Netzabruf und keine Abhängigkeit vom nativen Capacitor-Platzhalter** für diesen Web-Ladescreen.
-
-Die Regression prüft nun nicht nur einen Dateinamen, sondern:
-- dass die Bilddaten vollständig vorhanden sind,
-- dass die dekodierten Daten tatsächlich RIFF/WEBP sind,
-- und dass Vite genau diese Daten in `index.html` einbettet.
-
-Nach dieser Korrektur sind Regression, Produktionsbuild, Browsertest und Beta-APK am neuen PR-Head erneut Pflicht. Der erste grüne Beta-Lauf gilt für die Bilddarstellung ausdrücklich **nicht** als bestanden.
+Keine Spiel-, Speicher-, Balance-, Charakter-, Signatur- oder Releaseänderung. Andere offene PRs bleiben unberührt.
