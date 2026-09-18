@@ -166,7 +166,7 @@ Die Reihenfolge ist eine Qualitäts-/Risikoreihenfolge. Der letzte Nutzerauftrag
 
 **Abnahme:** kein Hals-/Hautdurchscheinen außerhalb der vorgesehenen Kragenöffnung, keine neuen Hals-/Kragen-Clippings oder sichtbaren Spalten, Porträt-IDs und gespeicherte Charaktere bleiben kompatibel, kleine und große Darstellung sind sichtbar geprüft.
 
-### CHAR-FIX-04 – Bart-/Kurzhaar-Restpassung — SICHTPRÜFUNG
+### CHAR-FIX-04 – Bart-/Kurzhaar-Restpassung — ERLEDIGT
 
 **Anlass:** Die formale CHAR-FIX-03-Matrix war grün, aber die anschließende echte Nutzersichtung zeigt weiterhin konkrete Passungsfehler. Besonders **Kinnbart (Bart-ID 4)** und **Ankerbart (Bart-ID 14)** sitzen falsch; weitere Bartformen müssen deshalb systematisch mitgeprüft werden. Außerdem sind viele kurze Frisuren auf den vier neueren Kopfformen **Trapez (Kopf 10)**, **Langkantig (11)**, **Diamant (12)** und **Kurzbreit (13)** zu klein bzw. decken die reale Kopfkontur oben/seitlich nicht, sodass Haut sichtbar durchscheint.
 
@@ -190,6 +190,8 @@ Die Reihenfolge ist eine Qualitäts-/Risikoreihenfolge. Der letzte Nutzerauftrag
 **Technik:** Bestehende IDs bleiben unverändert. `haarformen.jsx`, `bartformen.jsx`, `gesichtsanker.js` und der echte `Avatar` in `App.jsx` sind gemeinsam zu betrachten. Die reale Kopfmaske/`kopfpfad` soll Quelle der Passung bleiben. Keine Sonderfälle nur für einzelne gespeicherte Porträt-IDs, wenn eine geometrische Regel das Problem sauber lösen kann.
 
 **Abnahme:** Vorher/Nachher-Sichtbogen mit allen vier neuen Köpfen und den kritischen Kurzhaarformen; Bart-Vollbogen mit mindestens allen 15 Bart-IDs auf den vier neuen Köpfen sowie repräsentativen alten Köpfen. Kleine Spielgröße (72/96 px) und große Vorschau prüfen. Automatische Tests müssen zusätzlich **Hautkeile/Abdeckungsfehler** und **Bartanker-Lage** stärker absichern als CHAR-FIX-03. Build/Browser grün allein gilt ausdrücklich nicht als visuelle Abnahme.
+
+**Abschluss 18.09.2026:** PR #22 / CHAR-FIX-04 wurde mit eigener 72/96/145-px-Matrix, Kopfkontur-Diagnose und Bart-Vollprüfung abgenommen. Kinnbart 4 und Ankerbart 14 sitzen in der finalen Sichtung am tatsächlichen Kinnzentrum; die kritischen Kurzhaarformen auf Kopf 10–13 zeigen keine unbeabsichtigten oberen/seitlichen Hautspalten. Details und CI-Belege: `pruefberichte/2026-09-18-char-fix-04-passung.md`.
 
 ### CARD-P0-01 – Schichtenvertrag für Spielerkarten — BEREIT
 
