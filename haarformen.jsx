@@ -115,7 +115,10 @@ export function Haarform({index=0,weiblich=false,breite=24,farbe,hell,ebene='vor
  if(typ==='schulter')d='M24 47 C21 23 30 8 50 9 C70 8 79 23 76 47 L69 55 L67 32 Q58 26 51 22 Q43 26 33 32 L31 55 Z';
  if(typ==='flechtkranz')d='M25 42 C22 25 30 11 43 10 Q50 4 57 10 C70 11 78 25 75 42 Q66 33 60 33 Q50 28 40 33 Q33 33 25 42 Z';
  if(typ==='mittellocken')d='M23 46 Q19 35 24 28 Q21 21 30 18 Q30 10 39 12 Q45 5 51 11 Q60 6 67 14 Q77 14 77 25 Q82 34 75 46 L70 51 Q64 40 58 42 Q50 37 43 42 Q35 38 29 50 Z';
- if(typ==='langlocken')d='M23 47 Q19 35 24 27 Q21 19 31 17 Q32 9 40 11 Q46 4 52 10 Q62 5 68 14 Q78 14 77 25 Q82 34 75 48 L70 59 Q64 47 58 49 Q50 42 43 49 Q35 45 29 59 Z';
+ /* CHAR-FIX-05: "Lange Locken" rahmen das Gesicht statt als geschlossene
+    Haarplatte bis über Augen/Wangen zu laufen. Krone und seitliche Locken sind
+    getrennte Teilpfade; die bestehende Schädel-Unterlage schließt den Ansatz. */
+ if(typ==='langlocken')d='M23 39 Q20 30 24 25 Q22 18 31 16 Q33 9 40 11 Q46 4 52 10 Q62 5 68 14 Q77 14 77 24 Q80 29 76 38 Q68 31 61 32 Q55 27 50 30 Q44 27 38 32 Q31 31 23 39 Z M23 34 Q18 44 23 52 Q19 61 25 70 Q28 73 31 69 Q27 61 31 53 Q26 46 33 37 Z M77 34 Q82 44 77 52 Q81 61 75 70 Q72 73 69 69 Q73 61 69 53 Q74 46 67 37 Z';
  if(typ==='boxbraids')d='M25 43 C22 24 31 9 50 9 C69 9 78 24 75 43 Q68 34 61 33 Q50 27 39 33 Q32 34 25 43 Z M29 31 L26 58 L30 58 L34 34 Z M71 31 L74 58 L70 58 L66 34 Z';
  if(typ==='locsgebunden')d='M25 42 C23 23 31 10 48 9 Q66 7 76 28 L72 36 Q63 29 51 29 Q38 29 29 38 Z';
  if(typ==='fringe')d='M26 43 C22 25 31 10 49 9 Q69 8 76 29 L72 35 Q63 27 56 31 Q52 38 43 47 Q38 50 39 40 Q31 37 26 43 Z';
