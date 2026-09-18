@@ -29,7 +29,7 @@ Für die Vergleichsmatrix wurde nur die **temporäre Vorschau-Fixture im Arbeits
 - helles Porträt: moderner Stil (`stil: 2`), Hautindex 6 (`#F7DDC8`), helle Haare.
 - dunkles Porträt: moderner Stil (`stil: 2`), Hautindex 13 (`#493128`), dunkle Haare.
 - Bewegung aus: tatsächlicher Galerie-Schalter **„Animationen aus“**; danach waren in den gespeicherten Ansichten keine Kartenanimationen aktiv.
-- Bewegung an: echte Materialanimation; für einen reproduzierbaren Screenshot wurden die laufenden Web-Animations nach dem Rendern bei **2,2 s** pausiert. Das ist ein definierter Moment der Bewegung, nicht die Behauptung eines zeitlichen Worst Case.
+- Bewegung an: echte Materialanimation; für einen reproduzierbaren Screenshot wurden die laufenden Web-Animationen nach dem Rendern bei **2,2 s** pausiert. Das ist ein definierter Moment der Bewegung, nicht die Behauptung eines zeitlichen Worst Case.
 
 ### Tatsächlich angesehene Screenshots
 
@@ -60,7 +60,7 @@ Als Orientierung verlangt WCAG 2.2 für normalen Text mindestens **4,5:1** Kontr
 
 **Reproduktion:** kleine oder große Matrix, jeweils linke Spalte „Animation“; Gold und Legendär mit der rechten Spalte „Animation aus“ vergleichen.
 
-Der Materialeffekt liegt technisch bereits **hinter** dem KarteninHalt (`KartenEffekt` mit `zIndex: -1`); das frühere direkte Übermalen des Inhalts ist also nicht mehr das Problem. Die helle wandernde Materialfläche verändert aber den Hintergrund direkt unter dem sehr kleinen grauen Sekundärtext so stark, dass **Alter** und vor allem **„Spielmacher“** zeitweise kaum noch vom Untergrund abheben.
+Der Materialeffekt liegt technisch bereits **hinter** dem Karteninhalt (`KartenEffekt` mit `zIndex: -1`); das frühere direkte Übermalen des Inhalts ist also nicht mehr das Problem. Die helle wandernde Materialfläche verändert aber den Hintergrund direkt unter dem sehr kleinen grauen Sekundärtext so stark, dass **Alter** und vor allem **„Spielmacher“** zeitweise kaum noch vom Untergrund abheben.
 
 Snapshot-Median bei 2,2 s: 
 
@@ -92,9 +92,9 @@ Damit ist der Legendär-Befund nicht nur ein Animationsproblem. Der gemeinsame g
 
 ### P3 – Die Eigenschaft bleibt in klein und groß bei 9,5 px und profitiert nicht von der großen Darstellung
 
-**Reproduktion:** in beiden stillen Matrizen Gold/Legendär verglichen. `gross` vergrößert Porträt, Namen und OVR, die Eigenschaft bleibt jedoch `9.5px`; ilter bleibt `10.5px`.
+**Reproduktion:** in beiden stillen Matrizen Gold/Legendär verglichen. `gross` vergrößert Porträt, Namen und OVR, die Eigenschaft bleibt jedoch `9.5px`; Alter bleibt `10.5px`.
 
-Dadurch wird die größe Karte bei der wichtigsten schwachen Textzeile nicht besser lesbar. Das ist kein Überlaufproblem, sondern verschenkter Platz. Besonders zusammen mit P1/P2 fällt die feste 9,5-px-Zeile unnötig ab.
+Dadurch wird die große Karte bei der wichtigsten schwachen Textzeile nicht besser lesbar. Das ist kein Überlaufproblem, sondern verschenkter Platz. Besonders zusammen mit P1/P2 fällt die feste 9,5-px-Zeile unnötig ab.
 
 **Priorität:** **P3 / niedrig bis mittel**.
 
