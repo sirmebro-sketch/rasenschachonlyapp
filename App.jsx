@@ -17879,7 +17879,14 @@ function FlutlichtApp() {
     // Akademiejahr zuerst, sämtliche VC danach in genau einer Gesamtbuchung.
     const hausFortschritt = saisonenGespielt(q) >= HAUS_MIN_SAISONEN;
     q.hausFortschritt = hausFortschritt;
-    const AK2 = hausFortschritt ? akaVerbuchen(aka, 0) : { a: aka, ereignisse: [] };
+    /* Der Vermaechtnisbonus "Bekannte Adresse" wird hier durchgereicht. Er
+       liegt am VEREIN (`v.bonus`, gesetzt von `neuerVerein` aus dem letzten
+       Abschluss), wirkt aber in der AKADEMIE — deshalb muss er genau hier
+       ueber die Grenze. `?.` faengt den Fall ab, dass noch kein Verein
+       besteht: die Akademie ist frueher freigeschaltet als er. */
+    const AK2 = hausFortschritt
+      ? akaVerbuchen(aka, 0, undefined, verein?.bonus?.aufnahmen)
+      : { a: aka, ereignisse: [] };
     q.akaEreignisse = AK2.ereignisse; q.akaName = AK2.a.name; q.akaAktiv = !!AK2.a.gegruendet;
 
     /* ---- AUS DER JUGEND IN DIE SAMMLUNG (35.125) --------------------------

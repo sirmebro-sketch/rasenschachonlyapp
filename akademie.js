@@ -349,7 +349,13 @@ export const machAkademie = (H) => {
 
   /* Ein Jahr in der Akademie. Gibt den neuen Zustand und die Ereignisse
      zurück, damit man beim nächsten Besuch nachlesen kann, was war. */
-  function akaJahr(a0, weltjahr) {
+  /* `extraAufnahmen` ist der Vermaechtnisbonus "Bekannte Adresse" aus dem
+     VEREIN (`v.bonus.aufnahmen`). Er kommt als Argument herein, weil die
+     Akademie den Verein nicht kennt und auch nicht kennen soll — sie rechnet
+     fuer sich, und die Fabrik `machAkademie(H)` bekommt bewusst keinen
+     Vereinsstand. Ein Feld auf der Akademie zu spiegeln waere die zweite
+     Wahrheit, die frueher oder spaeter von der ersten abweicht. */
+  function akaJahr(a0, weltjahr, extraAufnahmen) {
     const a = {
       ...leereAkademie(), ...a0,
       stufen: { ...leereAkademie().stufen, ...(a0.stufen || {}) },
@@ -529,7 +535,17 @@ export const machAkademie = (H) => {
     a.faelle = (a.faelle || []).filter((f) => !f.erledigt);
 
     /* 3. Neuer Jahrgang */
-    const anzahl = Math.max(1, ri(1, 2) + Math.round(S.scouting * .7));
+    /* DER BONUS WIRD HIER GELESEN. Bis 18.09.2026 versprach das
+       Vermaechtnis-Extra "Bekannte Adresse" (350 Abschlusspunkte) genau das,
+       was sein Text sagt — "Die Akademie nimmt jedes Jahr ein Talent mehr auf"
+       —, und `fx: { aufnahmen: 1 }` landete ueber `neuerVerein` brav in
+       `v.bonus.aufnahmen`. Von dort las es NIEMAND; angezeigt wurde es
+       trotzdem. Dieselbe Sorte Placebo wie das entfernte "Scoutnetz", nur
+       teurer, weil man 350 Punkte dafuer sammelt.
+       Die drei Geschwister hatten laengst Leser: `startOvr` in verein.js:377,
+       `zuwachs` in :958, `ausbauStart` in :1354. Dies ist der vierte. */
+    const bonus = Math.max(0, Math.round(Number(extraAufnahmen) || 0));
+    const anzahl = Math.max(1, ri(1, 2) + Math.round(S.scouting * .7)) + bonus;
     /* Erst der Regelfall, dann die Absicherung: ist im ganzen Haus kein
        Torwart, wird der erste Neuzugang einer. Greift nur im Notfall und
        verschiebt die Verteilung deshalb kaum. */
@@ -650,14 +666,14 @@ export const machAkademie = (H) => {
   };
 
   /* VC gutschreiben und — sofern gegründet — ein Jahr weiterlaufen lassen */
-  function akaVerbuchen(a0, vc, weltjahr) {
+  function akaVerbuchen(a0, vc, weltjahr, extraAufnahmen) {
     const a = { ...leereAkademie(), ...(a0 || {}),
       stufen: { ...leereAkademie().stufen, ...((a0 && a0.stufen) || {}) },
       bilanz: { ...leereAkademie().bilanz, ...((a0 && a0.bilanz) || {}) } };
     a.vc = (a.vc || 0) + vc;
     a.verdient = (a.verdient || 0) + vc;
     if (!a.gegruendet) return { a, ereignisse: [] };
-    return akaJahr(a, (a.jahr || 2026) + 1);
+    return akaJahr(a, (a.jahr || 2026) + 1, extraAufnahmen);
   }
 
   /* Gründung: drei Jahrgänge auf einmal, damit nicht vier Laufbahnen lang

@@ -967,3 +967,70 @@ Prüfkriterien und einen verbindlichen PR-Abschluss zur Astra-Abnahme. Ohne
 Astra-Zuordnung gilt für neue ChatGPT-/Codex-Chats die Lemming-Arbeitsweise.
 Keine automatische Modellerkennung behauptet. Claude bleibt getrennt und seine
 Vereinswirtschaft wurde nicht integriert. Reine Dokumentation, keine neue Version.
+
+## „Bekannte Adresse" bekommt einen Leser (Claude, 18.09.2026)
+
+**Basis-Commit:** `703d377` (`main`). Zur Abnahme durch Astra.
+
+### Der Befund
+
+Das Vermächtnis-Extra **„Bekannte Adresse"** kostet 350 Abschlusspunkte und
+verspricht: „Die Akademie nimmt jedes Jahr ein Talent mehr auf."
+
+```
+verein.js:1063   { id: "netzwerk2", ab: 350, n: "Bekannte Adresse",
+                   fx: { aufnahmen: 1 } }
+App.jsx:9565     v.bonus.aufnahmen ? "+" + v.bonus.aufnahmen + " Aufnahme je Jahr" : null
+```
+
+Der Wert wanderte über `neuerVerein` brav nach `v.bonus.aufnahmen` und wurde im
+Vereinsbildschirm angezeigt. **Gelesen hat ihn niemand.** Die drei Geschwister
+hatten längst Leser — `startOvr` in `verein.js:377`, `zuwachs` in `:958`,
+`ausbauStart` in `:1354`; dieses eine nicht.
+
+Dieselbe Sorte Fehler wie das entfernte „Scoutnetz", nur teurer: 350 Punkte
+sammelt man über mehrere Vereinsleben.
+
+Gefunden beim Nachsehen der offenen Punkte, nicht aus einem Auftrag heraus —
+vermerkt war er seit dem 17.09.2026 als „bestehender Code, nicht aus dieser
+Runde".
+
+### Die Änderung
+
+`akaJahr` und `akaVerbuchen` nehmen einen vierten Parameter `extraAufnahmen`;
+der neue Jahrgang wird um diesen Wert grösser.
+
+**Als Argument, nicht als Feld auf der Akademie.** Die Akademie kennt den
+Verein nicht und soll ihn nicht kennen — `machAkademie(H)` bekommt bewusst
+keinen Vereinsstand. Den Bonus auf der Akademie zu spiegeln wäre die zweite
+Wahrheit, die früher oder später von der ersten abweicht; genau dieser Fehler
+steht als Begründung schon über `CLAUDE.md`.
+
+Durchgereicht wird er im Abschluss-Handler (`App.jsx`), der als Einziger beide
+Seiten sieht. `verein?.bonus?.aufnahmen` fängt ab, dass die Akademie früher
+freigeschaltet ist als der Verein.
+
+### Geprüft
+
+- `npm test` **142/142** (vorher 140), `npm run build` erfolgreich.
+- Zwei neue Regressionen, und die zweite ist der Punkt:
+  1. **Am Rechenkern:** gleiche Saat, einmal mit und einmal ohne Bonus — die
+     Zahl der Aufnahmen unterscheidet sich um genau den Bonus. Dazu die
+     kaputten Fälle: `0`, `-3` und `"kaputt"` ändern nichts und werden nicht
+     zum Geschenk.
+  2. **Über den echten Karriereabschluss.** In `App.jsx` stehen **zwei**
+     Bindungen namens `verein`: die Vereinsablage (`useState`, Zeile 17593)
+     und eine **Zeichenkette** in einer Renderfunktion (Zeile 14705). Greift
+     die falsche, ist der Bonus still wieder wirkungslos — und die Prüfung am
+     Rechenkern bliebe grün. Deshalb misst diese Regression durch den Handler.
+- **Gegenproben, beide rot:** wird der Bonus im Kern nicht addiert, fallen
+  **beide** Prüfungen; wird im Handler `undefined` statt des Vereinsbonus
+  durchgereicht, fällt **nur die zweite**. Genau dafür ist sie da.
+
+### Ausdrücklich offen
+
+- **Die Anzeige im Vereinsbildschirm bleibt unverändert.** Sie stimmt jetzt
+  einfach — vorher versprach sie etwas, das nicht geschah.
+- **Nicht nachkalibriert.** Ein Talent mehr je Jahr ist eine spürbare Wirkung;
+  ob 350 Punkte dafür der richtige Preis sind, ist eine Balance-Frage des
+  Eigentümers und nicht Teil dieser Runde.
