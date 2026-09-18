@@ -12,7 +12,7 @@ test('CHAR-P1-03: neue Frisuren sind bei Mann und Frau sichtbar und append-only'
   for(const [id,name] of ids){
    const card=page.locator(`[data-testid="varianten"] article[data-id="${id}"]`);
    await expect(card).toContainText(name);
-   await expect(card.locator('svg[aria-label="Spielerporträt"]')).toHaveCount(3);
+   await expect(card.locator('svg[aria-label="Spielerporträt"]')).toHaveCount(6);
   }
   await page.screenshot({path:testInfo.outputPath(`frisuren-${gender}.png`),fullPage:true});
  };
