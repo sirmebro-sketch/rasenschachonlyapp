@@ -13,3 +13,49 @@ index 0000000..0000000 100644
  
   const html=await page.locator('main').innerHTML();
   expect(html).not.toMatch(/NaN|undefined/);
+diff --git a/tools/char-fix-01.test.cjs b/tools/char-fix-01.test.cjs
+index 0000000..0000000 100644
+--- a/tools/char-fix-01.test.cjs
++++ b/tools/char-fix-01.test.cjs
+@@ -24,15 +24,20 @@ test('CHAR-FIX-01: beide modernen Haarlagen erhalten Profil und echte Kopfhuelle
+  const props=(app.match(/kopfprofil=\{kopf\.profil\|\|''\} kopfpfad=\{kopfD\}/g)||[]).length;
+  assert.equal(props,2,'Vorder- und Hinterhaar muessen dieselbe Kopfanpassung erhalten');
+- for(const profil of ['trapez','lang','diamant','kurzbreit'])assert.match(haar,new RegExp(profil+':\\{breite:'));
++ assert.match(haar,/const neueKopfpassform=\['trapez','lang','diamant','kurzbreit'\]\.includes\(kopfprofil\)&&kopfpfad/);
++ assert.match(haar,/const profilBonus=\{trapez:\.8,lang:1\.4,diamant:\.8,kurzbreit:\.8\}\[kopfprofil\]\|\|0/);
++ assert.match(haar,/const haarbreite=neueKopfpassform&&kompakt\?Math\.min\(31\.5,Math\.max\(breite\+profilBonus,24\)\):breite/);
++ assert.match(haar,/data-haar-passung=\{neueKopfpassform&&kompakt\?'kopfkontur':'standard'\}/);
++ assert.match(haar,/clipPath=\{neueKopfpassform&&kopfnah\?'url\(#'\+id\+'kopf\)':'?[^}]*undefined\}/);
+  assert.match(haar,/clipPathUnits="userSpaceOnUse"/);
+ });
+ 
+ test('CHAR-FIX-01: rasiert nutzt nur eine flache Kopfkappe statt dunkler Seitenunterlage',()=>{
+- assert.match(haar,/const rasierKappe='M26 34 C28 18 38 11 50 11 C62 11 72 18 74 34/);
++ assert.match(haar,/const rasierKappe=neueKopfpassform/);
++ assert.match(haar,/'M22 38 C24 16 37 8 50 8 C63 8 76 16 78 38/);
++ assert.match(haar,/: 'M26 34 C28 18 38 11 50 11 C62 11 72 18 74 34/);
+  assert.match(haar,/const unterlage=typ==='rasiert'\?rasierKappe:scalp/);
+  assert.match(haar,/opacity=\{typ==='rasiert'\?\.32:1\}/);
+ });
+diff --git a/tools/char-fix-03.test.cjs b/tools/char-fix-03.test.cjs
+index 0000000..0000000 100644
+--- a/tools/char-fix-03.test.cjs
++++ b/tools/char-fix-03.test.cjs
+@@ -99,12 +99,12 @@ test('CHAR-FIX-03: App nutzt dieselben Gesichtsanker und reicht Nase/Mund an den
+  assert.match(app,/<Bartform index=\{z\.bart\} kopf=\{kopf\} nase=\{z\.nase\} mund=\{z\.mund\}/);
+ });
+ 
+-test('CHAR-FIX-03: neue Kopfprofile bekommen keine verkleinernde/hochgezogene Haarpassform',()=>{
++test('CHAR-FIX-03/04: neue Kopfprofile nutzen keine verkleinernde historische Festbreite mehr',()=>{
+  const haar=fs.readFileSync(path.join(root,'haarformen.jsx'),'utf8');
+- for(const [profil,breite] of [['trapez','25.2'],['lang','24.2'],['diamant','25.8'],['kurzbreit','28.2']]){
+-  assert.match(haar,new RegExp(`${profil}:\\{breite:${breite.replace('.','\\.')},dy:0\\}`));
+- }
+- assert.match(haar,/const rasierKappe='M26 34/);
+- assert.match(haar,/Q62 29 50 30 Q38 29 26 34/);
++ assert.doesNotMatch(haar,/trapez:\{breite:25\.2,dy:0\}|lang:\{breite:24\.2,dy:0\}|diamant:\{breite:25\.8,dy:0\}|kurzbreit:\{breite:28\.2,dy:0\}/);
++ assert.match(haar,/const profilBonus=\{trapez:\.8,lang:1\.4,diamant:\.8,kurzbreit:\.8\}/);
++ assert.match(haar,/const scalp=neueKopfpassform\s*\? 'M12 52 C10 11 27 3 50 3 C73 3 90 11 88 52/);
++ assert.match(haar,/data-haar-vorderclip=\{neueKopfpassform&&kopfnah\?'kopf':'frei'\}/);
++ assert.match(haar,/clipPath=\{neueKopfpassform&&kopfnah\?'url\(#'\+id\+'kopf\)':undefined\}/);
+ });
