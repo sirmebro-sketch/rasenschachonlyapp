@@ -530,10 +530,19 @@ test('Der Ausbaureiter zeigt Geld und VC getrennt, ohne NaN',()=>{
  assert(html.includes('Gründungskapital'),'die VC-Extras stehen im eigenen Abschnitt');
  /* Kein Ausbau darf mehr mit VC ausgezeichnet sein. */
  assert(!html.includes('Ausbauen ·'),'die alte VC-Beschriftung ist weg');
- /* Eine leere Kasse macht den Knopf nicht kaputt, sondern nennt die Lücke. */
+ /* Bei leerer Kasse spricht der Preis für sich: „Dafür fehlen" würde nur die
+    Zahl wiederholen, die direkt darüber steht. Erst wenn etwas da ist, aber
+    nicht genug, sagt die Zeile etwas Neues. Beide Seiten der Grenze werden
+    geprüft — eine Zeile, die nie erscheint, ist kein Fortschritt. */
  const arm=E.renderVerein(E.VEREIN.mitWirtschaft(spielbereiterVerein({kasse:0})),
    {...E.leereAkademie(),vc:0},'ausbau');
- assert(arm.includes('Dafür fehlen'));assert(!arm.includes('NaN'));
+ assert(!arm.includes('Dafür fehlen'),'leere Kasse: keine Wiederholung des Preises');
+ assert(arm.includes('Bauen ·'),'der Preis selbst steht trotzdem da');
+ assert(!arm.includes('NaN'));
+ const halb=E.renderVerein(E.VEREIN.mitWirtschaft(spielbereiterVerein({kasse:2})),
+   {...E.leereAkademie(),vc:0},'ausbau');
+ assert(halb.includes('Dafür fehlen'),'angefangene Kasse: die Lücke wird genannt');
+ assert(!halb.includes('NaN'));
 });
 
 test('Saisonabrechnung: der Karrierebericht zeigt, woher das Geld kam und wohin es ging',async()=>{
@@ -733,6 +742,16 @@ test('Der Sponsorenreiter zeigt Angebote und laufende Verträge, ohne NaN',()=>{
  assert(html2.includes('Kein Platz frei'));
  assert(html2.includes('Alle Plätze belegt'));
  assert(!html2.includes('NaN'));
+ /* Der Reiter heißt „Partner", nicht „Sponsoren". Mit dem sechsten Reiter lag
+    „Chronik" auf einem 320er-Gerät zwei Wischer entfernt; kürzer holt sie
+    zurück, und es ist ohnehin das Wort, das die Kopfzeile des Reiters selbst
+    benutzt. Gemessen wurde das im Browser — diese Prüfung hält nur die
+    Entscheidung fest, damit sie nicht stillschweigend zurückgedreht wird.
+    Ein Zeichenbudget wäre eine Scheingenauigkeit: die Schrift ist proportional. */
+ const leiste=html.split('Angebote für diese Saison')[0];
+ assert(leiste.includes('>Partner<'),'der Reiter trägt die kurze Beschriftung');
+ assert(!leiste.includes('>Sponsoren<'),'die lange Beschriftung ist weg');
+ assert(leiste.includes('>Chronik<'),'und „Chronik" steht weiter in der Leiste');
 });
 
 test('Nach einem Aufstieg ist Klassenerhalt die Ansage, nicht der Titel',()=>{
