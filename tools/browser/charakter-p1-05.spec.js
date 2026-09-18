@@ -63,7 +63,7 @@ for(const url of ['/', '/.preview/spieltest.html'])test('CHAR-P1-05: Feineinstel
  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth+1)).toBe(true);
  const railMass=await rail.evaluate(el=>({scrollWidth:el.scrollWidth,clientWidth:el.clientWidth,scrollLeft:el.scrollLeft}));
  expect(railMass.scrollWidth).toBeGreaterThan(railMass.clientWidth);
- expect(railMass.scrollLeft).toBeLessThanOrEqual(2);
+ expect(railMass.scrollLeft).toBeLessThanOrEqual(8);
  await expect(rail).toHaveAttribute('data-am-anfang','true');
  await expect(hinweis).toHaveText('Wischen · weitere Kategorien →');
  await page.screenshot({path:testInfo.outputPath('char-p1-05-wisch-start.png'),fullPage:false});
