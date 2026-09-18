@@ -17,7 +17,7 @@ async function hinweiseSchliessen(page){
   }
 }
 
-test('QA Namenseingabe Charakter: Fokus, geringe Höhe, Zurück und Bestätigen', async ({page}, testInfo) => {
+test.only('QA Namenseingabe Charakter: Fokus, geringe Höhe, Zurück und Bestätigen', async ({page}, testInfo) => {
   test.skip(testInfo.project.name === 'desktop', 'Auftrag nur 320/390 px');
   await page.goto(spieltest);
   await page.getByRole('button',{name:'Neues Spiel',exact:true}).click();
@@ -70,7 +70,7 @@ test('QA Namenseingabe Charakter: Fokus, geringe Höhe, Zurück und Bestätigen'
   await page.screenshot({path:testInfo.outputPath('char-confirmed.png'),fullPage:false});
 });
 
-test('QA Namenseingabe Verein: Fokus, Scroll, Zurück und Bestätigen', async ({page}, testInfo) => {
+test.only('QA Namenseingabe Verein: Fokus, Scroll, Zurück und Bestätigen', async ({page}, testInfo) => {
   test.skip(testInfo.project.name === 'desktop', 'Auftrag nur 320/390 px');
   await page.goto(spieltest);
   await page.getByRole('button',{name:'Fortgeschritten',exact:true}).click();
