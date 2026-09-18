@@ -26,8 +26,8 @@ test('CHAR-FIX-04: gezielte Haar-/Bart-Sichtbögen rendern vollständig und saub
   await expect(page.locator('[data-testid="bart-neue"] article[data-kopf="'+id+'"] .paar')).toHaveCount(3);
  }
  await expect(page.locator('svg[aria-label="Haar-Passungsdiagnose"]')).toHaveCount(76);
- await expect(page.locator('[data-bart-id="4"]')).toHaveCount(30);
- await expect(page.locator('[data-bart-id="14"]')).toHaveCount(30);
+ await expect(page.locator('[data-bart-id="4"]')).toHaveCount(36);
+ await expect(page.locator('[data-bart-id="14"]')).toHaveCount(36);
 
  const html=await page.locator('main').innerHTML();
  expect(html).not.toMatch(/NaN|undefined/);

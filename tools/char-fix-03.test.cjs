@@ -99,11 +99,11 @@ test('CHAR-FIX-03: App nutzt dieselben Gesichtsanker und reicht Nase/Mund an den
  assert.match(app,/<Bartform index=\{z\.bart\} kopf=\{kopf\} nase=\{z\.nase\} mund=\{z\.mund\}/);
 });
 
-test('CHAR-FIX-03: neue Kopfprofile bekommen keine verkleinernde/hochgezogene Haarpassform',()=>{
+test('CHAR-FIX-03/04: neue Kopfprofile bekommen keine verkleinernde historische Festbreite mehr',()=>{
  const haar=fs.readFileSync(path.join(root,'haarformen.jsx'),'utf8');
- for(const [profil,breite] of [['trapez','25.2'],['lang','24.2'],['diamant','25.8'],['kurzbreit','28.2']]){
-  assert.match(haar,new RegExp(`${profil}:\\{breite:${breite.replace('.','\\.')},dy:0\\}`));
- }
- assert.match(haar,/const rasierKappe='M26 34/);
- assert.match(haar,/Q62 29 50 30 Q38 29 26 34/);
+ assert.doesNotMatch(haar,/trapez:\{breite:25\.2,dy:0\}|lang:\{breite:24\.2,dy:0\}|diamant:\{breite:25\.8,dy:0\}|kurzbreit:\{breite:28\.2,dy:0\}/);
+ assert.match(haar,/const profilBonus=\{trapez:\.8,lang:1\.4,diamant:\.8,kurzbreit:\.8\}/);
+ assert.match(haar,/const haarbreite=neueKopfpassform&&kompakt\?Math\.min\(31\.5,Math\.max\(breite\+profilBonus,24\)\):breite/);
+ assert.match(haar,/const scalp=neueKopfpassform\s*\? 'M12 52 C10 11 27 3 50 3 C73 3 90 11 88 52/);
+ assert.match(haar,/data-haar-vorderclip=\{neueKopfpassform&&kopfnah\?'kopf':'frei'\}/);
 });
