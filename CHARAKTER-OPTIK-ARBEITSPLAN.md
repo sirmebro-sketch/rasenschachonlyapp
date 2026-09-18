@@ -166,6 +166,31 @@ Die Reihenfolge ist eine Qualitäts-/Risikoreihenfolge. Der letzte Nutzerauftrag
 
 **Abnahme:** kein Hals-/Hautdurchscheinen außerhalb der vorgesehenen Kragenöffnung, keine neuen Hals-/Kragen-Clippings oder sichtbaren Spalten, Porträt-IDs und gespeicherte Charaktere bleiben kompatibel, kleine und große Darstellung sind sichtbar geprüft.
 
+### CHAR-FIX-04 – Bart-/Kurzhaar-Restpassung — SICHTPRÜFUNG
+
+**Anlass:** Die formale CHAR-FIX-03-Matrix war grün, aber die anschließende echte Nutzersichtung zeigt weiterhin konkrete Passungsfehler. Besonders **Kinnbart (Bart-ID 4)** und **Ankerbart (Bart-ID 14)** sitzen falsch; weitere Bartformen müssen deshalb systematisch mitgeprüft werden. Außerdem sind viele kurze Frisuren auf den vier neueren Kopfformen **Trapez (Kopf 10)**, **Langkantig (11)**, **Diamant (12)** und **Kurzbreit (13)** zu klein bzw. decken die reale Kopfkontur oben/seitlich nicht, sodass Haut sichtbar durchscheint.
+
+**Ziel:** Keine kosmetische Einzelkorrektur, sondern belastbare Restpassung der Bart- und Kurzhaar-Geometrie. Problematische Formen müssen an der tatsächlichen Kopf-/Kiefer-/Gesichtsgeometrie sitzen und kurze Frisuren die beabsichtigte Kopfzone ohne ungewollte Hautkeile abdecken.
+
+**Pflichtprüfung Bärte:**
+- alle sichtbaren Bart-IDs 1–15 auf allen 14 Kopfformen prüfen;
+- Schwerpunkt mindestens auf ID 4 **Kinnbart**, ID 5 **Ziegenbart**, ID 8 **Kinnriemen**, ID 12 **Konturierter Bart**, ID 13 **Spitzer Vollbart**, ID 14 **Ankerbart**, ID 15 **Breiter Vollbart**;
+- kritische Nasen-/Mundkombinationen aus CHAR-FIX-03 weiterverwenden und um Kombinationen ergänzen, bei denen Kinn-/Ankerformen sichtbar verrutschen;
+- Bart darf nicht auf Nase, Lippen oder Zähne rutschen; Kinn-/Ankerteile müssen am tatsächlichen Kinn und nicht an einer generischen historischen Y-Position sitzen;
+- absichtliche Längen unterhalb des Kinns bleiben erlaubt, müssen aber zentriert und proportional zur jeweiligen Kinn-/Kieferform sein.
+
+**Pflichtprüfung Frisuren:**
+- alle Frisuren gegen Kopf 10–13 rendern; Schwerpunkt auf kurzen/kompakten Typen;
+- Männer insbesondere: `rasiert(0)`, `kurz(1)`, `scheitel(2)`, `undercut(3)`, `textur(6)`, `licht(7)`, `slick(12)`, `crop(13)`, `flach(14)`, `seitlich(15)`, `vorhang(20)`, `fade(21)`, `iro(23)`;
+- Frauen insbesondere: `kurz(0)`, `bob(3)`, `pixie(7)`, `crop(9)`, `fade(19)`, `iro(21)`;
+- keine ungewollten Hautspalten am Scheitel, oberen Schädelrand oder an den seitlichen Kopfenden;
+- bei bewusst rasierten/Fade-Formen darf Haut sichtbar sein, aber nur als erkennbar gewollte Frisur — nicht als unmaskierter Spalt oder zu kleine Haarunterlage;
+- keine pauschale Übervergrößerung, die Haarflächen in Stirn/Gesicht oder außerhalb der realen Kopfmaske drückt.
+
+**Technik:** Bestehende IDs bleiben unverändert. `haarformen.jsx`, `bartformen.jsx`, `gesichtsanker.js` und der echte `Avatar` in `App.jsx` sind gemeinsam zu betrachten. Die reale Kopfmaske/`kopfpfad` soll Quelle der Passung bleiben. Keine Sonderfälle nur für einzelne gespeicherte Porträt-IDs, wenn eine geometrische Regel das Problem sauber lösen kann.
+
+**Abnahme:** Vorher/Nachher-Sichtbogen mit allen vier neuen Köpfen und den kritischen Kurzhaarformen; Bart-Vollbogen mit mindestens allen 15 Bart-IDs auf den vier neuen Köpfen sowie repräsentativen alten Köpfen. Kleine Spielgröße (72/96 px) und große Vorschau prüfen. Automatische Tests müssen zusätzlich **Hautkeile/Abdeckungsfehler** und **Bartanker-Lage** stärker absichern als CHAR-FIX-03. Build/Browser grün allein gilt ausdrücklich nicht als visuelle Abnahme.
+
 ### CARD-P0-01 – Schichtenvertrag für Spielerkarten — BEREIT
 
 **Ziel:** Kartenmaterial wirkt hochwertig, ohne Porträt/Text/Werte zu überdecken.
