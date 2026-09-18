@@ -518,7 +518,7 @@ test('Fünfzehn Saisons: der Weg nach oben bleibt begehbar, oben reisst der Deck
       v = W.saisonAbrechnung(v, e, saat).v;
     }
     return { stufen: W.AUSBAU.reduce((a, x) => a + (W.ausbauStufe(v, x.id) - 1), 0),
-             kasse: v.kasse, punkte: W.abschlussWirtschaft(v).punkte };
+             kasse: v.kasse, punkte: W.abschlussWirtschaft(v).punkte, abzug: v.abzug || 0 };
   };
   /* Unten muss sich Aufbau lohnen: wer fünfzehn Jahre ordentlich wirtschaftet,
      kommt voran, auch im Unterhaus. */
@@ -526,11 +526,19 @@ test('Fünfzehn Saisons: der Weg nach oben bleibt begehbar, oben reisst der Deck
     const r = lauf(stufe);
     assert(r.stufen >= 12, 'Liga ' + stufe + ' erreicht nur ' + r.stufen + ' von 30 Ausbaustufen');
     assert(r.kasse > -5, 'Liga ' + stufe + ' endet bei ' + r.kasse + ' Mio');
+    /* DIE LIZENZAUFLAGE DARF DEN GEWOEHNLICHEN WEG NICHT TREFFEN (P1-04).
+       Wer fuenfzehn Jahre ordentlich wirtschaftet, bekommt keine Auflage —
+       sonst waere aus einer Folge fuer verschuldete Vereine eine Steuer auf
+       das Bauen geworden. Diese Zusicherung ist mir wichtiger als die Staffel
+       selbst: eine Strafe, die den Normalfall trifft, ist ein Fehler, auch
+       wenn sie richtig rechnet. */
+    assert.equal(r.abzug, 0, 'Liga ' + stufe + ' faengt sich eine Lizenzauflage ein');
   }
   /* Oben darf Geld nicht aufhören, eine Entscheidung zu sein: wer den
      Punktedeckel reisst, für den ist die letzte Saison wirtschaftlich egal. */
   const eins = lauf(1);
   assert.equal(eins.stufen, 30, 'die erste Liga schafft weiterhin den Vollausbau');
+  assert.equal(eins.abzug, 0, 'und faengt sich dabei keine Lizenzauflage ein');
   assert(eins.punkte < W.PUNKTE_DECKEL,
     'der Überschuss reisst den Deckel wieder (' + eins.kasse + ' Mio, ' + eins.punkte + ' Punkte)');
 });
@@ -620,4 +628,66 @@ test('Alles bleibt endlich, auch mit allen neuen Systemen', () => {
     assert(beleg.zuschauer >= 0 && Number.isFinite(beleg.zuschauer));
     assert(beleg.ereignisse.length <= 2);
   }
+});
+
+/* ------------------------------------------------- Lizenzauflage (P1-04) */
+
+test('Der Kreditrahmen haengt an den Einnahmen, nicht an einer festen Zahl', () => {
+  /* Der Grund steht am Code: 20 Mio sind fuer einen Erstligisten nichts und
+     fuer einen Fuenftligisten das Ende. Ein fester Betrag traefe unten
+     ungleich haerter — dieselbe Falle wie beim Gehaltsteiler. */
+  const oben = W.kreditrahmen(verein({ ligastufe: 1, ausbau: { stadion: 5 } }), erg());
+  const unten = W.kreditrahmen(verein({ ligastufe: 5 }), erg());
+  assert(oben > unten * 2, 'oben wird mehr geduldet als unten: ' + oben + ' vs ' + unten);
+  assert(unten >= W.RAHMEN_MIN, 'auch der kleinste Verein hat einen Mindestrahmen');
+  /* Durchgereichte Einnahmen ergeben dieselbe Zahl wie selbst gerechnete —
+     sonst waere die Abkuerzung in `saisonAbrechnung` eine andere Rechnung. */
+  const v = verein({ ligastufe: 2 });
+  assert.equal(W.kreditrahmen(v, erg(), W.saisonEinnahmen(v, erg()).summe),
+    W.kreditrahmen(v, erg()), 'durchgereicht wie selbst gerechnet');
+});
+
+test('Die Lizenzpruefung staffelt nach Rahmen, nicht nach Millionen', () => {
+  const v = verein({ ligastufe: 2 });
+  const r = W.kreditrahmen(v, erg());
+  /* Eine volle Kasse und ein Minus INNERHALB des Rahmens kosten nichts. */
+  assert.equal(W.lizenzPruefung({ ...v, kasse: 50 }, erg()).punkte, 0);
+  assert.equal(W.lizenzPruefung({ ...v, kasse: 50 }, erg()).warnung, false);
+  const knapp = W.lizenzPruefung({ ...v, kasse: -(r * 0.9) }, erg());
+  assert.equal(knapp.punkte, 0, 'im Rahmen kostet es keine Punkte');
+  assert.equal(knapp.warnung, true, 'aber es wird gewarnt — sonst gibt es keine Gegenwehr');
+  /* Die Staffel 3/6/9, gemessen in Rahmen unter der Linie. */
+  assert.equal(W.lizenzPruefung({ ...v, kasse: -(r * 1.5) }, erg()).punkte, 3);
+  assert.equal(W.lizenzPruefung({ ...v, kasse: -(r * 3) }, erg()).punkte, 6);
+  assert.equal(W.lizenzPruefung({ ...v, kasse: -(r * 9) }, erg()).punkte, 9);
+  assert.equal(W.lizenzPruefung({ ...v, kasse: -99999 }, erg()).punkte, 9, 'nach oben gedeckelt');
+  /* DIE EIGENTLICHE ZUSICHERUNG: gleich tief IN RAHMEN heisst gleich teuer,
+     ganz gleich in welcher Liga. Eine Staffel in Millionen waere hier rot. */
+  /* `-(rr*3)` heisst: Schulden von drei Rahmen, also ZWEI Rahmen unter der
+     Linie — die mittlere Stufe. Der erste Entwurf dieser Pruefung rechnete
+     `-(rr*2)` und erwartete 6; das sind aber nur zwei Rahmen Schulden, also
+     EINER unter der Linie und damit 3 Punkte. Der Fehler lag in der Pruefung,
+     nicht im Code, und er steht hier, weil er sich beim Nachrechnen der
+     Staffel jederzeit wiederholen kann. */
+  for (const stufe of [1, 3, 5]) {
+    const vv = verein({ ligastufe: stufe });
+    const rr = W.kreditrahmen(vv, erg());
+    assert.equal(W.lizenzPruefung({ ...vv, kasse: -(rr * 3) }, erg()).punkte, 6,
+      'Liga ' + stufe + ' wird gleich behandelt');
+  }
+});
+
+test('Die Abrechnung beschliesst die Auflage aus der Kasse NACH der Saison', () => {
+  /* Gerechnet wird die Lage, in der der Verein in die neue Saison geht — nicht
+     die, mit der er hereinkam. Ein Verein, der waehrend der Saison ins Minus
+     rutscht, bekommt die Auflage sofort und nicht erst ein Jahr spaeter. */
+  const arm = verein({ ligastufe: 1, kasse: -400, ausbau: {} });
+  const { v: nach, beleg } = W.saisonAbrechnung(arm, erg({ rang: 10 }), 7);
+  assert(beleg.lizenz.punkte > 0, 'die Auflage steht im Beleg');
+  assert.equal(nach.abzug, beleg.lizenz.punkte, 'und wandert an den Verein');
+  assert.equal(beleg.lizenz.kasse, nach.kasse, 'geprueft wird die Kasse NACH der Abrechnung');
+  /* Ein gesunder Verein bekommt keine und traegt die 0 ausdruecklich. */
+  const reich = W.saisonAbrechnung(verein({ ligastufe: 1, kasse: 200 }), erg({ rang: 3 }), 7);
+  assert.equal(reich.v.abzug, 0);
+  assert.equal(reich.beleg.lizenz.warnung, false);
 });

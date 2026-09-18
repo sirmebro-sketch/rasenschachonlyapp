@@ -9921,6 +9921,20 @@ function VereinScreen({ v, aka, onAendern, onZurueck, onAbschluss, startReiter }
               <div className="m" style={{ fontSize: 11.5, marginTop: 2 }}>
                 Das Geld kommt aus Zuschauern, Gastronomie, Fanartikeln, Prämien
                 und Werbeverträgen — jede Saison neu abgerechnet.</div>
+              {/* STEHENDE WARNUNG (WIRT-P1-04). Der Beleg erscheint einmal am
+                  Saisonende; wer dazwischen auf die Kasse schaut, muss die
+                  Auflage hier sehen. Zwei Faelle, die nicht dasselbe sind:
+                  eine beschlossene Auflage trifft die laufende Saison sicher,
+                  ein Minus im Rahmen ist nur eine Vorwarnung. */}
+              {v.abzug > 0 && (
+                <div className="m" style={{ fontSize: 11.5, marginTop: 6, color: "var(--bad)" }}>
+                  <b>Lizenzauflage: {v.abzug} Punkte Abzug.</b> Sie wird am Ende
+                  dieser Saison auf die Tabelle angerechnet. Weniger Schulden
+                  heisst kleinere Auflage im nächsten Jahr.</div>)}
+              {v.abzug <= 0 && VEREIN.kasse(v) < 0 && (
+                <div className="m" style={{ fontSize: 11.5, marginTop: 6, color: "var(--mu)" }}>
+                  Die Kasse ist im Minus. Ein Überziehen bis zur Hälfte einer
+                  Saisoneinnahme ist geduldet — darunter setzt es Punktabzug.</div>)}
               {VEREIN.baustellenText(v).length > 0 && (
                 <div style={{ marginTop: 7 }}>
                   <div className="m" style={{ fontSize: 11.5 }}>Im Bau:</div>
@@ -10028,6 +10042,13 @@ function VereinScreen({ v, aka, onAendern, onZurueck, onAbschluss, startReiter }
                     {(c.wirtschaft.ausgelaufen || []).length
                       ? " · Vertrag aus: " + c.wirtschaft.ausgelaufen.join(", ") : ""}
                   </div>)}
+                {/* Der Abzug steht in ROT und in eigener Zeile, nicht als
+                    weiteres Glied in der Aufzaehlung oben: er erklaert den
+                    Tabellenplatz DIESES Jahres, und ohne ihn liest sich die
+                    Chronik, als waere der Verein einfach schlechter geworden. */}
+                {!!(c.wirtschaft && c.wirtschaft.abzug) && (
+                  <div className="m" style={{ fontSize: 11.5, marginTop: 3, color: "var(--bad)" }}>
+                    Lizenzauflage: {c.wirtschaft.abzug} Punkte abgezogen</div>)}
               </div>))}
           </div>)}
 
@@ -17456,6 +17477,23 @@ function EndScreen({ p, onNew }) {
                     {w.ziel && !w.ziel.erfuellt && (
                       <div className="m" style={{ fontSize: 11, marginTop: 5, color: "var(--mu)" }}>
                         Vorstandsziel verfehlt: {w.ziel.n} — keine Prämie.</div>)}
+                    {/* LIZENZAUFLAGE. Getrennt nach „hat gekostet" und „wird
+                        kosten": die erste erklaert den Tabellenplatz dieser
+                        Saison, die zweite ist die Vorwarnung fuer die
+                        naechste. Eine Strafe, die erst auffaellt, wenn sie
+                        schon wirkt, laesst dem Spieler keine Gegenwehr. */}
+                    {!!(w.lizenz && w.lizenz.angewandt) && (
+                      <div className="m" style={{ fontSize: 11, marginTop: 5, color: "var(--bad)" }}>
+                        Lizenzauflage: {w.lizenz.angewandt} Punkte Abzug in dieser Saison —
+                        der Tabellenplatz steht schon danach.</div>)}
+                    {!!(w.lizenz && w.lizenz.punkte) && (
+                      <div className="m" style={{ fontSize: 11, marginTop: 3, color: "var(--bad)" }}>
+                        Die Kasse steht {geld(Math.abs(w.lizenz.kasse))} im Minus, geduldet sind
+                        {" " + geld(w.lizenz.rahmen)}. Kommende Saison: {w.lizenz.punkte} Punkte Abzug.</div>)}
+                    {!!(w.lizenz && !w.lizenz.punkte && w.lizenz.warnung) && (
+                      <div className="m" style={{ fontSize: 11, marginTop: 3, color: "var(--mu)" }}>
+                        Die Kasse ist im Minus. Bis {geld(w.lizenz.rahmen)} ist das geduldet —
+                        darunter droht Punktabzug.</div>)}
                     {!!(w.fertig || []).length && (
                       <div className="m" style={{ fontSize: 11, marginTop: 5 }}>
                         Fertig geworden: {w.fertig.join(", ")}</div>)}
@@ -18155,6 +18193,11 @@ function FlutlichtApp() {
               : null,
             fertig: ((VS.beleg.bau || {}).fertig || []).map((f) => f.n + " Stufe " + f.stufe),
             ausgelaufen: VS.beleg.ausgelaufen || [],
+            /* Lizenzauflage (WIRT-P1-04): `angewandt` ist, was DIESE Saison
+               gekostet hat, `punkte` was die naechste kostet. Beides gehoert
+               hin — sonst sieht ein Jahr mit Abzug hinterher aus, als waere
+               nichts gewesen, und die kommende Auflage trifft unangekuendigt. */
+            lizenz: VS.beleg.lizenz || null,
           } : null,
         };
         /* DEN ABSCHLUSS AM VEREIN SPEICHERN (35.73, von Kevin gemeldet:

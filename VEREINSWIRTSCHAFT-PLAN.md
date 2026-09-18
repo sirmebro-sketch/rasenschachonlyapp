@@ -182,11 +182,38 @@ da ist, und schätzt sonst aus der Ligastufe. Solange `verein.js` keinen Kader
 führt, rechnet der Kern mit der Schätzung — richtig, aber nicht individuell.
 Echte Verträge je Spieler bleiben ein eigenes Paket.
 
-### WIRT-P1-04 – Folgen einer leeren Kasse — OFFEN
+### WIRT-P1-04 – Folgen einer leeren Kasse — VORGELEGT (Claude, 18.09.2026)
 
-Derzeit kann die Kasse ins Minus laufen, ohne dass etwas passiert. Denkbar:
-Transfersperre, Punktabzug, erzwungene Verkäufe. Bewusst noch nicht gebaut,
-weil es die Schwierigkeit spürbar verschiebt.
+**Lizenzauflage: Punktabzug.** Kevins Entscheidung vom 18.09.2026 aus drei
+vorgelegten Mitteln (Transfersperre, Punktabzug, erzwungene Verkäufe).
+
+Geduldet wird eine halbe Saisoneinnahme, mindestens 2 Mio — der Rahmen hängt an
+den Einnahmen, damit Bauen nicht bestraft wird und die untere Liga nicht härter
+trifft als die obere. Darunter kostet es 3, 6 oder 9 Punkte, gestaffelt nach
+**Rahmen** unter der Linie, nicht nach Millionen. Die Auflage trifft die
+kommende Saison, nicht die abgelaufene; deren Tabelle steht bereits.
+
+**Gemessen, was sie leistet und was nicht** (fünfzehn Saisons, echter
+Spielablauf, zwei Saaten, Kader aus dem Nachwuchs aufgefüllt):
+
+| Stärke | Auflage trifft | Punkte gesamt | Abstiege | Wirkung auf die Schulden |
+|---:|---|---:|---:|---|
+| 48–55 | nie | 0 | – | – |
+| 62 | ab Jahr 4–5 | 12–48 | 3 | −135 → −107 |
+| 70 | ab Jahr 3–4 | 66–84 | 1 | uneinheitlich |
+| 78 | ab Jahr 1 | 72–84 | **0** | uneinheitlich |
+
+**Sportlich wirkt sie, wirtschaftlich nicht.** Der 78er-Verein steht 52 Punkte
+über dem Abstiegsplatz; neun Punkte schließen ein Sechstel davon. Ein Kader,
+der seiner Liga so weit davongelaufen ist, ist durch Punktabzug nicht
+absteigbar — das ist keine Kalibrierfrage, sondern eine Grenze des Mittels.
+Die Gegenprobe über acht Läufe ergibt auf die Schulden Rauschen in beide
+Richtungen (+21 %, 0 %, −20 %, −3 %, +6 %, −13 %).
+
+**Offen bleibt deshalb der Lizenzentzug** — Zwangsabstieg statt Punktabzug,
+wenn die Auflage mehrere Saisons hintereinander greift. Das ist dasselbe
+Verfahren, nur seine letzte Stufe, und es ist das Einzige, was den extremen
+Fall schließt. Entscheidung des Eigentümers, nicht nebenbei gebaut.
 
 ### WIRT-P1-05 – Abschluss und Vermächtnis nachziehen — VORGELEGT (Claude, 17.09.2026)
 

@@ -125,6 +125,7 @@ export const machVerein = (H) => {
     baustellen: {},                /* je Abteilung ein laufendes Projekt */
     gehaltsniveau: 1,              /* Ratsche 0,75 bis 2,00 */
     ziel: null,                    /* Vorstandsziel der laufenden Saison */
+    abzug: 0,                      /* Lizenzauflage fuer die KOMMENDE Saison */
   });
 
   /* -------------------------------------------------------- Ligapyramide */
@@ -214,6 +215,9 @@ export const machVerein = (H) => {
       baustellen: obj(v.baustellen),
       gehaltsniveau: zahl(v.gehaltsniveau, 1),
       ziel: v.ziel || null,
+      /* Alte Spielstaende kennen die Lizenzauflage nicht und starten ohne.
+         Auf null geklemmt: ein negativer Abzug waere ein Geschenk. */
+      abzug: Math.max(0, zahl(v.abzug, 0)),
       ligastufe: ligastufe(v.land, v.liga),
     };
   };
@@ -881,7 +885,10 @@ export const machVerein = (H) => {
     const wFx = WIRT.wirkung(v);
     const medStufe = Math.min(AUSBAU_MAX, ausbauStufe(v, "medizin") + (wFx.medizin || 0));
 
-    const erg = saisonSpielen(v);
+    /* Die Lizenzauflage aus der VORIGEN Abrechnung trifft diese Saison — so
+       macht es der Fussball auch: die Auflage kostet das Jahr NACH dem
+       Verstoss, nicht das Jahr, das schon gespielt ist. */
+    const erg = abzugAnwenden(saisonSpielen(v), v.abzug);
     const N = erg.N;
     const rang = erg.rang == null ? N : erg.rang;
     const tabelle = erg.tabelle;
@@ -1071,6 +1078,10 @@ export const machVerein = (H) => {
     const wVor = { ...mitWirtschaft(v), kader: kaderGespielt, bilanz: neueBilanz };
     const { v: wNach, beleg } = WIRT.saisonAbrechnung(
       wVor, { rang, N, aufstieg, abstieg }, wSaat(v));
+    /* Der Rechenkern kennt die Tabelle nicht und kann deshalb nicht wissen,
+       was der Abzug gekostet hat. Der Beleg traegt beides: was diese Saison
+       abgezogen WURDE und was die naechste kostet. */
+    beleg.lizenz.angewandt = erg.abzug || 0;
 
     /* Das Ziel fuer die KOMMENDE Saison steht in der NEUEN Liga: nach einem
        Aufstieg ist Klassenerhalt die Ansage, nicht der Titel.
@@ -1102,6 +1113,12 @@ export const machVerein = (H) => {
       ziel: beleg.ziel.gesetzt ? { n: beleg.ziel.n, erfuellt: beleg.ziel.erfuellt } : null,
       ereignisse: beleg.ereignisse.map((e) => e.n),
       ausgelaufen: beleg.ausgelaufen,
+      /* Zwei verschiedene Zahlen, beide gebraucht: `abzug` ist, was DIESE
+         Saison gekostet hat, `auflage` ist, was die NAECHSTE kosten wird.
+         Nur die zweite zu speichern hiesse, dass ein Jahr mit Abzug hinterher
+         aussieht, als waere nichts gewesen. */
+      abzug: erg.abzug || 0,
+      auflage: beleg.lizenz.punkte || 0,
     };
 
     /* Neue Angebote fuer die KOMMENDE Saison. Die Saat haengt am Jahr, also
@@ -1117,6 +1134,7 @@ export const machVerein = (H) => {
            stimmung: wNach.stimmung, rechtsform: wNach.rechtsform,
            preise: wNach.preise, baustellen: wNach.baustellen,
            ausbau: wNach.ausbau, gehaltsniveau: wNach.gehaltsniveau,
+           abzug: wNach.abzug,
            ziel: zielNeu, angebote: null,          /* gleich unten neu gewuerfelt */
            faelle: faelleNeu, offeneAbschiede: [],
            bilanz: neueBilanz,
@@ -1140,6 +1158,9 @@ export const machVerein = (H) => {
       tabelle, rang, N, aufstieg, abstieg, staerke: st, abgaenge: weg,
       spiele: erg.spiele, spieler: erg.spieler, abschiede, faelle: faelleNeu,
       punkte: erg.punkte, tore: erg.tore, gegentore: erg.gegentore,
+      /* Was diese Saison an Lizenzauflage gekostet hat. Ohne dieses Feld
+         muesste der Aufrufer es aus der Chronik nachschlagen. */
+      abzug: erg.abzug || 0,
       vorbei: v.jahr + 1 > VEREIN_JAHRE,
       fehler: null,
     };
@@ -1542,6 +1563,36 @@ export const machVerein = (H) => {
      Rueckblick da und nicht als offener Zustand, der die naechste Aufstellung
      blockiert. Deshalb heisst das Feld `verpasst` und nicht `gesperrtBis`:
      eine Zahl ueber Vergangenes kann niemand fuer eine Sperre halten. */
+  /* ---- Lizenzauflage auf die Tabelle anwenden (WIRT-P1-04) --------------
+     Der Abzug muss die Tabelle WIRKLICH veraendern: Punkte weg, neu sortieren,
+     Plaetze neu vergeben, Rang und Punktzahl neu ablesen. Ein Abzug, der nur
+     als Zahl danebensteht, waehrend der Verein seinen erspielten Platz behaelt,
+     waere Kosmetik — und genau die Sorte Feld ohne Leser, von der dieses
+     Projekt schon mehrere hatte (`akademieAufnahmen`, `form`, `fitness`).
+
+     SORTIERT WIRD MIT DEMSELBEN VERGLEICH WIE IN `ligaSpielen`. Zwei
+     Sortierungen fuer dieselbe Tabelle laufen auseinander, sobald jemand eine
+     davon anfasst; die Regel steht deshalb einmal da und wird hier benutzt.
+
+     PUNKTE WERDEN BEI NULL GEKLEMMT. Im echten Fussball kann eine Mannschaft
+     ins Minus rutschen, aber eine Tabelle mit "-3 Punkte" liest sich wie ein
+     Anzeigefehler, und der Abzug wirkt ueber den Tabellenplatz ohnehin schon
+     voll. */
+  const tabVergleich = (x, y) => y.pkt - x.pkt || (y.gf - y.ga) - (x.gf - x.ga)
+    || y.gf - x.gf || String(x.name).localeCompare(String(y.name));
+
+  const abzugAnwenden = (erg, abzug) => {
+    const p = Math.max(0, Math.round(Number(abzug) || 0));
+    if (!p || !Array.isArray(erg.tabelle)) return { ...erg, abzug: 0 };
+    const tabelle = erg.tabelle.map((r) => (r.me ? { ...r, pkt: Math.max(0, r.pkt - p) } : { ...r }))
+      .sort(tabVergleich)
+      .map((r, i) => ({ ...r, pos: i + 1 }));
+    const eigene = tabelle.find((r) => r.me) || null;
+    return { ...erg, tabelle, abzug: p,
+             rang: eigene ? eigene.pos : erg.rang,
+             punkte: eigene ? eigene.pkt : erg.punkte };
+  };
+
   const saisonSpielen = (v) => {
     const st = staerke(v);
     const form = FORMATIONEN.find((f) => f.id === v.formation) || FORMATIONEN[0];
@@ -1653,7 +1704,7 @@ export const machVerein = (H) => {
            feldReihen, reihenOrdnen,
            staerke, autoAufstellen, vereinSaison, einschreiben, spieltMit,
            ligastufe, mitWirtschaft, ohneAbgeleitetes,
-           ligaSpielen, erwarteteTore, poisson, saisonSpielen,
+           ligaSpielen, erwarteteTore, poisson, saisonSpielen, abzugAnwenden,
            kandidaten, aufstellen, freimachen, aufstellungSaeubern, ueberzeugt,
            zustimmen, ablehnen, auslaufenLassen, bleibeLust, spVertrag,
            entlassen, zurueckInDieJugend, ZURUECK_ALTER,
