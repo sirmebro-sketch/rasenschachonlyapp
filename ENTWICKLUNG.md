@@ -882,3 +882,39 @@ Prüfstand-Head 6edd6f0: Spielregressionen/Build Run 35310049237 erfolgreich;
 Visuelle Browsertests Run 35310049190 mit 42 bestanden, 21 projektbedingt
 übersprungen, 0 fehlgeschlagen. Browserartefakt 10533281664, Digest
 e9ec1ac84a6e227f506a165d3462bc804bf158af99b0a1b8efc4c807e822f71b.
+
+
+## CHAR-P1-03 – Frisurenvielfalt, zweite Qualitätsrunde (35.193.0) – ChatGPT, 18.09.2026
+
+**Basis:** `main` `545b8929b4866dddb4ee2cd9b3825ff4061f951f`.  
+**Arbeitsbranch:** `chatgpt/char-p1-03-frisurenvielfalt-02`.  
+**PR:** #24.
+
+Die Runde folgt ausdrücklich der vollständigen CHAR-P0-01-Bestandsaufnahme statt einer Zielzahl. Vor dem Produktcode wurden die vorhandenen Haarfamilien und die belegten Ähnlichkeitskandidaten M13, W9 und W13 erneut in den 72-px-Bögen gesichtet und die fehlenden visuellen Räume dokumentiert.
+
+Umgesetzt:
+
+- Männer append-only 26–30: Mittellange Locken, Lange Locken, Box Braids, Zurückgebundene Locs, Asymmetrischer Fringe.
+- Frauen append-only 24–30: Vollpony, Curtain Bangs, Asymmetrischer Bob, Half-up, Langer Flechtzopf, Lange Wellen, Twin Buns.
+- M13, W9 und W13 innerhalb ihrer bestehenden IDs deutlich stärker differenziert.
+- gemeinsame Namensauflösung geschlechtsspezifisch erweitert, ohne historische IDs umzubelegen;
+- Inventar auf sieben Kopf-/Farbkontexte erweitert, darunter Oval/Kupfer sowie Schmal/Breit und Kopf 10–13;
+- CHAR-FIX-03 auf 868 Haarpaarungen, CHAR-FIX-04 auf 31+31 Frisuren hochgezogen;
+- direkte 72/96-px-Nachbarschaftsbögen für die Alt-Kandidaten und 72-px-Vergleiche für jede neue Frisur.
+
+Die erste echte Sichtung des bereits grünen Zwischenstands führte bewusst zu einer weiteren Produktkorrektur: Box Braids und langer Flechtzopf brauchten stärkere Segmentierung; Half-up eine klarere obere/rückwärtige Bindung. Sichtgeprüfter Produkt-Head danach: `aa74789c4c4bd4a40a4d2fd7b4dd39e488355e24`.
+
+**Automatisch geprüft auf diesem Produkt-Head:**
+
+- Spielregressionen Run `35315705473`: 140/140 bestanden, Produktionsbuild erfolgreich.
+- Visuelle Browsertests Run `35315705414`: 42 bestanden, 21 planmäßig übersprungen, 0 Fehler.
+- Browserartefakt `Rasenschach-Browsertest`: ID `10535950715`, Digest `sha256:171132150dcb8d87268a4b9c03cd5aa1ae187086e89d651c33f72a78383f42df`.
+- Safe-Patch-Brücke für die zwei `App.jsx`-Namensstellen: Run `35314484312` vollständig grün.
+
+**Tatsächliche Sichtprüfung:** vollständige Männer-/Frauenbögen bei 72/96/145 px; Alt-Nachbarschaften M1/13/21, W0/7/9, W2/8/13; jede neue ID gegen ihre engsten Nachbarn; CHAR-FIX-03-Haarmatrix; CHAR-FIX-04 Kopf-10–13-Matrix bei 72 px sowie kritischer 96/145-px-Bogen. Kein neuer Hautkeil, keine seitliche Haarlücke, keine zu kleine Perücke und kein unplausibles Hals-/Schulter-Clipping gefunden.
+
+Der erste PR-Browserlauf `35314563601` war wegen veralteter Prüfstandzahlen/alter Galerienamensauflösung rot (700 erwartet, tatsächlich 868; Galeriepfad ohne neue geschlechtsspezifische Namen). Die Sollwerte wurden ausschließlich an den gewollt größeren Katalog angepasst; fachliche Prüfungen wurden nicht gelockert.
+
+Vollständiger Bericht: `pruefberichte/2026-09-18-char-p1-03-frisurenvielfalt-02.md`.
+
+**Bewusst offen:** kein physischer Android-Geräte-Sichttest in der Charakterrunde. Der signierte Android-Build wird nach Integration als normales Post-Merge-Gate ausgeführt; ein erfolgreicher Build wird nicht als Geräte-Sichttest ausgegeben.

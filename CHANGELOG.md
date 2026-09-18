@@ -1,5 +1,12 @@
 # Änderungen
 
+## 35.193.0 – Mehr echte Frisurenvielfalt
+
+- Männerfrisuren um mittellange und lange Locken, Box Braids, zurückgebundene Locs und einen deutlich asymmetrischen Fringe erweitert.
+- Frauenfrisuren um Vollpony, Curtain Bangs, asymmetrischen Bob, Half-up, langen Flechtzopf, lange Wellen und Twin Buns erweitert.
+- Strukturierter Kurzschnitt, Kurzer Ansatz und Naturvolumen stärker von ihren bisherigen Nachbarformen abgegrenzt; bestehende gespeicherte Frisur-IDs bleiben erhalten.
+- Frisurenprüfung auf sieben Kopf-/Farbkontexte und 72/96/145 px erweitert; Passungsregressionen für die vergrößerten Kataloge aktualisiert.
+
 ## 35.192.0 – Stimmige Bilanzen und freiwillige Vereinsgründung
 
 - Ligatabellen aus gemeinsamen Hin-/Rückspielen: Siege, Niederlagen, Remis und Tore passen ligaweit zusammen. Karriere-Rang und daran gebundene Folgen bleiben erhalten.

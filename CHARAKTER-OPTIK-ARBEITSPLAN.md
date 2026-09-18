@@ -132,13 +132,15 @@ Die Reihenfolge ist eine Qualitäts-/Risikoreihenfolge. Der letzte Nutzerauftrag
 
 **Abnahme:** unbeschrifteter Vergleich bei normaler Avatargröße; mindestens mehrere deutlich verschiedene Kombinationen mit gleicher Kopf-/Haarbasis.
 
-### CHAR-P1-03 – Frisurenkatalog qualitativ verbreitern — SICHTPRÜFUNG
+### CHAR-P1-03 – Frisurenkatalog qualitativ verbreitern — ERLEDIGT
 
 **Ziel:** zusätzliche echte Kategorien statt Variationen derselben Kurzhaar-/Locken-Silhouette. Besonders Längen, Volumen, Haaransatz, Scheitel, Flecht-/Zopfstrukturen und unterschiedliche Texturen abdecken.
 
 **Technik:** `portraet.js` Indizes/Namen append-only; Renderer in `haarformen.jsx`; alte Renderer/alte Kennungen nicht nebenbei brechen.
 
 **Abnahme:** Bögen für beide Geschlechter, mehrere Haarfarben/Kopfformen, keine Hautspalten am Scheitel/Schläfen, kleine Darstellung geprüft.
+
+**Abschluss 18.09.2026:** Zweite Qualitätsrunde ergänzt fünf Männer- und sieben Frauenfamilien append-only, differenziert die drei CHAR-P0-01-Ähnlichkeitskandidaten M13/W9/W13 sichtbar nach und prüft den Gesamtkatalog bei 72/96/145 px auf sieben Kopf-/Farbkontexten. CHAR-FIX-03/04 wurden auf 31 Frisuren je Auswahl erweitert; die finalen Bögen wurden tatsächlich geöffnet und ohne neuen Passungsblocker abgenommen. Details: `pruefberichte/2026-09-18-char-p1-03-frisurenvielfalt-02.md`.
 
 ### CHAR-P1-04 – Bärte und Kombinationen ausbauen — SICHTPRÜFUNG
 
