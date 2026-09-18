@@ -1,0 +1,21 @@
+diff --git a/App.jsx b/App.jsx
+--- a/App.jsx
++++ b/App.jsx
+@@ -4,7 +4,7 @@ import { gesichtsAnker } from "./gesichtsanker.js";
+ import { AufdeckLicht, AUFDECK_CSS } from "./aufdeckeffekte.jsx";
+ import { Haarform } from "./haarformen.jsx";
+ import { KartenEffekt } from "./karteneffekte.jsx";
+-import { portraetOptionen, portraetWuerfeln, PORTRAET_NAMEN, NEUE_FRISUREN, FRISUR_NAMEN } from "./portraet.js";
++import { portraetOptionen, portraetWuerfeln, PORTRAET_NAMEN, frisurName } from "./portraet.js";
+ import { persoenlicherRueckblick } from "./karrieregeschichten.js";
+ import { VORSAETZE, vorsatzStand, vorsatzBelohnen, vorsatzPunkte, saisonZielStart, saisonZielAbschluss, vorsatzLohnText, bildungsFortschritt } from "./vorsatz.js";
+ import { laufbahnBeleg, abschlussBeleg, saisonenGespielt, VC_MIN_SAISONEN, PACK_MIN_SAISONEN, HAUS_MIN_SAISONEN } from "./belohnungen.js";
+@@ -15201,7 +15201,7 @@
+             const optionen=portraetOptionen({...ZUEGE_ANZAHL(meta,gender==="w"),haut:SKIN_EDIT.length,haar:HAIRC_EDIT.length},gender)[feld];
+             const farben=feld==="haut"?SKIN_EDIT:feld==="haar"?HAIRC_EDIT:feld==="augenfarbe"?AUGENFARBE.map(x=>x.c):null;
+             const titel=PORTRAET_REGLER(gender).find(x=>x[1]===feld)[0];
+-            const name=i=>feld==="kopf"?KOPFFORM[i].n:feld==="augenfarbe"?AUGENFARBE[i].n:feld==="frisur"&&i>=(gender==="w"?14:16)?NEUE_FRISUREN[i-(gender==="w"?14:16)]:feld==="frisur"?FRISUR_NAMEN[gender][i]:PORTRAET_NAMEN[feld]?.[i]||titel+" "+(i+1);
++            const name=i=>feld==="kopf"?KOPFFORM[i].n:feld==="augenfarbe"?AUGENFARBE[i].n:feld==="frisur"?frisurName(i,gender):PORTRAET_NAMEN[feld]?.[i]||titel+" "+(i+1);
+             return <><button className="btn sm" aria-pressed={!!fest[feld]} onClick={()=>setFest(v=>({...v,[feld]:!v[feld]}))}>{fest[feld]?titel+" freigeben":titel+" festhalten"}</button>
+               <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(90px,1fr))",gap:8,marginTop:10}}>
+                 {optionen.map(i=><button key={i} className="btn" aria-label={name(i)} aria-pressed={zuege[feld]===i} onClick={()=>setZuege(z=>({...z,[feld]:i,stil:2}))} style={{padding:6,minHeight:64,borderColor:zuege[feld]===i?"var(--ac)":"var(--ln)",borderWidth:2}}>
