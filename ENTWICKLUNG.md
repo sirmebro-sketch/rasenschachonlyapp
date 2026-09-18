@@ -1724,3 +1724,33 @@ als Bewegung eine Auskunft.
 
 **Geprüft:** `npm test` 172/172, `npm run build` erfolgreich. Die bestehende
 Belegprüfung verlangt jetzt beide Angaben.
+## Nachbesserung, zweiter Durchgang (Claude, 18.09.2026)
+
+Die beiden letzten offenen Punkte aus dem Gegenlesen.
+
+**1. Jede Saisonabrechnung rechnete 153 vollständige Einnahmerechnungen für
+einen einzigen Skalar.** `ueberzogen` ruft `bestPreis` für drei Felder, jeder
+Aufruf sucht in 51 Schritten und rechnet bei jedem Schritt die vollen
+Saisoneinnahmen — Ergebnis bis auf eine Zahl weggeworfen.
+
+Die Abkürzung ergibt sich aus der Korrektur des Vortags. Der Term ist
+`max(0, preis − max(1, optimum))`; für `preis ≤ 1` ist er **immer** null, ganz
+gleich wo das Optimum liegt. Also braucht es das Optimum dort auch nicht —
+keine Näherung, dieselbe Zahl auf kürzerem Weg. Und weil es keine
+Preisoberfläche gibt, steht überall die Voreinstellung 1: **50 Abrechnungen
+fallen von 51 auf 17 ms**, bei unverändertem Ergebnis (Normalpreis 60,
+Wucherpreis 30, vorher wie nachher).
+
+Eine Regression prüft die Grenze von beiden Seiten: unterhalb und bei 1 kostet
+der Preis nichts, darüber fällt die Stimmung monoton. Eine falsche Abkürzung
+zeigte sich dort als Knick.
+
+**2. `browser.yml` hatte den Zeilenumbruch am Dateiende verloren.** Eine
+unveränderte Zeile stand dadurch als `-/+`-Paar im Diff und hätte künftig jeden
+Vergleich verrauscht und `git blame` auf diesen Zweig gezeigt. Wiederhergestellt.
+
+**Nicht angefasst:** `tools/spieltest.cjs` und `tools/browser/charakter.spec.js`
+fehlt derselbe Umbruch — der fehlt aber schon auf `main` und stammt nicht aus
+dieser Runde. Vermerkt statt nebenbei miterledigt.
+
+**Geprüft:** `npm test` 148/148 (vorher 147).

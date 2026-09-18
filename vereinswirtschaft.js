@@ -395,8 +395,20 @@ const menge = (v, feld) => Math.max(0.05, 1 - (preisFaktor(v, feld) - 1) * elast
    Der Normalpreis ist kein Übergriff. Ärger entsteht erst, wenn der Spieler
    ÜBER den Normalpreis geht und der Verein nichts zu bieten hat, was ihn
    trägt. Deshalb `Math.max(1, bestPreis(...))`. */
-const ueberzogen = (v, erg) => ["ticket", "gastro", "merch"]
-  .reduce((a, f) => a + Math.max(0, preisFaktor(v, f) - Math.max(1, bestPreis(v, f, erg))), 0);
+const ueberzogen = (v, erg) => ["ticket", "gastro", "merch"].reduce((a, f) => {
+  const preis = preisFaktor(v, f);
+  /* ABKÜRZUNG, DIE NICHTS VERÄNDERT. Der Term ist
+     `max(0, preis - max(1, optimum))`. Für `preis <= 1` ist er immer null,
+     ganz gleich, wo das Optimum liegt — also braucht es das Optimum dann auch
+     nicht. Das ist keine Näherung, sondern dieselbe Zahl auf kürzerem Weg.
+     Und es ist der Normalfall: `bestPreis` sucht in 51 Schritten und rechnet
+     bei jedem Schritt die vollen Saisoneinnahmen, dreimal je Abrechnung —
+     153 volle Einnahmerechnungen, deren Ergebnis bis auf einen Skalar
+     weggeworfen wird. Solange es keine Preisoberfläche gibt, steht überall
+     die Voreinstellung 1, und damit fällt die ganze Rechnerei weg. */
+  if (preis <= 1) return a;
+  return a + Math.max(0, preis - Math.max(1, bestPreis(v, f, erg)));
+}, 0);
 
 /* ------------------------------------------------------------- Einnahmen */
 const stufeVon = (v, id) => Math.max(1, Math.min(AUSBAU_MAX, ((v?.ausbau || {})[id]) || 1));
