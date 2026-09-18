@@ -1,7 +1,42 @@
 # CHAR-FIX-03 – Haar-/Bart-/Gesichtspassung
 
 Datum: 18.09.2026
+Arbeitsbranch: `chatgpt/char-fix-03-haar-bart-passung`
 
-Arbeitsstand. Diese Datei wird durch die sichere Patch-Brücke angelegt, damit der aktuelle Branch nach der Geometriekorrektur zwingend durch `npm test` und `npm run build` läuft.
+## Anlass
 
-Die endgültige Abnahme wird erst nach erfolgreicher Browser-Vollmatrix und Sichtkontrolle ergänzt. Dieser dritte Gate-Lauf enthält zusätzlich die korrigierte Schnurrbart-/Nasenpassung und den aktualisierten Rasierkappen-Wächter; bis zur Sichtkontrolle ist CHAR-FIX-03 ausdrücklich nicht abgeschlossen.
+Die bisherigen Charakterprüfungen deckten bewusst Stichproben ab. Im Android-/Sichtfeedback blieben Kombinationen, bei denen Frisuren zu klein oder zu hoch saßen und Bartformen je nach Kopf/Nase/Mund zu weit in das Gesicht ragten.
+
+## Technische Korrekturen
+
+- Haarunterlage und kritische Kurzhaarformen sitzen größer und tiefer, bleiben aber auf die echte Kopfhülle geclippt.
+- Neue Kopfprofile verwenden keine künstlich nach oben gezogene Haarpassung mehr.
+- `gesichtsanker.js` koppelt Nase, Mund und Bart an dieselbe vertikale Geometrie.
+- Kurze Köpfe ziehen lange Nasen stärker nach oben; breite/offene Mundformen werden bei Bedarf vertikal komprimiert.
+- Schnurrbärte sind deutlich kompakter und zwischen Nasenunterkante und Mundzentrum begrenzt.
+- Bartkörper erhalten einen Mundfreiraum; Kiefer/Kinn bleiben weiterhin aus der realen Kopfform abgeleitet.
+- Nach dem ersten Browserlauf wurde zusätzlich `Kinngrübchen` relativ zur tatsächlichen Mundunterkante positioniert, weil Wangen-ID 1 bei 72 px vollständig vom Mund verdeckt wurde.
+
+## Erweiterte Prüfmatrix
+
+Automatisiert:
+- 1.512 Kombinationen aus 14 Köpfen × 12 Nasen × 9 Mündern für kollisionsfreie Gesichtsanker.
+- 700 Frisur×Kopf-Renderings.
+- 840 kritische Bart-Renderings über vier Nase/Mund-Paare und alle 14 Köpfe.
+
+Browser-Sichtbogen:
+- 700 Frisur×Kopf-Darstellungen.
+- 896 Bartdarstellungen (14 Köpfe × 4 kritische Gesichtspaare × 16 Bart-IDs).
+
+## Bisherige Nachweise
+
+Die sichere Patch-Brücke lief nach den Geometriekorrekturen vollständig grün: Patchprüfung, `npm ci`, `npm test` und `npm run build` erfolgreich.
+
+Der erste PR-Browserlauf zeigte:
+- `CHAR-FIX-03` selbst erfolgreich, einschließlich beider Vollmatrizen.
+- Sichtung der erzeugten Haar- und Bartmatrizen: keine abgeschnittenen Bartkörper, keine auf die Nase gerutschten Schnurrbärte und keine offensichtlich zu kleinen neuen Kopf-/Frisurpassungen in den geprüften Reihen.
+- Ein bestehender CHAR-P1-02-Rastertest fand Wangen-ID 0/1 bei 72 px pixelidentisch. Ursache war die vom Mund verdeckte Kinngrübchen-Geometrie; diese wurde anschließend korrigiert.
+
+## Status
+
+Noch **nicht final abgenommen**. Nach der Kinngrübchen-Korrektur müssen Spielregressionen und der vollständige Browserlauf auf demselben neuen Head erneut grün sein. Danach werden Artefakt/Screenshots erneut geprüft und dieser Bericht mit finalen Run-IDs ergänzt.
