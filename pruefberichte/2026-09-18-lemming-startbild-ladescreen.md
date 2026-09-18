@@ -65,4 +65,21 @@ Die eigentliche Android-Sichtpruefung des Starttimings und der Vollbildwirkung b
 
 Keine Spiel-, Speicher-, Balance-, Charakter-, Release-Signatur- oder main-Aenderung. Andere offene PRs bleiben unberuehrt.
 
-**Status:** Umsetzung laeuft auf dem PR-Branch; Astra-Abnahme und main-Integration bleiben offen.
+
+## Abschluss der Lemming-Eigenprüfung
+
+Beim ersten Lauf der neuen 1080×1920-Fassung am Head `779b5480…` schlug ausschließlich die exakte Bildhash-Prüfung fehl: **142/143** Tests waren grün. Der rekonstruierte WebP hatte zwar weiterhin 143.560 Byte und 1080×1920 Pixel, aber einen anderen SHA-256. Ursache war ein einzelnes falsch übertragenes Base64-Zeichen im 16. Datenblock. Der Block wurde gegen die vorbereitete Originaldatei abgeglichen und korrigiert; die Regression blieb absichtlich streng und wurde nicht an den falschen Hash angepasst.
+
+Am anschließend geprüften Code-Head `01263528014bed9736abe4ae42f033fb736d2fb3`:
+
+- **Spielregressionen:** 143/143 bestanden, 0 Fehler.
+- **Produktionsbuild:** Vite 6.4.3 erfolgreich, Buildzeit 2,03 s im CI-Lauf.
+- **Visuelle Browsertests:** 45 bestanden, 24 planmäßig übersprungen, 0 Fehler.
+- **Beta-APK:** Debug-Build erfolgreich (`BUILD SUCCESSFUL`), Artefakt `Rasenschach-XI-Beta-APK` hochgeladen.
+- **APK-Nachkontrolle:** Die APK enthält alle 16 Startbildteile; aus der APK rekonstruiert: 143.560 Byte, RIFF/WEBP/VP8, **1080×1920**, SHA-256 exakt `2be089a331766cd2508df6997721b112dac3a45794b3f43c2650efabcb695929`.
+- **Beta-APK SHA-256:** `011b64816cbe73d83389d20d7b7182dce7fded548b265a089775f9404d2e25aa`.
+- Das aus der fertigen APK extrahierte Startbild wurde zusätzlich visuell geöffnet; es entspricht dem gelieferten Rasenschach-XI-Magazinmotiv.
+
+Der physische Android-Gerätetest ist weiterhin **nicht** als erledigt markiert. Genau dafür wird die getrennte Beta an Kevin ausgegeben.
+
+**Status:** Lemming-Paket technisch eigengeprüft und zur Astra-Abnahme bereit. Kein main-Merge, kein Release.
