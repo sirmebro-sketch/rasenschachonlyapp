@@ -9415,7 +9415,11 @@ function VereinScreen({ v, aka, onAendern, onZurueck, onAbschluss, startReiter }
        Reiterleiste scrollt zwar waagerecht, aber mit dem sechsten Reiter lag
        „Chronik" auf einem 320er-Gerät zwei Wischer entfernt — beim Rundgang
        durch die Oberfläche gemessen. Zwei Zeichen weniger holen sie zurück. */
-    ["ausbau", "Ausbau"], ["sponsoren", "Partner"], ["chronik", "Chronik"]];
+    /* „Führung" statt „Ausbau": der Reiter trägt seit WIRT-P0-05-UI auch
+       Vorstandsziel, Preise und Rechtsform. Ein SIEBTER Reiter kam nicht in
+       Frage — bei 320 Pixeln lag schon der sechste zwei Wischer entfernt,
+       gemessen beim Rundgang am 18.09.2026. */
+    ["ausbau", "Führung"], ["sponsoren", "Partner"], ["chronik", "Chronik"]];
   const rueckJahre = (v.chronik || []).filter((c) => c.tabelle).map((c) => c.jahr).reverse();
   const [rjahr, setRjahr] = React.useState(null);
   const rc = (v.chronik || []).filter((c) => c.tabelle)
@@ -9957,6 +9961,125 @@ function VereinScreen({ v, aka, onAendern, onZurueck, onAbschluss, startReiter }
                 </div>)}
             </div>
 
+            {/* ---- VORSTANDSZIEL (WIRT-P0-05-UI) -------------------------
+                Es wurde seit dem Wirtschaftskern jede Saison gesetzt und
+                geprüft — sichtbar war es aber erst HINTERHER, im Beleg und in
+                der Chronik. Ein Ziel, das man erst erfährt, wenn es entschieden
+                ist, ist keines. Gewählt wird es nicht: der Vorstand gibt es
+                vor, abgeleitet aus der letzten Platzierung und verschärft von
+                der Rechtsform. */}
+            {v.ziel && (
+              <div className="pan pad" style={{ marginTop: 8 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
+                  <span className="eb">Vorstandsziel</span>
+                  <span className="d" style={{ fontSize: 13, color: "var(--ok)" }}>
+                    +{VEREIN.geldText(v.ziel.praemie, v.land)}</span>
+                </div>
+                <div className="d" style={{ fontSize: 15, marginTop: 2 }}>{v.ziel.n}</div>
+                <div className="m" style={{ fontSize: 11.5, marginTop: 2 }}>
+                  Mindestens Platz {v.ziel.soll} am Saisonende. Erfüllt bringt es
+                  die Prämie, verfehlt kostet es nichts — der Vorstand fordert,
+                  er bestraft nicht.</div>
+                <div className="m" style={{ fontSize: 11, marginTop: 4, color: "var(--mu)" }}>
+                  Die Vorgabe folgt der letzten Platzierung; eine strengere
+                  Rechtsform verschärft sie.</div>
+              </div>)}
+
+            {/* ---- PREISE (WIRT-P0-05-UI) -------------------------------
+                `preisFaktor` las bis hierher immer die Voreinstellung 1, weil
+                niemand etwas anderes setzen konnte. Die ganze Elastizitäts-
+                rechnung — Ansehen, Gastrostufe, Sortiment, Rechtsform,
+                Stimmung — lief also gegen einen festen Wert.
+
+                DER HINWEIS IST GERECHNET, NICHT GESCHÄTZT. `bestPreis` probiert
+                51 Werte durch und nennt den ertragreichsten. Er ist trotzdem
+                nur ein Hinweis: darüber zu gehen bringt kurzfristig mehr und
+                kostet Stimmung, und das darf der Spieler entscheiden. */}
+            <div className="pan pad" style={{ marginTop: 14 }}>
+              <div className="eb">Preise</div>
+              <div className="m" style={{ fontSize: 11.5, marginTop: 2 }}>
+                Faktor auf den Normalpreis. Höher heisst mehr je Einheit und
+                weniger Abnehmer — wie viel weniger, hängt davon ab, was der
+                Verein zu bieten hat.</div>
+            </div>
+            {VEREIN.PREIS_FELDER.map((f) => {
+              const jetzt = VEREIN.preisFaktor(VEREIN.mitWirtschaft(v), f.id);
+              const best = VEREIN.bestPreis(v, f.id);
+              const ueber = jetzt > best + 0.005;
+              return (
+                <div key={f.id} className="pan pad" style={{ marginTop: 8 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
+                    <span className="d" style={{ fontSize: 15 }}>{f.n}</span>
+                    <span className="d" style={{ fontSize: 15,
+                      color: ueber ? "var(--bad)" : "var(--tx)" }}>
+                      {Math.round(jetzt * 100)} %</span>
+                  </div>
+                  <div className="m" style={{ fontSize: 11.5, marginTop: 2 }}>{f.t}</div>
+                  <input type="range" style={{ width: "100%", marginTop: 6 }}
+                    min={VEREIN.PREIS_MIN} max={VEREIN.PREIS_MAX} step="0.02" value={jetzt}
+                    aria-label={f.n + " Preisfaktor"}
+                    onChange={(e) => { const r = VEREIN.preisSetzen(v, f.id, e.target.value);
+                                       if (!r.fehler) onAendern(r.v); }} />
+                  <div className="m" style={{ fontSize: 11, color: ueber ? "var(--bad)" : "var(--mu)" }}>
+                    {ueber
+                      ? "Über dem Ertragsmaximum von " + Math.round(best * 100)
+                        + " %. Bringt weniger ein und kostet jede Saison Stimmung."
+                      : "Ertragsmaximum bei " + Math.round(best * 100) + " %."}</div>
+                </div>);
+            })}
+
+            {/* ---- RECHTSFORM (WIRT-P0-05-UI) ---------------------------
+                `rechtsformWechseln` war vollständig gebaut und geprüft und
+                hatte null Aufrufer. Der Weg führt nur nach vorn und nur, wenn
+                der Verein gross genug ist — beides sagt der Bildschirm jetzt,
+                statt den Knopf wortlos zu sperren. */}
+            {(() => {
+              const jetzt = VEREIN.rechtsform(VEREIN.mitWirtschaft(v));
+              const alle = VEREIN.RECHTSFORMEN;
+              const i = alle.findIndex((r) => r.id === jetzt.id);
+              const naechste = alle[i + 1] || null;
+              const probe = naechste ? VEREIN.rechtsformWechseln(v, naechste.id) : null;
+              return (
+                <>
+                  <div className="pan pad" style={{ marginTop: 14 }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
+                      <span className="eb">Rechtsform</span>
+                      <span className="d" style={{ fontSize: 15 }}>{jetzt.n}</span>
+                    </div>
+                    <div className="m" style={{ fontSize: 11.5, marginTop: 2 }}>{jetzt.t}</div>
+                    <div className="m" style={{ fontSize: 11, marginTop: 4, color: "var(--mu)" }}>
+                      Vermarktung {Math.round(jetzt.kommerz * 100)} % · Fans vertragen
+                      {jetzt.toleranz >= 0 ? " mehr" : " weniger"} · Vorstand fordert
+                      {jetzt.zielHaerte > 1 ? " mehr" : jetzt.zielHaerte < 1 ? " weniger" : " normal"}
+                    </div>
+                  </div>
+                  {naechste && (
+                    <div className="pan pad" style={{ marginTop: 8 }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
+                        <span className="d" style={{ fontSize: 15 }}>Umwandeln in {naechste.n}</span>
+                        <span className="d" style={{ fontSize: 13, color: "var(--ok)" }}>
+                          +{VEREIN.geldText(naechste.einlage, v.land)}</span>
+                      </div>
+                      <div className="m" style={{ fontSize: 11.5, marginTop: 2 }}>{naechste.t}</div>
+                      <div className="m" style={{ fontSize: 11.5 }}>
+                        Kostet {VEREIN.geldText(naechste.wechselKosten, v.land)} und acht Punkte
+                        Stimmung. Der Weg führt nur nach vorn.</div>
+                      <button className="btn sm" style={{ marginTop: 6 }}
+                        disabled={!!(probe && probe.fehler)}
+                        onClick={() => { const r = VEREIN.rechtsformWechseln(v, naechste.id);
+                                         if (!r.fehler) onAendern(r.v); }}>
+                        {probe && probe.fehler ? probe.fehler : "Umwandeln"}
+                      </button>
+                    </div>)}
+                </>);
+            })()}
+
+            <div className="pan pad" style={{ marginTop: 14 }}>
+              <div className="eb">Ausbau</div>
+              <div className="m" style={{ fontSize: 11.5, marginTop: 2 }}>
+                Sechs Abteilungen, jede baut für sich. Eine Stufe wirkt erst ab
+                der Saison nach ihrer Fertigstellung.</div>
+            </div>
             {VEREIN.VEREIN_AUSBAU.map((ab) => {
               const stufe = VEREIN.ausbauStufe(v, ab.id);
               const k = VEREIN.ausbauKosten(v, ab.id);

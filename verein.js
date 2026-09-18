@@ -1266,6 +1266,44 @@ export const machVerein = (H) => {
   /* Ein Bauprojekt beginnen. Prueft VOR dem Schreiben, wie `buchungen.js` es
      fuer Karten und Coins tut: fehlt das Geld, aendert sich gar nichts.
      `mitWirtschaft` faengt den alten Spielstand ab, der keine Kasse kennt. */
+  /* ---- Vereinsfuehrung bedienbar machen (WIRT-P0-05-UI) -----------------
+     Preise, Rechtsform und Vorstandsziel rechneten seit dem Wirtschaftskern
+     mit, hatten aber keine Oberflaeche: `preisFaktor` las immer die
+     Voreinstellung 1, `rechtsformWechseln` hatte null Aufrufer, und das
+     Vorstandsziel tauchte erst NACH der Saison im Beleg auf. Drei Systeme, die
+     vollstaendig gebaut und geprueft waren und im Spiel nicht vorkamen.
+
+     Die Durchreichungen stehen hier und nicht in App.jsx, damit die Oberflaeche
+     `WIRT` nicht selbst importieren muss — dieselbe Linie wie bei `bauStarten`
+     und `extraKaufen`. */
+  const PREIS_FELDER = [
+    { id: "ticket", n: "Eintritt",    t: "Was eine Karte kostet. Teurer heisst weniger Zuschauer — und weniger Zuschauer heisst auch weniger Gastronomie." },
+    { id: "gastro", n: "Gastronomie", t: "Bier und Bratwurst. Was der Verein verlangen kann, haengt an der Gastrostufe." },
+    { id: "merch",  n: "Fanartikel",  t: "Trikots und Schals. Sortiment und Reichweite entscheiden, wie viel der Markt traegt." },
+  ];
+  const preisSetzen = (v, feld, wert) => {
+    if (!PREIS_FELDER.some((f) => f.id === feld)) return { v, fehler: "Unbekannter Preis." };
+    const x = Number(wert);
+    if (!Number.isFinite(x)) return { v, fehler: "Kein gueltiger Wert." };
+    const g = Math.max(WIRT.PREIS_MIN, Math.min(WIRT.PREIS_MAX, Math.round(x * 100) / 100));
+    return { v: { ...v, preise: { ...(v.preise || {}), [feld]: g } }, fehler: null };
+  };
+  /* Der Ertragsbeste Preis als HINWEIS, nicht als Automatik. `bestPreis`
+     rechnet ihn aus (51 Durchlaeufe, kein Schaetzwert) — der Spieler darf
+     bewusst darueber gehen und dafuer Stimmung zahlen. */
+  const bestPreis = (v, feld) => WIRT.bestPreis(mitWirtschaft(v), feld, letzterErg(v));
+  /* Die Lage der ABGELAUFENEN Saison, damit der Hinweis zum Verein passt und
+     nicht zu einem erfundenen Mittelfeldplatz. Ohne Chronik bleibt es bei der
+     Vorgabe aus `bestPreis`. */
+  const letzterErg = (v) => {
+    const c = (v?.chronik || []).filter((x) => x && x.rang).slice(-1)[0];
+    return c ? { rang: c.rang, N: c.N || 18 } : undefined;
+  };
+  const rechtsformWechseln = (v, zielId) => {
+    const r = WIRT.rechtsformWechseln(mitWirtschaft(v), zielId);
+    return r.fehler ? r : { ...r, v: ohneAbgeleitetes(r.v) };
+  };
+
   const bauStarten = (v, id) => {
     const r = WIRT.bauStart(mitWirtschaft(v), id);
     return { ...r, v: ohneAbgeleitetes(r.v) };          /* nichts Abgeleitetes speichern */
@@ -1762,5 +1800,9 @@ export const machVerein = (H) => {
            bauStarten, baustellenText, VC_EXTRAS, extraKaufen, geldText, kasse,
            SPONSOR_MAX, sponsorAngebote, sponsorAnnehmen, mitAngeboten, werbeErtrag,
            ENTZUG_NACH: WIRT.ENTZUG_NACH,
+           PREIS_FELDER, preisSetzen, bestPreis,
+           PREIS_MIN: WIRT.PREIS_MIN, PREIS_MAX: WIRT.PREIS_MAX, preisFaktor: WIRT.preisFaktor,
+           RECHTSFORMEN: WIRT.RECHTSFORMEN, rechtsform: WIRT.rechtsform, rechtsformWechseln,
+           zielSetzen: WIRT.zielSetzen,
            BONI, punkte, abschluss, neuerVerein };
 };

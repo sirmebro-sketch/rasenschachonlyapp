@@ -210,6 +210,24 @@ absteigbar — das ist keine Kalibrierfrage, sondern eine Grenze des Mittels.
 Die Gegenprobe über acht Läufe ergibt auf die Schulden Rauschen in beide
 Richtungen (+21 %, 0 %, −20 %, −3 %, +6 %, −13 %).
 
+### WIRT-P0-05-UI – Vereinsführung bedienbar machen — VORGELEGT (Claude, 18.09.2026)
+
+Preise, Rechtsform und Vorstandsziel rechneten seit WIRT-P0-05 mit und hatten
+keine Oberfläche. Folge: `preisFaktor` las **immer** die Voreinstellung 1, die
+ganze Elastizitätsrechnung lief gegen einen festen Wert, `rechtsformWechseln`
+hatte **null Aufrufer**, und das Vorstandsziel tauchte erst NACH der Saison im
+Beleg auf.
+
+- **Preise:** drei Regler (0,6 bis 1,6) mit dem gerechneten Ertragsmaximum als
+  Hinweis. Darüber zu gehen bleibt erlaubt und kostet Stimmung — eine
+  Entscheidung, keine Automatik.
+- **Rechtsform:** der nächste Schritt mit Einlage, Kosten und Wirkung; die
+  Sperre nennt ihren Grund, statt den Knopf wortlos abzuschalten.
+- **Vorstandsziel:** sichtbar, **bevor** es entschieden ist.
+
+Der Reiter heißt deshalb **„Führung"** statt „Ausbau". Ein siebter Reiter kam
+nicht in Frage — bei 320 Pixeln lag schon der sechste zwei Wischer entfernt.
+
 ### WIRT-P1-04b – Lizenzentzug als letzte Stufe — VORGELEGT (Claude, 18.09.2026)
 
 Die Antwort auf die Grenze oben, auf Kevins Auftrag vom 18.09.2026. **Drei

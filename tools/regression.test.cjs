@@ -1307,3 +1307,100 @@ test('Die Oberflaeche zaehlt die Jahre ohne Lizenz sichtbar mit',()=>{
    E.leereAkademie(),'ausbau');
  assert(!gesund.includes('Ohne Lizenz'));
 });
+
+/* ------------------------------------------ Vereinsfuehrung (WIRT-P0-05-UI)
+   Preise, Rechtsform und Vorstandsziel rechneten seit dem Wirtschaftskern mit
+   und hatten keine Oberflaeche. `preisFaktor` las deshalb immer die
+   Voreinstellung 1, `rechtsformWechseln` hatte null Aufrufer. */
+
+test('Ein gesetzter Preis kommt in der Abrechnung wirklich an',()=>{
+ /* DIE EIGENTLICHE ZUSICHERUNG. Ein Regler, der einen Wert speichert, den die
+    Rechnung nicht liest, waere dieselbe Sorte Placebo wie "Scoutnetz" und
+    "Bekannte Adresse" — nur mit Schieberegler. Geprueft wird deshalb die
+    EINNAHME, nicht das Feld. */
+ const v0=E.VEREIN.mitWirtschaft(spielbereiterVerein({kasse:50,ausbau:{stadion:3,gastro:3}}));
+ const teuer=E.VEREIN.preisSetzen(v0,'ticket',1.6);
+ assert.equal(teuer.fehler,null);
+ assert.equal(teuer.v.preise.ticket,1.6,'der Wert wird gespeichert');
+ /* Gespeichert ist nicht gelesen: der Faktor muss aus dem Verein kommen. */
+ assert.equal(E.VEREIN.preisFaktor(E.VEREIN.mitWirtschaft(teuer.v),'ticket'),1.6);
+ assert.equal(E.VEREIN.preisFaktor(v0,'ticket'),1,'ohne Setzen bleibt es bei 100 %');
+ /* Und die Zuschauerzahl muss sich unterscheiden — sonst rechnet niemand damit. */
+ const billig=E.VEREIN.preisSetzen(v0,'ticket',0.6).v;
+ const a=E.VEREIN.vereinSaison(E.VEREIN.einschreiben(E.VEREIN.mitWirtschaft(billig)).v);
+ const b=E.VEREIN.vereinSaison(E.VEREIN.einschreiben(E.VEREIN.mitWirtschaft(teuer.v)).v);
+ assert(!a.fehler&&!b.fehler);
+ assert(a.beleg.zuschauer>b.beleg.zuschauer,
+   'billiger fuellt das Stadion staerker: '+a.beleg.zuschauer+' vs '+b.beleg.zuschauer);
+});
+
+test('Preise werden geklemmt und pruefen vor dem Schreiben',()=>{
+ const v=spielbereiterVerein();
+ assert.equal(E.VEREIN.preisSetzen(v,'ticket',99).v.preise.ticket,E.VEREIN.PREIS_MAX);
+ assert.equal(E.VEREIN.preisSetzen(v,'ticket',-5).v.preise.ticket,E.VEREIN.PREIS_MIN);
+ assert(E.VEREIN.preisSetzen(v,'erfunden',1).fehler,'unbekanntes Feld wird abgelehnt');
+ assert(E.VEREIN.preisSetzen(v,'ticket','abc').fehler,'Unfug wird abgelehnt');
+ /* Ein abgelehnter Aufruf aendert gar nichts. */
+ assert.deepEqual(E.VEREIN.preisSetzen(v,'erfunden',1).v,v);
+});
+
+test('Der Preishinweis nennt das gerechnete Ertragsmaximum',()=>{
+ /* `bestPreis` probiert 51 Werte durch — der Hinweis ist ein Versprechen, kein
+    Schaetzwert. Hier wird nur geprueft, dass die Oberflaeche ihn ueberhaupt
+    bekommt und dass er in den Grenzen liegt; die Richtigkeit haelt
+    tools/vereinswirtschaft.test.cjs fest. */
+ for(const feld of ['ticket','gastro','merch']){
+  const b=E.VEREIN.bestPreis(spielbereiterVerein(),feld);
+  assert(Number.isFinite(b),feld+': '+b);
+  assert(b>=E.VEREIN.PREIS_MIN&&b<=E.VEREIN.PREIS_MAX,feld+' liegt in den Grenzen: '+b);
+ }
+});
+
+test('Die Rechtsform wechselt nur nach vorn und nur mit Groesse und Geld',()=>{
+ const klein=E.VEREIN.mitWirtschaft(spielbereiterVerein({kasse:500}));
+ /* Ein Verein in der untersten Liga kommt nicht an die Boerse. */
+ assert(E.VEREIN.rechtsformWechseln(klein,'ag').fehler,'zu klein fuer die AG');
+ /* Rueckwaerts geht gar nicht. */
+ assert(E.VEREIN.rechtsformWechseln({...klein,rechtsform:'gmbh'},'ev').fehler,
+   'der Weg fuehrt nur nach vorn');
+ /* Mit Liga und Geld geht es, und die Einlage kommt an. */
+ const gross={...klein,ligastufe:1,kasse:500};
+ const r=E.VEREIN.rechtsformWechseln(gross,'gmbh');
+ assert.equal(r.fehler,null,'Wechsel moeglich: '+r.fehler);
+ assert.equal(r.v.rechtsform,'gmbh');
+ const rf=E.VEREIN.RECHTSFORMEN.find(x=>x.id==='gmbh');
+ assert.equal(r.v.kasse,Math.round((500-rf.wechselKosten+rf.einlage)*100)/100,
+   'Kosten ab, Einlage drauf');
+ assert(r.v.stimmung<(gross.stimmung??60),'und es kostet Stimmung');
+ /* `ligastufe` ist abgeleitet und darf NICHT im Spielstand landen. */
+ assert.equal(r.v.ligastufe,undefined,'kein abgeleitetes Feld im Stand');
+ /* Ohne Geld kein Wechsel, und der Stand bleibt unberuehrt. */
+ const arm={...gross,kasse:0};
+ const nein=E.VEREIN.rechtsformWechseln(arm,'gmbh');
+ assert(nein.fehler,'ohne Geld kein Wechsel');
+ assert.equal(nein.v.rechtsform,'ev');
+});
+
+test('Der Fuehrungsreiter zeigt Ziel, Preise und Rechtsform ohne NaN',()=>{
+ const v=E.VEREIN.mitWirtschaft(spielbereiterVerein({kasse:60,
+   ziel:E.VEREIN.zielSetzen({ligastufe:2},8,18)}));
+ const html=E.renderVerein(v,{...E.leereAkademie(),vc:100},'ausbau');
+ assert(!html.includes('NaN'));
+ assert(!html.includes('undefined'));
+ assert(html.includes('Vorstandsziel'),'das Ziel steht da, bevor es entschieden ist');
+ assert(html.includes('Preise'));
+ assert(html.includes('Eintritt')&&html.includes('Gastronomie')&&html.includes('Fanartikel'));
+ assert(html.includes('Ertragsmaximum'),'der Hinweis wird genannt');
+ assert(html.includes('Rechtsform')&&html.includes('e.V.'));
+ assert(html.includes('Umwandeln'),'der naechste Schritt wird angeboten');
+ /* Der Reiter heisst jetzt "Fuehrung", weil er mehr traegt als Ausbau — und
+    "Chronik" muss weiter daneben stehen (320-Pixel-Befund aus #13). */
+ const leiste=html.split('Vereinskasse')[0];
+ assert(leiste.includes('>Führung<'),'der Reiter traegt den neuen Namen');
+ assert(!leiste.includes('>Ausbau<'),'der alte ist weg');
+ assert(leiste.includes('>Chronik<')&&leiste.includes('>Partner<'));
+ /* Ein Verein ohne Ziel (alter Stand) rendert trotzdem. */
+ const ohne=E.renderVerein(E.VEREIN.mitWirtschaft(spielbereiterVerein()),E.leereAkademie(),'ausbau');
+ assert(!ohne.includes('NaN'));
+ assert(!ohne.includes('Vorstandsziel'),'ohne Ziel keine leere Kachel');
+});
