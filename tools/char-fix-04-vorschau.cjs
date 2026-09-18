@@ -6,8 +6,8 @@ import {createRoot} from 'react-dom/client';
 function CharFix04Probe(){
  const basis={stil:2,augen:0,augenfarbe:1,brauen:0,nase:0,mund:0,ohren:1,wangen:0,schmuck:0,details:0,schminke:0,bart:0};
  const neu=[10,11,12,13],alt=[3,5,6];
- const mKrit=[0,1,2,3,6,7,12,13,14,15,20,21,23];
- const wKrit=[0,3,7,9,19,21];
+ const mKrit=[0,1,2,3,6,7,12,13,14,15,20,21,23,30];
+ const wKrit=[0,3,7,9,19,21,24,25,26];
  const bartKrit=[4,5,8,12,13,14,15];
  const paare=[
   {nase:3,mund:5,label:'N3/M5 · lange Nase / voller Mund'},
@@ -36,8 +36,8 @@ function CharFix04Probe(){
   <section data-testid="haar-alle-neue">
    <h1>1 · Alle Frisuren × Kopf 10–13 · 72 px</h1>
    {neu.map(kopf=><article className="pan pad kopf" data-kopf={kopf} key={'all'+kopf}><h2>ID {kopf} · {KOPFFORM[kopf].n}</h2>
-    <div className="grid">{Array.from({length:26},(_,f)=>avatar(kopf,'m',f,0,72,paare[0],'m'+f,'haar-alle'))}</div>
-    <div className="grid" style={{marginTop:7}}>{Array.from({length:24},(_,f)=>avatar(kopf,'w',f,0,72,paare[0],'w'+f,'haar-alle'))}</div>
+    <div className="grid">{Array.from({length:31},(_,f)=>avatar(kopf,'m',f,0,72,paare[0],'m'+f,'haar-alle'))}</div>
+    <div className="grid" style={{marginTop:7}}>{Array.from({length:31},(_,f)=>avatar(kopf,'w',f,0,72,paare[0],'w'+f,'haar-alle'))}</div>
    </article>)}
   </section>
 
