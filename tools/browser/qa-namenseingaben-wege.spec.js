@@ -26,7 +26,7 @@ test('QA Namenseingabe Charakter: Fokus, geringe Höhe, Zurück und Bestätigen'
 
   const name = page.locator('input[placeholder="z. B. Kevin Sarantis"]');
   const nummer = page.locator('input[maxlength="2"]');
-  const start = page.getByRole('button',{name:"LOS GEHT'S",exact:true});
+  const start = page.getByRole('button',{name:/Los geht's/i});
   const zurueck = page.getByRole('button',{name:'Zurück',exact:true});
 
   await name.fill(spielername);
@@ -65,7 +65,7 @@ test('QA Namenseingabe Charakter: Fokus, geringe Höhe, Zurück und Bestätigen'
 
   await neuerName.fill(spielername);
   await page.setViewportSize({width:testInfo.project.name === 'schmal' ? 320 : 390,height:testInfo.project.name === 'schmal' ? 720 : 844});
-  await page.getByRole('button',{name:"LOS GEHT'S",exact:true}).click();
+  await page.getByRole('button',{name:/Los geht's/i}).click();
   await expect(page.locator('body')).toContainText(/JEAN-PIERRE GROSSMÜLLER/i);
   await page.screenshot({path:testInfo.outputPath('char-confirmed.png'),fullPage:false});
 });
