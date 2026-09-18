@@ -7,47 +7,62 @@
 
 ## Auftrag
 
-Kevins Rasenschach-XI-Stadionmotiv soll beim Appstart kurz als app-eigener Ladescreen erscheinen. Unter dem großen „XI“ sitzt ein kleiner Ladekreis. Der Branch soll als getrennte Beta installierbar sein.
+Kevins geliefertes Rasenschach-XI-Magazinmotiv soll das bisherige Startmotiv ersetzen und beim Appstart kurz als app-eigener Ladescreen erscheinen. Das Bild soll auf Vollbild-Smartphones scharf bleiben; der Ladekreis sitzt exakt in der Bildschirmmitte. Der Branch soll weiterhin als getrennte Beta installierbar sein.
 
-## Erster Beta-Test: Fehler gefunden
+## Vorgeschichte und erhaltene Fremdarbeit
 
-Die erste Beta war technisch grün, auf Kevins Android-Gerät erschien jedoch **nicht** das gewünschte Stadionmotiv. Sichtbar war eine weiße Fläche mit blauem Capacitor-Platzhalter; nur der neue Ladekreis war korrekt vorhanden.
+Das Paket baut bewusst auf der bereits vorhandenen Lemming-Arbeit zu PR #28 auf. Deren app-eigener Splash vor React, Mindestanzeige, Ausblendung, Reduced-Motion-Verhalten und getrennte Beta-App-ID bleiben erhalten.
 
-Ursache: Die erste Fassung referenzierte `android/app/src/main/res/drawable-port-xhdpi/splash.png`. Die Annahme, diese vorhandene Ressource enthalte bereits Kevins Motiv, war falsch. Der grüne Build bewies lediglich, dass die Datei ausgeliefert wurde, nicht dass sie die richtige Grafik enthielt. Dieser erste Beta-Lauf gilt für die Bilddarstellung ausdrücklich als verworfen.
+Eine fruehe Beta dieses Pakets war trotz gruener CI visuell falsch, weil sie versehentlich eine alte Capacitor-Splashgrafik verwendete. Dieser Lauf bleibt als verworfener Befund dokumentiert. Die spaetere Stadionfassung wurde technisch abgesichert; sie wird mit dem aktuellen Auftrag lediglich durch Kevins neues Magazinmotiv ersetzt.
 
-## Korrigierte Lösung
+## Aktuelle Bildfassung
 
-Das tatsächlich gelieferte Motiv wurde als 720×1280-WebP für den Ladescreen vorbereitet. Die Bilddaten liegen offline in `startbild.b64` (83.704 Base64-Zeichen). `vite.config.js` liest diese Datei beim Build und ersetzt den Platzhalter `__RASENSCHACH_STARTBILD__` direkt durch eine `data:image/webp;base64,...`-URL in `index.html`.
+Das aktuell gelieferte Magazinmotiv liegt als **1080×1920-WebP** vor:
 
-Damit hängt der app-eigene Ladescreen nicht mehr von einer Android-Splashdatei, einem Netzabruf oder einer Laufzeit-Pfadauflösung ab. `index.html` enthält den Ladescreen vor dem React-Root; `main.jsx` hält ihn ab HTML-Start mindestens 2,2 Sekunden sichtbar und blendet ihn anschließend in 300 ms aus. Dauert der eigentliche Start länger, wird keine weitere volle Wartezeit addiert.
+- Dateigroesse: **143.560 Byte**
+- SHA-256: `2be089a331766cd2508df6997721b112dac3a45794b3f43c2650efabcb695929`
+- vollständig offline, kein Netzabruf
+- wegen des textbasierten GitHub-Schreibwegs in **16** Datenbloeke unter `public/startbild/` geteilt
 
-Der Ladekreis bleibt mittig unter dem XI. Bei `prefers-reduced-motion` rotiert er nicht.
+`tools/startbild.test.cjs` setzt die 16 Teile wieder zusammen und prueft Byte-Laenge, RIFF/WEBP-Signatur, **1080×1920** sowie den exakten SHA-256-Hash. Damit kann nicht unbemerkt wieder eine alte oder falsche Grafik in die Beta geraten.
 
-## Beta
+## Vollbilddarstellung auf Smartphones
 
-`.github/workflows/beta-apk.yml` baut nur für den Test eine Debug-App mit:
-- App-ID `de.rasenschach.xi.beta`,
-- Name „Rasenschach XI Beta“,
-- Debug-Signatur statt Release-Schlüssel,
-- eigenem App-/Speicherbereich, sodass sie neben der produktiven App installiert werden kann.
+Das 9:16-Motiv wird als scharfe Vordergrundebene mit `object-fit: contain` dargestellt, damit Titel, Randtexte und Barcode auch auf hoeheren Displays nicht abgeschnitten werden. Hinter dem Motiv liegt dieselbe Grafik weich vergroessert und abgedunkelt mit `object-fit: cover`; sie fuellt bei 18:9/19.5:9/20:9 nur den zusaetzlichen Randbereich.
+
+Dadurch bleibt auf 9:16 das Motiv randfuellend, waehrend auf laengeren Smartphones keine relevanten Seitenteile des Covers weggecroppt werden. Der Ladekreis liegt unabhaengig vom Seitenverhaeltnis bei **50 % / 50 %** exakt in der Bildschirmmitte.
+
+## Start-/Timing-Verhalten
+
+`index.html` zeigt den Ladescreen weiterhin vor dem React-Root. `main.jsx` haelt ihn ab HTML-Start mindestens 2,2 Sekunden sichtbar und blendet ihn danach aus. Dauert der eigentliche Start laenger, wird keine weitere volle Wartezeit addiert.
+
+Bei `prefers-reduced-motion` rotiert der Ring nicht.
+
+## Getrennte Beta
+
+`.github/workflows/beta-apk.yml` baut weiterhin nur fuer den Test eine Debug-App mit:
+
+- App-ID `de.rasenschach.xi.beta`
+- Name „Rasenschach XI Beta“
+- Debug-Signatur statt Release-Schluessel
+- eigenem App-/Speicherbereich fuer parallele Installation
 
 Kein Release und kein main-Merge.
 
-## Regression
+## Pruefplan fuer den aktuellen PR-Head
 
-`tools/startbild.test.cjs` prüft:
-- Ladescreen vor React,
-- Bild-Platzhalter und Spinner,
-- Spinnerposition und Reduced Motion,
-- exakt vollständige Base64-Daten,
-- RIFF/WEBP-Signatur nach dem Dekodieren,
-- Vite-Einbettung als Data-URL,
-- Mindestdauer und Entfernen des Ladescreens.
+Nach Abschluss der Bildumstellung muessen am exakten neuen Head erneut erfolgreich sein:
 
-## Noch offen
+- `npm test`
+- `npm run build`
+- visuelle Browsertests des PR
+- Workflow **Beta-APK fuer PR**
+- APK-Nachkontrolle auf die 16 Bildteile und den exakten Bildhash
 
-Nach der Korrektur müssen Regression, Produktionsbuild, Browserprüfungen und der Beta-APK-Workflow am **neuen** PR-Head erneut grün sein. Danach bleibt nur der erneute echte Android-Gerätetest durch Kevin/Astra. Browser- oder CI-Erfolg wird nicht als Gerätetest ausgegeben.
+Die eigentliche Android-Sichtpruefung des Starttimings und der Vollbildwirkung bleibt anschliessend ein echter Geraetetest durch Kevin/Astra.
 
 ## Nicht Teil dieses Pakets
 
-Keine Spiel-, Speicher-, Balance-, Charakter-, Signatur- oder Releaseänderung. Andere offene PRs bleiben unberührt.
+Keine Spiel-, Speicher-, Balance-, Charakter-, Release-Signatur- oder main-Aenderung. Andere offene PRs bleiben unberuehrt.
+
+**Status:** Umsetzung laeuft auf dem PR-Branch; Astra-Abnahme und main-Integration bleiben offen.
