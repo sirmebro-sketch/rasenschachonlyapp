@@ -6,9 +6,9 @@ test('CHAR-FIX-03: alle Kopf/Frisur-Paare und kritischen Bartkombinationen rende
  await page.goto('/.preview/char-fix-03.html');
  const haar=page.locator('[data-kind="haar"]');
  const bart=page.locator('[data-kind="bart"]');
- await expect(haar).toHaveCount(700);
+ await expect(haar).toHaveCount(868);
  await expect(bart).toHaveCount(896);
- await expect(haar.locator('svg[aria-label="Spielerporträt"]')).toHaveCount(700);
+ await expect(haar.locator('svg[aria-label="Spielerporträt"]')).toHaveCount(868);
  await expect(bart.locator('svg[aria-label="Spielerporträt"]')).toHaveCount(896);
  await expect(page.locator('[data-testid="haar-matrix"] article')).toHaveCount(14);
  await expect(page.locator('[data-testid="bart-matrix"] article')).toHaveCount(14);
