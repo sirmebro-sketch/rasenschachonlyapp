@@ -60,18 +60,18 @@ test('CHAR-FIX-03: alle 14 Kopf × 12 Nase × 9 Mund Kombinationen besitzen koll
 test('CHAR-FIX-03: alle Frisuren rendern auf allen 14 Kopfformen ohne ungültige Geometrie',()=>{
  let count=0;
  for(const kopf of KOEPFE){
-  for(let id=0;id<26;id++){
+  for(let id=0;id<31;id++){
    const svg=E.haar(id,false,kopf);count++;
    assert.doesNotMatch(svg,/NaN|undefined/);
    if(id!==11){assert.match(svg,/data-haar-typ=/);assert.match(svg,/data-haar-ebene="vorn"/);}
   }
-  for(let id=0;id<24;id++){
+  for(let id=0;id<31;id++){
    const svg=E.haar(id,true,kopf);count++;
    assert.doesNotMatch(svg,/NaN|undefined/);
    assert.match(svg,/data-haar-typ=/);
   }
  }
- assert.equal(count,700);
+ assert.equal(count,868);
 });
 
 test('CHAR-FIX-03: Bartkatalog rendert auf allen Köpfen mit kritischen Nasen/Mündern ohne Überlaufdaten',()=>{

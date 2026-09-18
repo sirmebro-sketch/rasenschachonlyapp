@@ -25,11 +25,11 @@ function CharFix03Probe(){
   <h1>CHAR-FIX-03 · Haar-/Bart-Passung</h1>
   <p className="intro">Sichtkontrolle aller 14 Kopfformen mit sämtlichen modernen Frisuren bei 72 px sowie aller Bart-IDs in vier kritischen Nase/Mund-Paaren. Gespeicherte IDs bleiben unverändert.</p>
   <section data-testid="haar-matrix">
-   <h1>Frisuren · 700 Kopf/Frisur-Paarungen</h1>
+   <h1>Frisuren · 868 Kopf/Frisur-Paarungen</h1>
    {KOPFFORM.map((k,kopf)=><article className="pan pad kopf" data-kopf={kopf} key={'h'+kopf}>
     <h2>ID {kopf} · {k.n}</h2>
-    <div className="grid">{Array.from({length:26},(_,f)=>renderHair(kopf,'m',f))}</div>
-    <div className="grid" style={{marginTop:6}}>{Array.from({length:24},(_,f)=>renderHair(kopf,'w',f))}</div>
+    <div className="grid">{Array.from({length:31},(_,f)=>renderHair(kopf,'m',f))}</div>
+    <div className="grid" style={{marginTop:6}}>{Array.from({length:31},(_,f)=>renderHair(kopf,'w',f))}</div>
    </article>)}
   </section>
   <section data-testid="bart-matrix">
