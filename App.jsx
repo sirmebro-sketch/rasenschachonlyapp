@@ -9264,10 +9264,13 @@ function VereinGruenden({ aka, verein, art = "voll", onFertig, onZurueck }) {
    wird der Anpfiffknopf aktiv — und er sagt, WAS fehlt. Ein grauer Knopf ohne
    Begründung ist eine Zumutung; dieselbe Überlegung wie bei `sperre` an den
    Auswahlmöglichkeiten und bei „noch 2 bis zum Verein". */
-function VereinScreen({ v, aka, onAendern, onZurueck, onAbschluss }) {
+function VereinScreen({ v, aka, onAendern, onZurueck, onAbschluss, startReiter }) {
   /* F55 (35.147): siehe VereinDach. */
   useZurueck(onZurueck);
-  const [reiter, setReiter] = React.useState("kader");
+  /* `startReiter` wie beim Packladen: der Prüfstand soll einen bestimmten
+     Reiter aufschlagen können, ohne einen Klick nachzubauen. Im Spiel wird er
+     nicht gesetzt, dort beginnt der Bildschirm wie immer beim Kader. */
+  const [reiter, setReiter] = React.useState(startReiter || "kader");
   const [bericht, setBericht] = React.useState(null);
   /* Welcher Platz gerade besetzt wird (35.49). `null` heisst: keiner offen.
      Bewusst eine Zahl und kein Objekt — der Index ist der Schluessel, unter
@@ -9824,12 +9827,34 @@ function VereinScreen({ v, aka, onAendern, onZurueck, onAbschluss }) {
               </div>)}
           </div>)}
 
+        {/* WIRT-P0-03: Ausbau kostet Geld, VC nur noch die vier Extras. Die
+            Trennung ist auch optisch eine: zwei Abschnitte, zwei Währungen,
+            keine Zeile, in der beides nebeneinander steht. */}
         {reiter === "ausbau" && (
-          <div className="pan pad" style={{ marginTop: 10 }}>
-            <div className="eb">Vereinsausbau · {aka ? aka.vc : 0} VC verfügbar</div>
+          <div style={{ marginTop: 10 }}>
+            <div className="pan pad">
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
+                <span className="eb">Vereinskasse</span>
+                <span className="d" style={{ fontSize: 18,
+                  color: VEREIN.kasse(v) < 0 ? "var(--bad)" : "var(--ok)" }}>
+                  {VEREIN.geldText(VEREIN.kasse(v), v.land)}</span>
+              </div>
+              <div className="m" style={{ fontSize: 11.5, marginTop: 2 }}>
+                Das Geld kommt aus Zuschauern, Gastronomie, Fanartikeln, Prämien
+                und Werbeverträgen — jede Saison neu abgerechnet.</div>
+              {VEREIN.baustellenText(v).length > 0 && (
+                <div style={{ marginTop: 7 }}>
+                  <div className="m" style={{ fontSize: 11.5 }}>Im Bau:</div>
+                  {VEREIN.baustellenText(v).map((t, i) => (
+                    <div key={i} className="d" style={{ fontSize: 12.5 }}>· {t}</div>))}
+                </div>)}
+            </div>
+
             {VEREIN.VEREIN_AUSBAU.map((ab) => {
               const stufe = VEREIN.ausbauStufe(v, ab.id);
               const k = VEREIN.ausbauKosten(v, ab.id);
+              const laeuft = (v.baustellen || {})[ab.id];
+              const fehlt = k == null ? 0 : Math.max(0, Math.round((k - VEREIN.kasse(v)) * 100) / 100);
               return (
                 <div key={ab.id} className="pan pad" style={{ marginTop: 8 }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
@@ -9839,13 +9864,48 @@ function VereinScreen({ v, aka, onAendern, onZurueck, onAbschluss }) {
                   <div className="m" style={{ fontSize: 11.5, marginTop: 2 }}>{ab.t}</div>
                   <div className="m" style={{ fontSize: 11.5 }}>{ab.wirkt}</div>
                   <button className="btn sm" style={{ marginTop: 6 }}
-                    disabled={k == null || !aka || aka.vc < k}
+                    disabled={k == null || !!laeuft || fehlt > 0}
+                    onClick={() => { const r = VEREIN.bauStarten(v, ab.id); if (!r.fehler) onAendern(r.v); }}>
+                    {k == null ? "Voll ausgebaut"
+                      : laeuft ? "Im Bau · noch " + laeuft.rest + (laeuft.rest === 1 ? " Saison" : " Saisons")
+                      : "Bauen · " + VEREIN.geldText(k, v.land)}
+                  </button>
+                  {/* „Dafür fehlen" nur, wenn es etwas zu ergänzen GIBT. Bei
+                      leerer Kasse ist die Lücke genau der Preis — die Zeile
+                      wiederholte dann die Zahl direkt über sich. Beim Rundgang
+                      durch die Oberfläche als Stottern aufgefallen: „Bauen ·
+                      4 Mio €" / „Dafür fehlen 4 Mio €". Ist schon etwas da,
+                      aber nicht genug, sagt sie etwas Neues. */}
+                  {k != null && !laeuft && fehlt > 0 && VEREIN.kasse(v) > 0 && (
+                    <div className="m" style={{ fontSize: 11, marginTop: 4 }}>
+                      Dafür fehlen {VEREIN.geldText(fehlt, v.land)}</div>)}
+                </div>);
+            })}
+
+            <div className="pan pad" style={{ marginTop: 14 }}>
+              <div className="eb">Mit VC · {aka ? aka.vc : 0} verfügbar</div>
+              <div className="m" style={{ fontSize: 11.5, marginTop: 2 }}>
+                Nur was den Verein überdauert oder mit Geld allein nicht geht.
+                Jedes einmal je Verein.</div>
+            </div>
+            {VEREIN.VC_EXTRAS.map((ex) => {
+              const hat = (v.extras || []).includes(ex.id);
+              return (
+                <div key={ex.id} className="pan pad" style={{ marginTop: 8 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
+                    <span className="d" style={{ fontSize: 15 }}>{ex.n}</span>
+                    <span className="m" style={{ fontSize: 12 }}>{ex.vc} VC</span>
+                  </div>
+                  <div className="m" style={{ fontSize: 11.5, marginTop: 2 }}>{ex.t}</div>
+                  <div className="m" style={{ fontSize: 11.5 }}>{ex.wirkt}</div>
+                  <button className="btn sm" style={{ marginTop: 6 }}
+                    disabled={hat || !aka || aka.vc < ex.vc}
                     onClick={() => {
-                      const r = VEREIN.ausbauen(v, ab.id, aka ? aka.vc : 0);
-                      if (!r.fehler) { onAendern(r.v, { ...aka, vc: aka.vc - r.kosten,
-                        ausgegeben: (aka.ausgegeben || 0) + r.kosten }); }
+                      const r = VEREIN.extraKaufen(v, ex.id, aka ? aka.vc : 0);
+                      if (!r.fehler) onAendern(r.v, { ...aka, vc: aka.vc - r.kosten,
+                        ausgegeben: (aka.ausgegeben || 0) + r.kosten });
                     }}>
-                    {k == null ? "Voll ausgebaut" : "Ausbauen · " + k + " VC"}
+                    {hat ? "Bereits vorhanden" : "Kaufen · " + ex.vc + " VC"}
                   </button>
                 </div>);
             })}
@@ -9863,6 +9923,32 @@ function VereinScreen({ v, aka, onAendern, onZurueck, onAbschluss }) {
                   {c.aufstieg ? " · Aufstieg" : c.abstieg ? " · Abstieg" : ""}</div>
                 <div className="m" style={{ fontSize: 11.5 }}>Stärke {c.staerke}
                   {c.abgaenge.length ? " · Abgänge: " + c.abgaenge.join(", ") : ""}</div>
+                {/* Die Wirtschaft des Jahres. Die Kurzfassung lag seit
+                    WIRT-P0-02 im Spielstand und wurde von niemandem gelesen —
+                    genau das, was dieses Projekt „ein Feld ohne Leser ist
+                    wieder nur eine Zahl" nennt. Hier beantwortet sie eine
+                    Frage: wie stand der Verein in diesem Jahr da? */}
+                {c.wirtschaft && (
+                  <div className="m" style={{ fontSize: 11.5, marginTop: 3 }}>
+                    <span style={{ color: c.wirtschaft.ergebnis < 0 ? "var(--bad)" : "var(--ok)" }}>
+                      {(c.wirtschaft.ergebnis > 0 ? "+" : "")
+                        + VEREIN.geldText(c.wirtschaft.ergebnis, v.land)}</span>
+                    {" · Kasse " + VEREIN.geldText(c.wirtschaft.kasse, v.land)}
+                    {c.wirtschaft.zuschauer
+                      ? " · " + Math.round(c.wirtschaft.zuschauer).toLocaleString("de-DE") + " Zuschauer"
+                      : ""}
+                    {c.wirtschaft.stimmung != null ? " · Stimmung " + c.wirtschaft.stimmung : ""}
+                    {c.wirtschaft.gehaltsniveau > 1.02
+                      ? " · Gehälter " + Math.round(c.wirtschaft.gehaltsniveau * 100) + " %"
+                      : ""}
+                    {c.wirtschaft.ziel
+                      ? " · " + c.wirtschaft.ziel.n + (c.wirtschaft.ziel.erfuellt ? " erfüllt" : " verfehlt")
+                      : ""}
+                    {(c.wirtschaft.ereignisse || []).length
+                      ? " · " + c.wirtschaft.ereignisse.join(", ") : ""}
+                    {(c.wirtschaft.ausgelaufen || []).length
+                      ? " · Vertrag aus: " + c.wirtschaft.ausgelaufen.join(", ") : ""}
+                  </div>)}
               </div>))}
           </div>)}
 

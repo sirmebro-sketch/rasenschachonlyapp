@@ -105,12 +105,24 @@ beim Speichern; eine gespeicherte 0 gilt nicht als fehlender Wert.
 **Wichtig für die Reihenfolge:** siehe Abschnitt 6 — P0-02 allein darf einen
 Spieler nicht erreichen.
 
-### WIRT-P0-03 – Ausbau auf Geld umstellen — BEREIT, jetzt zwingend
+### WIRT-P0-03 – Ausbau auf Geld umstellen — VORGELEGT (Claude, 17.09.2026)
 
-`VEREIN.ausbauen` (VC) durch `ausbauKaufen` (Geld) ersetzen; der Aufrufer
-steht in `App.jsx` im Vereinsbildschirm. VC-Extras als eigener, klar
-getrennter Abschnitt. Der alte VC-Ausbau verschwindet damit; bereits
-erreichte Stufen bleiben.
+`VEREIN.ausbauen` (VC) ist **ersetzt**, nicht ergänzt: die Funktion existiert
+nicht mehr, damit sie niemand versehentlich wiederbelebt. An ihre Stelle tritt
+`bauStarten` (Geld, über `WIRT.bauStart`). Aus Kaufen wird **Planen** — bezahlt
+wird sofort, gebaut über bis zu zwei Saisons, und der Name sagt das.
+
+**Ein Katalog statt zwei.** Der alte `VEREIN_AUSBAU` in `verein.js` ist
+verschwunden; die Abteilungen stehen nur noch in `vereinswirtschaft.js`. Zwei
+Listen mit denselben Kennungen und verschiedenen Preisen wären genau die
+Doppelung, an der dieses Projekt schon einmal gelitten hat. `training`,
+`stadion` und `medizin` behalten Kennung und Wirkung; `gastro`, `sortiment`
+und `reichweite` kommen hinzu.
+
+**Die Oberfläche trennt die Währungen sichtbar:** oben die Kasse in der
+Landeswährung mit den laufenden Baustellen, darunter die sechs Abteilungen mit
+Geldpreisen, und erst danach — eigener Abschnitt, eigene Überschrift — die vier
+VC-Extras. Keine Zeile, in der beides nebeneinander steht.
 
 ### WIRT-P0-04 – Sponsorenwahl als Oberfläche — BEREIT
 
@@ -210,7 +222,33 @@ gehören in derselben Auslieferung zum Spieler. Die Zahlen oben sind kein
 Fehler im Anschluss, sondern der Beweis, dass die Ausgabeseite fehlt. Wer P0-02
 allein freigibt, liefert eine Wirtschaft, die nur verlieren kann.
 
-**Danach erneut zu prüfen:** ob ein Verein, der sich hocharbeitet, den Ausbau
-schnell genug bezahlen kann, um den Gehaltssprung beim Aufstieg zu überleben
-(Stufe 2 → 1 verdreifachte die Gehälter von 21,6 auf 52,3, während die
-Einnahmen nur um 2,8 stiegen). Das ist die nächste echte Balance-Frage.
+**Beantwortet (17.09.2026) — teilweise, und das Ergebnis ist unbequem.** Mit
+P0-03 darf der Verein bauen. Gleicher Lauf, einmal ohne und einmal mit Ausbau:
+
+| Kaderstärke | ohne Bauen | mit Bauen | erreichter Ausbau |
+|---:|---:|---:|---:|
+| 48 | +27 | −8 | 9/30 |
+| 55 | −10 | −19 | 5/30 |
+| 62 | **−55** | **+11** | 18/30 |
+| 70 | −289 | −183 | 8/30 |
+| 78 | −556 | −539 | 1/30 |
+
+**Bauen rettet die Mitte, nicht die Spitze.** Ein Verein mit Stärke 62 dreht
+das Minus in ein Plus und erreicht 18 von 30 Stufen. Ein Verein mit Stärke 78
+erreicht **eine** Stufe: die Gehälter fressen den Ertrag, bevor gebaut werden
+kann, und wer einmal hinten liegt, baut sich nicht mehr heraus.
+
+Die Ursache ist der Exponent 4 auf die Spielerstärke. Bei der Kalibrierung
+rechnete er mit einer GESCHÄTZTEN Stärke von 74 in der ersten Liga; ein
+Spieler, der seine Akademie ausreizt, kommt darüber — und (78/60)^4 ist ein
+Viertel teurer als (74/60)^4, bei jedem Spieler, jede Saison.
+
+**Das ist eine Balance-Entscheidung und gehört Kevin**, nicht dem nächsten
+Paket. Drei Wege, absteigend nach Eingriffstiefe:
+
+1. **Exponent 4 → 3 oder 3,5.** Trifft genau die Spitze und lässt die Mitte
+   fast unberührt. Am zielgenauesten.
+2. **Obergrenze des Gehaltsniveaus von 2,00 auf etwa 1,6 senken.** Einfach,
+   aber nimmt auch dem mittleren Verein Druck.
+3. **Einnahmen der ersten Liga anheben** (Prämien, Sponsorenbasis). Löst es
+   auch, macht aber den Aufstieg wieder zum Selbstläufer — vermutlich falsch.

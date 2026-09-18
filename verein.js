@@ -1161,33 +1161,58 @@ export const machVerein = (H) => {
   };
 
   /* ============================ Vereinsausbau ============================ */
-  /* Der Verein laesst sich mit denselben VC ausbauen wie die Akademie. Drei
-     Abteilungen, bewusst wenige — der Verein soll nicht die Akademie
-     nachbauen, sondern ihre Absolventen besser machen.
-     Die Kosten liegen ueber denen einer Akademiestufe: der Vollausbau der
-     Akademie kostet 2.912 VC, und beides gleichzeitig auszubauen soll eine
-     echte Entscheidung sein, kein Nebenher. */
-  const VEREIN_AUSBAU = [
-    { id: "training", n: "Trainingszentrum", kosten: [0, 40, 75, 120, 175, 240],
-      t: "Deine Spieler entwickeln sich schneller.", wirkt: "+1 Stärke je Stufe und Jahr" },
-    { id: "stadion",  n: "Stadion",           kosten: [0, 45, 84, 135, 196, 268],
-      t: "Mehr Zuschauer, mehr Rückhalt, mehr Druck auf Gäste.", wirkt: "+0,8 Mannschaftsstärke je Stufe" },
-    { id: "medizin",  n: "Medizinische Abteilung", kosten: [0, 36, 68, 110, 160, 220],
-      t: "Weniger Ausfälle, längere Laufbahnen.", wirkt: "Spieler halten ein Jahr länger durch" },
-  ];
-  const AUSBAU_MAX = 6;
-  const ausbauStufe = (v, id) => clamp(((v.ausbau || {})[id]) || 1, 1, AUSBAU_MAX);
-  const ausbauKosten = (v, id) => {
-    const a = VEREIN_AUSBAU.find((x) => x.id === id);
-    const st = ausbauStufe(v, id);
-    return (a && st < AUSBAU_MAX) ? a.kosten[st] : null;      /* null = fertig */
+  /* WIRT-P0-03: DER AUSBAU KOSTET GELD, NICHT MEHR VC.
+
+     Kevin, 17.09.2026: „Das man keine VC in etwas versenkt was nach 15 Saison
+     eh verschwindet. Lediglich gewisse extra Bonis und Ausbauten sollen mit
+     VC möglich sein."
+
+     Bis 35.192 kostete jede Ausbaustufe VC — dieselbe knappe, laufbahn-
+     uebergreifende Waehrung wie die Akademie. Der Verein endet aber planmaessig
+     nach fuenfzehn Jahren und nimmt den Ausbau mit. Wer VC hineinsteckte,
+     steckte sie in etwas, das endet: keine Entscheidung, sondern eine Falle.
+
+     EIN KATALOG, NICHT ZWEI. Die Abteilungen stehen jetzt ausschliesslich in
+     `vereinswirtschaft.js`. Der alte Katalog hier ist ERSETZT, nicht ergaenzt
+     — zwei Listen mit denselben Kennungen und verschiedenen Preisen waeren
+     genau die Sorte Doppelung, die dieses Projekt schon einmal teuer bezahlt
+     hat. `training`, `stadion` und `medizin` behalten Kennung UND Wirkung;
+     `gastro`, `sortiment` und `reichweite` kommen hinzu.
+
+     AUS KAUFEN WIRD PLANEN. Bezahlt wird sofort, gebaut ueber bis zu zwei
+     Saisons (`bauStart`). Deshalb heisst die Funktion `bauStarten` und nicht
+     mehr `ausbauen`: der Name soll nicht verschweigen, dass die Stufe erst
+     spaeter wirkt. */
+  const VEREIN_AUSBAU = WIRT.AUSBAU;
+  const AUSBAU_MAX = WIRT.AUSBAU_MAX;
+  const ausbauStufe = WIRT.ausbauStufe;
+  const ausbauKosten = WIRT.ausbauKosten;
+
+  /* Ein Bauprojekt beginnen. Prueft VOR dem Schreiben, wie `buchungen.js` es
+     fuer Karten und Coins tut: fehlt das Geld, aendert sich gar nichts.
+     `mitWirtschaft` faengt den alten Spielstand ab, der keine Kasse kennt. */
+  const bauStarten = (v, id) => {
+    const r = WIRT.bauStart(mitWirtschaft(v), id);
+    return { ...r, v: ohneAbgeleitetes(r.v) };          /* nichts Abgeleitetes speichern */
   };
-  const ausbauen = (v, id, vcVorrat) => {
-    const k = ausbauKosten(v, id);
-    if (k == null) return { v, kosten: 0, fehler: "Schon voll ausgebaut." };
-    if (vcVorrat < k) return { v, kosten: 0, fehler: "Dafür fehlen " + (k - vcVorrat) + " VC." };
-    return { v: { ...v, ausbau: { ...v.ausbau, [id]: ausbauStufe(v, id) + 1 } }, kosten: k, fehler: null };
+  const baustellenText = (v) => WIRT.baustellenText(v);
+
+  /* Der EINZIGE verbliebene Weg, auf dem VC in den Verein fliessen. Vier
+     Posten, jeder einmal je Durchlauf, und jeder erfuellt eine der beiden
+     Bedingungen aus dem Arbeitsplan: er ueberdauert den Verein, oder er
+     ermoeglicht etwas, das mit Geld allein nicht geht. Der VC-Vorrat liegt an
+     der Akademie, nicht am Verein — deshalb kommt er als Zahl herein und die
+     Abbuchung geschieht draussen, genau wie beim Packkauf. */
+  const VC_EXTRAS = WIRT.VC_EXTRAS;
+  const extraKaufen = (v, id, vcVorrat) => {
+    const r = WIRT.extraKaufen(mitWirtschaft(v), id, vcVorrat);
+    return { ...r, v: ohneAbgeleitetes(r.v) };
   };
+
+  /* Geld in der Waehrung des Landes anzeigen. Gerechnet wird immer in
+     Millionen Euro; die Landeswaehrung ist eine reine Anzeigefrage. */
+  const geldText = (mio, land) => WIRT.geldText(mio, land);
+  const kasse = (v) => Math.round(((Number(v?.kasse) || 0)) * 100) / 100;
 
   /* ========================= Abschluss und Vermaechtnis ================== */
   /* Nach VEREIN_JAHRE ist Schluss. Kevins Vorgabe: Bilanz ziehen, VC
@@ -1550,6 +1575,7 @@ export const machVerein = (H) => {
            zustimmen, ablehnen, auslaufenLassen, bleibeLust, spVertrag,
            entlassen, zurueckInDieJugend, ZURUECK_ALTER,
            FREI_AKADEMIE, FREI_VEREIN, freigeschaltet,
-           VEREIN_AUSBAU, AUSBAU_MAX, ausbauStufe, ausbauKosten, ausbauen,
+           VEREIN_AUSBAU, AUSBAU_MAX, ausbauStufe, ausbauKosten,
+           bauStarten, baustellenText, VC_EXTRAS, extraKaufen, geldText, kasse,
            BONI, punkte, abschluss, neuerVerein };
 };
