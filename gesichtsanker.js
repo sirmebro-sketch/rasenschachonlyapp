@@ -26,6 +26,10 @@ const MUND_MASSE=[
  {oben:3.8,unten:4.2},
  {oben:.8,unten:2.2},
  {oben:1,unten:5.5},
+ // Neue Mund-IDs brauchen eigene Grenzen; nicht auf ID 8 zurückfallen.
+ {oben:3.5,unten:4.1}, // 9: Herzförmig
+ {oben:2.4,unten:2.8}, // 10: Kompakt
+ {oben:1.9,unten:3.2}, // 11: Breites Grinsen, einschließlich Strichstärke
 ];
 
 export function gesichtsAnker(kopf={},nase=0,mund=0){

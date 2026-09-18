@@ -144,7 +144,7 @@ Die Reihenfolge ist eine Qualitäts-/Risikoreihenfolge. Der letzte Nutzerauftrag
 
 **Abschluss 18.09.2026:** Zweite Qualitätsrunde ergänzt fünf Männer- und sieben Frauenfamilien append-only, differenziert die drei CHAR-P0-01-Ähnlichkeitskandidaten M13/W9/W13 sichtbar nach und prüft den Gesamtkatalog bei 72/96/145 px auf sieben Kopf-/Farbkontexten. CHAR-FIX-03/04 wurden auf 31 Frisuren je Auswahl erweitert; die finalen Bögen wurden tatsächlich geöffnet und ohne neuen Passungsblocker abgenommen. Details: `pruefberichte/2026-09-18-char-p1-03-frisurenvielfalt-02.md`.
 
-### CHAR-P1-04 – Bärte und Kombinationen ausbauen — SICHTPRÜFUNG
+### CHAR-P1-04 – Bärte und Kombinationen ausbauen — UMGESETZT, weitere unabhängige Sichtprüfung offen
 
 **Ziel:** Bartformen unterscheiden sich in Wangenlinie, Kinnlänge und Schnurrbartanteil und passen zu unterschiedlichen Kieferformen.
 
@@ -152,7 +152,7 @@ Die Reihenfolge ist eine Qualitäts-/Risikoreihenfolge. Der letzte Nutzerauftrag
 
 **Abnahme:** mehrere Kopfformen, helle/dunkle Bartfarben, keine Hautkeile; kleine Avatargröße.
 
-### CHAR-P1-05 – Charaktererstellung als Bedienoberfläche verbessern — BEREIT
+### CHAR-P1-05 – Charaktererstellung als Bedienoberfläche verbessern — UMGESETZT
 
 **Ziel:** große Auswahl bleibt auf dem Smartphone verständlich und schnell bedienbar.
 
@@ -347,3 +347,14 @@ Wenn der Nutzer nur sagt „arbeite an Charakteren/Optik weiter“:
 5. Danach zuerst belegte Defekte/Redundanzen beseitigen, dann hochwertige neue Varianten hinzufügen.
 6. Bei Karten-/Effektauftrag stattdessen mit **CARD-P0-01/CARD-P0-02/WILD-P0-01** starten.
 7. Ergebnisse dokumentieren und Paketstatus nur mit Beleg als erledigt behandeln.
+
+
+## Unabhängige Qualitätsprüfung vom 18.09.2026
+
+Die Pakete CHAR-P1-04 und CHAR-P1-05 sind bereits in main umgesetzt (siehe ihre
+Berichte vom 17.09.); sie sind nicht „noch nicht begonnen“. Der Nachtrag korrigiert
+diese Einordnung, ohne rückwirkend eine vollständige Geräte- oder Kombinations-
+abnahme zu behaupten. Die ursprünglichen Texte bleiben als Historie erhalten.
+
+Unabhängige Prüfung, kleine Korrekturen, Grenzen und Bewertung:
+[Qualitätsabnahme 35.194.1](pruefberichte/2026-09-18-astra-qualitaetsabnahme.md).
