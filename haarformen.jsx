@@ -7,19 +7,19 @@ export function Haarform({index=0,weiblich=false,breite=24,farbe,hell,ebene='vor
   ? ['kurz','lang','volumen','bob','knoten','seitenzopf','scheitellang','pixie','locken','crop','pferdeschwanz','zoepfe','hoch','afro','wellen','krause','cornrows','lockenseite','vorhang','fade','locs','iro','schulter','flechtkranz']
   : ['rasiert','kurz','scheitel','undercut','locken','afro','textur','licht','zoepfe','knoten','vokuhila','glatze','slick','crop','flach','seitlich','wellen','krause','cornrows','lockenseite','vorhang','fade','locs','iro','schulter','flechtkranz'];
  const typ=namen[index]||'kurz';
- /* CHAR-FIX-03: Profilbreite meint die obere Schädel-/Stirnzone, nicht die
-    maximale Wangenbreite. Die vier neuen Köpfe erhalten etwas mehr Haarfläche
-    und werden nicht mehr künstlich nach oben gezogen. Dadurch wirken kurze
-    Frisuren nicht wie zu kleine aufgesetzte Kappen, während der echte Kopfpfad
-    die Unterlage weiterhin exakt begrenzt. */
- const passform={
-  trapez:{breite:25.2,dy:0},
-  lang:{breite:24.2,dy:0},
-  diamant:{breite:25.8,dy:0},
-  kurzbreit:{breite:28.2,dy:0},
- }[kopfprofil]||{};
- const haarbreite=passform.breite||breite;
- const dy=passform.dy||0;
+ /* CHAR-FIX-04: Die feste Profilbreite aus FIX-03 konnte eine gültige, aber
+    sichtbar zu kleine "Perücke" ergeben. Kopfnahe Kurzformen leiten ihre
+    horizontale Passung jetzt aus der tatsächlich übergebenen Kopfbreite ab.
+    Ein kleiner profilspezifischer Zuschlag deckt die echte Schläfenkurve ab;
+    die reale Kopfmaske begrenzt Unterlage und kopfnahe Vorderform wieder exakt. */
+ const neueKopfpassform=['trapez','lang','diamant','kurzbreit'].includes(kopfprofil)&&kopfpfad;
+ const kompakteTypen=['rasiert','kurz','scheitel','undercut','textur','slick','crop','flach','seitlich','vorhang','fade','pixie','bob','iro'];
+ const kopfnaheTypen=['kurz','scheitel','undercut','slick','crop','flach','seitlich','vorhang','fade','pixie'];
+ const kompakt=kompakteTypen.includes(typ);
+ const kopfnah=kopfnaheTypen.includes(typ);
+ const profilBonus={trapez:.8,lang:1.4,diamant:.8,kurzbreit:.8}[kopfprofil]||0;
+ const haarbreite=neueKopfpassform&&kompakt?Math.min(31.5,Math.max(breite+profilBonus,24)):breite;
+ const dy=0;
  const transform=`translate(50 ${dy}) scale(${haarbreite/24} 1) translate(-50 0)`;
  if(typ==='glatze')return null;
  if(ebene==='hinten'){
@@ -38,18 +38,19 @@ export function Haarform({index=0,weiblich=false,breite=24,farbe,hell,ebene='vor
  // Die Unterlage deckt die tatsächliche Schädelkurve ab; einzelne Strähnen
  // dürfen keine hautfarbenen Spalten am Scheitel oder an den Schläfen lassen.
  const schlaefe=25+10*24/haarbreite;
- const neueKopfpassform=['trapez','lang','diamant','kurzbreit'].includes(kopfprofil)&&kopfpfad;
- /* CHAR-FIX-03: Die Haarlinie sitzt zwei bis drei SVG-Einheiten tiefer als in
-    CHAR-FIX-01. Genau dort waren im Vollbogen besonders Rasiert/Fade/Undercut
-    und mehrere kurze Formen optisch zu klein. Die Unterlage darf großzügig
-    sein, weil sie am echten Kopfpfad geclippt wird. */
+ /* CHAR-FIX-04: Die Unterlage der neuen Köpfe ist absichtlich größer als jede
+    reale Kopfkontur. Erst die echte Kopfmaske macht daraus die sichtbare Form.
+    Damit kann weder eine feste Ellipse noch eine historische Profilbreite an
+    breiten Schläfen oder am oberen Schädelrand einen Hautkeil offen lassen. */
  const scalp=neueKopfpassform
-  ? 'M18 48 C16 14 28 5 50 5 C72 5 84 14 82 48 Q71 34 50 30 Q29 34 18 48 Z'
+  ? 'M12 52 C10 11 27 3 50 3 C73 3 90 11 88 52 Q73 35 50 29 Q27 35 12 52 Z'
   : `M25 42 C24 20 ${schlaefe} 11 50 11 C${100-schlaefe} 11 76 20 75 42 Q70 34 50 30 Q30 34 25 42 Z`;
- /* Rasierte Haare brauchen keine dunklen Seitenbänder. Die Kappe ist bewusst
-    größer als zuvor, bleibt aber flach und wird auf die echte Kopfhülle
-    beschnitten. So wirkt sie wie Haar und nicht wie ein kleiner Fleck oben. */
- const rasierKappe='M26 34 C28 18 38 11 50 11 C62 11 72 18 74 34 Q62 29 50 30 Q38 29 26 34 Z';
+ /* Rasiert bleibt bewusst transparent. Auf den neuen Köpfen folgt auch diese
+    Kappe der realen Breite und wird anschließend an der Kopfmaske beschnitten,
+    statt als zu kleiner dunkler Fleck aufzuliegen. */
+ const rasierKappe=neueKopfpassform
+  ? 'M22 38 C24 16 37 8 50 8 C63 8 76 16 78 38 Q64 29 50 30 Q36 29 22 38 Z'
+  : 'M26 34 C28 18 38 11 50 11 C62 11 72 18 74 34 Q62 29 50 30 Q38 29 26 34 Z';
  const base='M25 41 C24 21 32 11 49 10 C66 8 77 22 75 41 C70 35 64 31 50 31 C36 31 30 36 25 41 Z';
  const swept='M25 41 C23 27 28 12 45 9 C61 5 73 14 76 31 Q69 25 60 27 Q42 34 27 33 Z';
  const curls='M24 42 Q21 35 24 29 Q20 23 27 19 Q25 13 32 13 Q33 7 40 10 Q43 4 49 8 Q56 3 61 9 Q68 6 72 13 Q80 13 77 22 Q82 27 77 33 L75 42 Q70 34 65 34 Q60 29 56 33 Q50 29 45 33 Q38 29 34 34 Q29 32 24 42 Z';
@@ -88,20 +89,22 @@ export function Haarform({index=0,weiblich=false,breite=24,farbe,hell,ebene='vor
  if(typ==='flechtkranz')d='M25 42 C22 25 30 11 43 10 Q50 4 57 10 C70 11 78 25 75 42 Q66 33 60 33 Q50 28 40 33 Q33 33 25 42 Z';
  const unterlage=typ==='rasiert'?rasierKappe:scalp;
  const kopfsaum=neueKopfpassform&&!['rasiert','licht'].includes(typ);
- return <g data-haar-typ={typ} data-haar-ebene="vorn" data-haar-profil={kopfprofil||'standard'} data-haar-breite={haarbreite}>
+ return <g data-haar-typ={typ} data-haar-ebene="vorn" data-haar-profil={kopfprofil||'standard'} data-haar-breite={haarbreite} data-haar-passung={neueKopfpassform&&kompakt?'kopfkontur':'standard'} data-haar-vorderclip={neueKopfpassform&&kopfnah?'kopf':'frei'}>
   {kopfpfad&&<defs><clipPath id={id+'kopf'} clipPathUnits="userSpaceOnUse"><path d={kopfpfad}/></clipPath><clipPath id={id+'kopfsaum'} clipPathUnits="userSpaceOnUse"><rect x="14" y="2" width="72" height="44"/></clipPath></defs>}
   {typ!=='licht'&&<g clipPath={kopfpfad?'url(#'+id+'kopf)':undefined}><g transform={transform}>
    <path d={unterlage} stroke={typ==='rasiert'?'none':farbe} strokeWidth={.65} fill={['undercut','fade'].includes(typ)?'url(#'+id+'fade)':farbe} opacity={typ==='rasiert'?.32:1}/>
   </g></g>}
   {kopfsaum&&<path d={kopfpfad} fill="none" stroke={farbe} strokeWidth=".9" strokeLinejoin="round" clipPath={'url(#'+id+'kopfsaum)'}/>} 
-  <g transform={transform}>
-   <defs><linearGradient id={id+'farbe'} x1="0" y1="0" x2=".75" y2="1"><stop stopColor={hell}/><stop offset=".38" stopColor={farbe}/><stop offset="1" stopColor={farbe}/></linearGradient><linearGradient id={id+'fade'} x1="0" y1="0" x2="0" y2="1"><stop offset=".25" stopColor={farbe}/><stop offset="1" stopColor={farbe} stopOpacity=".24"/></linearGradient><clipPath id={id+'clip'}><path d={d}/></clipPath></defs>
-   {typ!=='rasiert'&&<path d={d} stroke={typ==='licht'?farbe:'none'} strokeWidth={.5} strokeLinejoin="round" fill={'url(#'+id+'farbe)'}/>}
-   {typ==='flechtkranz'&&<path d="M29 27 Q38 16 50 17 Q62 16 71 27" fill="none" stroke={hell} strokeWidth="4.2" strokeLinecap="round" strokeDasharray="2 1.5" opacity=".7"/>}
-   <g clipPath={'url(#'+id+'clip)'} fill="none" stroke={hell} strokeLinecap="round" opacity=".27">
-    {['cornrows','zoepfe'].includes(typ)?[-18,-10,-2,6,14,22].map(x=><path key={x} d={`M${50+x} 9 Q${43+x} 24 ${49+x} 42`} strokeWidth="1.5"/>):
-     ['locken','krause','lockenseite','afro','volumen'].includes(typ)?Array.from({length:18},(_,i)=><path key={i} d={`M${27+(i%6)*8} ${18+Math.floor(i/6)*7} q-2 -3 2 -4 q4 0 3 3`} strokeWidth=".7"/>):
-     typ!=='rasiert'&&typ!=='licht'&&typ!=='flechtkranz'&&[0,1,2].map(i=><path key={i} d={['slick','hoch','knoten'].includes(typ)?`M${32+i*12} 30 Q${27+i*12} 15 ${42+i*8} 8`:`M${29+i*3} ${29-i*4} Q48 ${12-i*2} ${70-i*4} ${25-i*3}`} strokeWidth=".8"/>)}
+  <g clipPath={neueKopfpassform&&kopfnah?'url(#'+id+'kopf)':undefined}>
+   <g transform={transform}>
+    <defs><linearGradient id={id+'farbe'} x1="0" y1="0" x2=".75" y2="1"><stop stopColor={hell}/><stop offset=".38" stopColor={farbe}/><stop offset="1" stopColor={farbe}/></linearGradient><linearGradient id={id+'fade'} x1="0" y1="0" x2="0" y2="1"><stop offset=".25" stopColor={farbe}/><stop offset="1" stopColor={farbe} stopOpacity=".24"/></linearGradient><clipPath id={id+'clip'}><path d={d}/></clipPath></defs>
+    {typ!=='rasiert'&&<path d={d} stroke={typ==='licht'?farbe:'none'} strokeWidth={.5} strokeLinejoin="round" fill={'url(#'+id+'farbe)'}/>}
+    {typ==='flechtkranz'&&<path d="M29 27 Q38 16 50 17 Q62 16 71 27" fill="none" stroke={hell} strokeWidth="4.2" strokeLinecap="round" strokeDasharray="2 1.5" opacity=".7"/>}
+    <g clipPath={'url(#'+id+'clip)'} fill="none" stroke={hell} strokeLinecap="round" opacity=".27">
+     {['cornrows','zoepfe'].includes(typ)?[-18,-10,-2,6,14,22].map(x=><path key={x} d={`M${50+x} 9 Q${43+x} 24 ${49+x} 42`} strokeWidth="1.5"/>):
+      ['locken','krause','lockenseite','afro','volumen'].includes(typ)?Array.from({length:18},(_,i)=><path key={i} d={`M${27+(i%6)*8} ${18+Math.floor(i/6)*7} q-2 -3 2 -4 q4 0 3 3`} strokeWidth=".7"/>):
+      typ!=='rasiert'&&typ!=='licht'&&typ!=='flechtkranz'&&[0,1,2].map(i=><path key={i} d={['slick','hoch','knoten'].includes(typ)?`M${32+i*12} 30 Q${27+i*12} 15 ${42+i*8} 8`:`M${29+i*3} ${29-i*4} Q48 ${12-i*2} ${70-i*4} ${25-i*3}`} strokeWidth=".8"/>)}
+    </g>
    </g>
   </g>
  </g>;
