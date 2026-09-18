@@ -65,25 +65,28 @@ Die Browserregression prüft gezielt in den bestehenden Projekten
 3. Bronze/Silber besitzen erwartungsgemäß keine Holo-Materialebene.
 4. Gold/Legendär besitzen genau eine Materialebene, bündig zur Packbox.
 5. Der Folien-`clipPath` ist identisch mit dem sichtbaren Basis-Packpfad.
-6. Mit Bewegung laufen Farbfolie und Lichtzug.
-7. Mit `Animationen aus` läuft im Materialteilbaum keine Animation.
-8. Pro Breite/Zustand wird ein Vollseiten-Screenshot als Sichtbeleg erzeugt.
+6. Die Druck-/Beschriftungsebene liegt per Z-Index oberhalb der Materialfolie.
+7. Mit Bewegung laufen Farbfolie und Lichtzug.
+8. Mit `Animationen aus` läuft im Materialteilbaum keine Animation.
+9. Pro Breite/Zustand wird ein Vollseiten-Screenshot als Sichtbeleg erzeugt.
 
 Desktop wird für diesen gezielten Test bewusst übersprungen, weil CARD-P0-02
 explizit 320/390 px verlangt.
 
 ## Nachher – CI und Sichtprüfung
 
-Erster PR-Head mit der neuen Regression:
-`bdc105f19f7d9b8cb476d06bd32ac6f48240b821`.
+Prüf-Head nach Ergänzung der expliziten Layer-Prüfung:
+`b5a1ed1f5fb5b839bc11016d4d7e6c61676fc21e`.
 
-- **Spielregressionen 35344224202:** 140/140 bestanden; `npm run build`
+- **Spielregressionen 35344535437:** 140/140 bestanden; `npm run build`
   erfolgreich.
-- **Visuelle Browsertests 35344224314:** 49 bestanden, 26 planmäßig
+- **Visuelle Browsertests 35344535337:** 49 bestanden, 26 planmäßig
   übersprungen, 0 fehlgeschlagen.
-- Die vier neuen CARD-P0-02-Fälle (320/390 × Bewegung an/aus) sind bestanden.
-- Browserartefakt **10545817967**, Digest
-  `sha256:9606be365fe1ff9872fb680b66f1417e01ecbbf060cbf7e2f2764124e6d6028a`.
+- Die vier CARD-P0-02-Fälle (320/390 × Bewegung an/aus) sind bestanden; bei
+  Gold/Legendär wird zusätzlich automatisiert belegt, dass die Druckebene über
+  der Materialfolie liegt.
+- Browserartefakt **10546398850**, Digest
+  `sha256:b427565c7ec9a77a48232adcb53c78981901c448548b67fa85294de672d297a6`.
 
 Die vier neu erzeugten Pack-Screenshots wurden nach dem CI-Lauf tatsächlich
 geöffnet und angesehen. Der Vorher-Befund bestätigt sich: keine abgeschnittene
