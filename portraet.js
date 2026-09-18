@@ -1,7 +1,8 @@
 /* Stabile gespeicherte Indizes: neue Formen nur anhängen, alte Freischaltungen behalten. */
 export function portraetOptionen(basis,g){
  const a=Object.fromEntries(Object.entries(basis).map(([k,n])=>[k,Array.from({length:n},(_,i)=>i)]));
- a.frisur=[...a.frisur,...Array.from({length:10},(_,i)=>(g==='w'?14:16)+i)];
+ const frisurBonus=g==='w'?17:15;
+ a.frisur=[...a.frisur,...Array.from({length:frisurBonus},(_,i)=>(g==='w'?14:16)+i)];
  if(g!=='w')a.bart=[...a.bart,10,11,12,13,14,15];
  /* CHAR-P1-02: Die gespeicherten IDs bleiben gültig, aber nachgewiesene
     72-px-Dubletten werden nicht länger als neue Auswahl angeboten.
@@ -36,5 +37,11 @@ export const PORTRAET_NAMEN={
  schminke:['Ohne','Augen betonen','Lippen betonen','Augen und Lippen','Dezent','Feiner Lidstrich','Warmer Lippenakzent'],
 };
 export const NEUE_FRISUREN=['Weiche Wellen','Kurze Naturkrause','Geflochtener Ansatz','Locken mit Seitenscheitel','Mittelscheitel mit Fall','Kurzer Fade','Lange Locs','Irokesenschnitt','Schulterlang glatt','Flechtkranz'];
+export const NEUE_FRISUREN_M=[...NEUE_FRISUREN,'Mittellange Locken','Lange Locken','Box Braids','Zurückgebundene Locs','Asymmetrischer Fringe'];
+export const NEUE_FRISUREN_W=[...NEUE_FRISUREN,'Vollpony','Curtain Bangs','Asymmetrischer Bob','Half-up','Langer Flechtzopf','Lange Wellen','Twin Buns'];
 
 export const FRISUR_NAMEN={m:['Rasiert','Kurz','Seitenscheitel','Undercut','Locken','Afro','Igel','Halbglatze','Zöpfe','Knoten','Vokuhila','Glatze','Zurückgekämmt','Strukturierter Kurzschnitt','Flacher Schnitt','Seitlicher Ansatz'],w:['Kurz','Lang offen','Voluminös','Bob','Knoten','Seitenzopf','Lang mit Scheitel','Pixie','Locken','Kurzer Ansatz','Hoher Pferdeschwanz','Geflochtene Zöpfe','Hochgesteckt','Naturvolumen']};
+export function frisurName(index,g='m'){
+ const start=g==='w'?14:16,neu=g==='w'?NEUE_FRISUREN_W:NEUE_FRISUREN_M;
+ return index>=start?(neu[index-start]||('Frisur '+(index+1))):(FRISUR_NAMEN[g]?.[index]||('Frisur '+(index+1)));
+}
