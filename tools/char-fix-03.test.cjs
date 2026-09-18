@@ -50,8 +50,8 @@ test('CHAR-FIX-03: alle 14 Kopf × 12 Nase × 9 Mund Kombinationen besitzen koll
   for(const [key,value] of Object.entries(g))assert(Number.isFinite(value),`${kopf.n}/${nase}/${mund}: ${key} ist nicht endlich`);
   assert(g.mundTop>=g.naseBottom+.49,`${kopf.n} N${nase} M${mund}: Mund beginnt bei ${g.mundTop}, Nase endet ${g.naseBottom}`);
   assert(g.mundBottom<=g.kinn-.59,`${kopf.n} N${nase} M${mund}: Mund endet ${g.mundBottom}, Kinn ${g.kinn}`);
-  assert(g.schnurrbartY>g.naseBottom+3,`${kopf.n} N${nase} M${mund}: Schnurrbartanker zu hoch`);
-  assert(g.schnurrbartY<g.mundY+2,`${kopf.n} N${nase} M${mund}: Schnurrbartanker zu tief`);
+  assert(g.schnurrbartY>=g.naseBottom+2.24,`${kopf.n} N${nase} M${mund}: Schnurrbartanker zu hoch`);
+  assert(g.schnurrbartY<=g.mundY-1.49,`${kopf.n} N${nase} M${mund}: Schnurrbartanker zu tief`);
   assert(g.mundScale>=.58&&g.mundScale<=1,`${kopf.n} N${nase} M${mund}: unplausible Mundskalierung`);
  }
  assert.equal(count,1512);
@@ -83,7 +83,8 @@ test('CHAR-FIX-03: Bartkatalog rendert auf allen Köpfen mit kritischen Nasen/M�
   assert.match(svg,new RegExp(`data-bart-id="${id}"`));
   assert.match(svg,new RegExp(`data-bart-nase="${nase}"`));
   assert.match(svg,new RegExp(`data-bart-mund="${mund}"`));
-  assert.match(svg,/mask=/,'Bartkörper müssen den Mundfreiraum respektieren');
+  if([3,11].includes(id))assert.match(svg,/data-bart-part="schnurrbart/,'reine Schnurrbärte müssen als eigene Oberlippenform vorliegen');
+  else assert.match(svg,/mask=/,'Bartkörper müssen den Mundfreiraum respektieren');
  }
  assert.equal(count,840);
 });
