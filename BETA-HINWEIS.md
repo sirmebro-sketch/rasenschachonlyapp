@@ -17,6 +17,9 @@
 | #15 | WIRT-P1-01 — Saisonabrechnung sichtbar |
 | #16 | WIRT-P1-05 — Restkasse zählt beim Abschluss |
 | #29 | WIRT-P1-04 — Lizenzauflage: eine leere Kasse kostet Punkte |
+| #35 | WIRT-P1-04b — Lizenzentzug: drei Saisons ohne Lizenz kosten die Liga |
+| #36 | WIRT-P0-05-UI — Preise, Rechtsform und Vorstandsziel bedienbar |
+| #37 | WIRT-P1-02 — Stadion sichtbar, ausverkauftes Haus |
 
 Nicht enthalten: #7 (`workflow_dispatch` in `regression.yml`) — reine
 Werkzeugänderung ohne Wirkung auf die App.
@@ -82,7 +85,36 @@ tut, was draufsteht, ist das ein echter Fund.
 - **Beide Apps nebeneinander** sind an Namen und Symbol nur am Zusatz „(Beta)"
   zu unterscheiden.
 
-## Neu seit dem letzten Bau: die Lizenzauflage (WIRT-P1-04)
+## Nicht in dieser Beta: der Aufnahmebonus (#34)
+
+Die Korrektur an „Bekannte Adresse" (das Vermächtnis-Extra für 350 Punkte, das
+nichts tat) sitzt auf dem **neuen `main` 35.194**, diese Beta auf 35.193. Sie
+hereinzuholen hiesse, die Beta auf 35.194 zu heben und die Charakter-/Porträt-
+arbeit aus 35.194 mitzunehmen — eine Versionsentscheidung, die Kevin und Astra
+treffen, nicht ich nebenbei beim Auflösen eines Konflikts. Die Wirkung ist
+stattdessen durch eine Regression über den echten Karriereabschluss belegt.
+
+## Neu seit dem letzten Bau: drei weitere Pakete
+
+**Lizenzentzug (#35).** Drei Saisons in Folge auf der höchsten Abzugsstufe —
+also mehr als drei Kreditrahmen unter Wasser — kosten die Liga: Zwangsabstieg,
+unabhängig von der Tabelle. Der Zähler steht im Führungsreiter, ab dem ersten
+Jahr, mit dem Ausweg dabei (die höchste Stufe verlassen genügt). **Zwei volle
+Saisons Vorwarnung.**
+
+**Preise, Rechtsform, Vorstandsziel (#36).** Der Reiter heisst jetzt
+**„Führung"** statt „Ausbau" und trägt drei Regler für Eintritt, Gastronomie und
+Fanartikel — mit dem gerechneten Ertragsmaximum als Hinweis. Darüber zu gehen
+ist erlaubt und kostet Stimmung. Dazu die Umwandlung der Rechtsform (e.V. →
+GmbH → KGaA → AG) mit Einlage, Kosten und dem Grund auf dem Knopf, wenn sie
+nicht geht. Und das Vorstandsziel steht jetzt da, **bevor** die Saison läuft.
+
+**Stadion (#37).** Eine Kachel nennt Plätze, letzte Zuschauerzahl, Auslastung
+und was die nächste Ausbaustufe brächte. Ab 97 % gilt das Haus als
+**ausverkauft** — das bringt Stimmung, kein Geld (die Zuschauer stecken schon
+im Ticketposten).
+
+## Neu seit dem vorletzten Bau: die Lizenzauflage (WIRT-P1-04)
 
 Bis jetzt durfte die Kasse beliebig tief ins Minus laufen, ohne dass etwas
 geschah. Jetzt gilt: geduldet wird eine **halbe Saisoneinnahme** (mindestens
@@ -158,12 +190,13 @@ Stimmung, Gehaltsniveau, das Vorstandsziel samt Ausgang und die Ereignisse.
 
 ## Ausdrücklich offen
 
-- **Die Lizenzauflage hat eine gemessene Grenze.** Ein Kader, der seiner Liga
-  weit davongelaufen ist (Stärke 78), steht 52 Punkte über dem Abstiegsplatz —
-  neun Punkte Abzug schließen davon ein Sechstel. Er bleibt also oben und bleibt
-  verschuldet. Wer das im Test sieht, hat **keinen Fehler gefunden**, sondern
-  die Grenze des Mittels. Der Lizenzentzug (Zwangsabstieg) wäre die Antwort
-  darauf und ist nicht gebaut, weil nicht beauftragt.
+- **Der verschuldete Spitzenverein pendelt.** Mit dem Lizenzentzug (#35) steigt
+  er zwar ab, kommt aber sportlich sofort zurück und verliert die Lizenz erneut.
+  Gemessen: 13 bis 29 Prozent weniger Schulden, aber geheilt ist er nicht. Wer
+  das im Test sieht, hat **keinen Fehler gefunden**.
+- **Die Auslastung hängt nicht an der Kapazität.** 64.000 Plätze füllen sich zu
+  denselben 99 % wie 8.000 — Ausbauen ist reines Aufwärts ohne Risiko. Bekannt,
+  vermerkt, und eine Balance-Entscheidung, die Kevin trifft.
 - **Preise, Rechtsform und Vorstandsziel haben keine Oberfläche.** Sie rechnen
   mit den Vorgabewerten mit; einstellen kann man sie nicht.
 - **Die Abnahme durch Codex steht aus.** Was hier drin ist, kann sich noch
