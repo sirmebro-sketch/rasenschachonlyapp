@@ -24,7 +24,8 @@ const touchWisch=async(page,rail,richtung='links')=>{
     bei Playwright nicht, dass CDP-Koordinaten bereits im Viewport liegen. */
  await cdp.send('Input.synthesizeScrollGesture',{
   x,y,
-  xDistance:Math.round(Math.min(box.width,viewport.width)*.58)*(richtung==='links'?-1:1),
+  // CDP definiert positive xDistance als "nach links scrollen".
+  xDistance:Math.round(Math.min(box.width,viewport.width)*.58)*(richtung==='links'?1:-1),
   speed:650,
   preventFling:true,
   gestureSourceType:'touch'
