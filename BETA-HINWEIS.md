@@ -16,6 +16,7 @@
 | #13 | WIRT-P0-04 — Sponsorenwahl |
 | #15 | WIRT-P1-01 — Saisonabrechnung sichtbar |
 | #16 | WIRT-P1-05 — Restkasse zählt beim Abschluss |
+| #29 | WIRT-P1-04 — Lizenzauflage: eine leere Kasse kostet Punkte |
 
 Nicht enthalten: #7 (`workflow_dispatch` in `regression.yml`) — reine
 Werkzeugänderung ohne Wirkung auf die App.
@@ -81,6 +82,35 @@ tut, was draufsteht, ist das ein echter Fund.
 - **Beide Apps nebeneinander** sind an Namen und Symbol nur am Zusatz „(Beta)"
   zu unterscheiden.
 
+## Neu seit dem letzten Bau: die Lizenzauflage (WIRT-P1-04)
+
+Bis jetzt durfte die Kasse beliebig tief ins Minus laufen, ohne dass etwas
+geschah. Jetzt gilt: geduldet wird eine **halbe Saisoneinnahme** (mindestens
+2 Mio). Darunter setzt es **3, 6 oder 9 Punkte Abzug** — gestaffelt danach, wie
+viele Kreditrahmen der Verein unter der Linie steht, nicht nach Millionen.
+
+**Wo du es siehst — drei Zustände, drei verschiedene Aussagen:**
+
+| Lage | Was der Vereinsbildschirm sagt |
+|---|---|
+| Kasse im Plus | nichts |
+| Kasse im Minus, aber im Rahmen | „Die Kasse ist im Minus. Ein Überziehen bis zur Hälfte einer Saisoneinnahme ist geduldet — darunter setzt es Punktabzug." |
+| Auflage beschlossen | „**Lizenzauflage: 6 Punkte Abzug.** Sie wird am Ende dieser Saison auf die Tabelle angerechnet." |
+
+Dazu im Saisonbeleg (Abschlussbildschirm) getrennt, was die **abgelaufene**
+Saison gekostet hat und was die **kommende** kosten wird, und in der Chronik je
+Jahr in Rot, wie viele Punkte abgezogen wurden.
+
+**Die Auflage trifft die kommende Saison, nicht die abgelaufene** — deren
+Tabelle ist gespielt. So macht es der Fussball auch.
+
+**Wichtig beim Testen:** der Abzug verändert die Tabelle *wirklich* — Punkte
+weg, neu sortiert, Platz neu vergeben. Wenn du nach einer Saison mit Auflage
+schlechter stehst, als die Ergebnisse vermuten lassen, ist das kein Fehler. Und
+**der gewöhnliche Weg bekommt nie eine Auflage**: wer vernünftig wirtschaftet,
+merkt von alldem nichts. Sollte dir trotzdem eine begegnen, ohne dass du je im
+Minus warst, ist das ein echter Fund.
+
 ## Worauf es beim Testen besonders ankommt
 
 Das sind die Punkte, die kein Prüfstand beantworten kann:
@@ -128,9 +158,12 @@ Stimmung, Gehaltsniveau, das Vorstandsziel samt Ausgang und die Ereignisse.
 
 ## Ausdrücklich offen
 
-- **Folgen einer leeren Kasse** gibt es nicht (WIRT-P1-04). Die Kasse darf ins
-  Minus laufen, ohne dass etwas passiert — wer das im Test sieht, hat keinen
-  Fehler gefunden, sondern eine bekannte Lücke.
+- **Die Lizenzauflage hat eine gemessene Grenze.** Ein Kader, der seiner Liga
+  weit davongelaufen ist (Stärke 78), steht 52 Punkte über dem Abstiegsplatz —
+  neun Punkte Abzug schließen davon ein Sechstel. Er bleibt also oben und bleibt
+  verschuldet. Wer das im Test sieht, hat **keinen Fehler gefunden**, sondern
+  die Grenze des Mittels. Der Lizenzentzug (Zwangsabstieg) wäre die Antwort
+  darauf und ist nicht gebaut, weil nicht beauftragt.
 - **Preise, Rechtsform und Vorstandsziel haben keine Oberfläche.** Sie rechnen
   mit den Vorgabewerten mit; einstellen kann man sie nicht.
 - **Die Abnahme durch Codex steht aus.** Was hier drin ist, kann sich noch
