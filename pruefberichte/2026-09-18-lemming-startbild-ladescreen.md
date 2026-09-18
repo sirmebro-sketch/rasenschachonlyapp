@@ -47,3 +47,17 @@ Das gelieferte Originalmotiv ist 864 × 1536 px. Die bereits vorhandene Android-
 ## Status
 
 Umgesetzt auf eigenem Branch; **Astra-Abnahme und CI am PR-Head offen**, bis die GitHub-Läufe vollständig vorliegen. Android-Gerätetest der Beta bleibt Nutzer-/Astra-Sichtung.
+
+
+## Korrektur nach dem ersten Android-Gerätetest
+
+Kevins erster Beta-Test hat einen realen Fehler sichtbar gemacht: **Der Ladekreis erschien, das gewünschte Stadionmotiv aber nicht. Stattdessen war eine weiße Fläche mit blauem Capacitor-Platzhalter zu sehen.** Damit war die frühere Annahme falsch, die vorhandene Android-Datei `drawable-port-xhdpi/splash.png` enthalte bereits das gelieferte Motiv. Der grüne Build konnte nur belegen, dass die referenzierte Datei technisch ausgeliefert wurde – nicht, dass es die richtige Grafik war.
+
+Die Korrektur verwendet deshalb nicht länger eine Android-Ressource als indirekte Quelle. Das tatsächlich von Kevin gelieferte 9:16-Motiv wurde als 720×1280-WebP vorbereitet und sein Inhalt in `startbild.b64` hinterlegt. `vite.config.js` setzt diese Daten beim HTML-Build direkt als `data:image/webp;base64,...` in den Startscreen ein. Damit gibt es im APK **keinen Dateipfad, keinen Netzabruf und keine Abhängigkeit vom nativen Capacitor-Platzhalter** für diesen Web-Ladescreen.
+
+Die Regression prüft nun nicht nur einen Dateinamen, sondern:
+- dass die Bilddaten vollständig vorhanden sind,
+- dass die dekodierten Daten tatsächlich RIFF/WEBP sind,
+- und dass Vite genau diese Daten in `index.html` einbettet.
+
+Nach dieser Korrektur sind Regression, Produktionsbuild, Browsertest und Beta-APK am neuen PR-Head erneut Pflicht. Der erste grüne Beta-Lauf gilt für die Bilddarstellung ausdrücklich **nicht** als bestanden.
