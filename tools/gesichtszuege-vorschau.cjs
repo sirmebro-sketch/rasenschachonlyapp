@@ -24,6 +24,14 @@ function GesichtProbe(){
   {augen:7,brauen:1,nase:10,mund:4,wangen:5,details:7},
   {augen:5,brauen:5,nase:8,mund:7,wangen:2,details:2},
   {augen:8,brauen:6,nase:11,mund:8,wangen:6,details:8},
+  {augen:0,brauen:5,nase:9,mund:9,wangen:7,details:0},
+  {augen:7,brauen:2,nase:10,mund:10,wangen:8,details:5},
+  {augen:8,brauen:6,nase:11,mund:11,wangen:5,details:7},
+ ];
+ const kombiChecks=[
+  {label:'ohne Bart/Brille',bart:0,schmuck:0,mund:9,wangen:7},
+  {label:'Vollbart',bart:6,schmuck:0,mund:10,wangen:8},
+  {label:'Ankerbart + Brille',bart:14,schmuck:3,mund:11,wangen:7},
  ];
  return <div className="fl"><style>{CSS}</style><main style={{maxWidth:1240,margin:'auto',padding:18}}>
   <h1>CHAR-P1-02 · Gesichtszüge</h1>
@@ -48,9 +56,19 @@ function GesichtProbe(){
   </section>
   <section className="pan pad" data-testid="kombinationen" style={{marginTop:18}}>
    <div className="eb">Unbeschriftete Gesamtprobe</div>
-   <p className="m" style={{fontSize:11,color:'var(--mu)',maxWidth:850}}>Sieben Kombinationen mit identischem Kopf, identischer Frisur und identischer Haarfarbe. Ziel: Gesichter sollen ohne Namensschild nicht wie dieselbe Person wirken.</p>
+   <p className="m" style={{fontSize:11,color:'var(--mu)',maxWidth:850}}>Zehn Kombinationen mit identischem Kopf, identischer Frisur und identischer Haarfarbe. Ziel: Gesichter sollen ohne Namensschild nicht wie dieselbe Person wirken.</p>
    <div style={{display:'flex',gap:10,flexWrap:'wrap',alignItems:'end'}}>
     {kombis.map((k,i)=><div data-combo={i} key={i} style={{flex:'0 0 auto'}}><Avatar seed={9100+i} zuege={{...basis,...k}} size={groesse} g={geschlecht} nat="GER" meta={mkMeta()}/></div>)}
+   </div>
+  </section>
+  <section className="pan pad" data-testid="mund-kinn-kombicheck" style={{marginTop:18}}>
+   <div className="eb">Mund/Kinn · Überlagerungscheck</div>
+   <p className="m" style={{fontSize:11,color:'var(--mu)',maxWidth:850}}>Neue Mund- und Kinnformen auf männlicher Basis ohne Bart, mit Vollbart sowie mit Ankerbart und Brille. So werden Kollisionen mit den häufigsten Überlagerungen sichtbar.</p>
+   <div style={{display:'flex',gap:14,flexWrap:'wrap'}}>
+    {kombiChecks.map((k,i)=><article className="pan pad" data-kombi-check={i} key={k.label} style={{textAlign:'center'}}>
+      <Avatar seed={9400+i} zuege={{...basis,...k,kopf:i===0?0:i===1?10:12,frisur:i===2?21:1}} size={groesse} g="m" nat="GER" meta={mkMeta()}/>
+      <div className="m" style={{fontSize:10,color:'var(--mu)',marginTop:5}}>{k.label}</div>
+    </article>)}
    </div>
   </section>
   <div className="pan pad" style={{marginTop:18,fontSize:12}}><div className="eb">Prüfregel</div><p>Eine Variante gilt nicht als Qualitätsgewinn, wenn sie nur technisch anders ist, aber bei 72–96 px praktisch gleich gelesen wird. Sichtprüfung deshalb immer ohne Beschriftung gegenprüfen; IDs bleiben append-only.</p></div>
