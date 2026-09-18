@@ -125,10 +125,16 @@ Daraus folgt ein fester Weg für Claudes Beiträge:
    einfacher Fast-Forward wäre und die Prüfungen grün sind.
 2. **Claude legt die Abnahme vor:** je Runde ein Vermerk in `ENTWICKLUNG.md`
    mit Basis-Commit, was geändert wurde, was geprüft wurde und mit welchem
-   Ergebnis, und was ausdrücklich offen bleibt. Ein Pull Request ist der
-   bevorzugte Weg, weil dort zusätzlich die CI läuft (ein reiner Branch-Push
-   löst sie nicht aus); die Übergabe über den Branch allein ist zulässig, wenn
-   es schneller gehen soll.
+   Ergebnis, und was ausdrücklich offen bleibt. Übergeben wird über den
+   Branch.
+   **Den Pull Request eröffnet Claude** (Kevin, 17.09.2026). Das ist keine
+   Abnahme, sondern ihre Vorlage: eröffnen ändert an `main` nichts, macht den
+   Vorschlag aber Zeile für Zeile lesbar und lässt die CI daran laufen — ein
+   reiner Branch-Push tut das nicht (`.github/workflows/regression.yml`,
+   `on: pull_request`). Der Vermerk gehört trotzdem dazu; die CI prüft, ob es
+   baut, nicht ob es stimmt.
+   **Nicht zusammenführen, nicht freigeben, kein Auto-Merge, keinen fremden
+   Pull Request schliessen** — das ist Codex' Seite.
 3. **Codex entscheidet.** Drei Ausgänge, alle drei in Ordnung: übernehmen;
    mit Änderungswünschen zurückgeben; ablehnen. Nur einer ist es nicht:
    kommentarlos liegen lassen.
@@ -140,6 +146,9 @@ Daraus folgt ein fester Weg für Claudes Beiträge:
    und dann ist gut. Der Eigentümer kann jede dieser Entscheidungen aufheben.
 
 Umgekehrt gilt die Abnahme nicht: Codex' eigene Runden gehen direkt nach `main`.
+
+Kurzfassung der Arbeitsteilung am Pull Request: **Claude legt vor, Codex
+entscheidet.** Der Knopf, der `main` verändert, gehört genau einer Seite.
 
 ### Freigabe für die weitere Zusammenarbeit (15.09.2026)
 
