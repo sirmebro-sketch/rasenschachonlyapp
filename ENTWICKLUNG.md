@@ -918,3 +918,24 @@ Der erste PR-Browserlauf `35314563601` war wegen veralteter Prüfstandzahlen/alt
 Vollständiger Bericht: `pruefberichte/2026-09-18-char-p1-03-frisurenvielfalt-02.md`.
 
 **Bewusst offen:** kein physischer Android-Geräte-Sichttest in der Charakterrunde. Der signierte Android-Build wird nach Integration als normales Post-Merge-Gate ausgeführt; ein erfolgreicher Build wird nicht als Geräte-Sichttest ausgegeben.
+
+
+## CHAR-P1-02 – Gesichtszüge, Qualitätsrunde 2 (35.194.0) – ChatGPT, 18.09.2026
+
+**Basis:** `main` `f431f74c6e4810ac2e65a1fc0253777eaf03d09b`.  
+**Arbeitsbranch:** `chatgpt/char-p1-02-gesichtszuege-02`.  
+**PR:** #25.
+
+Nach CHAR-P1-03 wurde der belegte nächste Qualitätsgewinn bei formtragenden Gesichtszügen umgesetzt. Append-only neu: Mund 9–11 (Herzförmig, Kompakt, Breites Grinsen) und Wangen/Kinn 7–8 (Markante Kieferkante, Spitze Kinnkontur). Historische Seed-Ableitung und bestehende IDs bleiben unverändert.
+
+Der erste PR-Browserlauf `35319188356` war bewusst rot: Wangen/Kinn-ID 8 war bei 72 px praktisch identisch zu ID 0. Die echte Screenshot-Sichtung bestätigte den Befund. ID 8 wurde daraufhin gezielt mit stärkerer V-Kontur nachgeschärft.
+
+Finale PR-Abnahme auf dem korrigierten Produktcode:
+- Spielregressionen `35320111345`: 140/140 bestanden, Build erfolgreich.
+- Visuelle Browsertests `35320111337`: 43 bestanden, 23 planmäßig übersprungen, 0 Fehler.
+- Browserartefakt `10536434215`, Digest `sha256:adb0b77d25d517666dc7d8dd9e41891770433c67aead7c2940eced63c97b80a4`.
+- Finalbilder bei 72/96 px tatsächlich geöffnet; Kinn-ID 8 nun klar eigenständig, neue Münder lesbar, Bart-/Brillenprobe ohne störende Kollision.
+
+Vollständiger Bericht: [pruefberichte/2026-09-18-char-p1-02-gesichtszuege-02.md](pruefberichte/2026-09-18-char-p1-02-gesichtszuege-02.md).
+
+**Bewusst offen:** kein physischer Android-Gerätetest. Post-Merge-Regressionen, Browsertests und signierter Android-Build werden auf dem neuen `main` geprüft.
