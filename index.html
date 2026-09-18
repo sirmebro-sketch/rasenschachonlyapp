@@ -61,16 +61,22 @@
   </head>
   <body>
     <script>window.__RASENSCHACH_SPLASH_STARTED__ = performance.now();</script>
+    <script src="./startbild/part-01.js"></script>
+    <script src="./startbild/part-02.js"></script>
+    <script src="./startbild/part-03.js"></script>
+    <script src="./startbild/part-04.js"></script>
+    <script src="./startbild/part-05.js"></script>
+    <script src="./startbild/part-06.js"></script>
+    <script src="./startbild/part-07.js"></script>
+    <script src="./startbild/part-08.js"></script>
     <div id="app-startup-splash" role="status" aria-label="Rasenschach XI wird geladen">
-      <img
-        alt=""
-        src="__RASENSCHACH_STARTBILD__"
-        loading="eager"
-        fetchpriority="high"
-        decoding="sync"
-      />
+      <img id="startup-splash-image" alt="" loading="eager" fetchpriority="high" decoding="sync" />
       <span class="startup-spinner" aria-hidden="true"></span>
     </div>
+    <script>
+      document.getElementById("startup-splash-image").src = window.__RASENSCHACH_STARTBILD__;
+      delete window.__RASENSCHACH_STARTBILD__;
+    </script>
     <div id="root"></div>
     <script type="module" src="./main.jsx"></script>
   </body>
