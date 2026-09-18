@@ -66,7 +66,7 @@ test.only('QA Namenseingabe Charakter: Fokus, geringe Höhe, Zurück und Bestät
   await neuerName.fill(spielername);
   await page.setViewportSize({width:testInfo.project.name === 'schmal' ? 320 : 390,height:testInfo.project.name === 'schmal' ? 720 : 844});
   await page.getByRole('button',{name:/Los geht's/i}).click();
-  await expect(page.locator('body')).toContainText(/JEAN-PIERRE GROSSMÜLLER/i);
+  await expect(page.locator('body')).toContainText(spielername);
   await page.screenshot({path:testInfo.outputPath('char-confirmed.png'),fullPage:false});
 });
 
@@ -123,6 +123,6 @@ test.only('QA Namenseingabe Verein: Fokus, Scroll, Zurück und Bestätigen', asy
   await page.locator('input[placeholder="Vereinsname"]').fill(vereinsname);
   await page.locator('input[placeholder="Stadt"]').fill(ort);
   await page.getByRole('button',{name:'Verein anlegen',exact:true}).click();
-  await expect(page.locator('body')).toContainText(/FC ÜBERLÄNGE SÜD-WEST/i);
+  await expect(page.locator('body')).toContainText(vereinsname);
   await page.screenshot({path:testInfo.outputPath('verein-confirmed.png'),fullPage:false});
 });
