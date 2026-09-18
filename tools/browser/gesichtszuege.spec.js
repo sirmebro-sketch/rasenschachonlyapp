@@ -85,5 +85,18 @@ test('CHAR-P1-02: Vergleichsbögen für kleine und normale Spielgröße',async({
  await page.getByRole('combobox',{name:'Merkmal'}).selectOption('augen');
  await page.getByRole('checkbox',{name:'Beschriftung'}).uncheck();
  await page.getByTestId('kombinationen').screenshot({path:testInfo.outputPath('gesicht-kombinationen-w-72.png')});
+ await page.getByRole('combobox',{name:'Größe'}).selectOption('96');
+ await page.getByTestId('mund-kinn-kombicheck').screenshot({path:testInfo.outputPath('gesicht-mund-kinn-kombicheck-96.png')});
  expect(errors).toEqual([]);
+});
+
+test('CHAR-P1-02: neue Mund- und Kinnformen sind append-only auswählbar',async({page},testInfo)=>{
+ test.skip(testInfo.project.name!=='desktop','Katalogstruktur einmal prüfen.');
+ await page.goto('/.preview/gesichtszuege.html');
+ await page.getByRole('combobox',{name:'Merkmal'}).selectOption('mund');
+ await expect(page.locator('[data-testid="varianten"] article')).toHaveCount(12);
+ for(const id of [9,10,11])await expect(page.locator('[data-testid="varianten"] article[data-id="'+id+'"]')).toBeVisible();
+ await page.getByRole('combobox',{name:'Merkmal'}).selectOption('wangen');
+ await expect(page.locator('[data-testid="varianten"] article')).toHaveCount(8);
+ for(const id of [7,8])await expect(page.locator('[data-testid="varianten"] article[data-id="'+id+'"]')).toBeVisible();
 });
