@@ -1745,3 +1745,37 @@ getrennt, ohne NaN` rot.
 
 **Gefunden beim Rundgang durch die Oberfläche im Browser**, nicht im Prüfstand:
 der prüfte, dass die Zeile da ist, nicht ob sie etwas beiträgt.
+
+## Nachtrag aus dem Gerätetest: der Reiter heißt „Partner" (Claude, 18.09.2026)
+
+**Basis-Commit:** Kopf dieses Zweigs nach dem Nachziehen von
+`claude/wirt-p0-03` (enthält die beiden Korrekturen aus #6 und #11).
+
+Dieser Zweig hat dem Vereinsbildschirm einen **sechsten** Reiter gegeben. Beim
+Rundgang im Browser bei 320 Pixeln stand „Chronik" dadurch außerhalb des Bildes
+— erreichbar, weil die Leiste waagerecht scrollt, aber zwei Wischer entfernt und
+ohne dass etwas darauf hindeutet, dass dort noch etwas kommt.
+
+**Änderung:** die Beschriftung heißt „Partner" statt „Sponsoren". Die Kennung
+`sponsoren` bleibt unverändert — sie steht in `startReiter`, im Prüfstand und
+in gespeicherten Zuständen. Geändert wird nur, was der Spieler liest, und
+„Partner" ist ohnehin das Wort, mit dem der Reiter sich selbst überschreibt
+(„Partner · 0 von 3").
+
+**Geprüft:** `npm test` 171/171, `npm run build` erfolgreich. Die bestehende
+Prüfung des Reiters hält die Entscheidung jetzt fest: in der Reiterleiste steht
+`Partner`, nicht `Sponsoren`, und `Chronik` steht weiter daneben.
+**Gegenprobe:** mit der alten Beschriftung wird `not ok 60 — Der Sponsorenreiter
+zeigt Angebote und laufende Verträge, ohne NaN` rot.
+
+**Was diese Prüfung ausdrücklich NICHT tut:** nachweisen, dass die Leiste passt.
+Ein Zeichenbudget wäre Scheingenauigkeit — die Schrift ist proportional, und
+„Aufstellung" ist mit elf Zeichen länger als „Sponsoren" mit neun, ohne je
+gestört zu haben. Gemessen wurde im Browser; festgehalten ist die Messung im
+Browserlauf `tools/browser/beta-wirtschaft.spec.js` auf `claude/beta-35.193`.
+Der kann hier nicht mitkommen, weil er die Testwerkzeuge der Beta braucht, um
+überhaupt bis in den Spielbetrieb zu gelangen — vermerkt statt nachgebaut.
+
+**Offen für Codex:** falls später ein siebter Reiter dazukommt, ist die
+Kürzung verbraucht. Dann trägt die Leiste eher ein Überlaufzeichen als noch
+kürzere Wörter.

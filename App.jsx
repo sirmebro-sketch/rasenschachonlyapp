@@ -9410,7 +9410,12 @@ function VereinScreen({ v, aka, onAendern, onZurueck, onAbschluss, startReiter }
 
   const REITER = [["kader", "Kader"], ["elf", "Aufstellung"],
     ...(hatRueck ? [["rueck", "Rückblick"]] : []),
-    ["ausbau", "Ausbau"], ["sponsoren", "Sponsoren"], ["chronik", "Chronik"]];
+    /* „Partner" statt „Sponsoren": kürzer, und es ist das Wort, das der Reiter
+       in seiner eigenen Kopfzeile benutzt („Partner · 0 von 3"). Die
+       Reiterleiste scrollt zwar waagerecht, aber mit dem sechsten Reiter lag
+       „Chronik" auf einem 320er-Gerät zwei Wischer entfernt — beim Rundgang
+       durch die Oberfläche gemessen. Zwei Zeichen weniger holen sie zurück. */
+    ["ausbau", "Ausbau"], ["sponsoren", "Partner"], ["chronik", "Chronik"]];
   const rueckJahre = (v.chronik || []).filter((c) => c.tabelle).map((c) => c.jahr).reverse();
   const [rjahr, setRjahr] = React.useState(null);
   const rc = (v.chronik || []).filter((c) => c.tabelle)

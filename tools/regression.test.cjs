@@ -667,6 +667,16 @@ test('Der Sponsorenreiter zeigt Angebote und laufende Verträge, ohne NaN',()=>{
  assert(html2.includes('Kein Platz frei'));
  assert(html2.includes('Alle Plätze belegt'));
  assert(!html2.includes('NaN'));
+ /* Der Reiter heißt „Partner", nicht „Sponsoren". Mit dem sechsten Reiter lag
+    „Chronik" auf einem 320er-Gerät zwei Wischer entfernt; kürzer holt sie
+    zurück, und es ist ohnehin das Wort, das die Kopfzeile des Reiters selbst
+    benutzt. Gemessen wurde das im Browser — diese Prüfung hält nur die
+    Entscheidung fest, damit sie nicht stillschweigend zurückgedreht wird.
+    Ein Zeichenbudget wäre eine Scheingenauigkeit: die Schrift ist proportional. */
+ const leiste=html.split('Angebote für diese Saison')[0];
+ assert(leiste.includes('>Partner<'),'der Reiter trägt die kurze Beschriftung');
+ assert(!leiste.includes('>Sponsoren<'),'die lange Beschriftung ist weg');
+ assert(leiste.includes('>Chronik<'),'und „Chronik" steht weiter in der Leiste');
 });
 
 test('Nach einem Aufstieg ist Klassenerhalt die Ansage, nicht der Titel',()=>{
