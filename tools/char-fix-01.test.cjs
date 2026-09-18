@@ -31,5 +31,5 @@ test('CHAR-FIX-01: beide modernen Haarlagen erhalten Profil und echte Kopfhuelle
 test('CHAR-FIX-01: rasiert nutzt nur eine flache Kopfkappe statt dunkler Seitenunterlage',()=>{
  assert.match(haar,/const rasierKappe='M26 34 C28 18 38 11 50 11 C62 11 72 18 74 34/);
  assert.match(haar,/const unterlage=typ==='rasiert'\?rasierKappe:scalp/);
- assert.match(haar,/opacity=\{typ==='rasiert'\?\.28:1\}/);
+ assert.match(haar,/opacity=\{typ==='rasiert'\?\.32:1\}/);
 });
