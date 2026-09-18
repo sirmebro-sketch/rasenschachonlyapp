@@ -5,8 +5,7 @@ lesen. Dort stehen Repository-Adresse, dokumentierte Nutzerfreigabe und der
 Einstieg zur Prüfung des tatsächlich verfügbaren Zugriffs. Danach die folgende
 Reihenfolge ausführen; die Freigabe ersetzt keine technische Verbindung.
 
-An diesem Projekt arbeiten drei Beteiligte: der Eigentümer, ChatGPT/Codex und
-Claude. Keiner sieht, was die anderen gerade getan haben — außer, es steht im
+An diesem Projekt arbeiten Kevin, Astra, Lemming und Claude. Keiner sieht, was die anderen gerade getan haben — außer, es steht im
 Repository.
 
 Die inhaltlichen Regeln stehen **nicht hier**, sondern in `README.md`. Eine
@@ -17,11 +16,17 @@ ist deshalb nur ein Wegweiser mit einer verbindlichen Reihenfolge.
 
 ## Rollen
 
-Der Eigentümer entscheidet, was gebaut wird, und hat das letzte Wort.
-**Codex entwickelt und nimmt Claudes Arbeit ab**, bevor sie nach `main` geht.
-Claude entwickelt zu, liefert auf einem eigenen Branch und integriert seine
-Arbeit nicht selbst. Die Langfassung steht in `README.md`, Abschnitt
-„Rollen und Abnahme".
+Kevin hat das letzte Wort. Vor jeder Änderung die Rolle aus seiner Ansprache
+bestimmen und **README „Rollen und Abnahme“** lesen:
+
+- **Astra:** Entwicklung, unabhängige Abnahme, Integration und Veröffentlichung.
+- **Lemming:** kleine Pakete auf eigenem Branch; zusätzlich **[LEMMING.md](LEMMING.md)**
+  vollständig lesen. Kein eigener main-Merge oder Release.
+- **Claude:** eigene Rolle nach CLAUDE.md; Abnahme durch Astra.
+
+Ohne ausdrückliche Astra-Zuordnung gelten für neue ChatGPT-/Codex-Chats die
+Lemming-Regeln. Keine automatische Modellerkennung oder Selbsternennung.
+Die folgenden historischen „Codex“-Abnahmeverweise meinen **Astra**.
 
 ## Vor jeder Runde
 

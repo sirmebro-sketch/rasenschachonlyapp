@@ -110,36 +110,51 @@ Dazu sechs Regeln, die sich aus früheren Fehlern ergeben haben:
 
 ### Rollen und Abnahme
 
-Die Rollen sind nicht gleich verteilt, und das ist Absicht:
+**Rollenentscheidung des Eigentümers vom 18.09.2026.** Diese Zuordnung ersetzt
+für neue Arbeit die frühere pauschale Gleichsetzung von ChatGPT/Codex und Abnehmer.
+Historische Freigaben und Berichte darunter bleiben als Nachweis erhalten.
 
-| Wer | Rolle |
+| Rolle | Auftrag und Grenze |
 |---|---|
-| **Eigentümer** | entscheidet, was gebaut wird, und hat in allem das letzte Wort |
-| **ChatGPT/Codex** | entwickelt **und** nimmt Claudes Arbeit ab, bevor sie nach `main` geht |
-| **Claude** | entwickelt zu, liefert auf einem eigenen Branch und integriert nicht selbst |
+| **Kevin / Eigentümer** | Produktentscheidung, Auftragsumfang und letztes Wort. |
+| **Astra** | Entwickelt, prüft Lemming-/Claude-Beiträge, entscheidet über Abnahme, integriert und veröffentlicht im beauftragten Rahmen. |
+| **Lemming** | Andere von Kevin so angesprochene ChatGPT-Modelle: kleine abgegrenzte Arbeitspakete auf eigenem Branch, Eigenprüfung und PR zur Astra-Abnahme. Kein eigener main-Merge oder Release. |
+| **Claude Code** | Eigene beauftragte Entwicklung auf eigenem Branch nach CLAUDE.md; Abnahme und Integration durch Astra. |
 
-Daraus folgt ein fester Weg für Claudes Beiträge:
+**Rolle zu Beginn bestimmen:** Kevins ausdrückliche Ansprache „Astra“ oder
+„Lemming“ gilt für den laufenden Chat. Ein Modell darf seine Rolle nicht aus
+vermuteter Leistungsfähigkeit, Modellnamen oder verfügbaren Schreibrechten
+ableiten. Die Bezeichnungen sind Arbeitsrollen, keine technische Modellerkennung.
+Ohne ausdrückliche Astra-Zuordnung arbeitet ein neuer ChatGPT-/Codex-Chat zunächst
+nach den Lemming-Regeln; Lesen und Vorbereiten sind damit möglich, ohne unnötig
+nachzufragen. Claude bleibt in seiner eigenen Rolle. Ein späterer ausdrücklicher
+Auftrag von Kevin hat Vorrang; die Rolle darf sich nicht selbst hochstufen.
 
-1. **Claude arbeitet auf einem eigenen Branch**, nie direkt auf `main`, und
-   führt seine Arbeit nicht selbst zusammen — auch dann nicht, wenn es ein
-   einfacher Fast-Forward wäre und die Prüfungen grün sind.
-2. **Claude legt die Abnahme vor:** je Runde ein Vermerk in `ENTWICKLUNG.md`
-   mit Basis-Commit, was geändert wurde, was geprüft wurde und mit welchem
-   Ergebnis, und was ausdrücklich offen bleibt. Ein Pull Request ist der
-   bevorzugte Weg, weil dort zusätzlich die CI läuft (ein reiner Branch-Push
-   löst sie nicht aus); die Übergabe über den Branch allein ist zulässig, wenn
-   es schneller gehen soll.
-3. **Codex entscheidet.** Drei Ausgänge, alle drei in Ordnung: übernehmen;
-   mit Änderungswünschen zurückgeben; ablehnen. Nur einer ist es nicht:
-   kommentarlos liegen lassen.
-4. **Ablehnung oder Änderung wird begründet** — im Pull Request oder in
-   `ENTWICKLUNG.md`. Der Grund ist die eigentliche Information; ohne ihn baut
-   Claude denselben Vorschlag in der nächsten Runde wieder.
-5. **Bei fachlicher Uneinigkeit entscheidet Codex.** Claude darf widersprechen
-   und soll es tun, wenn er einen Fehler sieht — aber einmal, mit Begründung,
-   und dann ist gut. Der Eigentümer kann jede dieser Entscheidungen aufheben.
+**Pflichtlektüre für Lemming:** [LEMMING.md](LEMMING.md). Sie beschreibt Umfang,
+Prüfungen, Übergabe und Abschluss. Auch „Weiter“ erweitert diesen Umfang nicht.
+Ältere Formulierungen „Codex entscheidet/integriert“ meinen für künftige
+Abnahmen **Astra**, nicht jeden ChatGPT-/Codex-Chat.
 
-Umgekehrt gilt die Abnahme nicht: Codex' eigene Runden gehen direkt nach `main`.
+Der gemeinsame Abnahmeweg:
+
+1. Lemming und Claude arbeiten auf eigenen Branches. Kein direkter main-Push,
+   eigener Merge, Auto-Merge, Freigeben fremder PRs oder eigenmächtiger Release.
+2. Jeder Beitrag nennt Paket, Basiscommit, Änderungen, tatsächlich ausgeführte
+   Prüfungen, Ergebnis und offene Grenzen. Lemming eröffnet einen PR; fehlt
+   dafür technischer Zugriff, liefert er eine konkrete Branch-/Patch-Übergabe
+   und benennt den Blocker. Er behauptet keine Veröffentlichung.
+3. Astra entscheidet ausdrücklich: übernehmen, mit Änderungen zurückgeben
+   oder begründet ablehnen. Vom aktuellen Nutzerauftrag ausgeschlossene fremde
+   Arbeit wird als zurückgestellt benannt und nicht nebenbei übernommen.
+4. Wer umsetzt, darf Eigenprüfungen dokumentieren, aber nicht seine eigene
+   unabhängige Abnahme erklären. „Integriert“, „geprüft“ und „abgenommen“ sind
+   unterschiedliche Zustände. Kevin kann jede Entscheidung ändern.
+5. Astra gleicht main vor Integration erneut ab, erhält parallele Arbeit und
+   prüft CI/gegebenenfalls Android am tatsächlichen Integrationscommit.
+
+Astra darf eigene geprüfte Runden im autorisierten Rahmen integrieren. Die
+allgemeine Schreibfreigabe darunter hebt die Grenzen von Lemming und Claude
+nicht auf. Keine dieser Dateien umgeht technische Plattformfreigaben.
 
 ### Freigabe für die weitere Zusammenarbeit (15.09.2026)
 

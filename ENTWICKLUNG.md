@@ -954,3 +954,16 @@ am Ausgang: 192 Karrieren / 4.527 Saisons. Eigene mobile Browser-/Renderstichpro
 Befunde, Bewertung und Grenzen im [Abnahmebericht](pruefberichte/2026-09-18-astra-qualitaetsabnahme.md).
 Keine fremden Branches gelöscht und keine Claude-PRs integriert. Korrekturversion
 35.194.1 / 3519401; CI und Android nach Veröffentlichung am exakten Commit prüfen.
+
+## Dauerhafte Rollen Astra / Lemming – 18.09.2026
+
+Kevin hat PR #26 und den APK-Build 35.194.1 ausdrücklich freigegeben. PR #26 wurde
+als a804a9b11886167a3cb7331ce1ac8b864b98811e nach main übernommen.
+
+Auf Kevins Auftrag werden neue ChatGPT-Chats nach Ansprache als Astra oder Lemming
+geführt: README ist die maßgebliche Rollenquelle; AGENTS und START-NEUER-CHAT
+verweisen darauf. LEMMING.md enthält kleine Arbeitspakete, Umfangsgrenzen,
+Prüfkriterien und einen verbindlichen PR-Abschluss zur Astra-Abnahme. Ohne
+Astra-Zuordnung gilt für neue ChatGPT-/Codex-Chats die Lemming-Arbeitsweise.
+Keine automatische Modellerkennung behauptet. Claude bleibt getrennt und seine
+Vereinswirtschaft wurde nicht integriert. Reine Dokumentation, keine neue Version.

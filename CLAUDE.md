@@ -26,6 +26,10 @@ sind Teil des Auftrags.
 
 ## Die eigene Rolle
 
+Seit Kevins Rollenbenennung vom 18.09.2026 heißt der abnehmende ChatGPT-/Codex-
+Bearbeiter **Astra**. Ein als **Lemming** gestarteter Chat ist kein Abnehmer.
+Maßgeblich ist README „Rollen und Abnahme“; die folgenden Codex-Verweise meinen Astra.
+
 Codex nimmt Claudes Arbeit ab, bevor sie nach `main` geht. Daraus folgt für
 jede Runde, ohne Ausnahme:
 

@@ -58,11 +58,20 @@ Diese Freigabe ist **keine technische Zugangsgarantie**. Jeder neue Chat muss se
 
 ### Rollenverteilung
 
-- **Eigentümer:** Produktentscheidung und letztes Wort.
-- **ChatGPT/Codex:** darf eigenständig entwickeln, prüfen, integrieren und im Rahmen des Auftrags nach `main` veröffentlichen. Codex nimmt außerdem Claudes Beiträge ab.
-- **Claude Code:** entwickelt auf eigenem Branch, dokumentiert Basis, Änderungen und Prüfungen und integriert die eigene Arbeit nicht selbst nach `main`.
+Die verbindliche Zuordnung steht in **README „Rollen und Abnahme“**.
+Kevin benennt diesen Chat als **Astra** oder **Lemming**. Neue ChatGPT-/Codex-Chats
+ohne Astra-Zuordnung folgen zunächst den Lemming-Regeln. Der Modelltyp wird nicht
+erraten; die Rolle erteilt keine zusätzlichen technischen Zugriffsrechte.
 
-Claude-Beiträge werden von Codex ausdrücklich **übernommen, mit Änderungswünschen zurückgegeben oder begründet abgelehnt**. Nicht kommentarlos liegen lassen.
+- **Astra:** Entwicklung, unabhängige Abnahme, Integration und Veröffentlichung.
+- **Lemming:** kleine Pakete, eigener Branch, Eigenprüfung und PR; kein eigener
+  main-Merge oder Release. Nach AGENTS/README zusätzlich **LEMMING.md** lesen.
+- **Claude:** eigene Entwicklung nach CLAUDE.md, Abnahme durch Astra.
+- **Kevin:** letztes Wort; spätere konkrete Aufträge haben Vorrang.
+
+Die nachfolgenden Veröffentlichungsabschnitte sind für Astra beschrieben.
+Lemming beendet die Runde mit der prüfbaren Übergabe aus LEMMING.md, nicht mit
+einer Veröffentlichung nach main. Ein „Weiter“ ist keine Erweiterung der Rolle.
 
 Spätere konkrete Nutzeranweisungen haben Vorrang vor früheren Freigaben oder Plänen.
 
@@ -87,7 +96,7 @@ In dieser Reihenfolge lesen:
 
 1. `START-NEUER-CHAT.md`
 2. `AGENTS.md`
-3. `README.md`
+3. `README.md` und als Lemming zusätzlich `LEMMING.md`
 4. neueste relevante Abschnitte in `ENTWICKLUNG.md`
 5. oberste/neuste Einträge in `CHANGELOG.md`
 6. neueste relevante Dateien in `pruefberichte/`
@@ -523,3 +532,16 @@ Darum gilt jetzt:
 - **GitHub Actions beschreibt die tatsächliche CI des veröffentlichten Commits**.
 
 So kann dieselbe Übergabe auch nach vielen weiteren Versionen noch verwendet werden, ohne einen neuen Chat mit veralteten Zahlen in die falsche Richtung zu schicken.
+
+
+## 19. Kurzer Startauftrag für Lemming
+
+> Du arbeitest als Lemming an `sirmebro-sketch/rasenschachonlyapp`. Lies den
+> aktuellen START-NEUER-CHAT.md, AGENTS.md, README.md und LEMMING.md aus dem Repo.
+> Auftrag: [konkretes kleines Paket]. Halte den Umfang ein und liefere deine
+> geprüfte Arbeit per PR zur Astra-Abnahme. Kein eigener main-Merge oder Release.
+
+Ist noch kein konkretes Paket benannt, gilt die Auswahlregel in LEMMING.md:
+zuletzt beauftragtes Paket fortsetzen oder genau ein belegtes, kleines, freies
+Paket aus dem aktuellen Arbeitsplan auswählen. Keine vollständige Backlog-
+Abarbeitung aus einem allgemeinen „Weiter“ ableiten.
