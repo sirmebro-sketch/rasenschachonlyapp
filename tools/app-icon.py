@@ -79,6 +79,8 @@ def main() -> None:
     rgba.save(ROUND, "WEBP", lossless=True, method=6)
 
     (RES / "mipmap").mkdir(parents=True, exist_ok=True)
+    (RES / "drawable").mkdir(parents=True, exist_ok=True)
+    (RES / "drawable/app_icon_fullbleed.xml").write_text(BITMAP_FULL, encoding="utf-8")
     (RES / "mipmap/ic_launcher.xml").write_text(BITMAP_FULL, encoding="utf-8")
     (RES / "mipmap/ic_launcher_round.xml").write_text(BITMAP_ROUND, encoding="utf-8")
     (RES / "mipmap-anydpi-v26/ic_launcher.xml").write_text(ADAPTIVE, encoding="utf-8")

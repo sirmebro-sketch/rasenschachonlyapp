@@ -28,6 +28,7 @@ test('APPICON: vollflaechige Quelle ist mit Android-Ressourcen verdrahtet',()=>{
     assert.match(xml,/@drawable\/app_icon_fullbleed/);
     assert.match(xml,/@drawable\/ic_launcher_foreground/);
   }
+  assert.match(read('android/app/src/main/res/drawable/app_icon_fullbleed.xml'),/@drawable\/app_icon_fullbleed_image/);
   assert.match(read('android/app/src/main/res/drawable-v24/ic_launcher_foreground.xml'),/#00000000/);
   assert.match(read('android/app/src/main/res/mipmap/ic_launcher.xml'),/@drawable\/app_icon_fullbleed_image/);
   assert.match(read('android/app/src/main/res/mipmap/ic_launcher_round.xml'),/@drawable\/app_icon_round_image/);
