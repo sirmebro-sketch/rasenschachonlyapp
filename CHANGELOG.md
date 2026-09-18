@@ -1,5 +1,12 @@
 # Änderungen
 
+## 35.194.0 – Ausdrucksstärkere Gesichter
+
+- Drei neue Mundformen: herzförmig, kompakt und ein breites Grinsen.
+- Zwei neue Wangen-/Kinnformen mit markanter Kieferkante und spitzer Kinnkontur; die spitze Kontur wurde nach einer roten 72-px-Sichtprüfung gezielt nachgeschärft.
+- Bestehende Gesichts-IDs und historische Seed-Porträts bleiben unverändert; neue Formen werden append-only im Editor und beim Würfeln ergänzt.
+- Gesichtszug-Prüfung um 72/96-px-Rastervergleich sowie Bart-/Brillen-Überlagerungscheck erweitert.
+
 ## 35.193.0 – Mehr echte Frisurenvielfalt
 
 - Männerfrisuren um mittellange und lange Locken, Box Braids, zurückgebundene Locs und einen deutlich asymmetrischen Fringe erweitert.
