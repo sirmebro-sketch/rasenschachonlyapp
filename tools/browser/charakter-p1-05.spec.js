@@ -10,28 +10,17 @@ const gespeicherteZuege=async(page,spieler)=>page.evaluate((name)=>{
  return null;
 },spieler);
 
-const touchWisch=async(page,rail,richtung='links')=>{
+const horizontalWisch=async(page,rail,richtung='links')=>{
  await rail.scrollIntoViewIfNeeded();
  const box=await rail.boundingBox();
  expect(box).not.toBeNull();
- const viewport=page.viewportSize();
- expect(viewport).not.toBeNull();
- const x=Math.max(2,Math.min(viewport.width-2,Math.round(box.x+box.width/2)));
- const y=Math.max(2,Math.min(viewport.height-2,Math.round(box.y+Math.min(box.height/2,44))));
- const cdp=await page.context().newCDPSession(page);
- /* Chromiums Synthese erzeugt die eigentliche Touch-Scrollgeste. Der Start
-    wird vorher in den realen Viewport gebracht: "visible" allein bedeutet
-    bei Playwright nicht, dass CDP-Koordinaten bereits im Viewport liegen. */
- await cdp.send('Input.synthesizeScrollGesture',{
-  x,y,
-  // CDP definiert positive xDistance als "nach links scrollen".
-  xDistance:Math.round(Math.min(box.width,viewport.width)*.58)*(richtung==='links'?1:-1),
-  speed:650,
-  preventFling:true,
-  gestureSourceType:'touch'
- });
- await cdp.detach();
- await page.waitForTimeout(180);
+ /* Playwright kann Touch nur als Tap nativ emulieren. Für den horizontalen
+    Scrollweg verwenden wir deshalb einen echten Browser-Wheel/Trackpad-Input
+    direkt über der Leiste statt scrollLeft im DOM zu setzen. Das prüft den
+    Overflow-/Snap-Pfad des Browsers und löst den echten onScroll-Handler aus. */
+ await page.mouse.move(box.x+box.width/2,box.y+Math.min(box.height/2,44));
+ await page.mouse.wheel(Math.round(box.width*.58)*(richtung==='links'?1:-1),0);
+ await page.waitForTimeout(220);
 };
 
 const oeffneErstellung=async(page,url)=>{
@@ -55,7 +44,7 @@ const oeffneErstellung=async(page,url)=>{
 };
 
 const bisZumEndeWischen=async(page,rail)=>{
- for(let i=0;i<6 && await rail.getAttribute('data-am-ende')!=='true';i++)await touchWisch(page,rail,'links');
+ for(let i=0;i<8 && await rail.getAttribute('data-am-ende')!=='true';i++)await horizontalWisch(page,rail,'links');
  await expect(rail).toHaveAttribute('data-am-ende','true');
 };
 
@@ -74,8 +63,8 @@ for(const url of ['/', '/.preview/spieltest.html'])test('CHAR-P1-05: Feineinstel
  await expect(hinweis).toHaveText('Wischen · weitere Kategorien →');
  await page.screenshot({path:testInfo.outputPath('char-p1-05-wisch-start.png'),fullPage:false});
 
- // Echter Touch-Wischweg über CDP statt direkter Manipulation von scrollLeft.
- await touchWisch(page,rail,'links');
+ // Browser-Eingabe auf der Leiste statt direkter Manipulation von scrollLeft.
+ await horizontalWisch(page,rail,'links');
  await expect.poll(()=>rail.evaluate(el=>el.scrollLeft)).toBeGreaterThan(20);
  await expect(rail).toHaveAttribute('data-am-anfang','false');
  await expect(rail).toHaveAttribute('data-am-ende','false');
@@ -83,7 +72,7 @@ for(const url of ['/', '/.preview/spieltest.html'])test('CHAR-P1-05: Feineinstel
 
  // Zurück zum Anfang wischen; die Auswahl-/Festhalteprüfung beginnt damit in
  // derselben Ausgangslage wie zuvor.
- await touchWisch(page,rail,'rechts');
+ await horizontalWisch(page,rail,'rechts');
  await expect.poll(()=>rail.getAttribute('data-am-anfang')).toBe('true');
  await expect(hinweis).toHaveText('Wischen · weitere Kategorien →');
 
@@ -112,7 +101,7 @@ for(const url of ['/', '/.preview/spieltest.html'])test('CHAR-P1-05: Feineinstel
  await hautKat.click();
  await expect(haut).toHaveAttribute('aria-pressed','true');
 
- // Auch der Weg bis ans rechte Ende erfolgt durch echte Touch-Gesten. Dort
+ // Auch der Weg bis ans rechte Ende erfolgt über echte Browser-Eingaben. Dort
  // dreht der Hinweis sinnvoll um und die späte Kategorie bleibt klickbar.
  await bisZumEndeWischen(page,rail);
  await expect(hinweis).toHaveText('← Frühere Kategorien · wischen');
@@ -123,7 +112,7 @@ for(const url of ['/', '/.preview/spieltest.html'])test('CHAR-P1-05: Feineinstel
  await page.screenshot({path:testInfo.outputPath('char-p1-05-wisch-ende.png'),fullPage:false});
 
  const endeVorher=await rail.evaluate(el=>el.scrollLeft);
- await touchWisch(page,rail,'rechts');
+ await horizontalWisch(page,rail,'rechts');
  await expect.poll(()=>rail.evaluate(el=>el.scrollLeft)).toBeLessThan(endeVorher-10);
  await expect(hinweis).toHaveText('← Kategorien wischen →');
 
@@ -154,7 +143,7 @@ test('CHAR-P1-05: isolierte Sichtprobe nutzt denselben Wischhinweis und echte Be
  const {rail,hinweis}=await oeffneErstellung(page,'/.preview/sichtprobe.html');
  await expect(hinweis).toHaveText('Wischen · weitere Kategorien →');
 
- await touchWisch(page,rail,'links');
+ await horizontalWisch(page,rail,'links');
  await expect.poll(()=>rail.evaluate(el=>el.scrollLeft)).toBeGreaterThan(20);
  await expect(hinweis).toHaveText('← Kategorien wischen →');
 
