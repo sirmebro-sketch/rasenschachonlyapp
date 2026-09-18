@@ -421,6 +421,13 @@ const stufeVon = (v, id) => Math.max(1, Math.min(AUSBAU_MAX, ((v?.ausbau || {})[
 /* Plätze je Stadionstufe. Bewusst überproportional: die ersten Ausbaustufen
    sind billig und bringen wenig, die letzten teuer und viel. */
 export const PLAETZE = [0, 8000, 14000, 22000, 33000, 47000, 64000];
+/* AUSVERKAUFT (WIRT-P1-02). Die Auslastung ist bei .99 gedeckelt; alles ab 97 %
+   gilt als volles Haus. Gemessen, bevor die Schwelle gesetzt wurde: ein
+   Erstligist auf Rang 1 bis 3 erreicht die Deckelung, ein Drittligist auf Rang 1
+   kommt auf 91,7 %, ein Fünftligist auf 86,6 %. Die Marke ist also erreichbar
+   und trotzdem etwas wert — ein Ereignis, das nie eintritt, wäre wieder ein
+   Placebo, und davon hatte dieses Projekt schon genug. */
+export const AUSVERKAUFT_AB = 0.97;
 export const plaetze = (v) => PLAETZE[stufeVon(v, "stadion")];
 
 /* Eine Saison abrechnen. `erg` ist das Ergebnis aus `vereinSaison`:
@@ -637,6 +644,11 @@ export function saisonAbrechnung(v, erg = {}, saat = 0) {
   const ereignisGeld = ereignisse.reduce((a, e) => a + (e.geld || 0), 0);
   const ziel = zielPruefen(v, erg);
   const bau = bauTicken(v);
+  /* Das volle Haus wird NICHT extra bezahlt: die Zuschauer stecken bereits im
+     Ticket-, Gastro- und Merchandisingposten, ein Bonus obendrauf wäre dieselbe
+     Einnahme zweimal. Was es bringt, ist Stimmung — und die trägt sich in die
+     nächste Saison. */
+  const ausverkauft = ein.auslastung >= AUSVERKAUFT_AB;
 
   /* Das Gehaltsniveau der ABGELAUFENEN Saison steckt in `aus`; hier entsteht
      das der kommenden. Bezahlt wird, was vorher vereinbart war — der Erfolg
@@ -658,6 +670,7 @@ export function saisonAbrechnung(v, erg = {}, saat = 0) {
     + (erg.aufstieg ? 6 : 0) - (erg.abstieg ? 8 : 0)
     - ueberzogen(v, erg) * 22
     + bau.fertig.length * 3
+    + (ausverkauft ? 3 : 0)
     + ereignisse.reduce((a, e) => a + (e.stimmung || 0), 0))));
 
   /* Die Lizenzprüfung steht ganz am Ende und rechnet mit der Kasse NACH der
@@ -678,6 +691,10 @@ export function saisonAbrechnung(v, erg = {}, saat = 0) {
     beleg: { kasseVorher, einnahmen: ein.posten, ausgaben: aus.posten,
              summeEin: ein.summe, summeAus: aus.summe, ergebnis, kasse,
              zuschauer: ein.zuschauer, auslastung: ein.auslastung,
+             /* Plätze und Auslastung gehören in den Beleg, nicht nur in die
+                Rechnung: sonst sieht der Spieler eine Zuschauerzahl, ohne zu
+                wissen, ob das viel ist (WIRT-P1-02). */
+             plaetze: plaetze(v), ausverkauft,
              ausgelaufen: ausgelaufen.map((s) => s.n),
              ereignisse, ziel, bau, stimmung: stimmungNeu,
              stimmungVorher: v?.stimmung ?? 60,

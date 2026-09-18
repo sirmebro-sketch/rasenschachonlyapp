@@ -1404,3 +1404,39 @@ test('Der Fuehrungsreiter zeigt Ziel, Preise und Rechtsform ohne NaN',()=>{
  assert(!ohne.includes('NaN'));
  assert(!ohne.includes('Vorstandsziel'),'ohne Ziel keine leere Kachel');
 });
+
+test('Der Fuehrungsreiter macht das Stadion sichtbar (P1-02)',()=>{
+ /* Wer eine Ausbaustufe kauft, sah danach eine groessere Zahl in der
+    Abrechnung, ohne je erfahren zu haben, wie viele Plaetze er hat. Der Ausbau
+    war eine Zahlung ins Ungewisse. */
+ const v=E.VEREIN.mitWirtschaft(spielbereiterVerein({kasse:60,ausbau:{stadion:3,training:1,medizin:1}}));
+ const html=E.renderVerein(v,E.leereAkademie(),'ausbau');
+ assert(!html.includes('NaN'));
+ assert(html.includes('Stadion'));
+ assert(html.includes('22.000'),'die aktuellen Plaetze stehen da');
+ assert(html.includes('33.000'),'und was die naechste Stufe braechte');
+ assert(html.includes('11.000'),'samt Unterschied');
+ assert(html.includes('Noch keine Saison gespielt'),'ohne Chronik wird das gesagt');
+ /* Voll ausgebaut sagt es ebenfalls, statt eine leere Zeile zu zeigen. */
+ const max=E.VEREIN.mitWirtschaft(spielbereiterVerein({ausbau:{stadion:6,training:1,medizin:1}}));
+ const hmax=E.renderVerein(max,E.leereAkademie(),'ausbau');
+ assert(hmax.includes('64.000')&&hmax.includes('Voll ausgebaut'));
+ assert(!hmax.includes('NaN'));
+});
+
+test('Ausverkauft steht im Bericht und in der Chronik (P1-02)',()=>{
+ E.zufallSetzen(20260918);
+ const stark=spielbereiterVerein().kader.map(sp=>({...sp,ovr:86,pot:90}));
+ const v0=E.VEREIN.einschreiben(E.VEREIN.mitWirtschaft(
+   spielbereiterVerein({kader:stark,stimmung:85,kasse:50,
+     ausbau:{stadion:2,training:1,medizin:1}}))).v;
+ const r=E.VEREIN.vereinSaison(v0);
+ assert(!r.fehler,'die Saison laeuft: '+r.fehler);
+ /* Der Beleg traegt Plaetze und Marke, ganz gleich wie es ausging. */
+ assert(Number.isFinite(r.beleg.plaetze)&&r.beleg.plaetze>0,'Plaetze im Beleg');
+ assert.equal(typeof r.beleg.ausverkauft,'boolean');
+ const c=r.v.chronik.at(-1).wirtschaft;
+ assert.equal(c.plaetze,r.beleg.plaetze,'und wandern in die Chronik');
+ assert.equal(c.ausverkauft,r.beleg.ausverkauft);
+ assert(Number.isFinite(c.auslastung));
+});

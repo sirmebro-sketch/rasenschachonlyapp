@@ -9961,6 +9961,47 @@ function VereinScreen({ v, aka, onAendern, onZurueck, onAbschluss, startReiter }
                 </div>)}
             </div>
 
+            {/* ---- STADION (WIRT-P1-02) ---------------------------------
+                Plätze, Auslastung und Zuschauerzahl standen bisher nur in der
+                Rechnung. Wer eine Stufe kauft, sah danach eine grössere Zahl in
+                der Abrechnung, ohne je erfahren zu haben, wie viele Plätze er
+                überhaupt hat — der Ausbau war eine Zahlung ins Ungewisse.
+                Genannt wird deshalb auch, was die NÄCHSTE Stufe bringt. */}
+            {(() => {
+              const stufe = VEREIN.ausbauStufe(v, "stadion");
+              const jetzt = VEREIN.PLAETZE[stufe] || 0;
+              const naechste = VEREIN.PLAETZE[stufe + 1] || null;
+              const letzte = (v.chronik || []).filter((c) => c.wirtschaft
+                && c.wirtschaft.zuschauer).slice(-1)[0];
+              const w = letzte && letzte.wirtschaft;
+              return (
+                <div className="pan pad" style={{ marginTop: 8 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
+                    <span className="eb">Stadion</span>
+                    <span className="d" style={{ fontSize: 15 }}>
+                      {jetzt.toLocaleString("de-DE")} Plätze</span>
+                  </div>
+                  {w ? (
+                    <div className="m" style={{ fontSize: 11.5, marginTop: 2 }}>
+                      Zuletzt Ø {Math.round(w.zuschauer).toLocaleString("de-DE")} Zuschauer
+                      {w.auslastung ? " · " + Math.round(w.auslastung * 100) + " % ausgelastet" : ""}
+                      {w.ausverkauft ? " · ausverkauft" : ""}</div>
+                  ) : (
+                    <div className="m" style={{ fontSize: 11.5, marginTop: 2 }}>
+                      Noch keine Saison gespielt.</div>)}
+                  {naechste ? (
+                    <div className="m" style={{ fontSize: 11, marginTop: 4, color: "var(--mu)" }}>
+                      Die nächste Ausbaustufe bringt {naechste.toLocaleString("de-DE")} Plätze
+                      — {(naechste - jetzt).toLocaleString("de-DE")} mehr.</div>
+                  ) : (
+                    <div className="m" style={{ fontSize: 11, marginTop: 4, color: "var(--mu)" }}>
+                      Voll ausgebaut.</div>)}
+                  <div className="m" style={{ fontSize: 11, marginTop: 4, color: "var(--mu)" }}>
+                    Ab {Math.round(VEREIN.AUSVERKAUFT_AB * 100)} % Auslastung gilt das Haus als
+                    ausverkauft — das hebt die Stimmung.</div>
+                </div>);
+            })()}
+
             {/* ---- VORSTANDSZIEL (WIRT-P0-05-UI) -------------------------
                 Es wurde seit dem Wirtschaftskern jede Saison gesetzt und
                 geprüft — sichtbar war es aber erst HINTERHER, im Beleg und in
@@ -10167,6 +10208,7 @@ function VereinScreen({ v, aka, onAendern, onZurueck, onAbschluss, startReiter }
                     {c.wirtschaft.zuschauer
                       ? " · " + Math.round(c.wirtschaft.zuschauer).toLocaleString("de-DE") + " Zuschauer"
                       : ""}
+                    {c.wirtschaft.ausverkauft ? " · ausverkauft" : ""}
                     {c.wirtschaft.stimmung != null ? " · Stimmung " + c.wirtschaft.stimmung : ""}
                     {c.wirtschaft.gehaltsniveau > 1.02
                       ? " · Gehälter " + Math.round(c.wirtschaft.gehaltsniveau * 100) + " %"
@@ -17583,7 +17625,12 @@ function EndScreen({ p, onNew }) {
                     {w.zuschauer > 0 && (
                       <div className="m" style={{ fontSize: 10, color: "var(--mu)", marginBottom: 4 }}>
                         Ø {Math.round(w.zuschauer).toLocaleString("de-DE")} Zuschauer
+                        {w.plaetze ? " von " + w.plaetze.toLocaleString("de-DE") : ""}
                         {w.auslastung ? " · " + Math.round(w.auslastung * 100) + " % ausgelastet" : ""}</div>)}
+                    {!!w.ausverkauft && (
+                      <div className="m" style={{ fontSize: 11.5, marginBottom: 4, color: "var(--ok)" }}>
+                        <b>Ausverkauftes Haus.</b> Jedes Heimspiel voll — die Fans danken es
+                        mit Stimmung.</div>)}
 
                     <div style={{ marginTop: 6 }}>
                       {(w.einnahmen || []).map((x) => zeile(x.k, "+" + geld(x.v), "var(--ok)"))}
@@ -18334,6 +18381,7 @@ function FlutlichtApp() {
             summeEin: VS.beleg.summeEin, summeAus: VS.beleg.summeAus,
             ergebnis: VS.beleg.ergebnis, kasse: VS.beleg.kasse,
             zuschauer: VS.beleg.zuschauer, auslastung: VS.beleg.auslastung,
+            plaetze: VS.beleg.plaetze, ausverkauft: VS.beleg.ausverkauft,
             ereignisse: (VS.beleg.ereignisse || []).map((e) => ({ n: e.n, t: e.t, geld: e.geld })),
             /* Die beiden Werte, die die ganze Wirtschaft treiben, fehlten hier
                — und sie tauchen auch sonst nirgends auf. Der Spieler sah
