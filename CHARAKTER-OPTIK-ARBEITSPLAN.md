@@ -92,7 +92,7 @@ Bei jeder neuen oder überarbeiteten Merkmalsgruppe mindestens diese Fragen bean
 
 Die Reihenfolge ist eine Qualitäts-/Risikoreihenfolge. Der letzte Nutzerauftrag kann sie jederzeit ändern.
 
-### CHAR-P0-01 – Live-Bestandsaufnahme der Charaktererstellung — BEREIT
+### CHAR-P0-01 – Live-Bestandsaufnahme der Charaktererstellung — ERLEDIGT
 
 **Ziel:** Vor weiteren Massenergänzungen erfassen, welche vorhandenen Optionen wirklich unterschiedlich, schwach, fehlerhaft oder redundant wirken.
 
@@ -105,6 +105,8 @@ Die Reihenfolge ist eine Qualitäts-/Risikoreihenfolge. Der letzte Nutzerauftrag
 - **keine Varianten allein aufgrund persönlicher Vorliebe löschen oder umnummerieren.**
 
 **Abnahme:** Jede aktuelle Merkmalsgruppe hat einen belegten Befund; konkrete Dopplungen/Defekte sind mit Index und reproduzierbarer Ansicht benannt.
+
+**Abschluss 18.09.2026:** Vollständige 72/96/145-px-Sichtmatrix über sechs Kopf-/Farbkontexte und beide Geschlechter durchgeführt. Konkrete starke/brauchbare/ähnliche IDs, Defektbefund und priorisierter Ausbau stehen in [pruefberichte/2026-09-18-char-p0-01-visuelle-bestandsaufnahme.md](pruefberichte/2026-09-18-char-p0-01-visuelle-bestandsaufnahme.md). Produktcode blieb unverändert.
 
 ### CHAR-P0-02 – Porträt-Identitätskette absichern — BEREIT
 

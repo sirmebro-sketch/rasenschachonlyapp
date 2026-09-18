@@ -862,3 +862,23 @@ kein Browsererfolg daraus abgeleitet. GitHub-Browser-CI bleibt Release-Gate.
 Die automatische Freigabeprüfung lehnte den ersten main-Push ab. Kevin bestätigte
 daraufhin ausdrücklich die dauerhafte Freigabe für Updates und APK-Builds sowie
 sein letztes Wort; Wortlaut in README. Veröffentlichung wird damit fortgesetzt.
+
+
+## CHAR-P0-01 visuelle Bestandsaufnahme – ChatGPT, 18.09.2026
+
+Basis `main` ff9e59d8aa9d4ebd775ac012c683c1d5d150de7e nach CHAR-FIX-04.
+Offene Claude-PRs zur Vereinswirtschaft wurden vor Beginn geprüft und nicht
+verändert oder übernommen.
+
+Der vorhandene Charakter-Inventar-Prüfstand wurde ausschließlich für die
+Sichtabnahme auf 72/96/145 px und sechs Referenzkontexte (Schmal/Breit sowie
+Kopf 10–13, helle/dunkle Haut und Haare) erweitert. Alle Live-Merkmalsgruppen
+für Mann/Frau wurden als 84 CI-Sichtbögen gerendert und tatsächlich angesehen.
+Kein neuer Produktdefekt gefunden, daher kein Produktcode und keine Version
+geändert. Konkrete Ähnlichkeitskandidaten und die priorisierte Ausbauempfehlung
+stehen in [pruefberichte/2026-09-18-char-p0-01-visuelle-bestandsaufnahme.md](pruefberichte/2026-09-18-char-p0-01-visuelle-bestandsaufnahme.md).
+
+Prüfstand-Head 6edd6f0: Spielregressionen/Build Run 35310049237 erfolgreich;
+Visuelle Browsertests Run 35310049190 mit 42 bestanden, 21 projektbedingt
+übersprungen, 0 fehlgeschlagen. Browserartefakt 10533281664, Digest
+e9ec1ac84a6e227f506a165d3462bc804bf158af99b0a1b8efc4c807e822f71b.
