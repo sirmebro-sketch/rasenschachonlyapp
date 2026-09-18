@@ -33,8 +33,8 @@
              touch-action: pan-x pan-y; }
 
       /* Das Startbild liegt absichtlich direkt im HTML statt erst in React:
-         Nach dem bereits nativen Android-Startbild kann die lokale WebView
-         dasselbe Motiv ohne Zwischenblitz weiter anzeigen. */
+         Nach dem kurzen systemseitigen Android-Start kann die lokale WebView
+         sofort Kevins app-eigenes Motiv anzeigen. */
       #app-startup-splash {
         position: fixed; inset: 0; z-index: 2147483647; overflow: hidden;
         background: #050706; opacity: 1; transition: opacity 280ms ease;
