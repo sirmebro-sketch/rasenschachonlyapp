@@ -38,11 +38,26 @@ export function Haarform({index=0,weiblich=false,breite=24,farbe,hell,ebene='vor
   if(typ==='locsgebunden')d='M66 24 Q83 22 82 39 Q81 50 73 58 Q70 69 73 80 L66 80 Q63 65 68 53 Q73 42 64 31 Z';
   if(['vollpony','curtain'].includes(typ))d='M25 32 Q19 47 24 70 L31 75 Q29 57 36 37 Z M75 32 Q81 47 76 70 L69 75 Q71 57 64 37 Z';
   if(typ==='asymbob')d='M25 34 Q20 45 27 52 L32 51 L36 36 Z M74 31 Q82 47 74 65 L66 66 L63 35 Z';
-  if(typ==='halfup')d='M25 32 Q19 49 25 78 L32 79 Q29 57 36 37 Z M75 32 Q81 49 75 78 L68 79 Q71 57 64 37 Z M41 17 Q38 8 50 6 Q62 8 59 17 Q50 13 41 17 Z';
+  if(typ==='halfup')d='M25 32 Q19 49 25 78 L32 79 Q29 57 36 37 Z M75 32 Q81 49 75 78 L68 79 Q71 57 64 37 Z M39 18 Q35 8 49 6 Q60 6 61 13 Q71 9 76 16 Q79 23 70 30 Q65 34 60 33 Q65 21 56 17 Q48 13 39 18 Z';
   if(typ==='langzopf')d='M68 28 Q82 34 74 49 Q82 58 73 68 Q80 77 70 87 L65 84 Q72 76 66 68 Q73 58 67 50 Q74 40 64 33 Z';
   if(typ==='twinbuns')d='M24 27 Q16 20 21 12 Q27 5 35 11 Q40 18 33 27 Z M76 27 Q84 20 79 12 Q73 5 65 11 Q60 18 67 27 Z';
   if(!d)return null;
-  return <g data-haar-typ={typ} data-haar-ebene="hinten" data-haar-profil={kopfprofil||'standard'} transform={transform}><path d={d} fill={farbe}/><path d={d} fill="none" stroke={hell} strokeWidth={['boxbraids','langzopf'].includes(typ)?'.9':'.45'} strokeDasharray={['boxbraids','langzopf'].includes(typ)?'1.2 2.1':undefined} opacity={['boxbraids','langzopf'].includes(typ)?'.42':'.18'}/></g>;
+  return <g data-haar-typ={typ} data-haar-ebene="hinten" data-haar-profil={kopfprofil||'standard'} transform={transform}>
+   <path d={d} fill={farbe}/><path d={d} fill="none" stroke={hell} strokeWidth=".45" opacity=".18"/>
+   {typ==='boxbraids'&&<g fill="none" stroke={hell} strokeWidth=".8" opacity=".62">
+    {[44,52,60,68,76].map((y,i)=><React.Fragment key={y}>
+     <path d={`M${26+(i%2)} ${y} l5 2`}/><path d={`M${35+(i%2)} ${y+1} l6 2`}/>
+     <path d={`M${59-(i%2)} ${y+1} l6 -2`}/><path d={`M${69-(i%2)} ${y} l5 -2`}/>
+    </React.Fragment>)}
+   </g>}
+   {typ==='langzopf'&&<g fill="none" stroke={hell} strokeWidth=".9" opacity=".68">
+    <path d="M69 39 l7 4 M68 47 l8 4 M68 56 l8 4 M68 65 l7 4 M67 74 l7 4"/>
+    <path d="M76 43 l-7 4 M76 51 l-8 5 M76 60 l-8 5 M75 69 l-8 5"/>
+   </g>}
+   {typ==='locsgebunden'&&<g fill="none" stroke={hell} strokeWidth=".7" opacity=".45">
+    <path d="M67 36 l7 1 M66 44 l8 1 M65 52 l8 1 M66 61 l7 1 M68 70 l5 1"/>
+   </g>}
+  </g>;
  }
  // Die Unterlage deckt die tatsächliche Schädelkurve ab; einzelne Strähnen
  // dürfen keine hautfarbenen Spalten am Scheitel oder an den Schläfen lassen.
@@ -107,7 +122,7 @@ export function Haarform({index=0,weiblich=false,breite=24,farbe,hell,ebene='vor
  if(typ==='vollpony')d='M24 47 C21 23 30 8 50 9 C70 8 79 23 76 47 L70 51 L68 33 L62 34 L60 40 L55 36 L50 41 L45 36 L40 40 L38 34 L31 33 L30 51 Z';
  if(typ==='curtain')d='M24 47 C21 23 30 8 48 9 Q50 11 50 17 Q50 11 52 9 C70 8 79 23 76 47 L70 51 Q64 36 54 25 L52 43 L48 43 L46 25 Q36 36 30 51 Z';
  if(typ==='asymbob')d='M25 46 C22 23 31 9 50 9 Q70 8 76 37 L72 61 Q66 65 64 55 L65 33 Q56 27 50 25 Q41 32 31 36 L30 48 Z';
- if(typ==='halfup')d='M24 47 C21 23 30 9 50 10 C70 9 79 23 76 47 L70 51 Q68 34 58 28 Q50 32 42 28 Q32 34 30 51 Z M41 18 Q39 10 50 8 Q61 10 59 18 Q50 14 41 18 Z';
+ if(typ==='halfup')d='M24 47 C21 23 30 9 50 10 C70 9 79 23 76 47 L70 51 Q68 34 58 28 Q50 32 42 28 Q32 34 30 51 Z M39 20 Q39 12 49 10 Q59 11 61 18 Q56 16 50 17 Q44 16 39 20 Z';
  if(typ==='langzopf')d='M25 43 C23 23 32 9 50 9 Q71 8 76 35 Q65 27 56 29 Q46 35 28 36 Z';
  if(typ==='langwellen')d='M23 47 Q20 34 25 27 Q22 19 31 17 Q34 8 43 11 Q50 5 57 11 Q68 8 73 17 Q80 23 76 34 Q80 42 74 49 Q66 39 59 42 Q50 37 42 42 Q34 39 28 51 Z';
  if(typ==='twinbuns')d='M25 42 C23 24 32 10 49 10 Q67 8 75 28 L74 42 Q64 32 55 31 L50 24 L45 31 Q36 32 26 42 Z';
