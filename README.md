@@ -227,7 +227,11 @@ reine Werkzeug- oder Dokumentationsänderungen erhöhen sie nicht.
 **`npm test`** — `node --test tools/*.test.cjs`. Wie viele Prüfungen es gerade
 sind, sagt die Ausgabe des Laufs (`# pass`); eine Zahl an dieser Stelle wäre nach
 der nächsten Runde wieder falsch. Läuft in der CI bei Pushes auf `main` und Pull
-Requests (`.github/workflows/regression.yml`).
+Requests (`.github/workflows/regression.yml`) — und seit 17.09.2026 zusätzlich
+**von Hand auf jedem Branch**: Actions → „Spielregressionen" → „Run workflow" →
+Branch wählen. Damit ist eine Übergabe auch dann automatisch geprüft, wenn dazu
+noch kein Pull Request offen ist; ein reiner Branch-Push allein startet
+weiterhin nichts.
 Schwerpunkt: Abschlussbelohnungen und Kaufbuchungen, Speicherfehler an jedem
 einzelnen Schritt, simulierte Prozessabbrüche, Import mit Rücknahme,
 Ereignisstände nach Umsortierung des Katalogs.

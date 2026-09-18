@@ -3,6 +3,9 @@ on:
   pull_request:
   push:
     branches: [main]
+  # Von Hand startbar, damit ein Branch ohne Pull Request pruefbar ist:
+  # Actions -> Spielregressionen -> Run workflow -> Branch waehlen.
+  workflow_dispatch:
 permissions:
   contents: read
 jobs:
