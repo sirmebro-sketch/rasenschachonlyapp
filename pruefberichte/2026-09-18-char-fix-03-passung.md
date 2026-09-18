@@ -35,8 +35,8 @@ Die sichere Patch-Brücke lief nach den Geometriekorrekturen vollständig grün:
 Der erste PR-Browserlauf zeigte:
 - `CHAR-FIX-03` selbst erfolgreich, einschließlich beider Vollmatrizen.
 - Sichtung der erzeugten Haar- und Bartmatrizen: keine abgeschnittenen Bartkörper, keine auf die Nase gerutschten Schnurrbärte und keine offensichtlich zu kleinen neuen Kopf-/Frisurpassungen in den geprüften Reihen.
-- Ein bestehender CHAR-P1-02-Rastertest fand Wangen-ID 0/1 bei 72 px pixelidentisch. Ursache war die vom Mund verdeckte Kinngrübchen-Geometrie; diese wurde anschließend korrigiert.
+- Ein bestehender CHAR-P1-02-Rastertest fand Wangen-ID 0/1 pixelidentisch. Der erste Fix setzte das Kinngrübchen korrekt unter den Mund, blieb rasterseitig aber noch zu kontrastarm. Deshalb wird ID 1 nun als kleine, dunklere Kinnkontur gezeichnet; die Position folgt weiter der tatsächlichen Mundunterkante.
 
 ## Status
 
-Noch **nicht final abgenommen**. Nach der Kinngrübchen-Korrektur müssen Spielregressionen und der vollständige Browserlauf auf demselben neuen Head erneut grün sein. Danach werden Artefakt/Screenshots erneut geprüft und dieser Bericht mit finalen Run-IDs ergänzt.
+Noch **nicht final abgenommen**. Die zweite Kinngrübchen-Korrektur hat die sichere Patch-Brücke inklusive Regressionen und Produktionsbuild bestanden. Spielregressionen und der vollständige Browserlauf müssen nun auf demselben normalen PR-Head erneut grün sein. Danach werden Artefakt/Screenshots erneut geprüft und dieser Bericht mit finalen Run-IDs ergänzt.
