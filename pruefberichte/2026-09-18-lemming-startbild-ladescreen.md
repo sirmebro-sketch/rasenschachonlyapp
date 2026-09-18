@@ -7,13 +7,13 @@
 
 ## Problem und Lösung
 
-Der native Android-Startscreen verwendet das gelieferte Rasenschach-XI-Motiv bereits in den vorhandenen `splash.png`-Ressourcen. Der bisherige Web-Einstieg enthielt danach jedoch nur den React-Root. Dadurch konnte beim Übergang von Android zur Capacitor-WebView ein leerer/dunkler Zwischenzustand entstehen und es gab keinen sichtbaren Ladeindikator.
+Die erste Beta-Kontrolle hat einen wichtigen Fehler aufgedeckt: Die vorhandenen Android-`splash.png`-Ressourcen zeigen noch das alte Capacitor-Standardmotiv und sind **nicht** Kevins geliefertes Stadionbild. Diese erste Beta wurde deshalb verworfen und nicht als fertiger Teststand ausgegeben.
 
-Das Paket setzt deshalb denselben vorhandenen 9:16-Bildstand **direkt vor React in `index.html`**. Vite übernimmt die bestehende lokale Ressource `android/app/src/main/res/drawable-port-xhdpi/splash.png` in das Web-Bündel; es gibt keinen Netzabruf und keine zweite Bildkopie im Repository. Ein kleiner rot-weißer Spinner liegt bei ca. 64 % Bildschirmhöhe unter dem großen „XI“.
+Das gelieferte Motiv liegt nun in einer auf 720 × 1280 px optimierten WebP-Fassung mit 47.528 Byte vor. Weil der GitHub-Schreibweg in diesem Chat keine Binärdatei direkt annehmen kann, wird es verlustfrei als Base64-Daten in acht lokalen JavaScriptteilen unter `public/startbild/` abgelegt und unmittelbar im HTML zusammengesetzt. Es gibt keinen Netzwerkabruf und keine Abhängigkeit von den falschen Android-Standardgrafiken.
 
-`main.jsx` blendet den Screen nach mindestens **2,2 Sekunden** weich aus. Braucht der Bundle-Start selbst länger, wird keine zusätzliche volle Wartezeit addiert: nach dem ersten Render-Auftrag beginnt die Blende unmittelbar. App-Logik, Speicherformat und Spielinhalte bleiben unverändert. Bei systemweit reduzierter Bewegung bleibt der Ring sichtbar, rotiert aber nicht.
+`index.html` setzt das Motiv **direkt vor React** als ersten app-eigenen Bildschirm. Ein kleiner rot-weißer Spinner liegt bei ca. 64 % Bildschirmhöhe unter dem großen „XI“. `main.jsx` blendet den Screen nach mindestens **2,2 Sekunden** weich aus. Braucht der Bundle-Start selbst länger, wird keine zusätzliche volle Wartezeit addiert. Bei systemweit reduzierter Bewegung bleibt der Ring sichtbar, rotiert aber nicht.
 
-Damit entsteht auf Android die beabsichtigte Kette: **nativer Start mit Motiv → Web-Ladescreen mit demselben Motiv + Ladekreis → Spiel**. Ein eigener nativer Theme-Umbau ist dafür nicht nötig.
+Auf Android 12+ (einschließlich Android 16) ist der kurze systemseitige Android-Startscreen vor dem WebView technisch vorgegeben; das frei gestaltbare Vollbildmotiv kann erst direkt danach als erster app-eigener Screen erscheinen. Dieses Paket verändert den systemseitigen Android-Splash nicht, sondern stellt sicher, dass **unmittelbar danach Kevins Motiv** statt der alten Capacitor-Grafik im app-eigenen Ladescreen erscheint.
 
 ## Getrennte Beta-APK
 
@@ -24,7 +24,7 @@ Damit entsteht auf Android die beabsichtigte Kette: **nativer Start mit Motiv �
 Neu: `tools/startbild.test.cjs` schützt folgende Verträge:
 
 - Startbild steht vor dem React-Root im HTML,
-- die lokale 9:16-Splashressource wird verwendet,
+- das gelieferte 9:16-Motiv wird offline aus acht lokalen Datenblöcken zusammengesetzt,
 - Ladeindikator ist vorhanden und unter dem XI positioniert,
 - reduzierte Bewegung stoppt die Rotation,
 - Mindestdauer beträgt 2,2 Sekunden,
@@ -34,7 +34,7 @@ Die vollständigen Projektprüfungen werden am exakten PR-Head von GitHub Action
 
 ## Sichtprüfung
 
-Das gelieferte Originalmotiv ist 864 × 1536 px. Die bereits vorhandene Android-Ressource `drawable-port-xhdpi/splash.png` ist 720 × 1280 px und damit ebenfalls exakt 9:16; Logo, XI, Ball, Spielfeld und Randtexte bleiben im Hochformat erhalten. Der Spinner sitzt unterhalb des XI und oberhalb des unteren Slogans. Eine echte Android-Gerätesichtung bleibt bis zur Installation des Beta-Artefakts offen.
+Das gelieferte Originalmotiv ist 864 × 1536 px. Die für den Ladescreen verwendete Fassung ist 720 × 1280 px und damit ebenfalls exakt 9:16. Logo, XI, Ball, Spielfeld und Randtexte bleiben im Hochformat erhalten; der Spinner sitzt unterhalb des XI und oberhalb des unteren Slogans. Die erste erzeugte Beta wurde durch direkte APK-Inspektion als falsch erkannt (Capacitor-Standardgrafik). Erst ein neuer CI-Build auf dem korrigierten PR-Head darf als Test-Beta ausgegeben werden.
 
 ## Bewusst nicht geändert
 
