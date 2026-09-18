@@ -548,6 +548,24 @@ test('Stimmung: der voreingestellte Preis kostet keine Stimmung', () => {
   assert(nach.stimmung < 80, 'Überteuerung kostet weiterhin Stimmung');
 });
 
+test('Der Stimmungsschaden wächst stetig über dem Normalpreis', () => {
+  /* Hält die Abkürzung fest, die `bestPreis` überspringt, solange der Preis
+     nicht über 1 liegt: der Term ist dort beweisbar null. Geprüft wird die
+     Grenze von beiden Seiten und dass es keinen Sprung gibt — eine falsche
+     Abkürzung würde sich genau hier als Knick zeigen. */
+  const stimmungBei = (f) => W.saisonAbrechnung(
+    verein({ ligastufe: 4, ausbau: {}, stimmung: 70, preise: { ticket: f, gastro: f, merch: f } }),
+    erg({ rang: 9 }), 3).beleg.stimmung;
+  const unten = [0.6, 0.8, 1.0].map(stimmungBei);
+  assert(unten.every((x) => x === unten[0]),
+    'unterhalb und bei 1 kostet der Preis nichts: ' + unten.join(', '));
+  /* Darüber fällt sie, und zwar monoton. */
+  const oben = [1.1, 1.3, 1.6].map(stimmungBei);
+  assert(oben[0] <= unten[0] && oben[1] <= oben[0] && oben[2] <= oben[1],
+    'über dem Normalpreis muss es stetig teurer werden: ' + oben.join(', '));
+  assert(oben[2] < unten[0], 'Wucher kostet spürbar');
+});
+
 test('Der Punktedeckel hält auch mit der Vermächtnisplakette', () => {
   /* Vorher wurde der Faktor NACH der Deckelung angewandt und hob den Deckel
      selbst an: aus 250 wurden 288, während drei Stellen „gedeckelt bei 250"
