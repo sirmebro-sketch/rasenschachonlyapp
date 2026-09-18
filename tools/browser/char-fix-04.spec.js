@@ -12,20 +12,20 @@ test('CHAR-FIX-04: gezielte Haar-/Bart-Sichtbögen rendern vollständig und saub
  const bartAlt=page.locator('[data-kind="bart-alt"]');
  const bartGross=page.locator('[data-kind="bart-kritisch"]');
 
- await expect(alle).toHaveCount(200);
- await expect(kritisch).toHaveCount(152);
- await expect(diagnose).toHaveCount(76);
+ await expect(alle).toHaveCount(248);
+ await expect(kritisch).toHaveCount(184);
+ await expect(diagnose).toHaveCount(92);
  await expect(bartNeu).toHaveCount(384);
  await expect(bartAlt).toHaveCount(96);
  await expect(bartGross).toHaveCount(42);
 
  for(const id of [10,11,12,13]){
-  await expect(page.locator('[data-testid="haar-alle-neue"] article[data-kopf="'+id+'"] [data-kind="haar-alle"]')).toHaveCount(50);
-  await expect(page.locator('[data-testid="haar-kritisch"] article[data-kopf="'+id+'"] [data-kind="haar-kritisch"][data-size="96"]')).toHaveCount(19);
-  await expect(page.locator('[data-testid="haar-kritisch"] article[data-kopf="'+id+'"] [data-kind="haar-kritisch"][data-size="145"]')).toHaveCount(19);
+  await expect(page.locator('[data-testid="haar-alle-neue"] article[data-kopf="'+id+'"] [data-kind="haar-alle"]')).toHaveCount(62);
+  await expect(page.locator('[data-testid="haar-kritisch"] article[data-kopf="'+id+'"] [data-kind="haar-kritisch"][data-size="96"]')).toHaveCount(23);
+  await expect(page.locator('[data-testid="haar-kritisch"] article[data-kopf="'+id+'"] [data-kind="haar-kritisch"][data-size="145"]')).toHaveCount(23);
   await expect(page.locator('[data-testid="bart-neue"] article[data-kopf="'+id+'"] .paar')).toHaveCount(3);
  }
- await expect(page.locator('svg[aria-label="Haar-Passungsdiagnose"]')).toHaveCount(76);
+ await expect(page.locator('svg[aria-label="Haar-Passungsdiagnose"]')).toHaveCount(92);
  await expect(page.locator('[data-bart-id="4"]')).toHaveCount(36);
  await expect(page.locator('[data-bart-id="14"]')).toHaveCount(36);
 
