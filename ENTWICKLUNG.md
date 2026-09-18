@@ -1517,6 +1517,63 @@ Abbruch in der Mitte sieht sonst aus wie „nichts passiert", ist aber
   einzige Antwort, die bleibt.
 - **Preise, Rechtsform und Vorstandsziel haben keine Oberfläche.**
 - **Kein Gerätetest.**
+
+## WIRT-P1-01 — Die Saisonabrechnung wird sichtbar (Claude, 17.09.2026)
+
+**Basis-Commit:** Stand des Zweigs `claude/wirt-p0-04` (Pull Request #13).
+**Branch:** `claude/wirt-p1-01`. **Vorgelegt zur Abnahme.**
+Kette: `claude/vereinswirtschaft` → `wirt-p0-02` → `wirt-p0-03` → `wirt-p0-04`
+→ dieser.
+
+**Das Problem.** Seit P0-02 wird jede Saison abgerechnet, seit P0-03 gibt der
+Verein Geld aus und seit P0-04 nimmt er welches ein. Der Spieler sah davon
+genau eine Zahl: den Kassenstand. Warum er sich verändert hatte, stand
+nirgends — und damit war jede wirtschaftliche Entscheidung eine Wette ohne
+Rückmeldung.
+
+**Was gebaut wurde.** Der Beleg aus `vereinSaison` wandert in
+`p.vereinBericht.wirtschaft` und wird im Abschlussbildschirm unter der
+bestehenden Vereinskachel gezeigt:
+
+- jeder Einnahme- und Ausgabeposten einzeln, mit Vorzeichen und Farbe,
+- Wirtschaftsereignisse mit Betrag **und Text** — ein Sturmschaden soll erzählt
+  werden, nicht nur gebucht,
+- die Vorstandsprämie als Posten, ein verfehltes Ziel als eigene Zeile,
+- Ergebnis und neuer Kassenstand,
+- Zuschauerschnitt und Auslastung, fertig gewordene Bauprojekte, ausgelaufene
+  Werbeverträge.
+
+**DIESELBE QUELLE WIE DIE BUCHUNG.** Der Beleg wird gelesen, nicht nachgerechnet
+— dieselbe Regel wie beim Coinbeleg am Karriereende. Zwei Rechnungen laufen
+früher oder später auseinander, und dann glaubt der Spieler der falschen.
+
+**Mitgenommen wird der Beleg EINER Saison, nicht die Chronik.** Fünfzehn
+gehörten nicht in einen Karrierebericht, der ein Jahr zusammenfasst.
+
+**Geprüft:** `npm test` **160/160** (vorher 158), `npm run build` erfolgreich.
+Zwei neue Regressionen: der Bericht zeigt **jeden** gebuchten Posten (Einnahmen
+wie Ausgaben, namentlich abgeglichen) samt Zuschauerzahl, und ein Bericht ohne
+Wirtschaftsteil bleibt unverändert lesbar; dazu verfehltes und erfülltes Ziel,
+fertige Bauten, ausgelaufene Verträge und Ereignistexte.
+**Gegenprobe:** lässt man die Ausgabenzeilen weg, wird die erste rot
+(„Ausgabe fehlt: Spielergehälter · 18 Spieler, Ø 62").
+
+**Eine Fussnote zum Prüfstand.** Zwei Anläufe sind an handgebauten
+Spielerständen gescheitert (`p.nat.flag`, dann `p.club.tier`) — der
+Abschlussbildschirm liest mehr Felder, als man beim Nachbauen ahnt. Die
+Regression benutzt jetzt einen echten, über `runFinish` abgeschlossenen
+Spieler. Das ist die Regel, nicht die Ausnahme: ein erfundener Zustand prüft,
+was man sich vorstellt, ein erzeugter prüft, was passiert.
+
+**Offen bleibt:**
+
+- **WIRT-P1-05 — Abschluss.** `abschlussWirtschaft` hat weiterhin null
+  Aufrufer: die Restkasse wird beim Vereinsende nicht zu Vermächtnispunkten.
+  Danach wäre der Gerätetest sinnvoll.
+- **WIRT-P1-04 — Folgen einer leeren Kasse.**
+- **Preise, Rechtsform und Vorstandsziel haben keine Oberfläche.**
+- **WIRT-P1-02 — Stadionausbau spürbar machen.**
+- **Kein Gerätetest.**
 ## Nachbesserung nach Gegenlesen — Wirtschaftskern (Claude, 17.09.2026)
 
 Nach dem Bau der ganzen Kette habe ich den eigenen Diff systematisch
@@ -1652,6 +1709,21 @@ Spielstände bekommen weiterhin ihre Auswahl.
 **Geprüft:** `npm test` 170/170, `npm run build` erfolgreich. Zwei neue
 Regressionen: der angezeigte Betrag stimmt mit dem gebuchten Posten überein,
 und eine leergeräumte Angebotsliste bleibt leer.
+
+## Nachbesserung nach Gegenlesen — Saisonabrechnung (Claude, 17.09.2026)
+
+**Stimmung und Gehaltsniveau fehlten im Beleg.** Beide treiben die ganze
+Wirtschaft — die Stimmung über Auslastung und Merchandising, das Gehaltsniveau
+über die Ratsche — und **keine der beiden Zahlen tauchte irgendwo im Spiel
+auf**. Der Spieler sah Zuschauer und Merchandising Jahr für Jahr sinken und die
+Gehaltszeile steigen, ohne zu erfahren, dass es diese Werte überhaupt gibt.
+
+Beide stehen jetzt im Karrierebericht, und zwar **mit Richtung**: „Stimmung 64
+(+4) · Gehaltsniveau 118 % und steigend". Ein Wert, der sich bewegt, ist erst
+als Bewegung eine Auskunft.
+
+**Geprüft:** `npm test` 172/172, `npm run build` erfolgreich. Die bestehende
+Belegprüfung verlangt jetzt beide Angaben.
 ## Nachbesserung, zweiter Durchgang (Claude, 18.09.2026)
 
 Die beiden letzten offenen Punkte aus dem Gegenlesen.

@@ -545,6 +545,81 @@ test('Der Ausbaureiter zeigt Geld und VC getrennt, ohne NaN',()=>{
  assert(!halb.includes('NaN'));
 });
 
+test('Saisonabrechnung: der Karrierebericht zeigt, woher das Geld kam und wohin es ging',async()=>{
+ /* WIRT-P1-01. Vorher sah der Spieler nur einen Kassenstand, der sich
+    verändert hatte — ohne Grund. Der Beleg wird gebucht UND angezeigt, aus
+    derselben Quelle: zwei Rechnungen laufen auseinander, und dann glaubt der
+    Spieler der falschen (dieselbe Regel wie beim Coinbeleg). */
+ const v0=E.VEREIN.einschreiben(spielbereiterVerein()).v;
+ const r=E.VEREIN.vereinSaison(v0);
+ assert(!r.fehler,r.fehler);
+ const b=r.beleg;
+ /* Ein ECHTER abgeschlossener Spieler als Unterlage, kein handgebautes
+    Objekt: der Abschlussbildschirm liest mehr Felder, als man beim Nachbauen
+    ahnt — zwei Anläufe sind an erfundenen Ständen gescheitert. */
+ const fertig=(await E.runFinish(player(3))).P;
+ const p={...fertig,
+  vereinBericht:{name:'Testverein',jahr:1,liga:v0.liga,rang:r.rang,N:r.N,
+   tore:r.tore,gegentore:r.gegentore,punkte:r.punkte,aufstieg:!!r.aufstieg,
+   abstieg:!!r.abstieg,meister:r.rang===1,vorbei:false,abgaenge:0,
+   wirtschaft:{land:'GER',einnahmen:b.einnahmen,ausgaben:b.ausgaben,
+    summeEin:b.summeEin,summeAus:b.summeAus,ergebnis:b.ergebnis,kasse:b.kasse,
+    zuschauer:b.zuschauer,auslastung:b.auslastung,
+    ereignisse:(b.ereignisse||[]).map(e=>({n:e.n,t:e.t,geld:e.geld})),
+    ziel:null,fertig:[],ausgelaufen:[],
+    stimmung:b.stimmung,stimmungVorher:b.stimmungVorher,
+    gehalt:b.gehalt?{vorher:b.gehalt.vorher,neu:b.gehalt.neu}:null}}};
+ const html=E.renderEnd(p);
+ assert(!html.includes('NaN'),'keine kaputte Zahl');
+ assert(html.includes('Saisonabrechnung'));
+ assert(html.includes('Ergebnis'));
+ /* Jeder gebuchte Posten steht auch da — sonst zeigt der Bericht eine andere
+    Rechnung als die, die stattgefunden hat. */
+ for(const x of b.einnahmen)assert(html.includes(x.k.split(' ·')[0]),'Einnahme fehlt: '+x.k);
+ for(const x of b.ausgaben)assert(html.includes(x.k.split(' ·')[0]),'Ausgabe fehlt: '+x.k);
+ assert(html.includes('Zuschauer'));
+ /* Die beiden Werte, die die ganze Wirtschaft treiben, müssen genannt werden —
+    sonst sieht der Spieler Zuschauer und Merchandising sinken und die
+    Gehaltszeile steigen, ohne dass eine der Zahlen je auftaucht. */
+ assert(html.includes('Stimmung'),'die Stimmung wird genannt');
+ assert(html.includes('Gehaltsniveau'),'das Gehaltsniveau wird genannt');
+ /* Ohne Wirtschaftsteil bleibt der Bericht wie vorher — alte Spielstände
+    haben keinen Beleg, und der Bildschirm darf daran nicht zerbrechen. */
+ const ohne={...p,vereinBericht:{...p.vereinBericht,wirtschaft:null}};
+ const html2=E.renderEnd(ohne);
+ assert(!html2.includes('NaN'));
+ assert(!html2.includes('Saisonabrechnung'));
+ assert(html2.includes('Ein Jahr Profimannschaft'),'der übrige Bericht steht weiter');
+});
+
+test('Saisonabrechnung: verfehltes Ziel, fertige Bauten und Ereignisse werden benannt',async()=>{
+ const grund=(await E.runFinish(player(3))).P;
+ const bericht=(w)=>({...grund,vereinBericht:{name:'Testverein',jahr:3,liga:'3. Liga',
+  rang:7,N:18,tore:40,gegentore:44,punkte:48,aufstieg:false,abstieg:false,
+  meister:false,vorbei:false,abgaenge:0,wirtschaft:{land:'GER',
+   einnahmen:[{k:'Zuschauer',v:8}],ausgaben:[{k:'Spielergehälter',v:6}],
+   summeEin:8,summeAus:6,ergebnis:2,kasse:12,zuschauer:6000,auslastung:0.75,...w}}});
+ /* Verfehltes Ziel wird gesagt, nicht verschwiegen. */
+ const verfehlt=E.renderEnd(bericht({ereignisse:[],fertig:[],ausgelaufen:[],
+   ziel:{n:'Gesicherte Mitte',erfuellt:false,praemie:0}}));
+ assert(verfehlt.includes('Vorstandsziel verfehlt'));
+ assert(verfehlt.includes('Gesicherte Mitte'));
+ /* Erfülltes Ziel steht als Posten mit Prämie in der Rechnung. */
+ const erfuellt=E.renderEnd(bericht({ereignisse:[],fertig:[],ausgelaufen:[],
+   ziel:{n:'Klassenerhalt',erfuellt:true,praemie:1.4}}));
+ assert(erfuellt.includes('Vorstandsziel erfüllt'));
+ assert(!erfuellt.includes('Vorstandsziel verfehlt'));
+ /* Fertige Bauten, ausgelaufene Verträge und Ereignisse mit Text. */
+ const rest=E.renderEnd(bericht({ziel:null,fertig:['Stadion Stufe 2'],
+   ausgelaufen:['Nordwind Energie'],
+   ereignisse:[{n:'Sturmschaden am Dach',t:'Eine Novembernacht kostet die Nordtribüne ihr halbes Dach.',geld:-1.2}]}));
+ assert(rest.includes('Stadion Stufe 2'));
+ assert(rest.includes('Nordwind Energie'));
+ assert(rest.includes('Sturmschaden am Dach'));
+ assert(rest.includes('Novembernacht'),'das Ereignis wird erzählt, nicht nur gebucht');
+ assert(!rest.includes('NaN'));
+});
+
 test('Sponsoren: die Angebote liegen im Spielstand, nicht im Augenblick',()=>{
  /* WIRT-P0-04. Würden die Angebote beim Zeichnen erzeugt, bekäme man bei
     jedem Aufschlagen des Bildschirms neue — und die Auswahl wäre kein
