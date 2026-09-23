@@ -1,3 +1,27 @@
+## 23.09.2026 · Lemming · Spielerkarten-Holo nach 35.195.1
+
+Basis `5491fa7` / Version 35.195.1. Nutzerbefund: Der zuvor deutlich
+regenbogenartige Holoeffekt auf Gold-/Legendär-Spielerkarten ist seit dem letzten
+Kartenpatch kaum noch sichtbar. Ursache reproduziert: 35.195.1 führte für genau
+diesen Spielerpfad `dezent` mit 16 % Gesamtdeckkraft ein. Dadurch wurden die
+bereits nur teiltransparenten Farbstopps effektiv auf ungefähr 5 % oder weniger
+abgeschwächt.
+
+Kleine Korrektur auf `lemming/spielerkarten-holo-intensitaet`: Nur der
+`dezent`-Pfad in `karteneffekte.jsx` wird angehoben. Gold verwendet 66 %,
+Legendär 78 % Gesamtdeckkraft und einen klar irisierenden Verlauf aus Magenta,
+Violett, Cyan, Grün und Gold. Die Folie bleibt per bestehendem Schichtenvertrag
+hinter Porträt und Information. Der normale Effektpfad für Packs, Wildcards und
+andere Verbraucher bleibt unverändert; Bronze/Silber erhalten weiterhin keine
+Holografie. Eine Regression schützt gegen die 16-%-Rückkehr und hält die neue
+Spielerkarten-Abstufung fest.
+
+Prüfung: GitHub-PR-CI für `npm test`, `npm run build`, Galerie und Browserprüfung
+wird am exakten PR-Head ausgewertet. Lokale Browser-/Android-Sichtprüfung ist in
+dieser Umgebung nicht verfügbar; das wird nicht als durchgeführt ausgegeben.
+
+Status: umgesetzt, Astra-Abnahme offen; kein main-Merge und kein Release.
+
 ## 23.09.2026 · Astra · 35.195.1 · Kartenflächen nach Nutzerfeedback
 
 Basis `095da80`. Kevin beanstandet die dunklen Ausschnitte auf Gold-/Legendärkarten
