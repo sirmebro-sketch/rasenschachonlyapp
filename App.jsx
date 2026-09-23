@@ -18,6 +18,7 @@ import React, { useState, useEffect, useLayoutEffect, useRef, useMemo } from "re
    `react-dom` ist ohnehin da: main.jsx baut damit die Wurzel. */
 import { createPortal } from "react-dom";
 import { store } from "./storage.js";
+import { SOUND_KEY, getSoundLevel, setSoundLevel, playSound } from "./sound.js";
 import { backupLesen, datenErsetzen, importWiederherstellen, IMPORT_JOURNAL } from "./sicherung.js";
 import { laufStand, laufWeiter } from "./spielstand.js";
 import { SCHRIFTEN } from "./schriften.js";
@@ -8852,7 +8853,7 @@ const KARTEN_KEY = "rasenschach:karten";
 const SPEICHERSCHLUESSEL = [
   IMPORT_JOURNAL, SAVE_KEY, SEEN_KEY, WILL_KEY, ACH_KEY, LIFE_KEY, META_KEY, HALL_KEY,
   AKA_KEY, VER_KEY, KARTEN_KEY, WC_KEY, HSV_KEY, RUECK_KEY,
-  "rasenschach:ruhe", "rasenschach:vib", "rasenschach:text",
+  "rasenschach:ruhe", "rasenschach:vib", "rasenschach:text", SOUND_KEY,
   "rasenschach:speed", "rasenschach:schwer", "rasenschach:wach",
   /* Altnamen aus `ALT_KEYS` — ohne sie kehrt der geloeschte Stand zurueck. */
   ...Object.values(ALT_KEYS).flat(),
@@ -9346,10 +9347,13 @@ function VereinGruenden({ aka, verein, art = "voll", onFertig, onZurueck }) {
    wird der Anpfiffknopf aktiv — und er sagt, WAS fehlt. Ein grauer Knopf ohne
    Begründung ist eine Zumutung; dieselbe Überlegung wie bei `sperre` an den
    Auswahlmöglichkeiten und bei „noch 2 bis zum Verein". */
-function VereinScreen({ v, aka, onAendern, onZurueck, onAbschluss }) {
+function VereinScreen({ v, aka, onAendern, onZurueck, onAbschluss, startReiter }) {
   /* F55 (35.147): siehe VereinDach. */
   useZurueck(onZurueck);
-  const [reiter, setReiter] = React.useState("kader");
+  /* `startReiter` wie beim Packladen: der Prüfstand soll einen bestimmten
+     Reiter aufschlagen können, ohne einen Klick nachzubauen. Im Spiel wird er
+     nicht gesetzt, dort beginnt der Bildschirm wie immer beim Kader. */
+  const [reiter, setReiter] = React.useState(startReiter || "kader");
   const [bericht, setBericht] = React.useState(null);
   /* Welcher Platz gerade besetzt wird (35.49). `null` heisst: keiner offen.
      Bewusst eine Zahl und kein Objekt — der Index ist der Schluessel, unter
@@ -9489,7 +9493,16 @@ function VereinScreen({ v, aka, onAendern, onZurueck, onAbschluss }) {
 
   const REITER = [["kader", "Kader"], ["elf", "Aufstellung"],
     ...(hatRueck ? [["rueck", "Rückblick"]] : []),
-    ["ausbau", "Ausbau"], ["chronik", "Chronik"]];
+    /* „Partner" statt „Sponsoren": kürzer, und es ist das Wort, das der Reiter
+       in seiner eigenen Kopfzeile benutzt („Partner · 0 von 3"). Die
+       Reiterleiste scrollt zwar waagerecht, aber mit dem sechsten Reiter lag
+       „Chronik" auf einem 320er-Gerät zwei Wischer entfernt — beim Rundgang
+       durch die Oberfläche gemessen. Zwei Zeichen weniger holen sie zurück. */
+    /* „Führung" statt „Ausbau": der Reiter trägt seit WIRT-P0-05-UI auch
+       Vorstandsziel, Preise und Rechtsform. Ein SIEBTER Reiter kam nicht in
+       Frage — bei 320 Pixeln lag schon der sechste zwei Wischer entfernt,
+       gemessen beim Rundgang am 18.09.2026. */
+    ["ausbau", "Führung"], ["sponsoren", "Partner"], ["chronik", "Chronik"]];
   const rueckJahre = (v.chronik || []).filter((c) => c.tabelle).map((c) => c.jahr).reverse();
   const [rjahr, setRjahr] = React.useState(null);
   const rc = (v.chronik || []).filter((c) => c.tabelle)
@@ -9641,6 +9654,7 @@ function VereinScreen({ v, aka, onAendern, onZurueck, onAbschluss }) {
               <div className="eb">Aus der Jugend hochziehen</div>
               <div className="m" style={{ fontSize: 11.5, marginTop: 3 }}>
                 {holbar.length ? "Wer hier hochgeht, fehlt der Akademie. Sie füllt sich wieder auf."
+                  : !aka?.gegruendet ? "Gründe zuerst deine Jugendakademie im Vereinsmenü. Dort wachsen deine Nachwuchsspieler heran."
                   : "Zurzeit ist niemand alt genug. Lass die Akademie ein Jahr laufen."}</div>
               {holbar.sort((a, b) => b.ovr - a.ovr).slice(0, 14).map((t) => {
                 const gebraucht = Object.keys(bd.fehlt).some((pz) => VEREIN.kannSpielen(t, pz));
@@ -9906,12 +9920,298 @@ function VereinScreen({ v, aka, onAendern, onZurueck, onAbschluss }) {
               </div>)}
           </div>)}
 
+        {/* WIRT-P0-04: Werbeverträge. Die Angebote stehen im Spielstand, nicht
+            im Augenblick — wer den Bildschirm zumacht und wieder aufschlägt,
+            findet dieselben drei vor. Sonst wäre die Auswahl kein Entschluss,
+            sondern ein Automat, den man bis zum besten Angebot drückt. */}
+        {reiter === "sponsoren" && (() => {
+          const vs = VEREIN.mitAngeboten(v);
+          const laufend = vs.sponsoren || [];
+          const jeSaison = laufend.reduce((a, x) => a + (x.betrag || 0), 0);
+          const voll = laufend.length >= VEREIN.SPONSOR_MAX;
+          const letzte = (v.chronik || [])[(v.chronik || []).length - 1];
+          const raus = (letzte && letzte.wirtschaft && letzte.wirtschaft.ausgelaufen) || [];
+          return (
+            <div style={{ marginTop: 10 }}>
+              <div className="pan pad">
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
+                  <span className="eb">Partner · {laufend.length} von {VEREIN.SPONSOR_MAX}</span>
+                  <span className="d" style={{ fontSize: 16, color: "var(--ok)" }}>
+                    {VEREIN.geldText(VEREIN.werbeErtrag(v, jeSaison), v.land)} je Saison</span>
+                </div>
+                <div className="m" style={{ fontSize: 11.5, marginTop: 2 }}>
+                  Ein langer Vertrag zahlt je Saison weniger, hält den Platz aber
+                  besetzt. Wer aufsteigt, hätte neu verhandeln können.
+                  {" Genannt ist, was nach der Rechtsform ankommt — ein e.V. "
+                    + "vermarktet zurückhaltender als eine AG."}</div>
+                {raus.length > 0 && (
+                  <div className="m" style={{ fontSize: 11.5, marginTop: 6, color: "var(--bad)" }}>
+                    Ausgelaufen: {raus.join(", ")}</div>)}
+              </div>
+
+              {laufend.map((sp) => (
+                <div key={sp.id} className="pan pad" style={{ marginTop: 8 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
+                    <span className="d" style={{ fontSize: 15 }}>{sp.n}</span>
+                    <span className="m" style={{ fontSize: 12 }}>
+                      noch {sp.rest} {sp.rest === 1 ? "Saison" : "Saisons"}</span>
+                  </div>
+                  <div className="m" style={{ fontSize: 11.5, marginTop: 2 }}>
+                    {sp.branche} · {VEREIN.geldText(VEREIN.werbeErtrag(v, sp.betrag), v.land)} je Saison
+                    {sp.vorteil ? " · " + sp.vorteil : ""}</div>
+                </div>))}
+
+              <div className="pan pad" style={{ marginTop: 14 }}>
+                <div className="eb">Angebote für diese Saison</div>
+                <div className="m" style={{ fontSize: 11.5, marginTop: 2 }}>
+                  {voll ? "Alle Plätze belegt — erst wenn ein Vertrag ausläuft, ist wieder einer frei."
+                        : "Die Beträge richten sich nach Liga, Erfolg und Ansehen des Vereins."}</div>
+              </div>
+              {(vs.angebote || []).length === 0 && (
+                <div className="pan pad m" style={{ marginTop: 8, fontSize: 12 }}>
+                  Für diese Saison liegt nichts mehr vor.</div>)}
+              {(vs.angebote || []).map((an) => (
+                <div key={an.id} className="pan pad" style={{ marginTop: 8 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
+                    <span className="d" style={{ fontSize: 15 }}>{an.n}</span>
+                    {/* DER BETRAG, DER ANKOMMT — nicht der vereinbarte. Die
+                        Abrechnung zieht den Faktor der Rechtsform ab; die
+                        Anzeige zeigte vorher brutto und damit eine Zahl, die
+                        nie eintrifft. */}
+                    <span className="d" style={{ fontSize: 14, color: "var(--ok)" }}>
+                      {VEREIN.geldText(VEREIN.werbeErtrag(v, an.betrag), v.land)}</span>
+                  </div>
+                  <div className="m" style={{ fontSize: 11.5, marginTop: 2 }}>
+                    {an.branche} · {an.laufzeit} {an.laufzeit === 1 ? "Saison" : "Saisons"}
+                    {" · insgesamt " + VEREIN.geldText(
+                      Math.round(VEREIN.werbeErtrag(v, an.betrag) * an.laufzeit * 100) / 100, v.land)}</div>
+                  {an.vorteil && <div className="m" style={{ fontSize: 11.5 }}>{an.vorteil}</div>}
+                  <button className="btn sm" style={{ marginTop: 6 }} disabled={voll}
+                    onClick={() => { const r = VEREIN.sponsorAnnehmen(v, an.id); if (!r.fehler) onAendern(r.v); }}>
+                    {voll ? "Kein Platz frei" : "Unterschreiben"}
+                  </button>
+                </div>))}
+            </div>);
+        })()}
+
+        {/* WIRT-P0-03: Ausbau kostet Geld, VC nur noch die vier Extras. Die
+            Trennung ist auch optisch eine: zwei Abschnitte, zwei Währungen,
+            keine Zeile, in der beides nebeneinander steht. */}
         {reiter === "ausbau" && (
-          <div className="pan pad" style={{ marginTop: 10 }}>
-            <div className="eb">Vereinsausbau · {aka ? aka.vc : 0} VC verfügbar</div>
+          <div style={{ marginTop: 10 }}>
+            <div className="pan pad">
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
+                <span className="eb">Vereinskasse</span>
+                <span className="d" style={{ fontSize: 18,
+                  color: VEREIN.kasse(v) < 0 ? "var(--bad)" : "var(--ok)" }}>
+                  {VEREIN.geldText(VEREIN.kasse(v), v.land)}</span>
+              </div>
+              <div className="m" style={{ fontSize: 11.5, marginTop: 2 }}>
+                Das Geld kommt aus Zuschauern, Gastronomie, Fanartikeln, Prämien
+                und Werbeverträgen — jede Saison neu abgerechnet.</div>
+              {/* STEHENDE WARNUNG (WIRT-P1-04). Der Beleg erscheint einmal am
+                  Saisonende; wer dazwischen auf die Kasse schaut, muss die
+                  Auflage hier sehen. Zwei Faelle, die nicht dasselbe sind:
+                  eine beschlossene Auflage trifft die laufende Saison sicher,
+                  ein Minus im Rahmen ist nur eine Vorwarnung. */}
+              {v.abzug > 0 && (
+                <div className="m" style={{ fontSize: 11.5, marginTop: 6, color: "var(--bad)" }}>
+                  <b>Lizenzauflage: {v.abzug} Punkte Abzug.</b> Sie wird am Ende
+                  dieser Saison auf die Tabelle angerechnet. Weniger Schulden
+                  heisst kleinere Auflage im nächsten Jahr.</div>)}
+              {/* DER ZÄHLER MUSS SICHTBAR SEIN (WIRT-P1-04b). Ein Zwangsabstieg,
+                  der ohne Ansage kommt, wäre Willkür — und er kommt frühestens
+                  im dritten Jahr, also gibt es zwei volle Saisons Vorwarnung.
+                  Die Zeile nennt auch den Ausweg: die höchste Stufe verlassen
+                  genügt, gesund werden muss der Verein nicht. */}
+              {v.lizenzJahre > 0 && (
+                <div className="m" style={{ fontSize: 11.5, marginTop: 4, color: "var(--bad)" }}>
+                  <b>Ohne Lizenz seit {v.lizenzJahre}{" von "}{VEREIN.ENTZUG_NACH} Saisons.</b>{" "}
+                  {v.lizenzJahre >= VEREIN.ENTZUG_NACH - 1
+                    ? "Noch eine Saison so, und der Verein steigt zwangsweise ab — unabhängig von der Tabelle."
+                    : "Bleibt es dabei, folgt nach " + VEREIN.ENTZUG_NACH
+                      + " Saisons der Zwangsabstieg."}{" "}
+                  Der Zähler springt auf null, sobald die Schulden wieder unter
+                  drei Kreditrahmen liegen.</div>)}
+              {v.abzug <= 0 && VEREIN.kasse(v) < 0 && (
+                <div className="m" style={{ fontSize: 11.5, marginTop: 6, color: "var(--mu)" }}>
+                  Die Kasse ist im Minus. Ein Überziehen bis zur Hälfte einer
+                  Saisoneinnahme ist geduldet — darunter setzt es Punktabzug.</div>)}
+              {VEREIN.baustellenText(v).length > 0 && (
+                <div style={{ marginTop: 7 }}>
+                  <div className="m" style={{ fontSize: 11.5 }}>Im Bau:</div>
+                  {VEREIN.baustellenText(v).map((t, i) => (
+                    <div key={i} className="d" style={{ fontSize: 12.5 }}>· {t}</div>))}
+                </div>)}
+            </div>
+
+            {/* ---- STADION (WIRT-P1-02) ---------------------------------
+                Plätze, Auslastung und Zuschauerzahl standen bisher nur in der
+                Rechnung. Wer eine Stufe kauft, sah danach eine grössere Zahl in
+                der Abrechnung, ohne je erfahren zu haben, wie viele Plätze er
+                überhaupt hat — der Ausbau war eine Zahlung ins Ungewisse.
+                Genannt wird deshalb auch, was die NÄCHSTE Stufe bringt. */}
+            {(() => {
+              const stufe = VEREIN.ausbauStufe(v, "stadion");
+              const jetzt = VEREIN.PLAETZE[stufe] || 0;
+              const naechste = VEREIN.PLAETZE[stufe + 1] || null;
+              const letzte = (v.chronik || []).filter((c) => c.wirtschaft
+                && c.wirtschaft.zuschauer).slice(-1)[0];
+              const w = letzte && letzte.wirtschaft;
+              return (
+                <div className="pan pad" style={{ marginTop: 8 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
+                    <span className="eb">Stadion</span>
+                    <span className="d" style={{ fontSize: 15 }}>
+                      {jetzt.toLocaleString("de-DE")} Plätze</span>
+                  </div>
+                  {w ? (
+                    <div className="m" style={{ fontSize: 11.5, marginTop: 2 }}>
+                      Zuletzt Ø {Math.round(w.zuschauer).toLocaleString("de-DE")} Zuschauer
+                      {w.auslastung ? " · " + Math.round(w.auslastung * 100) + " % ausgelastet" : ""}
+                      {w.ausverkauft ? " · ausverkauft" : ""}</div>
+                  ) : (
+                    <div className="m" style={{ fontSize: 11.5, marginTop: 2 }}>
+                      Noch keine Saison gespielt.</div>)}
+                  {naechste ? (
+                    <div className="m" style={{ fontSize: 11, marginTop: 4, color: "var(--mu)" }}>
+                      Die nächste Ausbaustufe bringt {naechste.toLocaleString("de-DE")} Plätze
+                      — {(naechste - jetzt).toLocaleString("de-DE")} mehr.</div>
+                  ) : (
+                    <div className="m" style={{ fontSize: 11, marginTop: 4, color: "var(--mu)" }}>
+                      Voll ausgebaut.</div>)}
+                  <div className="m" style={{ fontSize: 11, marginTop: 4, color: "var(--mu)" }}>
+                    Ab {Math.round(VEREIN.AUSVERKAUFT_AB * 100)} % Auslastung gilt das Haus als
+                    ausverkauft — das hebt die Stimmung.</div>
+                </div>);
+            })()}
+
+            {/* ---- VORSTANDSZIEL (WIRT-P0-05-UI) -------------------------
+                Es wurde seit dem Wirtschaftskern jede Saison gesetzt und
+                geprüft — sichtbar war es aber erst HINTERHER, im Beleg und in
+                der Chronik. Ein Ziel, das man erst erfährt, wenn es entschieden
+                ist, ist keines. Gewählt wird es nicht: der Vorstand gibt es
+                vor, abgeleitet aus der letzten Platzierung und verschärft von
+                der Rechtsform. */}
+            {v.ziel && (
+              <div className="pan pad" style={{ marginTop: 8 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
+                  <span className="eb">Vorstandsziel</span>
+                  <span className="d" style={{ fontSize: 13, color: "var(--ok)" }}>
+                    +{VEREIN.geldText(v.ziel.praemie, v.land)}</span>
+                </div>
+                <div className="d" style={{ fontSize: 15, marginTop: 2 }}>{v.ziel.n}</div>
+                <div className="m" style={{ fontSize: 11.5, marginTop: 2 }}>
+                  Mindestens Platz {v.ziel.soll} am Saisonende. Erfüllt bringt es
+                  die Prämie, verfehlt kostet es nichts — der Vorstand fordert,
+                  er bestraft nicht.</div>
+                <div className="m" style={{ fontSize: 11, marginTop: 4, color: "var(--mu)" }}>
+                  Die Vorgabe folgt der letzten Platzierung; eine strengere
+                  Rechtsform verschärft sie.</div>
+              </div>)}
+
+            {/* ---- PREISE (WIRT-P0-05-UI) -------------------------------
+                `preisFaktor` las bis hierher immer die Voreinstellung 1, weil
+                niemand etwas anderes setzen konnte. Die ganze Elastizitäts-
+                rechnung — Ansehen, Gastrostufe, Sortiment, Rechtsform,
+                Stimmung — lief also gegen einen festen Wert.
+
+                DER HINWEIS IST GERECHNET, NICHT GESCHÄTZT. `bestPreis` probiert
+                51 Werte durch und nennt den ertragreichsten. Er ist trotzdem
+                nur ein Hinweis: darüber zu gehen bringt kurzfristig mehr und
+                kostet Stimmung, und das darf der Spieler entscheiden. */}
+            <div className="pan pad" style={{ marginTop: 14 }}>
+              <div className="eb">Preise</div>
+              <div className="m" style={{ fontSize: 11.5, marginTop: 2 }}>
+                Faktor auf den Normalpreis. Höher heisst mehr je Einheit und
+                weniger Abnehmer — wie viel weniger, hängt davon ab, was der
+                Verein zu bieten hat.</div>
+            </div>
+            {VEREIN.PREIS_FELDER.map((f) => {
+              const jetzt = VEREIN.preisFaktor(VEREIN.mitWirtschaft(v), f.id);
+              const best = VEREIN.bestPreis(v, f.id);
+              const ueber = jetzt > best + 0.005;
+              const stimmungsRisiko = jetzt > Math.max(1, best) + 0.005;
+              return (
+                <div key={f.id} className="pan pad" style={{ marginTop: 8 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
+                    <span className="d" style={{ fontSize: 15 }}>{f.n}</span>
+                    <span className="d" style={{ fontSize: 15,
+                      color: ueber ? "var(--bad)" : "var(--tx)" }}>
+                      {Math.round(jetzt * 100)} %</span>
+                  </div>
+                  <div className="m" style={{ fontSize: 11.5, marginTop: 2 }}>{f.t}</div>
+                  <input type="range" style={{ width: "100%", marginTop: 6 }}
+                    min={VEREIN.PREIS_MIN} max={VEREIN.PREIS_MAX} step="0.02" value={jetzt}
+                    aria-label={f.n + " Preisfaktor"}
+                    onChange={(e) => { const r = VEREIN.preisSetzen(v, f.id, e.target.value);
+                                       if (!r.fehler) onAendern(r.v); }} />
+                  <div className="m" style={{ fontSize: 11, color: ueber ? "var(--bad)" : "var(--mu)" }}>
+                    {ueber
+                      ? "Über dem Ertragsmaximum von " + Math.round(best * 100)
+                        + " %. Bringt weniger ein."
+                        + (stimmungsRisiko ? " Kann bei dieser Preislage jede Saison Stimmung kosten." : " Kein Stimmungsschaden durch diesen Preis.")
+                      : "Ertragsmaximum bei " + Math.round(best * 100) + " %."}</div>
+                </div>);
+            })}
+
+            {/* ---- RECHTSFORM (WIRT-P0-05-UI) ---------------------------
+                `rechtsformWechseln` war vollständig gebaut und geprüft und
+                hatte null Aufrufer. Der Weg führt nur nach vorn und nur, wenn
+                der Verein gross genug ist — beides sagt der Bildschirm jetzt,
+                statt den Knopf wortlos zu sperren. */}
+            {(() => {
+              const jetzt = VEREIN.rechtsform(VEREIN.mitWirtschaft(v));
+              const alle = VEREIN.RECHTSFORMEN;
+              const i = alle.findIndex((r) => r.id === jetzt.id);
+              const naechste = alle[i + 1] || null;
+              const probe = naechste ? VEREIN.rechtsformWechseln(v, naechste.id) : null;
+              return (
+                <>
+                  <div className="pan pad" style={{ marginTop: 14 }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
+                      <span className="eb">Rechtsform</span>
+                      <span className="d" style={{ fontSize: 15 }}>{jetzt.n}</span>
+                    </div>
+                    <div className="m" style={{ fontSize: 11.5, marginTop: 2 }}>{jetzt.t}</div>
+                    <div className="m" style={{ fontSize: 11, marginTop: 4, color: "var(--mu)" }}>
+                      Vermarktung {Math.round(jetzt.kommerz * 100)} % · Fans vertragen
+                      {jetzt.toleranz >= 0 ? " mehr" : " weniger"} · Vorstand fordert
+                      {jetzt.zielHaerte > 1 ? " mehr" : jetzt.zielHaerte < 1 ? " weniger" : " normal"}
+                    </div>
+                  </div>
+                  {naechste && (
+                    <div className="pan pad" style={{ marginTop: 8 }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
+                        <span className="d" style={{ fontSize: 15 }}>Umwandeln in {naechste.n}</span>
+                        <span className="d" style={{ fontSize: 13, color: "var(--ok)" }}>
+                          +{VEREIN.geldText(naechste.einlage, v.land)}</span>
+                      </div>
+                      <div className="m" style={{ fontSize: 11.5, marginTop: 2 }}>{naechste.t}</div>
+                      <div className="m" style={{ fontSize: 11.5 }}>
+                        Kostet {VEREIN.geldText(naechste.wechselKosten, v.land)} und acht Punkte
+                        Stimmung. Der Weg führt nur nach vorn.</div>
+                      <button className="btn sm" style={{ marginTop: 6 }}
+                        disabled={!!(probe && probe.fehler)}
+                        onClick={() => { const r = VEREIN.rechtsformWechseln(v, naechste.id);
+                                         if (!r.fehler) onAendern(r.v); }}>
+                        {probe && probe.fehler ? probe.fehler : "Umwandeln"}
+                      </button>
+                    </div>)}
+                </>);
+            })()}
+
+            <div className="pan pad" style={{ marginTop: 14 }}>
+              <div className="eb">Ausbau</div>
+              <div className="m" style={{ fontSize: 11.5, marginTop: 2 }}>
+                Sechs Abteilungen, jede baut für sich. Eine Stufe wirkt erst ab
+                der Saison nach ihrer Fertigstellung.</div>
+            </div>
             {VEREIN.VEREIN_AUSBAU.map((ab) => {
               const stufe = VEREIN.ausbauStufe(v, ab.id);
               const k = VEREIN.ausbauKosten(v, ab.id);
+              const laeuft = (v.baustellen || {})[ab.id];
+              const fehlt = k == null ? 0 : Math.max(0, Math.round((k - VEREIN.kasse(v)) * 100) / 100);
               return (
                 <div key={ab.id} className="pan pad" style={{ marginTop: 8 }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
@@ -9921,13 +10221,48 @@ function VereinScreen({ v, aka, onAendern, onZurueck, onAbschluss }) {
                   <div className="m" style={{ fontSize: 11.5, marginTop: 2 }}>{ab.t}</div>
                   <div className="m" style={{ fontSize: 11.5 }}>{ab.wirkt}</div>
                   <button className="btn sm" style={{ marginTop: 6 }}
-                    disabled={k == null || !aka || aka.vc < k}
+                    disabled={k == null || !!laeuft || fehlt > 0}
+                    onClick={() => { const r = VEREIN.bauStarten(v, ab.id); if (!r.fehler) onAendern(r.v); }}>
+                    {k == null ? "Voll ausgebaut"
+                      : laeuft ? "Im Bau · noch " + laeuft.rest + (laeuft.rest === 1 ? " Saison" : " Saisons")
+                      : "Bauen · " + VEREIN.geldText(k, v.land)}
+                  </button>
+                  {/* „Dafür fehlen" nur, wenn es etwas zu ergänzen GIBT. Bei
+                      leerer Kasse ist die Lücke genau der Preis — die Zeile
+                      wiederholte dann die Zahl direkt über sich. Beim Rundgang
+                      durch die Oberfläche als Stottern aufgefallen: „Bauen ·
+                      4 Mio €" / „Dafür fehlen 4 Mio €". Ist schon etwas da,
+                      aber nicht genug, sagt sie etwas Neues. */}
+                  {k != null && !laeuft && fehlt > 0 && VEREIN.kasse(v) > 0 && (
+                    <div className="m" style={{ fontSize: 11, marginTop: 4 }}>
+                      Dafür fehlen {VEREIN.geldText(fehlt, v.land)}</div>)}
+                </div>);
+            })}
+
+            <div className="pan pad" style={{ marginTop: 14 }}>
+              <div className="eb">Mit VC · {aka ? aka.vc : 0} verfügbar</div>
+              <div className="m" style={{ fontSize: 11.5, marginTop: 2 }}>
+                Nur was den Verein überdauert oder mit Geld allein nicht geht.
+                Jedes einmal je Verein.</div>
+            </div>
+            {VEREIN.VC_EXTRAS.map((ex) => {
+              const hat = (v.extras || []).includes(ex.id);
+              return (
+                <div key={ex.id} className="pan pad" style={{ marginTop: 8 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
+                    <span className="d" style={{ fontSize: 15 }}>{ex.n}</span>
+                    <span className="m" style={{ fontSize: 12 }}>{ex.vc} VC</span>
+                  </div>
+                  <div className="m" style={{ fontSize: 11.5, marginTop: 2 }}>{ex.t}</div>
+                  <div className="m" style={{ fontSize: 11.5 }}>{ex.wirkt}</div>
+                  <button className="btn sm" style={{ marginTop: 6 }}
+                    disabled={hat || !aka || aka.vc < ex.vc}
                     onClick={() => {
-                      const r = VEREIN.ausbauen(v, ab.id, aka ? aka.vc : 0);
-                      if (!r.fehler) { onAendern(r.v, { ...aka, vc: aka.vc - r.kosten,
-                        ausgegeben: (aka.ausgegeben || 0) + r.kosten }); }
+                      const r = VEREIN.extraKaufen(v, ex.id, aka ? aka.vc : 0);
+                      if (!r.fehler) onAendern(r.v, { ...aka, vc: aka.vc - r.kosten,
+                        ausgegeben: (aka.ausgegeben || 0) + r.kosten });
                     }}>
-                    {k == null ? "Voll ausgebaut" : "Ausbauen · " + k + " VC"}
+                    {hat ? "Bereits vorhanden" : "Kaufen · " + ex.vc + " VC"}
                   </button>
                 </div>);
             })}
@@ -9945,6 +10280,44 @@ function VereinScreen({ v, aka, onAendern, onZurueck, onAbschluss }) {
                   {c.aufstieg ? " · Aufstieg" : c.abstieg ? " · Abstieg" : ""}</div>
                 <div className="m" style={{ fontSize: 11.5 }}>Stärke {c.staerke}
                   {c.abgaenge.length ? " · Abgänge: " + c.abgaenge.join(", ") : ""}</div>
+                {/* Die Wirtschaft des Jahres. Die Kurzfassung lag seit
+                    WIRT-P0-02 im Spielstand und wurde von niemandem gelesen —
+                    genau das, was dieses Projekt „ein Feld ohne Leser ist
+                    wieder nur eine Zahl" nennt. Hier beantwortet sie eine
+                    Frage: wie stand der Verein in diesem Jahr da? */}
+                {c.wirtschaft && (
+                  <div className="m" style={{ fontSize: 11.5, marginTop: 3 }}>
+                    <span style={{ color: c.wirtschaft.ergebnis < 0 ? "var(--bad)" : "var(--ok)" }}>
+                      {(c.wirtschaft.ergebnis > 0 ? "+" : "")
+                        + VEREIN.geldText(c.wirtschaft.ergebnis, v.land)}</span>
+                    {" · Kasse " + VEREIN.geldText(c.wirtschaft.kasse, v.land)}
+                    {c.wirtschaft.zuschauer
+                      ? " · " + Math.round(c.wirtschaft.zuschauer).toLocaleString("de-DE") + " Zuschauer"
+                      : ""}
+                    {c.wirtschaft.ausverkauft ? " · ausverkauft" : ""}
+                    {c.wirtschaft.stimmung != null ? " · Stimmung " + c.wirtschaft.stimmung : ""}
+                    {c.wirtschaft.gehaltsniveau > 1.02
+                      ? " · Gehälter " + Math.round(c.wirtschaft.gehaltsniveau * 100) + " %"
+                      : ""}
+                    {c.wirtschaft.ziel
+                      ? " · " + c.wirtschaft.ziel.n + (c.wirtschaft.ziel.erfuellt ? " erfüllt" : " verfehlt")
+                      : ""}
+                    {(c.wirtschaft.ereignisse || []).length
+                      ? " · " + c.wirtschaft.ereignisse.join(", ") : ""}
+                    {(c.wirtschaft.ausgelaufen || []).length
+                      ? " · Vertrag aus: " + c.wirtschaft.ausgelaufen.join(", ") : ""}
+                  </div>)}
+                {/* Der Abzug steht in ROT und in eigener Zeile, nicht als
+                    weiteres Glied in der Aufzaehlung oben: er erklaert den
+                    Tabellenplatz DIESES Jahres, und ohne ihn liest sich die
+                    Chronik, als waere der Verein einfach schlechter geworden. */}
+                {!!(c.wirtschaft && c.wirtschaft.abzug) && (
+                  <div className="m" style={{ fontSize: 11.5, marginTop: 3, color: "var(--bad)" }}>
+                    Lizenzauflage: {c.wirtschaft.abzug} Punkte abgezogen</div>)}
+                {!!(c.wirtschaft && c.wirtschaft.entzogen) && (
+                  <div className="m" style={{ fontSize: 11.5, marginTop: 3,
+                    color: "var(--bad)", fontWeight: 600 }}>
+                    Lizenz entzogen — Zwangsabstieg</div>)}
               </div>))}
           </div>)}
 
@@ -10087,6 +10460,21 @@ function VereinAbschluss({ v, ergebnis, ges, onNeu, onZurueck }) {
           <div className="d" style={{ fontSize: 30, color: "var(--go)" }}>
             <Zahl v={ergebnis.vc} dauer={900} suffix=" VC" /></div>
           <div className="m" style={{ fontSize: 11.5 }}>{ergebnis.punkte} Vermächtnispunkte</div>
+          {/* WIRT-P1-05: woraus die Punkte bestehen. Ohne diese Zeile sähe der
+              Spieler nur eine gewachsene Zahl und wüsste nicht, dass seine
+              Kasse darin steckt — und würde beim nächsten Verein wieder alles
+              bis zur letzten Mark verbauen. */}
+          {ergebnis.wirtschaft && (
+            <div className="m" style={{ fontSize: 10.5, color: "var(--mu)", marginTop: 2 }}>
+              {ergebnis.wirtschaft.punkte > 0
+                ? ergebnis.sportlich + " sportlich · " + ergebnis.wirtschaft.punkte
+                  + " aus der Kasse (" + VEREIN.geldText(ergebnis.wirtschaft.kasse, v.land) + ")"
+                : "Alles sportlich — die Kasse war am Ende leer."}
+              {ergebnis.wirtschaft.faktor > 1
+                ? " · Vermächtnisplakette +"
+                  + Math.round((ergebnis.wirtschaft.faktor - 1) * 100) + " %"
+                : ""}
+            </div>)}
           {/* DER DRITTE TOTE ZAEHLER BEKOMMT EINEN LESER (35.103).
               `vereinPunkteSumme` wurde seit 35.74 fortgeschrieben und von
               niemandem gelesen — nicht einmal von einer Errungenschaft, anders
@@ -10215,7 +10603,7 @@ const flaecheAlsKnopf = (fn, label) => ({
 function Shell({ children, wide, blatt, zusatz }) {
   const r = blatt ? RESSORT[blatt] : null;
   return (
-    <div className="fl">
+    <div className="fl" data-blatt={blatt}>
       <style>{CSS}</style>
       <div style={{ margin: "0 auto", maxWidth: wide ? 1120 : 860, padding: "14px 12px 40px" }}>
         {r && <Kolumnentitel r={r} zusatz={zusatz} />}
@@ -10923,6 +11311,7 @@ function MarkeJubel({ marke, onFertig }) {
 function TitelJubel({ titel, club, land, onFertig }) {
   useEffect(() => {
     haptik("gross");
+    playSound("trophy");
     const t = setTimeout(() => onFertig && onFertig(), RUHE ? 900 : 1400 + titel.length * 900);
     return () => clearTimeout(t);
   }, []);
@@ -12277,9 +12666,9 @@ function WildcardEnthuellung({ card, onFertig }) {
 
   useEffect(() => {
     haptik(gross ? "gross" : pomp >= .3 ? "gut" : "wahl");
-    if (RUHE) { setStufe(3); return; }
+    if (RUHE) { setStufe(3); playSound("wildcard"); return; }
     const uhren = [
-      setTimeout(() => { setStufe(1); haptik(gross ? "gross" : "gut"); }, T[1]),
+      setTimeout(() => { setStufe(1); playSound("wildcard"); haptik(gross ? "gross" : "gut"); }, T[1]),
       setTimeout(() => setStufe(2), T[2]),
       setTimeout(() => setStufe(3), T[3]),
     ];
@@ -12641,6 +13030,7 @@ function Packladen({ vc, pool, verein, gratis, startpaket, startReiter,
     if (umsonst) await onGratis(alle); else await onKauf(packId, alle);
     setOffen(alle); setGezeigt([]); setMeldung(null);
     setWischt([]); setWeg([]); setOffenPack(packId);
+    playSound("pack");
   });
 
   if (offen) {
@@ -12692,6 +13082,7 @@ function Packladen({ vc, pool, verein, gratis, startpaket, startReiter,
                   jubel={gezeigt.indexOf(i) >= 0}
                   onTippen={(e) => {
                     if (e.detail === 0) fokusNachAufdecken.current = e.currentTarget.parentElement;
+                    if (gezeigt.indexOf(i) < 0) playSound(k.stufe === "legende" ? "trophy" : "reveal");
                     setGezeigt((g) => (g.indexOf(i) >= 0 ? g : [...g, i]));
                   }} />
                 {/* ZWEI WEGE, UND BEIDE FUEHREN WEG (35.90, von Kevin
@@ -12945,12 +13336,13 @@ function Packladen({ vc, pool, verein, gratis, startpaket, startReiter,
               Drei aus {startpaket.vorher || "deiner alten Mannschaft"}, mindestens
               einer aus deiner Ruhmeshalle. Du fängst nicht bei null an.</div>
             <button className="btn pri" style={{ marginTop: 10, width: "100%" }}
-              disabled={speichert} onClick={() => ausfuehren(async () => {
+              disabled={speichert} data-sound="tap" onClick={() => ausfuehren(async () => {
                 const r = KARTEN.startpaket(pool, startpaket.vorher, new Date().getFullYear());
                 if (r.fehler) throw Error(r.fehler);
                 await onStartpaket(r.karten);
                 setOffen(r.karten); setGezeigt([]); setMeldung(null);
                 setWischt([]); setWeg([]); setOffenPack("gold");
+                playSound("pack");
               })}>Startpaket öffnen</button>
           </div>)}
 
@@ -12962,7 +13354,7 @@ function Packladen({ vc, pool, verein, gratis, startpaket, startReiter,
             <div className="m" style={{ fontSize: 11, color: "var(--mu)", marginTop: 3 }}>
               Je beendeter Laufbahn mit mindestens {PACK_MIN_SAISONEN} gespielten Saisons eines.</div>
             <button className="btn pri" style={{ marginTop: 10, width: "100%" }}
-              disabled={speichert} onClick={() => ziehen("bronze", true)}>Gratispack öffnen</button>
+              disabled={speichert} data-sound="tap" onClick={() => ziehen("bronze", true)}>Gratispack öffnen</button>
           </div>)}
 
         <div className="m" style={{ fontSize: 11.5, color: "var(--mu)", marginBottom: 8 }}>
@@ -12992,7 +13384,7 @@ function Packladen({ vc, pool, verein, gratis, startpaket, startReiter,
                 <div className="m" style={{ fontSize: 10.5, color: "var(--mu)", marginTop: 3 }}>
                   entspricht etwa {KARTEN.preisInLaufbahnen(pk.id).toString().replace(".", ",")}
                   {" "}Laufbahnen Akademieausbau</div>
-                <button className="btn" disabled={speichert || !leistbar}
+                <button className="btn" disabled={speichert || !leistbar} data-sound="tap"
                   style={{ marginTop: 9, width: "100%",
                     borderColor: leistbar ? KARTEN.STUFEN[pk.id].farbe : undefined }}
                   onClick={() => ziehen(pk.id, false)}>
@@ -13015,6 +13407,9 @@ function Spielerkarte({ karte, gross, aufgedeckt = true, onTippen, jubel }) {
   if (!karte) return null;
   const st = (KARTEN.STUFEN && KARTEN.STUFEN[karte.stufe]) || KARTEN.STUFEN.bronze;
   const gr = gross ? 1 : .78;
+  const folie = karte.stufe === "gold" || karte.stufe === "legende";
+  // Astra-Abnahme: Folie bleibt sichtbar, Information erhält einen ruhigen Grund.
+  const info = folie ? {background:"rgba(15,20,17,.94)",borderRadius:4,padding:4} : {};
   /* Die Rueckseite eines noch nicht aufgedeckten Packs. Sie zeigt die Stufe
      schon — sonst waere das Aufdecken ohne Spannung, weil man nichts erwartet. */
   if (!aufgedeckt) {
@@ -13024,7 +13419,7 @@ function Spielerkarte({ karte, gross, aufgedeckt = true, onTippen, jubel }) {
           + " 0%," + KARTEN.flaeche(karte.stufe).unten + " 100%)",
         width: "100%", minHeight: Math.round(150 * gr), display: "flex",
         alignItems: "center", justifyContent: "center", cursor: "pointer" }}
-        onClick={onTippen}
+        onClick={onTippen} data-sound="none"
         aria-label={"Verdeckte Karte, Stufe " + st.n + ". Antippen zum Aufdecken."}>
         <div className="d" style={{ fontSize: Math.round(15 * gr), color: st.farbe,
           letterSpacing: ".1em" }}>{st.n.toUpperCase()}</div>
@@ -13044,7 +13439,7 @@ function Spielerkarte({ karte, gross, aufgedeckt = true, onTippen, jubel }) {
   const feiern = jubel && !RUHE
     && (karte.stufe === "gold" || karte.stufe === "legende" || karte.sonderkarte);
   return (
-    <div className={"pan pad winkel" + (feiern ? " kartenjubel" : "")}
+    <div data-spielerkarte={karte.stufe} className={"pan pad winkel" + (feiern ? " kartenjubel" : "")}
       style={{ borderColor: st.farbe, borderWidth: 2,
       /* DECKEND, kein `transparent` mehr (35.83). Zwei volle Stopps: oben die
          Stufenfarbe kräftig im Kartongrund, unten dunkel. Eine Sammelkarte
@@ -13062,7 +13457,7 @@ function Spielerkarte({ karte, gross, aufgedeckt = true, onTippen, jubel }) {
       {feiern && <AufdeckLicht farbe={st.farbe} stark={karte.stufe === "legende" || !!karte.sonderkarte} kompakt/>}
       {/* 35.181: Keine Vollflächenfolie über Porträt und Text mehr. */}
 
-      <div style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
+      <div style={{ ...info, display: "flex", alignItems: "flex-start", gap: 10 }}>
         <Avatar seed={karte.portraet?.avatar ?? kartenKennung(karte)} zuege={karte.portraet?.zuege} club={null}
           size={Math.round(54 * gr)} nat={karte.nat || null} g={karte.portraet?.g || "m"}
           meta={karte.stufe === "legende" ? { mk_rahmen4: true, rahmenWahl: "mk_rahmen4" }
@@ -13073,7 +13468,7 @@ function Spielerkarte({ karte, gross, aufgedeckt = true, onTippen, jubel }) {
           <div className="d" style={{ fontSize: Math.round(17 * gr), overflow: "hidden",
             textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
             {karte.flag ? karte.flag + " " : ""}{karte.name}</div>
-          <div className="m" style={{ fontSize: 10.5, color: "var(--mu)", marginTop: 2 }}>
+          <div className="m" style={{ fontSize: gross ? 12 : 11, color: folie ? "#e4e2d9" : "var(--mu)", marginTop: 2 }}>
             {karte.alter} Jahre{karte.verein ? " · " + karte.verein : ""}
             {karte.herkunft === "halle" ? " · Ruhmeshalle" : ""}
             {karte.herkunft === "akademie" ? " · aus der Jugend" : ""}</div>
@@ -13086,7 +13481,7 @@ function Spielerkarte({ karte, gross, aufgedeckt = true, onTippen, jubel }) {
               Alte Karten haben kein `zusatz` — dann fällt die Zeile weg,
               statt „Jahrgang undefined" zu zeigen. */}
           {karte.herkunft === "akademie" && typVon({typ:karte.zusatz?.typ}) && (
-            <div className="m" style={{fontSize:12,color:"var(--mu)",marginTop:5}}>
+            <div className="m" style={{fontSize:12,color:folie?"#e4e2d9":"var(--mu)",marginTop:5}}>
               Talenttyp: {typVon({typ:karte.zusatz.typ}).n}
             </div>)}
           {karte.herkunft === "akademie" && karte.zusatz && karte.zusatz.jahrgang && (
@@ -13102,18 +13497,18 @@ function Spielerkarte({ karte, gross, aufgedeckt = true, onTippen, jubel }) {
       {/* Anlage nur zeigen, wenn sie ueber der Staerke liegt — „Anlage 70" bei
           Staerke 70 ist keine Auskunft, sondern Fuellsel. */}
       {karte.pot > karte.ovr && (
-        <div className="m" style={{ fontSize: 10.5, color: "var(--mu)", marginTop: 7 }}>
+        <div className="m" style={{ ...info, fontSize: gross ? 12 : 11, color: folie ? "#e4e2d9" : "var(--mu)", marginTop: 7 }}>
           Anlage {karte.pot} · noch {karte.pot - karte.ovr} zu holen</div>)}
       {/* MERKMALE ALS SYMBOLE (Kevins Wunsch). Höchstens drei — was jeder
           hat, zeichnet niemanden aus. */}
       {merk.length > 0 && (
-        <div style={{ display: "flex", gap: 8, marginTop: 8, alignItems: "center",
+        <div style={{ ...info, display: "flex", gap: 8, marginTop: 8, alignItems: "center",
           flexWrap: "wrap" }}>
           {merk.map((m) => (
             <span key={m.id} title={m.n} style={{ display: "flex", alignItems: "center",
               gap: 4 }}>
               <Merkzeichen sym={m.sym} farbe={st.farbe} groesse={gross ? 15 : 13} />
-              <span className="m" style={{ fontSize: 9.5, color: "var(--mu)" }}>{m.n}</span>
+              <span className="m" style={{ fontSize: gross ? 12 : 11, color: folie ? "#e4e2d9" : "var(--mu)" }}>{m.n}</span>
             </span>))}
         </div>)}
       {karte.sonderkarte && (
@@ -13300,6 +13695,7 @@ function Sonderschuss({ grund, ruhe, onFertig }) {
           feld: f.n }
       : { ...SCHUSS_TROST, feld: "daneben" };
     setHalt({ f, lohn, bei: ruhe ? .5 : stelle.current });
+    playSound(f.att >= 2 ? "goal" : f.n === "daneben" ? "setback" : "confirm");
     haptik(f.att >= 2 ? "gut" : "wahl");
   };
 
@@ -13367,7 +13763,7 @@ function Sonderschuss({ grund, ruhe, onFertig }) {
       </div>
 
       {!halt ? (
-        <button className="btn pri" style={{ marginTop: 12, width: "100%" }}
+        <button className="btn pri" data-sound="none" style={{ marginTop: 12, width: "100%" }}
           onClick={schiessen}>
           {ruhe ? "Schießen (ohne Bewegung)" : "Schießen"}</button>
       ) : (
@@ -13415,15 +13811,15 @@ function Wendekarte({ vorn, hinten, um, setUm, label, style }) {
   const tippen = () => {
     const jetzt = Date.now();
     if (jetzt - letzterTipp.current < 320) {
-      letzterTipp.current = 0; setUm((u) => !u); haptik("wahl");
+      letzterTipp.current = 0; setUm((u) => !u); haptik("wahl"); playSound("flip");
     } else letzterTipp.current = jetzt;
   };
   const taste = (e) => {
-    if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setUm((u) => !u); }
+    if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setUm((u) => !u); playSound("flip"); }
   };
   return (
     <div className={"wender" + (um ? " um" : "")} onClick={tippen} onKeyDown={taste}
-      role="button" tabIndex={0} aria-label={label}
+      role="button" tabIndex={0} data-sound="none" aria-label={label}
       style={{ cursor: "pointer", outlineOffset: 3, ...(style || {}) }}>
       <div className="dreh">{vorn}{hinten}</div>
     </div>
@@ -13462,12 +13858,12 @@ function Pass({ p, full }) {
         <span>Spielerpass</span>
         <span className="m" style={{ letterSpacing: ".10em" }}>{nr}</span>
       </div>
-      <div style={{ display: "flex", gap: 11, alignItems: "flex-start" }}>
+      <div className="spielerpass-kopf" style={{ display: "flex", gap: 11, alignItems: "flex-start" }}>
         {/* Lichtbild — auf jedem Pass derselbe harte Rahmen */}
         <div style={{ border: "2px solid var(--tinte)", padding: 2, flexShrink: 0, background: c1 + "1A" }}>
           <Avatar seed={p.avatar} zuege={p.zuege} club={p.club} size={62} g={p.g} nat={p.nation.id} meta={p.meta} />
         </div>
-        <div style={{ flex: 1, minWidth: 0 }}>
+        <div className="spielerpass-daten" style={{ flex: 1, minWidth: 0 }}>
           {/* Die Binden standen bis 34.23 HIER, in derselben Flexzeile wie der
               Name, mit flexWrap:wrap. Bei langem Namen rutschten sie in Zeile
               zwei — und weil beide Passseiten im selben Rasterfeld liegen,
@@ -14374,9 +14770,10 @@ function Kurzanleitung({ onZu }) {
 /* Alles, was man einmal einstellt und dann in Ruhe lässt: Darstellung,
    Rückmeldung, Sicherung, Rechtliches. Liegt hinter dem Zahnrad, damit das
    Titelblatt frei bleibt. */
-function Optionen({ ruhe, aufRuhe, onBackup, onZu, onAnleitung, hall, aka, laeuft, meta, aufRahmen }) {
+function Optionen({ ruhe, aufRuhe, onBackup, onZu, onAnleitung, hall, aka, laeuft, meta, aufRahmen, schreibe }) {
   useZurueck(onZu);
   const [vib, setVib] = useState(VIBRATION);
+  const [klang, setKlang] = useState(getSoundLevel);
   const [stufe, setStufe] = useState(TEXTSTUFE);
   const [speed, setSpeed] = useState(SPEEDMODUS);
   const [schwer, setSchwer] = useState(SCHWIERIGKEIT);
@@ -14503,6 +14900,19 @@ function Optionen({ ruhe, aufRuhe, onBackup, onZu, onAnleitung, hall, aka, laeuf
             <span className="m" style={{ fontSize: 10.5, color: "var(--mu)", display: "block", marginTop: 2 }}>
               Kurzes Brummen bei Entscheidungen</span>
           </button>
+          <div style={{ borderTop: "1px solid var(--ln)", paddingTop: 11, marginTop: 6 }}>
+            <span className="eb">Spielklänge</span>
+            <div className="optionen-auswahl" role="group" aria-label="Lautstärke der Spielklänge">
+              {[[0, "Aus"], [1, "Leise"], [2, "Normal"]].map(([wert, name]) => (
+                <button key={wert} className={"btn sm" + (klang === wert ? " on" : "")}
+                  data-sound="none" aria-pressed={klang === wert}
+                  onClick={() => { setKlang(wert); setSoundLevel(wert);
+                    merken(SOUND_KEY, String(wert)); if (wert) playSound("confirm"); }}>
+                  {name}</button>))}
+            </div>
+            <span className="m" style={{ fontSize: 10.5, color: "var(--mu)", display: "block", marginTop: 5 }}>
+              Kurze Signale für Entscheidungen, Saisons und besondere Momente. Keine Dauermusik.</span>
+          </div>
           <button className="btn optionen-schalter" aria-pressed={wach} aria-label="Bildschirm anlassen" style={{ border: 0, padding: "11px 0", opacity: wachGeht ? 1 : .45 }}
             disabled={!wachGeht}
             onClick={() => { const n = !wach; setWach(n); setWachAn(n);
@@ -14750,7 +15160,7 @@ function titelgeschichte(save, laeuft, hall, aka) {
     unter: "Trainingsschwerpunkte, Vertragspoker, Leihen, Angebote, die man besser ablehnt. Eine Laufbahn, eine Entscheidung nach der anderen." };
 }
 
-function MenuScreen({ onSammlung, hall, onNew, onHall, save, onResume, onAch, achN, metaN, onBackup, ruhe, setRuhe, setRuheState, aka, onAka, verein, onVerein, onVereinDach, gesamt, onLaden, meta, aufRahmen, freiHinweis, onFreiZu, karten, speicherFehler, optAuf, onOptAufGesehen }) {
+function MenuScreen({ onSammlung, hall, onNew, onHall, save, onResume, onAch, achN, metaN, onBackup, ruhe, setRuhe, setRuheState, aka, onAka, verein, onVerein, onVereinDach, gesamt, onLaden, meta, aufRahmen, freiHinweis, onFreiZu, karten, speicherFehler, optAuf, onOptAufGesehen, schreibe }) {
   const [ask, setAsk] = useState(false);
   const [opt, setOpt] = useState(false);
   /* F56 (35.147): kam man aus der Sicherung zurück, war `opt` wieder false
@@ -14772,7 +15182,7 @@ function MenuScreen({ onSammlung, hall, onNew, onHall, save, onResume, onAch, ac
   if (anleitung) return <Shell blatt="optionen" zusatz="ANLEITUNG"><Kurzanleitung onZu={() => setAnleitung(false)} /></Shell>;
   if (opt) return (
     <Shell blatt="optionen">
-      <Optionen ruhe={ruhe} hall={hall} aka={aka} laeuft={!!laeuft} onBackup={onBackup}
+      <Optionen ruhe={ruhe} hall={hall} aka={aka} laeuft={!!laeuft} onBackup={onBackup} schreibe={schreibe}
         meta={meta} aufRahmen={aufRahmen}
         onZu={() => setOpt(false)} onAnleitung={() => setAnleitung(true)}
         aufRuhe={(n) => { setRuhe(n); setRuheState(n); }} />
@@ -14789,7 +15199,7 @@ function MenuScreen({ onSammlung, hall, onNew, onHall, save, onResume, onAch, ac
     return (
       <button className="btn" style={{ border: 0, borderBottom: "1px solid var(--ln)",
         padding: "11px 0 11px 10px", borderLeft: "3px solid " + r.f, opacity: zu ? .45 : 1,
-          cursor: zu ? "default" : "pointer" }} disabled={zu} onClick={klick || undefined}>
+          cursor: zu ? "default" : "pointer" }} disabled={zu} data-sound="navigate" onClick={klick || undefined}>
         <span className="inhalt">
           <span className="d" style={{ fontSize: 16 }}>{titel}</span>
           <span className="punkte" />
@@ -14892,7 +15302,7 @@ function MenuScreen({ onSammlung, hall, onNew, onHall, save, onResume, onAch, ac
             </div>
           )}
           {/* Störer: schräg, laut, rund — die Hauptaktion der Seite. */}
-          <button className="rs-startsignal" aria-label={(laeuft ? "WEITER SPIELEN ab Seite " : "NEUE LAUFBAHN ab Seite ")+(laeuft ? RESSORT.laufbahn.s : RESSORT.anlegen.s)} onClick={laeuft ? onResume : onNew}
+          <button className="rs-startsignal" data-sound="whistle" aria-label={(laeuft ? "WEITER SPIELEN ab Seite " : "NEUE LAUFBAHN ab Seite ")+(laeuft ? RESSORT.laufbahn.s : RESSORT.anlegen.s)} onClick={laeuft ? onResume : onNew}
             style={{ position: "absolute", right: 8, top: 8, width: 92, height: 92, borderRadius: "50%",
               border: "none", background: "var(--stoerer)", color: "#fff", cursor: "pointer",
               transform: "rotate(-11deg)", display: "flex", flexDirection: "column",
@@ -15108,6 +15518,13 @@ function CreateScreen({ onStart, onBack, meta }) {
     if (!eigenerName) setName(namensVorschlag(nation, gender, avatar + namensDreh * 7919));
   }, [nation, gender, avatar, eigenerName, namensDreh]);
   useEffect(() => {
+    // Ein mehrzeiliger Vorschautext darf das gerade bearbeitete Feld nicht
+    // unter den Rand schieben, insbesondere bei eingeblendeter Tastatur.
+    const eingabe = document.getElementById(formularId + "-name");
+    if (window.innerHeight <= 540 && document.activeElement === eingabe)
+      eingabe?.scrollIntoView({ block: "nearest" });
+  }, [name, formularId]);
+  useEffect(() => {
     setZuege((z) => {
       // Manuelle Farben bleiben beim Nationalitätswechsel erhalten.
       const A = ZUEGE_ANZAHL(meta, gender === "w");
@@ -15122,6 +15539,32 @@ function CreateScreen({ onStart, onBack, meta }) {
   const [fein, setFein] = useState(false);
   const [merkmal,setMerkmal] = useState("frisur");
   const [fest,setFest] = useState({});
+  /* CHAR-P1-05 Nachlauf: Die mobile Kategorienleiste war zwar wischbar, aber
+     der abgeschnittene Folgebutton war als Hinweis zu dezent. Der Zustand
+     beschreibt nur die Scrollposition und aendert weder Auswahl noch IDs. */
+  const kategorieLeiste = useRef(null);
+  const [kategorieRand,setKategorieRand] = useState({start:true,end:false});
+  const kategoriePosition = (el=kategorieLeiste.current) => {
+    if (!el) return;
+    const max = Math.max(0, el.scrollWidth - el.clientWidth);
+    /* Chromium kann die Grid-/Snap-Leiste beim Oeffnen um wenige Pixel
+       einrasten (im mobilen Prüfweg reproduzierbar: 4 px). Das ist optisch
+       weiterhin der Anfang und darf den Hinweis nicht schon auf "beide"
+       umschalten. Derselbe kleine Toleranzrand gilt am rechten Ende. */
+    const rand = 8;
+    const next = {start:el.scrollLeft <= rand,end:max <= rand || el.scrollLeft >= max - rand};
+    setKategorieRand((alt) => alt.start === next.start && alt.end === next.end ? alt : next);
+  };
+  useEffect(() => {
+    if (!fein) return;
+    const frame = requestAnimationFrame(() => kategoriePosition());
+    const neuMessen = () => kategoriePosition();
+    window.addEventListener("resize", neuMessen);
+    return () => {
+      cancelAnimationFrame(frame);
+      window.removeEventListener("resize", neuMessen);
+    };
+  }, [fein, gender]);
   const [statur, setStatur] = useState("normal");
   /* Die Statur zieht den Kopf schmal oder breit. OHNE diesen Effekt wäre sie
      im Gesicht wirkungslos — genau die Sorte Merkmal, die in diesem Projekt
@@ -15178,11 +15621,11 @@ function CreateScreen({ onStart, onBack, meta }) {
             `.pan` bringt `position:relative` mit; die Angabe hier sticht sie
             aus, weil sie direkt am Element steht. Der Grund ist deckend, sonst
             läge der Text darunter durch. */}
-        <div className="pan pad" style={{ marginTop: 12, display: "flex", gap: 12, alignItems: "center", flexWrap: fein ? "wrap" : "nowrap",
+        <div className="pan pad char-vorschau" style={{ marginTop: 12, display: "flex", gap: 12, alignItems: "center", flexWrap: fein ? "wrap" : "nowrap",
           position: "sticky", top: 0, zIndex: 5, borderBottomWidth: 2, background: "var(--pan)" }}>
           <Avatar zuege={zuege} seed={avatar} club={CLUBS.find((c) => c.n === club) || null} size={fein ? 164 : 86} ring="var(--ln2)" g={gender} nat={nation} meta={meta} />
           <div style={{ flex: 1, minWidth: fein ? 180 : 0 }}>
-            <div className="d" title={name.trim() || "Der Namenlose"} style={{ fontSize: 20, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{nat.flag} {name.trim() || "Der Namenlose"}</div>
+            <div className="d" title={name.trim() || "Der Namenlose"} style={{ fontSize: 20, overflowWrap: "anywhere", lineHeight: 1.15 }}>{nat.flag} {name.trim() || "Der Namenlose"}</div>
             {/* 35.184: Kurze Angaben und reservierte Zeilen halten den kompakten Pass stabil. */}
             <div className="m" title={POS[pos].label + " · " + foot + " · Rückennummer " + (number || "—")}
               style={{ fontSize: 11, color: "var(--mu)", marginTop: 4, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
@@ -15200,8 +15643,19 @@ function CreateScreen({ onStart, onBack, meta }) {
         {fein && <div id={formularId + "-feinheiten"} className="pan pad" style={{marginTop:10}}>
           <div className="eb">Dein Spielerporträt</div>
           <p style={{fontSize:12,color:"var(--mu)"}}>Wähle ein Merkmal und tippe auf deine Variante. Festgehaltene Merkmale bleiben beim Würfeln erhalten.</p>
-          <div style={{display:"flex",gap:6,flexWrap:"wrap",marginBottom:12}}>
+          <div ref={kategorieLeiste} data-char-kategorien="true"
+            data-am-anfang={kategorieRand.start?"true":"false"} data-am-ende={kategorieRand.end?"true":"false"}
+            onScroll={(e)=>kategoriePosition(e.currentTarget)}
+            style={{display:"flex",gap:6,flexWrap:"wrap",marginBottom:12}}>
             {PORTRAET_REGLER(gender).map(([lbl,feld])=><button key={feld} className="btn sm" aria-pressed={merkmal===feld} onClick={()=>setMerkmal(feld)} style={{borderColor:merkmal===feld?"var(--ac)":undefined}}>{lbl}{fest[feld]?" · fest":""}</button>)}
+          </div>
+          <div className="char-kategorie-hinweis" aria-hidden="true"
+            data-richtung={kategorieRand.start&&!kategorieRand.end?"weiter":kategorieRand.end&&!kategorieRand.start?"zurueck":"beide"}>
+            {kategorieRand.start&&!kategorieRand.end
+              ?"Wischen · weitere Kategorien →"
+              :kategorieRand.end&&!kategorieRand.start
+                ?"← Frühere Kategorien · wischen"
+                :"← Kategorien wischen →"}
           </div>
           {(()=>{const feld=PORTRAET_REGLER(gender).some(x=>x[1]===merkmal)?merkmal:"frisur";
             const optionen=portraetOptionen({...ZUEGE_ANZAHL(meta,gender==="w"),haut:SKIN_EDIT.length,haar:HAIRC_EDIT.length},gender)[feld];
@@ -15216,7 +15670,7 @@ function CreateScreen({ onStart, onBack, meta }) {
                 </button>)}
               </div></>;
           })()}
-          <p style={{fontSize:11,color:"var(--mu)",marginTop:10}}>Haut- und Haarfarbe sind unabhängig von deiner Nationalität frei wählbar. Dein Aussehen verändert keine Spielwerte.</p>
+          <p style={{fontSize:11,color:"var(--mu)",marginTop:10}}>Haut- und Haarfarbe sind unabhängig von deiner Nationalität frei wählbar. Die Porträtmerkmale verändern keine Spielwerte; die separat gewählte Statur beeinflusst deine Startwerte.</p>
         </div>}
 
         <div style={{ display: "grid", gap: 10, gridTemplateColumns: "repeat(auto-fit,minmax(150px,1fr))", marginTop: 12 }}>
@@ -15241,11 +15695,11 @@ function CreateScreen({ onStart, onBack, meta }) {
               </button>
             </div>
             <span className="m" style={{ fontSize: 10, color: "var(--mu)", display: "block", marginTop: 3 }}>
-              {eigenerName ? "Bleibt deiner, auch wenn du die Herkunft wechselst."
-                : "Vorschlag zur Herkunft. Einfach überschreiben."}</span>
+              {eigenerName ? "Bleibt deiner, auch wenn du Nation oder Geschlecht wechselst."
+                : "Vorschlag passend zu Nation und Geschlecht. Einfach überschreiben."}</span>
           </div>
           <div>
-            <label className="eb" htmlFor={formularId + "-number"} style={{ display: "block", marginBottom: 5 }}>Nummer</label>
+            <label className="eb" htmlFor={formularId + "-number"} style={{ display: "block", marginBottom: 5 }}>Rückennummer</label>
             <input id={formularId + "-number"} className="inp m" aria-label="Rückennummer" inputMode="numeric" value={number} maxLength={2}
               onChange={(e) => setNumber(e.target.value.replace(/\D/g, "").slice(0, 2))} />
           </div>
@@ -15304,13 +15758,13 @@ function CreateScreen({ onStart, onBack, meta }) {
                 </div>
               </div>
             </button>))}
-          {!jugend.length && <div style={{ fontSize: 12, color: "var(--mu)" }}>Dazu passt gerade kein Verein.</div>}
+          {!jugend.length && <div style={{ fontSize: 12, color: "var(--mu)" }}>Für diese Auswahl ist kein Jugendverein verfügbar.</div>}
         </div>
 
         <label className="eb" htmlFor={formularId + "-suche"} style={{ display: "block", margin: "18px 0 6px" }}>Wunschverein</label>
         <div style={{ fontSize: 11.5, color: "var(--mu)", marginBottom: 7 }}>
-          Musst du nicht. Der Verein klopft im Lauf der Jahre ein- bis dreimal an —
-          sofern du sportlich dorthin passt.
+          Musst du nicht. Dein Wunschverein kann dir im Lauf der Jahre bis zu dreimal ein Angebot machen —
+          sofern du sportlich dorthin passt und nicht bereits dort spielst.
         </div>
         {traum ? (() => { const c = CLUBS.find((x) => x.n === traum); return (
           <div className="pan pad" style={{ borderColor: "var(--go)" }}>
@@ -17297,6 +17751,113 @@ function EndScreen({ p, onNew }) {
                   {b.abgaenge > 0 ? b.abgaenge + " Abgänge — die Akademie muss nachliefern." : ""}
                   {b.vorbei ? (b.abgaenge > 0 ? " " : "") + "Die fünfzehn Jahre sind um." : ""}
                 </div>)}
+
+              {/* WIRT-P1-01: woher das Geld kam und wohin es ging. Ohne diese
+                  Seite sah der Spieler nur einen Kassenstand, der sich
+                  veraendert hatte — ohne zu wissen, warum. Dieselbe Bauart wie
+                  der Coinbeleg: Posten links, Betrag rechts, Summe darunter.
+                  Der Beleg ist gebucht worden; hier wird er nur gelesen. */}
+              {b.wirtschaft && (() => {
+                const w = b.wirtschaft;
+                const geld = (x) => VEREIN.geldText(x, w.land);
+                const zeile = (k, wert, farbe) => (
+                  <div key={k} style={{ display: "flex", justifyContent: "space-between",
+                    gap: 10, fontSize: 11.5, padding: "2px 0" }}>
+                    <span style={{ color: "var(--mu)", flex: 1, minWidth: 0, overflow: "hidden",
+                      textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{k}</span>
+                    <span style={{ color: farbe || "inherit", whiteSpace: "nowrap" }}>{wert}</span>
+                  </div>);
+                return (
+                  <div style={{ marginTop: 10, paddingTop: 9, borderTop: "1px solid var(--ln)" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
+                      <span className="eb" style={{ fontSize: 11 }}>Saisonabrechnung</span>
+                      <span className="d" style={{ fontSize: 17,
+                        color: w.kasse < 0 ? "var(--bad)" : "var(--ok)" }}>{geld(w.kasse)}</span>
+                    </div>
+                    {w.zuschauer > 0 && (
+                      <div className="m" style={{ fontSize: 10, color: "var(--mu)", marginBottom: 4 }}>
+                        Ø {Math.round(w.zuschauer).toLocaleString("de-DE")} Zuschauer
+                        {w.plaetze ? " von " + w.plaetze.toLocaleString("de-DE") : ""}
+                        {w.auslastung ? " · " + Math.round(w.auslastung * 100) + " % ausgelastet" : ""}</div>)}
+                    {!!w.ausverkauft && (
+                      <div className="m" style={{ fontSize: 11.5, marginBottom: 4, color: "var(--ok)" }}>
+                        <b>Ausverkauftes Haus.</b> Jedes Heimspiel voll — die Fans danken es
+                        mit Stimmung.</div>)}
+
+                    <div style={{ marginTop: 6 }}>
+                      {(w.einnahmen || []).map((x) => zeile(x.k, "+" + geld(x.v), "var(--ok)"))}
+                      {(w.ausgaben || []).map((x) => zeile(x.k, "−" + geld(x.v), "var(--bad)"))}
+                      {(w.ereignisse || []).filter((e) => e.geld).map((e) =>
+                        zeile(e.n, (e.geld > 0 ? "+" : "−") + geld(Math.abs(e.geld)),
+                          e.geld > 0 ? "var(--ok)" : "var(--bad)"))}
+                      {w.ziel && w.ziel.erfuellt && w.ziel.praemie > 0 &&
+                        zeile("Vorstandsziel erfüllt · " + w.ziel.n, "+" + geld(w.ziel.praemie), "var(--ok)")}
+                    </div>
+
+                    <div style={{ display: "flex", justifyContent: "space-between", gap: 10,
+                      marginTop: 6, paddingTop: 6, borderTop: "1px solid var(--ln)", fontSize: 12.5 }}>
+                      <span className="d">Ergebnis</span>
+                      <span className="d" style={{ color: w.ergebnis < 0 ? "var(--bad)" : "var(--ok)" }}>
+                        {(w.ergebnis > 0 ? "+" : "") + geld(w.ergebnis)}</span>
+                    </div>
+
+                    {/* Stimmung und Gehaltsniveau mit RICHTUNG, nicht nur als
+                        Stand — ein Wert, der sich bewegt, ist erst als
+                        Bewegung eine Auskunft. */}
+                    {(w.stimmung != null || w.gehalt) && (
+                      <div className="m" style={{ fontSize: 11, marginTop: 5, color: "var(--mu)" }}>
+                        {w.stimmung != null ? "Stimmung " + w.stimmung
+                          + (w.stimmungVorher != null && w.stimmungVorher !== w.stimmung
+                             ? " (" + (w.stimmung > w.stimmungVorher ? "+" : "")
+                               + (w.stimmung - w.stimmungVorher) + ")" : "") : ""}
+                        {w.gehalt && w.stimmung != null ? " · " : ""}
+                        {w.gehalt ? "Gehaltsniveau " + Math.round(w.gehalt.neu * 100) + " %"
+                          + (w.gehalt.neu > w.gehalt.vorher ? " und steigend" : "") : ""}
+                      </div>)}
+                    {w.ziel && !w.ziel.erfuellt && (
+                      <div className="m" style={{ fontSize: 11, marginTop: 5, color: "var(--mu)" }}>
+                        Vorstandsziel verfehlt: {w.ziel.n} — keine Prämie.</div>)}
+                    {/* LIZENZAUFLAGE. Getrennt nach „hat gekostet" und „wird
+                        kosten": die erste erklaert den Tabellenplatz dieser
+                        Saison, die zweite ist die Vorwarnung fuer die
+                        naechste. Eine Strafe, die erst auffaellt, wenn sie
+                        schon wirkt, laesst dem Spieler keine Gegenwehr. */}
+                    {!!(w.lizenz && w.lizenz.angewandt) && (
+                      <div className="m" style={{ fontSize: 11, marginTop: 5, color: "var(--bad)" }}>
+                        Lizenzauflage: {w.lizenz.angewandt} Punkte Abzug in dieser Saison —
+                        der Tabellenplatz steht schon danach.</div>)}
+                    {!!(w.lizenz && w.lizenz.punkte) && (
+                      <div className="m" style={{ fontSize: 11, marginTop: 3, color: "var(--bad)" }}>
+                        Die Kasse steht {geld(Math.abs(w.lizenz.kasse))} im Minus, geduldet sind
+                        {" " + geld(w.lizenz.rahmen)}. Kommende Saison: {w.lizenz.punkte} Punkte Abzug.</div>)}
+                    {!!(w.lizenz && w.lizenz.entzogen) && (
+                      <div className="m" style={{ fontSize: 11.5, marginTop: 5,
+                        color: "var(--bad)", fontWeight: 600 }}>
+                        Die Lizenz wurde entzogen: Zwangsabstieg, unabhängig vom
+                        Tabellenplatz. In der neuen Liga kostet der Kader rund
+                        die Hälfte — das ist der Weg zurück.</div>)}
+                    {!!(w.lizenz && w.lizenz.entzugOhneWirkung) && (
+                      <div className="m" style={{ fontSize: 11.5, marginTop: 5, color: "var(--bad)" }}>
+                        Die Lizenz wäre entzogen — tiefer geht es aber nicht.
+                        Es bleibt beim Punktabzug.</div>)}
+                    {!!(w.lizenz && w.lizenz.jahre > 0 && !w.lizenz.entzogen) && (
+                      <div className="m" style={{ fontSize: 11, marginTop: 3, color: "var(--bad)" }}>
+                        Ohne Lizenz seit {w.lizenz.jahre} von {VEREIN.ENTZUG_NACH} Saisons.</div>)}
+                    {!!(w.lizenz && !w.lizenz.punkte && w.lizenz.warnung) && (
+                      <div className="m" style={{ fontSize: 11, marginTop: 3, color: "var(--mu)" }}>
+                        Die Kasse ist im Minus. Bis {geld(w.lizenz.rahmen)} ist das geduldet —
+                        darunter droht Punktabzug.</div>)}
+                    {!!(w.fertig || []).length && (
+                      <div className="m" style={{ fontSize: 11, marginTop: 5 }}>
+                        Fertig geworden: {w.fertig.join(", ")}</div>)}
+                    {!!(w.ausgelaufen || []).length && (
+                      <div className="m" style={{ fontSize: 11, marginTop: 3, color: "var(--mu)" }}>
+                        Vertrag ausgelaufen: {w.ausgelaufen.join(", ")}</div>)}
+                    {(w.ereignisse || []).map((e, i) => (
+                      <div key={i} className="m" style={{ fontSize: 11, marginTop: 3, color: "var(--mu)" }}>
+                        {e.n}{e.t ? " — " + e.t : ""}</div>))}
+                  </div>);
+              })()}
             </div>);
         })()}
         {p.hausFortschritt === false && <p style={{ marginTop: 12, color: "var(--mu)" }}>
@@ -17654,6 +18215,7 @@ function FlutlichtApp() {
       kartenRef.current = K; setKarten(K); setGesehen(gesehenNeu);
       if (roh["rasenschach:ruhe"] != null) { setRuhe(roh["rasenschach:ruhe"] === "1"); setRuheState(roh["rasenschach:ruhe"] === "1"); }
       if (roh["rasenschach:vib"] != null) setVibration(roh["rasenschach:vib"] === "1");
+      setSoundLevel(roh[SOUND_KEY] == null ? 1 : roh[SOUND_KEY]);
       if (roh["rasenschach:text"] != null) setTextstufe(parseInt(roh["rasenschach:text"],10) || 0);
       if (roh["rasenschach:speed"] != null) setSpeedmodus(roh["rasenschach:speed"] === "1");
       if (roh["rasenschach:schwer"]) setSchwierigkeit(roh["rasenschach:schwer"]);
@@ -17879,7 +18441,14 @@ function FlutlichtApp() {
     // Akademiejahr zuerst, sämtliche VC danach in genau einer Gesamtbuchung.
     const hausFortschritt = saisonenGespielt(q) >= HAUS_MIN_SAISONEN;
     q.hausFortschritt = hausFortschritt;
-    const AK2 = hausFortschritt ? akaVerbuchen(aka, 0) : { a: aka, ereignisse: [] };
+    /* Der Vermaechtnisbonus "Bekannte Adresse" wird hier durchgereicht. Er
+       liegt am VEREIN (`v.bonus`, gesetzt von `neuerVerein` aus dem letzten
+       Abschluss), wirkt aber in der AKADEMIE — deshalb muss er genau hier
+       ueber die Grenze. `?.` faengt den Fall ab, dass noch kein Verein
+       besteht: die Akademie ist frueher freigeschaltet als er. */
+    const AK2 = hausFortschritt
+      ? akaVerbuchen(aka, 0, undefined, verein?.bonus?.aufnahmen)
+      : { a: aka, ereignisse: [] };
     q.akaEreignisse = AK2.ereignisse; q.akaName = AK2.a.name; q.akaAktiv = !!AK2.a.gegruendet;
 
     /* ---- AUS DER JUGEND IN DIE SAMMLUNG (35.125) --------------------------
@@ -17959,6 +18528,39 @@ function FlutlichtApp() {
           punkte: VS.punkte, aufstieg: !!VS.aufstieg, abstieg: !!VS.abstieg,
           meister: VS.rang === 1, vorbei: !!VS.vorbei,
           abgaenge: (VS.abgaenge || []).length,
+          /* WIRT-P1-01: die Saisonabrechnung wandert mit in den Bericht.
+             DIESELBE QUELLE wie die Buchung — der Beleg aus `vereinSaison`,
+             nicht eine zweite Rechnung daneben. Genau wie beim Coinbeleg am
+             Karriereende: zwei Rechnungen laufen frueher oder spaeter
+             auseinander, und dann glaubt der Spieler der falschen.
+             Mitgenommen wird der Beleg EINER Saison, nicht die Chronik —
+             fuenfzehn davon gehoerten nicht in einen Karrierebericht. */
+          wirtschaft: VS.beleg ? {
+            land: verein.land,
+            einnahmen: VS.beleg.einnahmen, ausgaben: VS.beleg.ausgaben,
+            summeEin: VS.beleg.summeEin, summeAus: VS.beleg.summeAus,
+            ergebnis: VS.beleg.ergebnis, kasse: VS.beleg.kasse,
+            zuschauer: VS.beleg.zuschauer, auslastung: VS.beleg.auslastung,
+            plaetze: VS.beleg.plaetze, ausverkauft: VS.beleg.ausverkauft,
+            ereignisse: (VS.beleg.ereignisse || []).map((e) => ({ n: e.n, t: e.t, geld: e.geld })),
+            /* Die beiden Werte, die die ganze Wirtschaft treiben, fehlten hier
+               — und sie tauchen auch sonst nirgends auf. Der Spieler sah
+               Zuschauer und Merchandising Jahr für Jahr sinken (über die
+               Stimmung) und die Gehaltszeile steigen (über die Ratsche), ohne
+               dass eine der beiden Zahlen je genannt wurde. */
+            stimmung: VS.beleg.stimmung, stimmungVorher: VS.beleg.stimmungVorher,
+            gehalt: VS.beleg.gehalt ? { vorher: VS.beleg.gehalt.vorher, neu: VS.beleg.gehalt.neu } : null,
+            ziel: VS.beleg.ziel && VS.beleg.ziel.gesetzt
+              ? { n: VS.beleg.ziel.n, erfuellt: VS.beleg.ziel.erfuellt, praemie: VS.beleg.ziel.praemie }
+              : null,
+            fertig: ((VS.beleg.bau || {}).fertig || []).map((f) => f.n + " Stufe " + f.stufe),
+            ausgelaufen: VS.beleg.ausgelaufen || [],
+            /* Lizenzauflage (WIRT-P1-04): `angewandt` ist, was DIESE Saison
+               gekostet hat, `punkte` was die naechste kostet. Beides gehoert
+               hin — sonst sieht ein Jahr mit Abzug hinterher aus, als waere
+               nichts gewesen, und die kommende Auflage trifft unangekuendigt. */
+            lizenz: VS.beleg.lizenz || null,
+          } : null,
         };
         /* DEN ABSCHLUSS AM VEREIN SPEICHERN (35.73, von Kevin gemeldet:
            „die Bonis werden nicht uebernommen").
@@ -18183,6 +18785,7 @@ function FlutlichtApp() {
     setRueckblick(null); setJubel([]); setMarken([]); setSchluss(null);
     setKarriereRueck({ ...q, lauf: q.lauf });
     setP(q); setPhase("end"); setStopAsk(false);
+    playSound("farewell");
     } catch (e) {
       abschlussRef.current = null;
       setSpeicherFehler({key:SAVE_KEY,was:e.message,t:Date.now()});
@@ -18291,6 +18894,7 @@ function FlutlichtApp() {
   /* PRUEFSTAND-ANFANG: handler */
   const chooseTraining = (id) => {
     haptik("wahl");
+    playSound("training");
     const q = clone(p);
     if (!q.saisonZiel || q.saisonZiel.jahr !== q.year) q.saisonZiel = saisonZielStart(q);
     q.training = q.speed ? autoTraining(q) : id;
@@ -18328,6 +18932,7 @@ function FlutlichtApp() {
     q.mv = marketValue(q);
     setP(q);
     setEr({ text: evText(out.text, queue[ei] ? queue[ei]._ctx : {}), extra });
+    playSound("event");
   };
   /* 35.37: Ereignisse, die im selben Zug ungueltig geworden sind, ueberspringen.
      -------------------------------------------------------------------------
@@ -18403,6 +19008,7 @@ function FlutlichtApp() {
     const q = clone(base);
     const vorher = { tot: { ...base.tot }, nt: { caps: base.nt.caps } };
     const s = simulateSeason(q);
+    playSound("season");
     setMarken(markenPruefen(vorher, q).map((m) => ({ ...m, lauf: q.lauf })));
     if (q.speed) { const kauf = []; autoKauf(q, kauf); if (kauf.length) s.notes = [...(s.notes || []), ...kauf]; }
     else { const vk = []; verwalterRunde(q, vk); if (vk.length) s.notes = [...(s.notes || []), ...vk]; }
@@ -18484,6 +19090,7 @@ function FlutlichtApp() {
     }
     q.age += 1; q.year += 1; q.mv = marketValue(q);
     if (q.age > LAUFBAHN_MAX || (q.age >= 34 && q.ovr < 58 && chance(.5))) { finish(q, "Es kam kein Angebot mehr, das noch Sinn ergab."); return; }
+    if (o.type === "transfer" || o.type === "loan" || o.type === "return") playSound("transfer");
     /* Die Frage kam ab 33 in jeder dritten Saison wieder — bis zu fünfmal in
        einer Laufbahn, auch wenn man auf dem Zenit stand. Jetzt EINMAL, und
        nur wenn die Stärke wirklich nachgelassen hat: mindestens 4 Punkte
@@ -18637,7 +19244,7 @@ function FlutlichtApp() {
   })();
 
   if (phase === "menu") return <MenuScreen hall={hall} save={save} karten={karten}
-    speicherFehler={speicherFehler}
+    speicherFehler={speicherFehler} schreibe={schreibe}
     optAuf={optZurueck} onOptAufGesehen={() => setOptZurueck(false)}
     freiHinweis={freiJetzt}
     onFreiZu={() => merkeGesehen(freiJetzt === "verein" ? { verein: true } : { aka: true })}
@@ -19016,7 +19623,7 @@ function FlutlichtApp() {
                       <div className="m" style={{ fontSize: 10.5, color: "var(--mu)", marginTop: 3 }}>
                         {Object.keys(t.bias).length ? Object.keys(t.bias).map((k) => aLab(p.pos, k)).join(" · ") : "Erholung"}</div>
                     </div>
-                    <button className="btn pri" style={{ marginTop: 12 }} onClick={() => chooseTraining(t.id)}>
+                    <button className="btn pri" data-sound="none" style={{ marginTop: 12 }} onClick={() => chooseTraining(t.id)}>
                       <span className="d" style={{ fontSize: 16 }}>Saison starten</span>
                     </button>
                   </>);
@@ -19024,7 +19631,7 @@ function FlutlichtApp() {
                   <p style={{ fontSize: 12, color: "var(--mu)", marginTop: 4 }}>Wohin dein Fortschritt fließt.</p>
                   <div className="g3" style={{ marginTop: 10 }}>
                     {TRAINING.map((t) => (
-                      <button key={t.id} className="btn" onClick={() => chooseTraining(t.id)}>
+                      <button key={t.id} className="btn" data-sound="none" onClick={() => chooseTraining(t.id)}>
                         <div className="d" style={{ fontSize: 14 }}>{t.name}</div>
                         <div className="m" style={{ fontSize: 9.5, color: "var(--mu)", marginTop: 3 }}>
                           {Object.keys(t.bias).length ? Object.keys(t.bias).map((k) => aLab(p.pos, k)).join(" · ") : "Erholung"}</div>
@@ -19058,7 +19665,7 @@ function FlutlichtApp() {
                     {e.choices.map((c, i) => {
                       const offen = wahlOffen(c, p);
                       return (
-                      <button key={i} className="btn" disabled={!offen}
+                      <button key={i} className="btn" data-sound="none" disabled={!offen}
                         onClick={offen ? () => resolve(c) : undefined}>
                         {/* Auch durch evText: die Auswahlmöglichkeiten liefen
                             zuerst daran vorbei und wären bei einer Spielerin

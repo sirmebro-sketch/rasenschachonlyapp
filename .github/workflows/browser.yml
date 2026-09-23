@@ -34,6 +34,7 @@ jobs:
             .preview/char-fix-01.html
             .preview/baerte.html
             .preview/char-fix-03.html
+            .preview/char-fix-05.html
             .preview/spieltest.html
             .preview/bildschirm.html
           include-hidden-files: true
