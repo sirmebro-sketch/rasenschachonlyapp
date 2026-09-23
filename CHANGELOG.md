@@ -1,5 +1,10 @@
 # Änderungen
 
+## Noch nicht veröffentlicht – Sol: Spielklänge zur Astra-Abnahme
+
+- Eigene, kurze Sounds für Menüs, Entscheidungen, Sonderschuss, Saison, Titel, Wildcards und Sammelkarten. Kein durchgehender Soundtrack.
+- Lautstärke in den Einstellungen zwischen Aus, Leise und Normal wählbar; die Auswahl bleibt beim Neustart erhalten.
+
 ## 35.194.1 – Kleine Korrekturen nach unabhängiger Qualitätsprüfung
 
 - Neue Mundformen verwenden eigene Abstandsgrenzen für Lippen, Kinn und Bärte.

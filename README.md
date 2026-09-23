@@ -228,6 +228,25 @@ zusätzlichen Elterncommit übernehmen, wie in 35.178 geschehen. Keine ungeprüf
 Arbeit überschreiben und keine Force-Pushes zur vermeintlichen Bereinigung.
 Im Entwicklungsvermerk Quell- und Zielcommit sowie die Entscheidung nennen.
 
+### Eigene Spielklänge
+
+Die 16 MP3-Dateien unter `public/sounds/` sind eigens für Rasenschach XI aus
+Sinustönen, Obertönen und synthetischem Rauschen erzeugt; es werden keine
+Fremdaufnahmen oder fremden Melodien verwendet. `python3 tools/generate-sounds.py`
+erzeugt sie deterministisch neu (benötigt NumPy und ffmpeg mit libmp3lame).
+Dateinamen und Abspielregeln stehen in `sound.js`. Ein `data-sound` an einer
+Schaltfläche überschreibt den dezenten Standardton, `data-sound="none"` verhindert
+ihn für Aktionen mit einem eigenen unmittelbaren Klang. Beim Pack öffnet ein
+kurzer Antipp-Ton den Browser-Audiokanal, der eigentliche Pack-Klang folgt erst
+nach erfolgreicher Buchung.
+
+Die Lautstärke `rasenschach:sound` (0/1/2) ist eine normale lokale Einstellung:
+Sie wird beim Laden ausgelesen und bei „Alles löschen“ entfernt. Standard ist
+„Leise“. Es gibt keine Hintergrundmusik oder automatische Wiedergabe beim Start;
+die App spielt erst nach einer Bedienaktion. Audiofehler dürfen den Spielablauf
+nicht unterbrechen. Den Klang auf einem echten Android-Gerät mit Medienlautstärke,
+Stummschalter und Unterbrechungen prüfen, bevor er veröffentlicht wird.
+
 ### Versionsschema
 
 `package.json` führt die Version als `major.minor.patch` (derzeit 35.194.1).

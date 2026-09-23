@@ -18,6 +18,7 @@ import React, { useState, useEffect, useLayoutEffect, useRef, useMemo } from "re
    `react-dom` ist ohnehin da: main.jsx baut damit die Wurzel. */
 import { createPortal } from "react-dom";
 import { store } from "./storage.js";
+import { SOUND_KEY, getSoundLevel, setSoundLevel, playSound } from "./sound.js";
 import { backupLesen, datenErsetzen, importWiederherstellen, IMPORT_JOURNAL } from "./sicherung.js";
 import { laufStand, laufWeiter } from "./spielstand.js";
 import { SCHRIFTEN } from "./schriften.js";
@@ -8852,7 +8853,7 @@ const KARTEN_KEY = "rasenschach:karten";
 const SPEICHERSCHLUESSEL = [
   IMPORT_JOURNAL, SAVE_KEY, SEEN_KEY, WILL_KEY, ACH_KEY, LIFE_KEY, META_KEY, HALL_KEY,
   AKA_KEY, VER_KEY, KARTEN_KEY, WC_KEY, HSV_KEY, RUECK_KEY,
-  "rasenschach:ruhe", "rasenschach:vib", "rasenschach:text",
+  "rasenschach:ruhe", "rasenschach:vib", "rasenschach:text", SOUND_KEY,
   "rasenschach:speed", "rasenschach:schwer", "rasenschach:wach",
   /* Altnamen aus `ALT_KEYS` — ohne sie kehrt der geloeschte Stand zurueck. */
   ...Object.values(ALT_KEYS).flat(),
@@ -10923,6 +10924,7 @@ function MarkeJubel({ marke, onFertig }) {
 function TitelJubel({ titel, club, land, onFertig }) {
   useEffect(() => {
     haptik("gross");
+    playSound("trophy");
     const t = setTimeout(() => onFertig && onFertig(), RUHE ? 900 : 1400 + titel.length * 900);
     return () => clearTimeout(t);
   }, []);
@@ -12277,9 +12279,9 @@ function WildcardEnthuellung({ card, onFertig }) {
 
   useEffect(() => {
     haptik(gross ? "gross" : pomp >= .3 ? "gut" : "wahl");
-    if (RUHE) { setStufe(3); return; }
+    if (RUHE) { setStufe(3); playSound("wildcard"); return; }
     const uhren = [
-      setTimeout(() => { setStufe(1); haptik(gross ? "gross" : "gut"); }, T[1]),
+      setTimeout(() => { setStufe(1); playSound("wildcard"); haptik(gross ? "gross" : "gut"); }, T[1]),
       setTimeout(() => setStufe(2), T[2]),
       setTimeout(() => setStufe(3), T[3]),
     ];
@@ -12641,6 +12643,7 @@ function Packladen({ vc, pool, verein, gratis, startpaket, startReiter,
     if (umsonst) await onGratis(alle); else await onKauf(packId, alle);
     setOffen(alle); setGezeigt([]); setMeldung(null);
     setWischt([]); setWeg([]); setOffenPack(packId);
+    playSound("pack");
   });
 
   if (offen) {
@@ -12692,6 +12695,7 @@ function Packladen({ vc, pool, verein, gratis, startpaket, startReiter,
                   jubel={gezeigt.indexOf(i) >= 0}
                   onTippen={(e) => {
                     if (e.detail === 0) fokusNachAufdecken.current = e.currentTarget.parentElement;
+                    if (gezeigt.indexOf(i) < 0) playSound(k.stufe === "legende" ? "trophy" : "reveal");
                     setGezeigt((g) => (g.indexOf(i) >= 0 ? g : [...g, i]));
                   }} />
                 {/* ZWEI WEGE, UND BEIDE FUEHREN WEG (35.90, von Kevin
@@ -12945,12 +12949,13 @@ function Packladen({ vc, pool, verein, gratis, startpaket, startReiter,
               Drei aus {startpaket.vorher || "deiner alten Mannschaft"}, mindestens
               einer aus deiner Ruhmeshalle. Du fängst nicht bei null an.</div>
             <button className="btn pri" style={{ marginTop: 10, width: "100%" }}
-              disabled={speichert} onClick={() => ausfuehren(async () => {
+              disabled={speichert} data-sound="tap" onClick={() => ausfuehren(async () => {
                 const r = KARTEN.startpaket(pool, startpaket.vorher, new Date().getFullYear());
                 if (r.fehler) throw Error(r.fehler);
                 await onStartpaket(r.karten);
                 setOffen(r.karten); setGezeigt([]); setMeldung(null);
                 setWischt([]); setWeg([]); setOffenPack("gold");
+                playSound("pack");
               })}>Startpaket öffnen</button>
           </div>)}
 
@@ -12962,7 +12967,7 @@ function Packladen({ vc, pool, verein, gratis, startpaket, startReiter,
             <div className="m" style={{ fontSize: 11, color: "var(--mu)", marginTop: 3 }}>
               Je beendeter Laufbahn mit mindestens {PACK_MIN_SAISONEN} gespielten Saisons eines.</div>
             <button className="btn pri" style={{ marginTop: 10, width: "100%" }}
-              disabled={speichert} onClick={() => ziehen("bronze", true)}>Gratispack öffnen</button>
+              disabled={speichert} data-sound="tap" onClick={() => ziehen("bronze", true)}>Gratispack öffnen</button>
           </div>)}
 
         <div className="m" style={{ fontSize: 11.5, color: "var(--mu)", marginBottom: 8 }}>
@@ -12992,7 +12997,7 @@ function Packladen({ vc, pool, verein, gratis, startpaket, startReiter,
                 <div className="m" style={{ fontSize: 10.5, color: "var(--mu)", marginTop: 3 }}>
                   entspricht etwa {KARTEN.preisInLaufbahnen(pk.id).toString().replace(".", ",")}
                   {" "}Laufbahnen Akademieausbau</div>
-                <button className="btn" disabled={speichert || !leistbar}
+                <button className="btn" disabled={speichert || !leistbar} data-sound="tap"
                   style={{ marginTop: 9, width: "100%",
                     borderColor: leistbar ? KARTEN.STUFEN[pk.id].farbe : undefined }}
                   onClick={() => ziehen(pk.id, false)}>
@@ -13024,7 +13029,7 @@ function Spielerkarte({ karte, gross, aufgedeckt = true, onTippen, jubel }) {
           + " 0%," + KARTEN.flaeche(karte.stufe).unten + " 100%)",
         width: "100%", minHeight: Math.round(150 * gr), display: "flex",
         alignItems: "center", justifyContent: "center", cursor: "pointer" }}
-        onClick={onTippen}
+        onClick={onTippen} data-sound="none"
         aria-label={"Verdeckte Karte, Stufe " + st.n + ". Antippen zum Aufdecken."}>
         <div className="d" style={{ fontSize: Math.round(15 * gr), color: st.farbe,
           letterSpacing: ".1em" }}>{st.n.toUpperCase()}</div>
@@ -13300,6 +13305,7 @@ function Sonderschuss({ grund, ruhe, onFertig }) {
           feld: f.n }
       : { ...SCHUSS_TROST, feld: "daneben" };
     setHalt({ f, lohn, bei: ruhe ? .5 : stelle.current });
+    playSound(f.att >= 2 ? "goal" : f.n === "daneben" ? "setback" : "confirm");
     haptik(f.att >= 2 ? "gut" : "wahl");
   };
 
@@ -13367,7 +13373,7 @@ function Sonderschuss({ grund, ruhe, onFertig }) {
       </div>
 
       {!halt ? (
-        <button className="btn pri" style={{ marginTop: 12, width: "100%" }}
+        <button className="btn pri" data-sound="none" style={{ marginTop: 12, width: "100%" }}
           onClick={schiessen}>
           {ruhe ? "Schießen (ohne Bewegung)" : "Schießen"}</button>
       ) : (
@@ -13415,15 +13421,15 @@ function Wendekarte({ vorn, hinten, um, setUm, label, style }) {
   const tippen = () => {
     const jetzt = Date.now();
     if (jetzt - letzterTipp.current < 320) {
-      letzterTipp.current = 0; setUm((u) => !u); haptik("wahl");
+      letzterTipp.current = 0; setUm((u) => !u); haptik("wahl"); playSound("flip");
     } else letzterTipp.current = jetzt;
   };
   const taste = (e) => {
-    if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setUm((u) => !u); }
+    if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setUm((u) => !u); playSound("flip"); }
   };
   return (
     <div className={"wender" + (um ? " um" : "")} onClick={tippen} onKeyDown={taste}
-      role="button" tabIndex={0} aria-label={label}
+      role="button" tabIndex={0} data-sound="none" aria-label={label}
       style={{ cursor: "pointer", outlineOffset: 3, ...(style || {}) }}>
       <div className="dreh">{vorn}{hinten}</div>
     </div>
@@ -14374,9 +14380,10 @@ function Kurzanleitung({ onZu }) {
 /* Alles, was man einmal einstellt und dann in Ruhe lässt: Darstellung,
    Rückmeldung, Sicherung, Rechtliches. Liegt hinter dem Zahnrad, damit das
    Titelblatt frei bleibt. */
-function Optionen({ ruhe, aufRuhe, onBackup, onZu, onAnleitung, hall, aka, laeuft, meta, aufRahmen }) {
+function Optionen({ ruhe, aufRuhe, onBackup, onZu, onAnleitung, hall, aka, laeuft, meta, aufRahmen, schreibe }) {
   useZurueck(onZu);
   const [vib, setVib] = useState(VIBRATION);
+  const [klang, setKlang] = useState(getSoundLevel);
   const [stufe, setStufe] = useState(TEXTSTUFE);
   const [speed, setSpeed] = useState(SPEEDMODUS);
   const [schwer, setSchwer] = useState(SCHWIERIGKEIT);
@@ -14503,6 +14510,19 @@ function Optionen({ ruhe, aufRuhe, onBackup, onZu, onAnleitung, hall, aka, laeuf
             <span className="m" style={{ fontSize: 10.5, color: "var(--mu)", display: "block", marginTop: 2 }}>
               Kurzes Brummen bei Entscheidungen</span>
           </button>
+          <div style={{ borderTop: "1px solid var(--ln)", paddingTop: 11, marginTop: 6 }}>
+            <span className="eb">Spielklänge</span>
+            <div className="optionen-auswahl" role="group" aria-label="Lautstärke der Spielklänge">
+              {[[0, "Aus"], [1, "Leise"], [2, "Normal"]].map(([wert, name]) => (
+                <button key={wert} className={"btn sm" + (klang === wert ? " on" : "")}
+                  data-sound="none" aria-pressed={klang === wert}
+                  onClick={() => { setKlang(wert); setSoundLevel(wert);
+                    merken(SOUND_KEY, String(wert)); if (wert) playSound("confirm"); }}>
+                  {name}</button>))}
+            </div>
+            <span className="m" style={{ fontSize: 10.5, color: "var(--mu)", display: "block", marginTop: 5 }}>
+              Kurze Signale für Entscheidungen, Saisons und besondere Momente. Keine Dauermusik.</span>
+          </div>
           <button className="btn optionen-schalter" aria-pressed={wach} aria-label="Bildschirm anlassen" style={{ border: 0, padding: "11px 0", opacity: wachGeht ? 1 : .45 }}
             disabled={!wachGeht}
             onClick={() => { const n = !wach; setWach(n); setWachAn(n);
@@ -14750,7 +14770,7 @@ function titelgeschichte(save, laeuft, hall, aka) {
     unter: "Trainingsschwerpunkte, Vertragspoker, Leihen, Angebote, die man besser ablehnt. Eine Laufbahn, eine Entscheidung nach der anderen." };
 }
 
-function MenuScreen({ onSammlung, hall, onNew, onHall, save, onResume, onAch, achN, metaN, onBackup, ruhe, setRuhe, setRuheState, aka, onAka, verein, onVerein, onVereinDach, gesamt, onLaden, meta, aufRahmen, freiHinweis, onFreiZu, karten, speicherFehler, optAuf, onOptAufGesehen }) {
+function MenuScreen({ onSammlung, hall, onNew, onHall, save, onResume, onAch, achN, metaN, onBackup, ruhe, setRuhe, setRuheState, aka, onAka, verein, onVerein, onVereinDach, gesamt, onLaden, meta, aufRahmen, freiHinweis, onFreiZu, karten, speicherFehler, optAuf, onOptAufGesehen, schreibe }) {
   const [ask, setAsk] = useState(false);
   const [opt, setOpt] = useState(false);
   /* F56 (35.147): kam man aus der Sicherung zurück, war `opt` wieder false
@@ -14772,7 +14792,7 @@ function MenuScreen({ onSammlung, hall, onNew, onHall, save, onResume, onAch, ac
   if (anleitung) return <Shell blatt="optionen" zusatz="ANLEITUNG"><Kurzanleitung onZu={() => setAnleitung(false)} /></Shell>;
   if (opt) return (
     <Shell blatt="optionen">
-      <Optionen ruhe={ruhe} hall={hall} aka={aka} laeuft={!!laeuft} onBackup={onBackup}
+      <Optionen ruhe={ruhe} hall={hall} aka={aka} laeuft={!!laeuft} onBackup={onBackup} schreibe={schreibe}
         meta={meta} aufRahmen={aufRahmen}
         onZu={() => setOpt(false)} onAnleitung={() => setAnleitung(true)}
         aufRuhe={(n) => { setRuhe(n); setRuheState(n); }} />
@@ -14789,7 +14809,7 @@ function MenuScreen({ onSammlung, hall, onNew, onHall, save, onResume, onAch, ac
     return (
       <button className="btn" style={{ border: 0, borderBottom: "1px solid var(--ln)",
         padding: "11px 0 11px 10px", borderLeft: "3px solid " + r.f, opacity: zu ? .45 : 1,
-          cursor: zu ? "default" : "pointer" }} disabled={zu} onClick={klick || undefined}>
+          cursor: zu ? "default" : "pointer" }} disabled={zu} data-sound="navigate" onClick={klick || undefined}>
         <span className="inhalt">
           <span className="d" style={{ fontSize: 16 }}>{titel}</span>
           <span className="punkte" />
@@ -14892,7 +14912,7 @@ function MenuScreen({ onSammlung, hall, onNew, onHall, save, onResume, onAch, ac
             </div>
           )}
           {/* Störer: schräg, laut, rund — die Hauptaktion der Seite. */}
-          <button className="rs-startsignal" aria-label={(laeuft ? "WEITER SPIELEN ab Seite " : "NEUE LAUFBAHN ab Seite ")+(laeuft ? RESSORT.laufbahn.s : RESSORT.anlegen.s)} onClick={laeuft ? onResume : onNew}
+          <button className="rs-startsignal" data-sound="whistle" aria-label={(laeuft ? "WEITER SPIELEN ab Seite " : "NEUE LAUFBAHN ab Seite ")+(laeuft ? RESSORT.laufbahn.s : RESSORT.anlegen.s)} onClick={laeuft ? onResume : onNew}
             style={{ position: "absolute", right: 8, top: 8, width: 92, height: 92, borderRadius: "50%",
               border: "none", background: "var(--stoerer)", color: "#fff", cursor: "pointer",
               transform: "rotate(-11deg)", display: "flex", flexDirection: "column",
@@ -17654,6 +17674,7 @@ function FlutlichtApp() {
       kartenRef.current = K; setKarten(K); setGesehen(gesehenNeu);
       if (roh["rasenschach:ruhe"] != null) { setRuhe(roh["rasenschach:ruhe"] === "1"); setRuheState(roh["rasenschach:ruhe"] === "1"); }
       if (roh["rasenschach:vib"] != null) setVibration(roh["rasenschach:vib"] === "1");
+      setSoundLevel(roh[SOUND_KEY] == null ? 1 : roh[SOUND_KEY]);
       if (roh["rasenschach:text"] != null) setTextstufe(parseInt(roh["rasenschach:text"],10) || 0);
       if (roh["rasenschach:speed"] != null) setSpeedmodus(roh["rasenschach:speed"] === "1");
       if (roh["rasenschach:schwer"]) setSchwierigkeit(roh["rasenschach:schwer"]);
@@ -18183,6 +18204,7 @@ function FlutlichtApp() {
     setRueckblick(null); setJubel([]); setMarken([]); setSchluss(null);
     setKarriereRueck({ ...q, lauf: q.lauf });
     setP(q); setPhase("end"); setStopAsk(false);
+    playSound("farewell");
     } catch (e) {
       abschlussRef.current = null;
       setSpeicherFehler({key:SAVE_KEY,was:e.message,t:Date.now()});
@@ -18291,6 +18313,7 @@ function FlutlichtApp() {
   /* PRUEFSTAND-ANFANG: handler */
   const chooseTraining = (id) => {
     haptik("wahl");
+    playSound("training");
     const q = clone(p);
     if (!q.saisonZiel || q.saisonZiel.jahr !== q.year) q.saisonZiel = saisonZielStart(q);
     q.training = q.speed ? autoTraining(q) : id;
@@ -18328,6 +18351,7 @@ function FlutlichtApp() {
     q.mv = marketValue(q);
     setP(q);
     setEr({ text: evText(out.text, queue[ei] ? queue[ei]._ctx : {}), extra });
+    playSound("event");
   };
   /* 35.37: Ereignisse, die im selben Zug ungueltig geworden sind, ueberspringen.
      -------------------------------------------------------------------------
@@ -18403,6 +18427,7 @@ function FlutlichtApp() {
     const q = clone(base);
     const vorher = { tot: { ...base.tot }, nt: { caps: base.nt.caps } };
     const s = simulateSeason(q);
+    playSound("season");
     setMarken(markenPruefen(vorher, q).map((m) => ({ ...m, lauf: q.lauf })));
     if (q.speed) { const kauf = []; autoKauf(q, kauf); if (kauf.length) s.notes = [...(s.notes || []), ...kauf]; }
     else { const vk = []; verwalterRunde(q, vk); if (vk.length) s.notes = [...(s.notes || []), ...vk]; }
@@ -18484,6 +18509,7 @@ function FlutlichtApp() {
     }
     q.age += 1; q.year += 1; q.mv = marketValue(q);
     if (q.age > LAUFBAHN_MAX || (q.age >= 34 && q.ovr < 58 && chance(.5))) { finish(q, "Es kam kein Angebot mehr, das noch Sinn ergab."); return; }
+    if (o.type === "transfer" || o.type === "loan" || o.type === "return") playSound("transfer");
     /* Die Frage kam ab 33 in jeder dritten Saison wieder — bis zu fünfmal in
        einer Laufbahn, auch wenn man auf dem Zenit stand. Jetzt EINMAL, und
        nur wenn die Stärke wirklich nachgelassen hat: mindestens 4 Punkte
@@ -18637,7 +18663,7 @@ function FlutlichtApp() {
   })();
 
   if (phase === "menu") return <MenuScreen hall={hall} save={save} karten={karten}
-    speicherFehler={speicherFehler}
+    speicherFehler={speicherFehler} schreibe={schreibe}
     optAuf={optZurueck} onOptAufGesehen={() => setOptZurueck(false)}
     freiHinweis={freiJetzt}
     onFreiZu={() => merkeGesehen(freiJetzt === "verein" ? { verein: true } : { aka: true })}
@@ -19016,7 +19042,7 @@ function FlutlichtApp() {
                       <div className="m" style={{ fontSize: 10.5, color: "var(--mu)", marginTop: 3 }}>
                         {Object.keys(t.bias).length ? Object.keys(t.bias).map((k) => aLab(p.pos, k)).join(" · ") : "Erholung"}</div>
                     </div>
-                    <button className="btn pri" style={{ marginTop: 12 }} onClick={() => chooseTraining(t.id)}>
+                    <button className="btn pri" data-sound="none" style={{ marginTop: 12 }} onClick={() => chooseTraining(t.id)}>
                       <span className="d" style={{ fontSize: 16 }}>Saison starten</span>
                     </button>
                   </>);
@@ -19024,7 +19050,7 @@ function FlutlichtApp() {
                   <p style={{ fontSize: 12, color: "var(--mu)", marginTop: 4 }}>Wohin dein Fortschritt fließt.</p>
                   <div className="g3" style={{ marginTop: 10 }}>
                     {TRAINING.map((t) => (
-                      <button key={t.id} className="btn" onClick={() => chooseTraining(t.id)}>
+                      <button key={t.id} className="btn" data-sound="none" onClick={() => chooseTraining(t.id)}>
                         <div className="d" style={{ fontSize: 14 }}>{t.name}</div>
                         <div className="m" style={{ fontSize: 9.5, color: "var(--mu)", marginTop: 3 }}>
                           {Object.keys(t.bias).length ? Object.keys(t.bias).map((k) => aLab(p.pos, k)).join(" · ") : "Erholung"}</div>
@@ -19058,7 +19084,7 @@ function FlutlichtApp() {
                     {e.choices.map((c, i) => {
                       const offen = wahlOffen(c, p);
                       return (
-                      <button key={i} className="btn" disabled={!offen}
+                      <button key={i} className="btn" data-sound="none" disabled={!offen}
                         onClick={offen ? () => resolve(c) : undefined}>
                         {/* Auch durch evText: die Auswahlmöglichkeiten liefen
                             zuerst daran vorbei und wären bei einer Spielerin
