@@ -14,6 +14,8 @@ Android-Geräteprüfung der neuen Audio-/Optikfunktionen bleibt offen.
 
 ## Noch nicht veröffentlicht
 
+- Die Spielerpass-Vorschau in der Charaktererstellung bleibt beim Öffnen und Schließen der Feinheiten gleich aufgebaut und gleich skaliert; das Porträt ist in beiden Zuständen moderat größer.
+
 - Männerfrisur 27 „Lange Locken“ rahmt das Gesicht mit getrennten Kronen-/Seitenlocken statt einer tiefen geschlossenen Haarfläche; gespeicherte Frisur-ID und übriger Katalog bleiben unverändert.
 
 - Auf schmalen Smartphones zeigt die Charakter-Kategorienleiste jetzt dezent an, dass weitere Kategorien horizontal erreichbar sind; der Hinweis wechselt beim Wischen passend zwischen Anfang, Mitte und Ende.
