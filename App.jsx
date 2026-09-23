@@ -15621,10 +15621,14 @@ function CreateScreen({ onStart, onBack, meta }) {
             `.pan` bringt `position:relative` mit; die Angabe hier sticht sie
             aus, weil sie direkt am Element steht. Der Grund ist deckend, sonst
             läge der Text darunter durch. */}
-        <div className="pan pad char-vorschau" style={{ marginTop: 12, display: "flex", gap: 12, alignItems: "center", flexWrap: fein ? "wrap" : "nowrap",
+        <div className="pan pad char-vorschau" data-char-vorschau="true" style={{ marginTop: 12, display: "flex", gap: 12, alignItems: "center", flexWrap: "nowrap",
           position: "sticky", top: 0, zIndex: 5, borderBottomWidth: 2, background: "var(--pan)" }}>
-          <Avatar zuege={zuege} seed={avatar} club={CLUBS.find((c) => c.n === club) || null} size={fein ? 164 : 86} ring="var(--ln2)" g={gender} nat={nation} meta={meta} />
-          <div style={{ flex: 1, minWidth: fein ? 180 : 0 }}>
+          {/* Die Spielerpass-Vorschau darf beim Oeffnen der Feinheiten nicht
+              zoomen oder ihr Layout wechseln. 112 px vergroessert die bisherige
+              Kompaktansicht sichtbar, bleibt aber auch bei 320 px neben den
+              beiden Aktionen nutzbar. */}
+          <Avatar zuege={zuege} seed={avatar} club={CLUBS.find((c) => c.n === club) || null} size={112} ring="var(--ln2)" g={gender} nat={nation} meta={meta} />
+          <div style={{ flex: 1, minWidth: 0 }}>
             <div className="d" title={name.trim() || "Der Namenlose"} style={{ fontSize: 20, overflowWrap: "anywhere", lineHeight: 1.15 }}>{nat.flag} {name.trim() || "Der Namenlose"}</div>
             {/* 35.184: Kurze Angaben und reservierte Zeilen halten den kompakten Pass stabil. */}
             <div className="m" title={POS[pos].label + " · " + foot + " · Rückennummer " + (number || "—")}
