@@ -529,6 +529,9 @@ test('Der Ausbaureiter zeigt Geld und VC getrennt, ohne NaN',()=>{
  assert(html.includes('Bauen'),'Geldknopf');
  assert(html.includes('Gastronomie'),'die neuen Abteilungen sind da');
  assert(html.includes('Gründungskapital'),'die VC-Extras stehen im eigenen Abschnitt');
+ assert(!html.includes('Kann bei dieser Preislage jede Saison Stimmung kosten.'),'Normalpreise erzeugen keinen Stimmungsschaden');
+ const teuer=E.renderVerein({...v,preise:{ticket:1.8,gastro:1.8,merch:1.8}},E.leereAkademie(),'ausbau');
+ assert(teuer.includes('Kann bei dieser Preislage jede Saison Stimmung kosten.'),'Überhöhte Preise warnen vor Stimmungsschaden');
  /* Kein Ausbau darf mehr mit VC ausgezeichnet sein. */
  assert(!html.includes('Ausbauen ·'),'die alte VC-Beschriftung ist weg');
  /* Bei leerer Kasse spricht der Preis für sich: „Dafür fehlen" würde nur die

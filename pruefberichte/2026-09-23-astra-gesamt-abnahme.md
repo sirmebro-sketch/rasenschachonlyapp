@@ -93,3 +93,12 @@ Die Wirtschaftsfolge wurde über den Head von #37 einschließlich ihrer Vorgäng
 Konflikte in Entwicklungsvermerken/Changelog behalten beide Geschichten; README behält die
 aktuelle Astra-/Lemming-Rollenteilung. Im Regressionstest wurden angrenzende Testblöcke
 korrekt getrennt. Alle Beiträge werden über ihre Head-Commits als Vorfahren erhalten.
+
+## Nachprüfung vor CI-Abschluss
+
+Die manuelle Wiederladeprüfung bestätigt 46 Mio Vereinskasse, laufenden Stadionbau und
+102 % Eintrittspreis. Lange Locken wurden im echten Browser bei 72/96/145 px in hellen
+und dunklen Kontexten angesehen; Augen und Brauen liegen frei auf der Gesichtsfläche.
+Die Preisoberfläche meldete bei normalen Gastro-/Fanartikelpreisen fälschlich einen
+Stimmungsschaden, obwohl der Kern Normalpreise schützt. Der Hinweis folgt jetzt dieser
+Grenze; eine Regression prüft Normal- und überhöhte Preise. 236/236 Tests erneut grün.

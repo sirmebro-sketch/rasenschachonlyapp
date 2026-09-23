@@ -37,7 +37,7 @@ test('Kurzer Bildschirm: Namenseingabe bleibt frei und langer Name vollständig'
  await page.goto('/.preview/sichtprobe.html');
  await page.getByRole('button',{name:'erstellung',exact:true}).click();
  const input=page.getByRole('textbox',{name:'Name der Spielerin oder des Spielers'});
- const name='Alexandermilian Maximilianus';
+ const name='Alexandermilian Muster';
  await input.fill(name);
  await expect(input).toBeInViewport();
  const box=await input.boundingBox();

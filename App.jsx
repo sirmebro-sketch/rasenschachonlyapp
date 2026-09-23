@@ -10131,6 +10131,7 @@ function VereinScreen({ v, aka, onAendern, onZurueck, onAbschluss, startReiter }
               const jetzt = VEREIN.preisFaktor(VEREIN.mitWirtschaft(v), f.id);
               const best = VEREIN.bestPreis(v, f.id);
               const ueber = jetzt > best + 0.005;
+              const stimmungsRisiko = jetzt > Math.max(1, best) + 0.005;
               return (
                 <div key={f.id} className="pan pad" style={{ marginTop: 8 }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
@@ -10148,7 +10149,8 @@ function VereinScreen({ v, aka, onAendern, onZurueck, onAbschluss, startReiter }
                   <div className="m" style={{ fontSize: 11, color: ueber ? "var(--bad)" : "var(--mu)" }}>
                     {ueber
                       ? "Über dem Ertragsmaximum von " + Math.round(best * 100)
-                        + " %. Bringt weniger ein und kostet jede Saison Stimmung."
+                        + " %. Bringt weniger ein."
+                        + (stimmungsRisiko ? " Kann bei dieser Preislage jede Saison Stimmung kosten." : " Kein Stimmungsschaden durch diesen Preis.")
                       : "Ertragsmaximum bei " + Math.round(best * 100) + " %."}</div>
                 </div>);
             })}
