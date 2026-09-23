@@ -7,12 +7,12 @@ export const EFFEKT_KONTUREN={
  elf:{box:'0 0 100 100',pfad:'M0 0 H100 V78 L50 100 L0 78 Z'},
  pack:{box:'0 0 64 91',pfad:'M2 8 L6 4 L10 8 L14 4 L18 8 L22 4 L26 8 L30 4 L34 8 L38 4 L42 8 L46 4 L50 8 L54 4 L58 8 L62 4 L62 87 L2 87 Z'},
 };
-export function KartenEffekt({form='karte',stark=false,still=false,hsv=false}){
+export function KartenEffekt({form='karte',stark=false,still=false,hsv=false,dezent=false}){
  const id='folie'+React.useId().replace(/[^a-zA-Z0-9_-]/g,'');
  const k=EFFEKT_KONTUREN[form]||EFFEKT_KONTUREN.karte;
  return <svg aria-hidden="true" focusable="false" className={'rs-materialkante'+(stark?' rs-folie-stark':'')+(still?' rs-folie-still':'')}
   data-form={form} viewBox={k.box} preserveAspectRatio="none"
-  style={{position:'absolute',inset:0,width:'100%',height:'100%',pointerEvents:'none',overflow:'hidden',zIndex:form==='pack'?1:-1}}>
+  style={{position:'absolute',inset:0,width:'100%',height:'100%',pointerEvents:'none',overflow:'hidden',zIndex:form==='pack'?1:-1,opacity:dezent ? .16 : 1}}>
   <defs>
    <clipPath id={id+'clip'}><path d={k.pfad}/></clipPath>
    <linearGradient id={id+'holo'} x1="0" y1="0" x2="1" y2=".65">

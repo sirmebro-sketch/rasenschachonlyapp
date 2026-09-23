@@ -1,3 +1,16 @@
+## 23.09.2026 · Astra · 35.195.1 · Kartenflächen nach Nutzerfeedback
+
+Basis `095da80`. Kevin beanstandet die dunklen Ausschnitte auf Gold-/Legendärkarten
+und nennt Bronze als Vorbild. Die bei 35.195.0 eingeführten Informationskästen
+sind entfernt. Die Spielerkarte begrenzt stattdessen die Folie auf 16 % Deckkraft;
+helle Sekundärtexte bleiben erhalten. Sammlung und große Karten nutzen dieselbe
+durchgehende Fläche. Die Galerie enthält zusätzlich kompakte Ruhmeshallenkarten
+mit drei Auszeichnungen, damit dieser Fall künftig direkt sichtbar ist.
+
+Geprüft: 236 Regressionen bestanden, Produktionsbuild und Capacitor-Sync erfolgreich.
+Mobile Sichtprobe bei 390 und 320 px, Gold/Legendär mit drei Auszeichnungen.
+Android-Geräteprüfung steht aus; die Browseransicht ist keine Geräteemulation.
+
 ## 23.09.2026 · Astra · 35.195.0 · gemeinsame Abnahme
 
 Basis `703d377`; 26 offene PRs in einem Integrationsstand zusammengeführt und nachgebessert.

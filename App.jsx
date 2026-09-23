@@ -13408,8 +13408,8 @@ function Spielerkarte({ karte, gross, aufgedeckt = true, onTippen, jubel }) {
   const st = (KARTEN.STUFEN && KARTEN.STUFEN[karte.stufe]) || KARTEN.STUFEN.bronze;
   const gr = gross ? 1 : .78;
   const folie = karte.stufe === "gold" || karte.stufe === "legende";
-  // Astra-Abnahme: Folie bleibt sichtbar, Information erhält einen ruhigen Grund.
-  const info = folie ? {background:"rgba(15,20,17,.94)",borderRadius:4,padding:4} : {};
+  // 35.195.1: Durchgehender Karton wie bei Bronze. Die Folie wird dezenter,
+  // statt einzelne Informationen mit dunklen Kästen aus der Fläche zu schneiden.
   /* Die Rueckseite eines noch nicht aufgedeckten Packs. Sie zeigt die Stufe
      schon — sonst waere das Aufdecken ohne Spannung, weil man nichts erwartet. */
   if (!aufgedeckt) {
@@ -13453,11 +13453,11 @@ function Spielerkarte({ karte, gross, aufgedeckt = true, onTippen, jubel }) {
       {/* HOLOSCHIMMER, nur auf den beiden obersten Stufen (35.84). Auf Bronze
           und Silber wäre er kein Merkmal mehr, sondern Dekoration — und
           Dekoration, die überall ist, sagt nichts. */}
-      {holo && <KartenEffekt stark={karte.stufe === "legende"} />}
+      {holo && <KartenEffekt stark={karte.stufe === "legende"} dezent />}
       {feiern && <AufdeckLicht farbe={st.farbe} stark={karte.stufe === "legende" || !!karte.sonderkarte} kompakt/>}
       {/* 35.181: Keine Vollflächenfolie über Porträt und Text mehr. */}
 
-      <div style={{ ...info, display: "flex", alignItems: "flex-start", gap: 10 }}>
+      <div style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
         <Avatar seed={karte.portraet?.avatar ?? kartenKennung(karte)} zuege={karte.portraet?.zuege} club={null}
           size={Math.round(54 * gr)} nat={karte.nat || null} g={karte.portraet?.g || "m"}
           meta={karte.stufe === "legende" ? { mk_rahmen4: true, rahmenWahl: "mk_rahmen4" }
@@ -13497,12 +13497,12 @@ function Spielerkarte({ karte, gross, aufgedeckt = true, onTippen, jubel }) {
       {/* Anlage nur zeigen, wenn sie ueber der Staerke liegt — „Anlage 70" bei
           Staerke 70 ist keine Auskunft, sondern Fuellsel. */}
       {karte.pot > karte.ovr && (
-        <div className="m" style={{ ...info, fontSize: gross ? 12 : 11, color: folie ? "#e4e2d9" : "var(--mu)", marginTop: 7 }}>
+        <div className="m" style={{ fontSize: gross ? 12 : 11, color: folie ? "#e4e2d9" : "var(--mu)", marginTop: 7 }}>
           Anlage {karte.pot} · noch {karte.pot - karte.ovr} zu holen</div>)}
       {/* MERKMALE ALS SYMBOLE (Kevins Wunsch). Höchstens drei — was jeder
           hat, zeichnet niemanden aus. */}
       {merk.length > 0 && (
-        <div style={{ ...info, display: "flex", gap: 8, marginTop: 8, alignItems: "center",
+        <div style={{ display: "flex", gap: 8, marginTop: 8, alignItems: "center",
           flexWrap: "wrap" }}>
           {merk.map((m) => (
             <span key={m.id} title={m.n} style={{ display: "flex", alignItems: "center",
