@@ -1,3 +1,10 @@
+## 23.09.2026 · Astra · 35.195.0 · gemeinsame Abnahme
+
+Basis `703d377`; 26 offene PRs in einem Integrationsstand zusammengeführt und nachgebessert.
+Entscheidung je PR mit Head, Korrekturen, Prüfungen, historische Branches und offene
+Android-Grenzen: [Gesamtabnahme](pruefberichte/2026-09-23-astra-gesamt-abnahme.md).
+Die kombinierte Browser-CI und Veröffentlichung werden dort nachgetragen.
+
 # Weiterentwicklung
 
 <!-- Bewusst ohne Versionsnummer im Titel (15.09.2026): sie stand zuletzt auf
@@ -967,3 +974,1565 @@ Prüfkriterien und einen verbindlichen PR-Abschluss zur Astra-Abnahme. Ohne
 Astra-Zuordnung gilt für neue ChatGPT-/Codex-Chats die Lemming-Arbeitsweise.
 Keine automatische Modellerkennung behauptet. Claude bleibt getrennt und seine
 Vereinswirtschaft wurde nicht integriert. Reine Dokumentation, keine neue Version.
+
+## WIRT-P0-01 – Wirtschaftskern der Profimannschaft (Claude, 17.09.2026)
+
+Basis: `main` 8e4eeec (35.192.0), vor Beginn abgerufen. Branch
+`claude/vereinswirtschaft`.
+
+**Auftrag des Eigentümers:** Der Vereinsausbau soll mit Geld bezahlt werden,
+nicht mit VC — „das man keine VC in etwas versenkt was nach 15 Saison eh
+verschwindet". Einnahmen aus Werbedeals, sportlichem Erfolg, Ticketverkäufen
+(Stadion, Gastronomie) und Merchandising. VC nur noch für wenige Extras.
+Dauerhafter Rahmen dazu in `VEREINSWIRTSCHAFT-PLAN.md`.
+
+**Nicht übernommen:** Der offene Branch `codex/char-p0-02-identitaet` wurde
+bewusst nicht in die Arbeitsbasis geholt. Er ist Codex' laufende Arbeit an der
+Porträt-Identitätskette, berührt diese Runde inhaltlich nicht, und ein
+Zusammenführen vor seinem Abschluss würde beim nächsten Rebase Konflikte
+erzeugen. Begründung hier, wie die Übergaberegel es verlangt.
+
+**Neu: `vereinswirtschaft.js`.** Reine Rechnung, kein React, keine Zufallsquelle
+aus `App.jsx` — die Sponsorenwürfel bekommen ihre Saat von außen, damit
+dieselbe Saison reproduzierbar dieselben Angebote zeigt.
+
+- **Währung.** 42 Länder mit Code, Symbol und Kurs; alles andere fällt auf Euro
+  zurück. Gerechnet wird ausschließlich in Millionen Euro, wie `p.money` beim
+  Spieler; die Landeswährung ist reine Anzeige. Andersherum — je Land rechnen —
+  bräche jeden Vergleich zwischen zwei Ligen und zwänge dazu, die Ausbaukosten
+  je Land zu pflegen.
+- **Ausbau, sechs Abteilungen auf Geldbasis.** Die drei alten Kennungen
+  (`training`, `stadion`, `medizin`) behalten Namen und Wirkung — laufende
+  Vereine hängen daran, `ausbauStufe` liest sie in `verein.js` an vier Stellen.
+  Neu sind die drei Geldquellen: Gastronomie, Fanartikel, Vertrieb.
+  Vollausbau aller sechs kostet 319 Mio.
+- **Vier VC-Extras**, jedes einmal je Durchlauf: Gründungskapital,
+  Scoutnetz, Namensrecht am Stadion, Vermächtnisplakette. Bedingung für jedes:
+  es überdauert den Verein oder ermöglicht etwas, das mit Geld allein nicht
+  geht. Preise zwischen einer halben und anderthalb Laufbahnen.
+- **Zwölf erfundene Sponsoren**, keine echten Marken. Pro Saison drei Angebote,
+  Laufzeit ein bis vier Saisons, Betrag skaliert mit Ligastufe und Erfolg;
+  lange Bindung zahlt je Saison weniger. Sechs haben einen Vorteil
+  (Merchandising, Gastronomie, Medizin, Vertrieb, Nachwuchs).
+- **Einnahmen** aus Zuschauern (Plätze × Auslastung × Preis × Heimspiele),
+  Gastronomie, Merchandising (Sortiment × Vertrieb × Ansehen, als Produkt: ohne
+  Vertrieb bringt das beste Sortiment wenig), Prämien und Sponsoren.
+- **Laufende Kosten** und eine **Saisonabrechnung mit Beleg** — dieselbe Bauart
+  wie `abschlussBeleg` in `belohnungen.js`, damit Buchung und Anzeige dieselbe
+  Quelle haben.
+
+**Balance, nachgerechnet statt geschätzt.** Verfahren: fünfzehn Vereinsjahre,
+jede zweite Saison das wertvollste Sponsorenangebot angenommen, jede Saison der
+billigste offene Ausbau gekauft, solange die Kasse reicht. Ø-Einnahmen je
+Saison und erreichte Ausbaustufen von 30:
+
+| Liga | Rang | Ø Einnahmen | Ø Kosten | Ausbau | Minusjahre |
+|---:|---:|---:|---:|---:|---:|
+| 1 | 3 | 110,0 | 60,2 | 30/30 | 0 |
+| 1 | 10 | 86,8 | 53,8 | 30/30 | 0 |
+| 2 | 5 | 44,2 | 31,2 | 26/30 | 0 |
+| 2 | 14 | 29,3 | 24,4 | 18/30 | 1 |
+| 3 | 8 | 21,9 | 19,1 | 13/30 | 1 |
+| 4 | 10 | 14,0 | 13,3 | 7/30 | 5 |
+| 5 | 12 | 10,4 | 10,4 | 4/30 | 7 |
+
+Zwei Zwischenstände mussten korrigiert werden, beide durch diesen Lauf
+aufgedeckt und nicht durch Hinsehen:
+
+1. **Erster Entwurf:** Ein Erstligist nahm 1.908 Mio ein, gab 440 aus und hatte
+   nach Vollausbau **1.148 Mio** in der Kasse. Oben war damit keine Entscheidung
+   mehr zu treffen. Ursachen: Ticketpreis 42 € in der ersten Liga (mehr als eine
+   Bundesligakarte im Schnitt kostet) und laufende Kosten, die nicht mit der
+   Vereinsgröße wuchsen. Es fehlte der größte Posten eines echten Vereins, das
+   Personal.
+2. **Zweiter Entwurf:** Personalkosten mit Exponent 0,85 nach Ligastufe — jetzt
+   stand ein Fünftligist fünfzehn Jahre im Minus und erreichte **null**
+   Ausbaustufen. Aus „sich hocharbeiten" war „nichts geht" geworden. Mit
+   Exponent 1,5 zahlt er 1,8 Mio statt 7,3, ein Erstligist zahlt 20.
+
+**Geprüft:** 15 neue Regressionen, `npm test` 124/124 (vorher 109),
+`npm run build` erfolgreich. Die Regressionen prüfen Verhalten, nicht
+Kalibrierung: dass Geld nur über belegte Posten entsteht, dass die Summe die
+Summe der Posten ist, dass ein Kauf ohne Deckung gar nichts ändert, dass
+Sponsorenangebote bei gleicher Saat gleich bleiben und Verträge genau nach
+ihrer Laufzeit enden, und dass in Grenzlagen (leerer Verein, Liga 9, Rang 20)
+keine NaN entstehen.
+
+**Ausdrücklich offen:**
+
+- **Das Modul ist noch an nichts angeschlossen.** Weder `verein.js` noch die
+  Oberfläche rufen es auf; der alte VC-Ausbau läuft unverändert weiter. Das ist
+  der Zuschnitt dieser Runde, kein Versehen: Anschluss (WIRT-P0-02),
+  Umstellung des Ausbaus (P0-03) und Sponsorenwahl (P0-04) sind eigene Pakete,
+  und der Aufrufer für P0-03 liegt in `App.jsx`, wo Codex parallel arbeitet.
+- **Ein erfolgreicher Erstligist hat nach Vollausbau noch rund 429 Mio übrig.**
+  Zu viel, um eine Entscheidung zu bleiben. Es fehlen die Spielergehälter
+  (WIRT-P1-03); bis dahin ist der Überschuss bekannt, nicht übersehen.
+- **Eine leere Kasse hat keine Folgen.** Der Verein kann ins Minus laufen, ohne
+  dass etwas passiert (WIRT-P1-04) — bewusst, weil es die Schwierigkeit spürbar
+  verschöbe.
+- **Kein Gerätetest, keine Oberflächenprüfung.** Es gibt noch nichts zu sehen.
+- **Die Kurse sind gerundete Größenordnungen**, keine Tageskurse. Sie sollen
+  die Zahl vertraut aussehen lassen, nicht eine Wechselstube nachbilden.
+
+Keine Versionserhöhung und kein CHANGELOG-Eintrag: für Spielende ändert sich in
+dieser Runde nichts.
+
+
+## WIRT-P0-05 – Vereinsführung: fünf Systeme (Claude, 17.09.2026)
+
+Basis: derselbe Branch `claude/vereinswirtschaft`, aufgesetzt auf WIRT-P0-01.
+Der Eigentümer hat die fünf Vorschläge einzeln bestätigt und einen ergänzt.
+
+**1. Bauzeit 1–3 Saisons.** Bezahlt wird sofort und vollständig, gebaut über
+Saisons; eine Baustelle gleichzeitig. Dauer aus den Kosten: bis 3 Mio eine
+Saison, bis 12 Mio zwei, darüber drei.
+
+**2. Preise für Tickets, Gastronomie und Fanartikel.** Faktor 0,6 bis 1,6.
+Umgesetzt über Elastizität, nicht über ein Verbot — Kevins Beispiele sind
+damit eine Folge der Rechnung, keine Sonderregel:
+
+- *Tickets am Ansehen.* Ein Erstligist mit Ansehen 1,9 darf über Normalpreis
+  gehen; ein Fünftligist mit Ansehen 0,7 zahlt bei jeder Erhöhung drauf.
+- *Gastronomie an der Gastrostufe.* Stufe 1 muss unter Normalpreis bleiben,
+  Stufe 6 darf deutlich zulangen.
+- *Fanartikel an Sortiment und Vertrieb.*
+
+Wer über das ertragreichste Niveau hinausgeht, verliert zusätzlich Stimmung —
+der Schaden ist doppelt und wirkt in die nächste Saison.
+
+**3. Vorstandsziel je Saison**, aus der Ausgangslage abgeleitet (Klassenerhalt
+/ Gesicherte Mitte / Vorne angreifen / Um den Titel spielen). Prämie nur bei
+Erfolg, Verfehlen kostet nichts. Die Härte hängt an der Rechtsform.
+
+**4. Null bis zwei Wirtschaftsereignisse je Saison** in Kevins Verteilung
+30 % / 50 % / 20 %, fünf positive und fünf negative. Die Beträge sind Anteile
+der Vereinsgrösse, keine festen Summen: 2 Mio sind für einen Fünftligisten eine
+Katastrophe und für einen Erstligisten Kleingeld.
+
+**5. Rechtsform e.V. → GmbH → KGaA → AG.** Nur nach vorn und nur ab Grösse
+(die AG braucht die erste Liga). Jede Stufe bringt Einlage und bessere
+Vermarktung, kostet aber Fan-Toleranz und verschärft das Vorstandsziel. Ein
+e.V. darf höhere Preise verlangen als eine AG — die Mitgliedsbeiträge sind bei
+ihm eine Säule, bei der AG ein Rest.
+
+Dazu **Stimmung** (0–100) als einziger neuer sichtbarer Wert. Sie bewegt sich
+träge (höchstens rund zehn Punkte je Saison), wächst mit Erfolg und fertigen
+Bauprojekten, sinkt bei Überteuerung, und wirkt auf Auslastung und
+Merchandising.
+
+**Zwei Korrekturen am Kern aus P0-01**, beide durch den Durchrechnungslauf
+aufgedeckt und im vorigen Vermerk bereits als Schwäche benannt:
+
+1. *Merchandising wuchs quadratisch* und war bei Vollausbau mit 59,7 Mio die
+   grösste Einnahmequelle — mehr als alle Ticketverkäufe zusammen. Jetzt über
+   die Wurzel gedämpft: 6/6 bringt das Sechsfache von 1/1, nicht das
+   Sechsunddreissigfache.
+2. *Fernsehgeld erdrückte das Unterhaus.* Ein Drittligist bekam 7,87 Mio
+   Prämien gegen 2,66 Mio aus eigener Arbeit; sein Ausbau war fast
+   gleichgültig. Exponent von 1,15 auf 1,6 — Liga 1 bekommt 26, Liga 3 noch
+   4,2, Liga 5 nur 1,8.
+
+**Ein Befund beim Nachrechnen der Preisregler.** Der angezeigte „beste Preis"
+ist ein Versprechen an den Spieler, und die erste Fassung hat es gebrochen.
+Zuerst rechnete sie die Schulformel (1+e)/(2e) — beim Ticketpreis 14 % daneben,
+weil höhere Kartenpreise auch den Gastro-Umsatz kosten: wer nicht kommt, kauft
+auch keine Bratwurst. Nach Einrechnen dieser Kopplung lag sie über 10.935
+Vereinskonfigurationen immer noch in 558 Fällen falsch (5,1 %) — Ursache sind
+die Deckelungen (Auslastung höchstens 99 %, Menge mindestens 5 %): ein
+ausverkauftes Stadion verliert bei einer Preiserhöhung zunächst gar keine
+Besucher, sein Optimum liegt also höher als jede Parabel vorhersagt. Der
+Hinweis wird jetzt **numerisch am echten Ertrag** bestimmt, einundfünfzig
+Auswertungen über das Reglerband. Gegenprobe: dieselben 10.935 Konfigurationen,
+**null** Abweichungen.
+
+**Kalibrierung mit allen Systemen.** Verfahren: fünfzehn Vereinsjahre, Preise
+jede Saison auf das Optimum gesetzt, jede zweite Saison das wertvollste
+Sponsorenangebot, Baustart sobald bezahlbar, Rechtsformwechsel sobald möglich.
+
+| Liga | Rang | Form am Ende | Ø Ein | Ø Aus | Kasse | Stimmung | Ausbau | Minusjahre |
+|---:|---:|---|---:|---:|---:|---:|---:|---:|
+| 1 | 3 | AG | 68,5 | 32,9 | 674,5 | 100 | 11/30 | 0 |
+| 2 | 5 | KGaA | 31,6 | 18,9 | 222,2 | 100 | 11/30 | 0 |
+| 3 | 8 | e.V. | 20,4 | 15,2 | 84,3 | 100 | 11/30 | 0 |
+| 4 | 10 | e.V. | 15,4 | 13,6 | 22,4 | 85 | 11/30 | 2 |
+| 5 | 12 | e.V. | 8,8 | 9,1 | −4,7 | 43 | 2/30 | 9 |
+
+Kluge Preise und der Rechtsformwechsel sind spürbar, aber kein Freifahrtschein:
+in Liga 1 steigen die Ø-Einnahmen von 64,8 auf 68,5, in Liga 3 von 19,1 auf
+20,4 — und vor allem hält der Verein seine Stimmung (100 statt 45).
+
+**Geprüft:** 24 Regressionen im Modul (9 neue), `npm test` 133/133 (vorher 124),
+`npm run build` erfolgreich. Die neuen Prüfungen decken ab: Bauzeiten für jede
+Ausbaustufe, nur eine Baustelle, Fertigstellung genau nach Ablauf; Kevins beide
+Preisbeispiele; das Optimum-Versprechen über das ganze Reglerband für alle drei
+Preise; Stimmungsgrenzen und -trägheit; alle vier Zielstufen mit und ohne
+Erfüllung; die 30/50/20-Verteilung über 6.000 Ziehungen; Rechtsform nur nach
+vorn, nur ab Grösse, mit Einlage und Stimmungskosten, und die aufsteigende
+Vermarktungsreihe.
+
+**Ausdrücklich offen:**
+
+- **Die Bauzeit ist jetzt die eigentliche Grenze, nicht das Geld.** Höchstens
+  elf der dreissig Ausbaustufen sind in fünfzehn Jahren zu schaffen, auch mit
+  voller Kasse. Das ist eine Eigenschaft — ein Verein wird nie fertig, man
+  spezialisiert sich —, aber der Eigentümer sollte sie kennen und
+  entscheiden, ob sie so bleiben soll.
+- **Geld sammelt sich ohne Verwendung**, in Liga 1 rund 674 Mio. Zwei
+  Abhilfen offen: Spielergehälter (WIRT-P1-03) und die Restkasse am Ende in
+  Abschlusspunkte (WIRT-P1-05).
+- **Wer immer Dritter wird, bekommt dauerhaft „Um den Titel spielen"** und
+  verdient nie eine Prämie. Ob die Schwelle bei Platz 2 besser läge, sagt der
+  Gerätetest.
+- **Weiterhin an nichts angeschlossen** und kein Gerätetest: es gibt nichts zu
+  sehen. Anschluss ist WIRT-P0-02 bis P0-04.
+
+Keine Versionserhöhung, kein CHANGELOG-Eintrag: für Spielende ändert sich
+nichts, solange das Modul nicht angeschlossen ist.
+
+
+## WIRT-P0-05 Nachtrag – drei Entscheidungen des Eigentümers (Claude, 17.09.2026)
+
+Nach der Kalibrierung hat der Eigentümer drei Punkte entschieden.
+
+**1. „Man sollte schon alles schaffen, wenn man genug Geld hat. Die Bauzeit
+sollte also einen nicht begrenzen. Limitieren wir die Bauzeit auf max 2 Jahre
+[…]. Aber wie du sagst, eine gewisse Spezialisierung sollte bleiben."**
+
+Die Höchstdauer allein hätte das nicht gelöst: dreissig Projekte nacheinander
+sind auch bei zwei Jahren nie unter sechzig Saisons zu schaffen. Die Änderung
+liegt deshalb woanders — **jede Abteilung baut für sich**. Stadion und
+Gastronomie gleichzeitig: ja. Stadion Stufe 3 und Stufe 4 gleichzeitig: nein,
+man kann dieselbe Tribüne nicht zweimal auf einmal erweitern. Damit braucht
+jede Abteilung höchstens zehn Saisons, und sie laufen parallel.
+
+Neu gerechnet, gleiches Verfahren wie zuvor:
+
+| Liga | Rang | Form am Ende | Ø Einnahmen | Kasse | Ausbau | Punkte aus Kasse |
+|---:|---:|---|---:|---:|---:|---:|
+| 1 | 3 | AG | 142,6 | 1.248,2 | **30/30** | 250 (Deckel) |
+| 1 | 10 | AG | 132,9 | 1.052,2 | **30/30** | 250 (Deckel) |
+| 2 | 5 | KGaA | 73,1 | 294,6 | **30/30** | 74 |
+| 3 | 8 | GmbH | 38,2 | 43,3 | 25/30 | 11 |
+| 4 | 10 | GmbH | 20,6 | 6,6 | 14/30 | 2 |
+| 5 | 12 | e.V. | 8,8 | −4,7 | 2/30 | 0 |
+
+Alles schaffbar, wenn das Geld reicht; ab Liga 3 entscheidet man, was man
+weglässt. Genau die gewünschte Mischung.
+
+**2. Restkasse zu Vermächtnispunkten.** Vier Millionen ergeben einen
+Abschlusspunkt, gedeckelt bei 250. Zum Vergleich wiegt ein Aufstieg 120 Punkte
+und eine Meisterschaft 90 — eine nie ausgegebene Kasse darf sportlichen Erfolg
+nicht ersetzen. Schulden zählen nicht negativ; der Abschluss soll nicht zweimal
+bestrafen. Das VC-Extra „Vermächtnisplakette" wirkt hier, und nur hier: sein
+`punkteFaktor` hatte bis jetzt keinen Leser.
+
+**3. Zielschwelle verschoben.** Das härteste Vorstandsziel beginnt jetzt ab
+Platz 2 statt ab Platz 3. Vorher bekam ein Verein, der jedes Jahr Dritter
+wurde, dauerhaft „Um den Titel spielen" mit Soll 1 und verdiente nie eine
+Prämie.
+
+**Geprüft:** 26 Regressionen im Modul (2 neue), `npm test` 135/135 (vorher 133),
+`npm run build` erfolgreich. Die neuen Prüfungen decken ab: Höchstdauer zwei
+Saisons für jede Ausbaustufe, dieselbe Abteilung nicht zweimal gleichzeitig,
+zwei Abteilungen gleichzeitig erlaubt, unterschiedlich lange Projekte werden
+zu unterschiedlichen Zeitpunkten fertig — und ein Lauf mit unerschöpflicher
+Kasse, der belegt, dass **alle dreissig** Stufen innerhalb der fünfzehn Jahre
+erreichbar sind. Dazu Restkasse-Umrechnung mit Deckel, Schuldenfall und
+Plakettenfaktor.
+
+**Offen bleibt:** der Überschuss oben (rund 1.250 Mio in Liga 1, der den
+Punktedeckel reisst) — das ist der fehlende Posten Spielergehälter
+(WIRT-P1-03). Anschluss an Spielablauf und Oberfläche unverändert offen
+(WIRT-P0-02 bis P0-04), kein Gerätetest.
+
+## WIRT-P1-03 — Spielergehälter mit Erfolgsratsche (Claude, 17.09.2026)
+
+**Basis-Commit:** `c632163` (Zusammenführung von `origin/main` = `a96660f`).
+**Branch:** `claude/vereinswirtschaft`. **Vorgelegt zur Abnahme, nicht
+zusammengeführt.**
+
+**Auftrag.** Kevin: „Lass uns die Sache mit dem Überschuss angehen!
+Spielergehälter und allgemein laufende Kosten und Mitarbeitergehälter steigen
+bei langanhaltendem Erfolg. Vielleicht bekommen wir es damit etwas reduziert."
+
+Damit ist der Punkt erledigt, der im Vermerk davor ausdrücklich offen blieb:
+ein Erstligist sass nach fünfzehn Jahren auf rund 1.250 Mio und riss den
+Punktedeckel — ab dem Jahr, in dem alles gebaut war, war Wirtschaften egal.
+
+**Was geändert wurde** (`vereinswirtschaft.js`):
+
+1. **Die Pauschale „Personal und Mannschaft" ist ersetzt, nicht ergänzt.** Das
+   stand so im Arbeitsplan (WIRT-P1-03) und war die eine Falle: wer den Posten
+   stehen lässt und Gehälter danebenstellt, zahlt doppelt. An seiner Stelle
+   stehen **Spielergehälter** und **Mitarbeiter und Verwaltung**; „Betrieb und
+   Unterhalt" sank im selben Zug von 0,85 auf 0,55 je Ausbaustufe, weil das
+   Personal dort mit drinsteckte.
+2. **Gehalt je Spieler: 0,9 Mio × (ovr/60)^4 ÷ Ligastufe.** Der Exponent
+   bildet ab, dass Gehälter nicht linear mit der Stärke wachsen; der Teiler,
+   dass derselbe Spieler in der ersten Liga mehr verdient als in der vierten.
+   Ohne Kader wird je Ligastufe geschätzt (74/66/60/55/51/48), damit der
+   Rechenkern auch isoliert läuft, solange `verein.js` keinen Kader führt.
+3. **Gehaltsniveau als Ratsche, 0,75 bis 2,00.** Ziel aus Ligastufe,
+   Platzierung und Vorgeschichte (Meisterschaften und Aufstiege, gedeckelt bei
+   +0,55). Je Saison wird der **halbe** Abstand nach oben gegangen und **ein
+   Sechstel** nach unten. Anhaltender Erfolg wird dadurch dauerhaft teuer,
+   eine einzelne gute Saison nicht bestraft — und ein Absteiger wird seine
+   Gehaltsstruktur nicht in einem Jahr los.
+4. **Die Abrechnung schreibt das Niveau fort.** Bezahlt wird die abgelaufene
+   Saison mit dem alten Niveau; das neue gilt ab der kommenden. Der Beleg
+   weist `gehalt: { vorher, neu, kader }` aus, damit die Oberfläche später
+   dieselbe Quelle liest wie die Buchung.
+
+**Nachgerechnet.** Fünfzehn Saisons je Ligastufe, gieriger Verein (Preise auf
+dem rechnerischen Optimum, die zwei besten Sponsorenangebote angenommen, jede
+bezahlbare Stufe sofort begonnen), Platz 3 in jeder Liga, gleiches Verfahren
+für beide Spalten:
+
+| Liga | Kasse vorher | Kasse nachher | Ausbau vorher | Ausbau nachher | Punkte vorher | Punkte nachher | Niveau am Ende |
+|---:|---:|---:|---:|---:|---:|---:|---:|
+| 1 | 1.435 | **667** | 30/30 | 30/30 | 250 (Deckel) | **167** | 1,61 |
+| 2 | 537 | 302 | 30/30 | 30/30 | 134 | 76 | 1,29 |
+| 3 | 151 | 86 | 30/30 | 29/30 | 38 | 21 | 1,17 |
+| 4 | 32 | 22 | 27/30 | 24/30 | 8 | 6 | 1,11 |
+| 5 | 42 | 24 | 24/30 | 22/30 | 10 | 6 | 1,06 |
+
+Der Überschuss oben ist mehr als halbiert und der Punktedeckel wird nicht mehr
+gerissen — die letzte Saison bleibt eine wirtschaftliche Entscheidung. Unten
+bleibt der Weg begehbar.
+
+**Ein Fehler auf dem Weg, weil er sich wiederholen kann.** Die erste Fassung
+rechnete die Gehälter **ohne Ligateiler**. In sich stimmig, alle 138
+bestehenden Regressionen grün — und trotzdem falsch: ein Viertligist zahlte
+11,4 Mio Gehälter bei 17 Mio Einnahmen und erreichte in fünfzehn Jahren **0
+von 30** Ausbaustufen, Liga 3 kam auf 8. Aus „sich hocharbeiten" wurde „nichts
+geht". Gefunden hat das nicht der Prüfstand, sondern erst der Langzeitlauf.
+Deshalb ist er jetzt selbst eine Regression.
+
+**Geprüft:** `npm test` **144/144** (vorher 138), `npm run build` erfolgreich.
+Sechs neue Regressionen im Modul: Ratsche schnell hoch und langsam runter;
+Fortschreibung und Beleg; die Pauschale ist nachweislich verschwunden; Gehälter
+folgen Kader und Liga; Grenzen halten auch bei absurder Vorgeschichte; und ein
+Fünfzehn-Saisons-Lauf, der unten mindestens 12 von 30 Stufen und oben den
+Vollausbau **unter** dem Punktedeckel verlangt. Gegenprobe gemacht: nimmt man
+den Ligateiler wieder heraus, werden genau diese Regressionen rot (`not ok 29`
+und `not ok 31`, „Liga 3 erreicht nur 8 von 30 Ausbaustufen"). Die CI lief
+nicht, weil ein Branch-Push sie nicht auslöst.
+
+**Zusätzlich, weil die Regel sonst in der nächsten Sitzung wieder falsch
+gilt:** `CLAUDE.md` und `README.md` sagten „ein Pull Request ist der
+bevorzugte Weg" und ließen damit offen, wer ihn eröffnet. Kevin hat das am
+17.09.2026 in zwei Schritten geklärt — erst „Pull requests macht nur Astra",
+dann, nachdem der Unterschied zwischen Eröffnen und Zusammenführen auf dem
+Tisch lag, die endgültige Fassung: **Claude eröffnet, Codex entscheidet.**
+Das Eröffnen ändert an `main` nichts und lässt die CI am Vorschlag laufen,
+was ein reiner Branch-Push nicht tut; Abnahme, Prüfung, Gegenprobe und der
+Merge-Knopf bleiben bei Codex. Ausdrücklich ausgenommen bleibt für Claude:
+zusammenführen, freigeben, Auto-Merge einschalten, fremde Pull Requests
+schliessen. Beide Dateien stehen jetzt auf dieser Fassung.
+
+**Offen bleibt:**
+
+- **Der Kader ist geschätzt, nicht gelesen.** `kaderKosten` liest `v.kader`,
+  wenn es da ist — `verein.js` führt aber keinen. Sobald er da ist, ist die
+  Kalibrierung erneut zu prüfen.
+- **Anschluss an Spielablauf und Oberfläche** unverändert offen (WIRT-P0-02
+  bis P0-04). Das Gehaltsniveau braucht dabei ein Feld im Spielstand;
+  alte Spielstände ohne `gehaltsniveau` beginnen bei 100 % (geprüft).
+- **Kein Gerätetest.** Die Zahlen stammen aus Läufen, nicht aus dem Spiel.
+- **Ob 667 Mio oben noch zu viel sind, entscheidet Kevin.** Der Lauf ist der
+  bestmögliche Verlauf, nicht der mittlere; ein normaler Verlauf liegt
+  darunter. Nachschärfen ginge über die Obergrenze des Niveaus (2,00) oder
+  das Tempo nach oben (halber Abstand).
+
+## WIRT-P0-02 — Wirtschaft am Spielablauf (Claude, 17.09.2026)
+
+**Basis-Commit:** `1ac1f18` (Zweig `claude/vereinswirtschaft`, Pull Request #6).
+**Branch:** `claude/wirt-p0-02`. **Vorgelegt zur Abnahme, nicht zusammengeführt.**
+Dieser Zweig setzt auf #6 auf, weil `vereinswirtschaft.js` nur dort existiert.
+
+**Auftrag.** Kevin: „Dann mache mit WIRT-P0-02 weiter". Der Rechenkern lief bis
+hierher isoliert — geprüft, aber von niemandem aufgerufen.
+
+**Was geändert wurde** (`verein.js`):
+
+1. **Gewöhnlicher Import statt Fabrik.** `vereinswirtschaft.js` braucht keinen
+   Namen aus `App.jsx`, importiert selbst nichts und kann deshalb ohne
+   Ringimport eingebunden werden. Die Zusicherung steht als Kommentar an der
+   Importzeile, damit sie nicht versehentlich gebrochen wird.
+2. **`leererVerein` trägt die Wirtschaft:** `kasse`, `sponsoren`, `extras`,
+   `stimmung`, `rechtsform`, `preise`, `baustellen`, `gehaltsniveau`, `ziel`.
+   Die alten Ausbaukennungen `training`, `stadion`, `medizin` bleiben
+   unverändert — sie sind Vertrag.
+3. **Die Ligastufe wird abgeleitet, nicht gespeichert.** `ligastufe(land, liga)`
+   dreht die Pyramide aus `stufenVon` um, sodass 1 die höchste Liga ist. Ein
+   Auf- oder Abstieg führt sie sofort mit, und kein Land braucht eine gepflegte
+   Tabelle.
+4. **Die Saat kommt aus dem Verein**, nicht aus `rnd()`: FNV-1a über Name,
+   Land, Liga und Jahr. Ein Neuladen würfelt damit keine neuen
+   Sponsorenangebote — die Zusage aus WIRT-P0-04.
+5. **`vereinSaison` rechnet ab.** Mit der Liga der abgelaufenen Saison, der
+   Bilanz einschliesslich dieser Saison und dem **echten Kader** — damit
+   rechnet `kaderKosten` erstmals mit wirklichen Stärken statt der Schätzung.
+   Das Ziel der kommenden Saison wird in der NEUEN Liga gesetzt.
+6. **Chronik: Kurzfassung, nicht voller Beleg.** Fünfzehn vollständige Belege
+   lägen dauerhaft im Spielstand; gelesen wird die Summe. Dieselbe Abwägung wie
+   bei den Einzelspielen. Der volle Beleg kommt als Rückgabewert.
+7. **`mitWirtschaft` für alte Spielstände.** Ergänzt wird beim **Lesen**, nicht
+   beim Speichern: ein Spielstand aus 35.192 muss sich öffnen lassen, ohne dass
+   ihn vorher jemand anfasst. Geprüft wird auf endliche Zahl statt auf
+   Wahrheitswert, damit eine gespeicherte 0 nicht als „fehlt" gilt.
+
+**Geprüft:** `npm test` **149/149** (vorher 144), `npm run build` erfolgreich.
+Fünf neue Regressionen in `tools/regression.test.cjs`, also am zusammengebauten
+`App.jsx` und nicht an einer Nachbildung: Abrechnung und Fortschreibung,
+abgeleitete Ligastufe, alter Spielstand ohne jedes Wirtschaftsfeld,
+Reproduzierbarkeit bei festgehaltenem Würfel, fünfzehn Jahre am Stück ohne
+NaN. **Gegenprobe gemacht:** lässt man die Kasse aus der Fortschreibung weg,
+werden Prüfung 48 und 50 rot; lässt man die Chronik-Kurzfassung weg, Prüfung 48.
+
+**DER WICHTIGE BEFUND — bitte vor der Abnahme lesen.**
+
+Der Anschluss funktioniert. Genau deshalb zeigt er etwas, das vorher niemand
+sehen konnte. Fünfzehn Jahre durch den echten Spielablauf, Kader aus Spielern
+der Stärke 70, `zufallSetzen(20260917)`:
+
+| Jahr | Liga | Plätze | Einnahmen | Kosten | davon Gehälter | Kasse |
+|---:|---|---:|---:|---:|---:|---:|
+| 1 | 3. Liga | 8.000 | 18,3 | 17,2 | 11,1 | 7 |
+| 2 | 2. Bundesliga | 8.000 | 32,3 | 29,0 | 21,6 | 16 |
+| 3 | Bundesliga | 8.000 | 35,1 | 62,5 | 52,3 | −1 |
+| 15 | Bundesliga | 8.000 | 32,4 | 75,7 | 64,0 | **−289** |
+
+Über fünf Kaderstärken gerechnet, gleiches Verfahren: Stärke 48 endet bei +27,
+Stärke 55 bei −10, 62 bei −55, 70 bei −289, 78 bei −556.
+
+Die Ursache steht in der Spalte **Plätze**: sie ändert sich nie. `bauStart` und
+`ausbauKaufen` haben noch keinen Aufrufer — das ist WIRT-P0-03. Die Einnahmen
+bleiben deshalb auf dem Stand des Gründungsstadions, während die Gehälter der
+Liga folgen. Ein Erstligist mit 8.000 Plätzen und 64 Mio Gehältern geht
+zugrunde, und das ist sachlich richtig — nur kann der Spieler nichts dagegen
+tun, solange er nicht bauen darf.
+
+**Das ist kein Fehler im Anschluss, sondern der Beweis, dass die Ausgabeseite
+fehlt.** Ich habe es deshalb NICHT wegkalibriert: die Gehälter so weit zu
+senken, dass ein Verein ohne Stadion überlebt, würde genau die Entscheidung
+entwerten, die P0-03 erzeugen soll.
+
+**Daraus eine Reihenfolgeregel, die ich zur Abnahme mitvorlege:** P0-02 und
+P0-03 gehören in derselben Auslieferung zum Spieler. Wer P0-02 allein
+freigibt, liefert eine Wirtschaft, die nur verlieren kann. Nach `main` darf
+dieser Zweig trotzdem — sichtbar wird davon nichts, solange der
+Vereinsbildschirm die Kasse nicht anzeigt.
+
+**Offen bleibt:**
+
+- **WIRT-P0-03 ist jetzt zwingend**, nicht mehr nur der nächste Punkt.
+- **Der Gehaltssprung beim Aufstieg** ist die nächste echte Balance-Frage:
+  Stufe 2 → 1 verdreifachte die Gehälter (21,6 → 52,3), die Einnahmen stiegen
+  um 2,8. Ob ein Aufsteiger das mit Ausbau auffangen kann, ist erst nach P0-03
+  messbar.
+- **Folgen einer leeren Kasse** gibt es weiterhin keine (WIRT-P1-04). Die Kasse
+  läuft ins Minus, ohne dass etwas passiert — bewusst, aber jetzt sichtbarer.
+- **Kein Gerätetest**, keine Oberfläche. Der Spieler sieht von all dem nichts.
+
+## WIRT-P0-03 — Ausbau kostet Geld, VC nur noch vier Extras (Claude, 17.09.2026)
+
+**Basis-Commit:** `9ad335a` (Zweig `claude/wirt-p0-02`, Pull Request #9).
+**Branch:** `claude/wirt-p0-03`. **Vorgelegt zur Abnahme, nicht zusammengeführt.**
+Die Kette ist `claude/vereinswirtschaft` → `claude/wirt-p0-02` → dieser Zweig.
+
+**Auftrag.** Kevins ursprüngliche Vorgabe, jetzt eingelöst: „Das man keine VC in
+etwas versenkt was nach 15 Saison eh verschwindet. Lediglich gewisse extra Bonis
+und Ausbauten sollen mit VC möglich sein."
+
+**Was geändert wurde:**
+
+1. **`VEREIN.ausbauen` (VC) ist gelöscht, nicht stillgelegt.** Eine unbenutzte
+   Funktion, die noch dasteht, wird in der nächsten Runde wieder aufgerufen.
+   Eine eigene Regression hält fest, dass es sie nicht mehr gibt.
+2. **Ein Katalog statt zwei.** Der alte `VEREIN_AUSBAU` in `verein.js` ist weg;
+   `VEREIN_AUSBAU` zeigt jetzt auf `WIRT.AUSBAU`. Zwei Listen mit denselben
+   Kennungen und verschiedenen Preisen wären genau die Doppelung, die dieses
+   Projekt schon einmal Geld gekostet hat.
+3. **Aus Kaufen wird Planen.** `bauStarten` bezahlt sofort und baut über bis zu
+   zwei Saisons. Der Name verschweigt nicht, dass die Stufe erst später wirkt.
+4. **Die Oberfläche trennt die Währungen sichtbar.** Oben die Kasse in der
+   Landeswährung samt laufender Baustellen, darunter die sechs Abteilungen mit
+   Geldpreisen, und erst danach — eigener Abschnitt — die vier VC-Extras. Keine
+   Zeile, in der beides nebeneinander steht. Fehlt Geld, nennt der Bildschirm
+   die Lücke, statt den Knopf wortlos zu sperren.
+5. **`startReiter` am `VereinScreen`**, wie ihn der `Packladen` schon hatte:
+   der Prüfstand soll einen Reiter aufschlagen können, ohne einen Klick
+   nachzubauen. Im Spiel wird er nicht gesetzt.
+
+**Geprüft:** `npm test` **154/154** (vorher 149), `npm run build` erfolgreich.
+Fünf neue Regressionen: die alte VC-Funktion ist nachweislich verschwunden und
+der Katalog einer; Bauen prüft vor dem Schreiben, bucht genau einmal ab, sperrt
+dieselbe Abteilung und erlaubt eine andere; VC-Extras nur einmal, mit Prüfung
+vor der Buchung; die Ausbauwirkungen im Spiel hängen weiter an denselben
+Kennungen (sonst hätte ein ausgebautes Trainingszentrum stumm aufgehört zu
+wirken); und der Ausbaureiter rendert Geld und VC getrennt, ohne NaN.
+
+**DIE FRAGE AUS P0-02 IST BEANTWORTET — teilweise, und unbequem.**
+
+Gleicher Lauf wie dort, einmal ohne und einmal mit Ausbau:
+
+| Kaderstärke | ohne Bauen | mit Bauen | erreichter Ausbau |
+|---:|---:|---:|---:|
+| 48 | +27 | −8 | 9/30 |
+| 55 | −10 | −19 | 5/30 |
+| 62 | **−55** | **+11** | 18/30 |
+| 70 | −289 | −183 | 8/30 |
+| 78 | −556 | −539 | 1/30 |
+
+**Bauen rettet die Mitte, nicht die Spitze.** Stärke 62 dreht das Minus in ein
+Plus und erreicht 18 von 30 Stufen — genau der Verlauf, den das System erzeugen
+soll. Stärke 78 erreicht **eine** Stufe: die Gehälter fressen den Ertrag, bevor
+gebaut werden kann, und wer einmal hinten liegt, baut sich nicht mehr heraus.
+
+Die Ursache ist der Exponent 4 auf die Spielerstärke. Bei der Kalibrierung
+rechnete er gegen eine GESCHÄTZTE Stärke von 74 in der ersten Liga; ein Spieler,
+der seine Akademie ausreizt, kommt darüber, und (78/60)^4 ist ein Viertel teurer
+als (74/60)^4 — bei jedem Spieler, in jeder Saison.
+
+**Ich habe das nicht geändert.** Es ist eine Balance-Entscheidung, sie gehört
+Kevin, und sie ungefragt zu treffen hiesse, seinen ausdrücklichen Auftrag
+(„Gehälter steigen bei langanhaltendem Erfolg") nach eigenem Gutdünken wieder
+abzuschwächen. Drei Wege, absteigend nach Eingriffstiefe:
+
+1. **Exponent 4 → 3 oder 3,5.** Trifft genau die Spitze, lässt die Mitte fast
+   unberührt. Am zielgenauesten, meine Empfehlung.
+2. **Obergrenze des Gehaltsniveaus von 2,00 auf etwa 1,6.** Einfach, nimmt aber
+   auch dem mittleren Verein Druck.
+3. **Einnahmen der ersten Liga anheben.** Löst es auch, macht den Aufstieg aber
+   wieder zum Selbstläufer — vermutlich falsch.
+
+**Offen bleibt:**
+
+- **Die Balance-Entscheidung oben.** Bis dahin ist die Spitze unspielbar.
+- **WIRT-P0-04** (Sponsorenwahl) und **P1-01** (Saisonabrechnung sichtbar): der
+  Spieler sieht bis jetzt nicht, WOHER das Geld kam. Er sieht nur den Stand.
+- **Preise, Rechtsform und Vorstandsziel haben keine Oberfläche.** Sie rechnen
+  mit den Vorgabewerten mit; einstellen kann man sie nicht.
+- **Die Versionsnummer bleibt 35.192.0.** Diese Runde ändert Spielverhalten und
+  müsste sie bei einer neuen APK erhöhen — das entscheidet Codex beim Ausliefern,
+  nicht ich auf dem Zweig.
+- **Kein Gerätetest.**
+
+## WIRT-P0-04 — Sponsorenwahl, und eine Korrektur an mir selbst (Claude, 17.09.2026)
+
+**Basis-Commit:** Stand des Zweigs `claude/wirt-p0-03` (Pull Request #11).
+**Branch:** `claude/wirt-p0-04`. **Vorgelegt zur Abnahme.**
+Kette: `claude/vereinswirtschaft` → `wirt-p0-02` → `wirt-p0-03` → dieser.
+
+### Zuerst die Korrektur, weil sie das Wichtigere ist
+
+Beim Aufräumen für dieses Paket ist aufgefallen, dass `sponsorAngebote` und
+`sponsorAnnehmen` **null Aufrufer** hatten. Kein Verein im Spiel bekam je einen
+Werbevertrag; eine ganze Einnahmesäule war nicht verdrahtet.
+
+Das entwertet meine Begründung aus den beiden Vermerken davor. Die Läufe zu
+P0-02 und P0-03 gingen durch den echten Spielablauf und hatten deshalb **keine
+Sponsoren** — während die isolierte Kalibrierung, gegen die ich sie verglichen
+habe, immer zwei Verträge je Saison annahm. Ich habe zwei Prüfstände mit
+verschiedenen Einnahmequellen gegeneinandergestellt, als wären sie vergleichbar.
+Der Bankrott von −451 Mio, mit dem ich eine Änderung der Gehaltskurve begründet
+habe, kam fast vollständig aus der fehlenden Säule.
+
+Nachgerechnet, gleicher Lauf, diesmal **mit** Sponsoren:
+
+| Szenario | Exponent 4 | Exponent 3 |
+|---|---:|---:|
+| gewöhnlich, Saat 20260917 | +24, 9/30 | +22, 9/30 |
+| gewöhnlich, Saat 4711 | +337, 30/30 | +337, 30/30 |
+| starker Kader (70/82) | **+161**, 28/30 | +606, 30/30 |
+| Liga 1 isoliert | 667 Mio, **167 Punkte** | 854 Mio, 214 Punkte |
+
+Mit Exponent 4 war der starke Verein nie in Gefahr. Kevin hat daraufhin
+entschieden: **Exponent bleibt 4, Pull Request #12 geschlossen, stattdessen
+dieses Paket.** Die Ursache wird behoben, nicht das Symptom.
+
+**Lehre, die im Arbeitsplan steht und hier wiederholt wird, weil sie Geld
+gekostet hat:** eine Zahl aus dem isolierten Kern und eine aus dem Spielablauf
+sind erst vergleichbar, wenn beide dieselben Einnahmequellen kennen. Wer eine
+Stellschraube anfassen will, prüft zuerst, ob alle Posten einen Aufrufer haben.
+
+### Was gebaut wurde
+
+1. **Die Angebote liegen im Spielstand (`v.angebote`), nicht im Augenblick.**
+   Das ist der Kern. Würden sie beim Zeichnen erzeugt, bekäme man bei jedem
+   Aufschlagen des Bildschirms neue — und aus der Wahl würde ein Automat, den
+   man bis zum besten Angebot drückt. Sie werden einmal je Saison aus der Saat
+   des Vereins gewürfelt und bleiben stehen, bis sie angenommen sind oder die
+   Saison vorbei ist. `mitAngeboten` legt fehlende nach, damit alte Spielstände
+   und der Augenblick nach der Einschreibung ohne Sonderfall auskommen.
+2. **`sponsorAnnehmen` prüft vor dem Schreiben:** Platz frei, Angebot liegt
+   wirklich vor, Firma nicht schon Partner. Ein abgelehnter Abschluss ändert
+   gar nichts.
+3. **Drei Partner gleichzeitig** (`SPONSOR_MAX`).
+4. **Eigener Reiter im Vereinsbildschirm:** laufende Partner mit Betrag,
+   Restlaufzeit und Vorteil; darunter die Angebote mit Betrag, Laufzeit,
+   Gesamtwert und Vorteil. Ausgelaufene Verträge werden aus der Chronik
+   gemeldet. Sind alle Plätze belegt, sagt der Bildschirm das, statt den Knopf
+   wortlos zu sperren.
+5. **Nach jeder Saison neue Angebote**, gewürfelt mit dem neuen Jahr in der
+   Saat — sonst käme zweimal dieselbe Auswahl.
+
+### Die Obergrenze ist gemessen, nicht gesetzt
+
+Endkasse in Mio, erreichte Ausbaustufen in Klammern:
+
+| Partner | gewöhnl. A | gewöhnl. B | gewöhnl. C | starker Kader | sehr stark |
+|---:|---:|---:|---:|---:|---:|
+| 2 | +2 (9) | +32 (27) | +54 (27) | −79 (10) | −491 (4) |
+| **3** | **+5 (9)** | **+124 (29)** | **+122 (29)** | −194 (10) | −397 (5) |
+| 4 | +11 (9) | +223 (30) | +174 (30) | −54 (11) | −349 (6) |
+| 5 | +6 (10) | +199 (30) | +154 (30) | −38 (11) | −344 (7) |
+| 6 | +17 (10) | +309 (30) | +345 (30) | +135 (27) | −261 (7) |
+
+Drei ist der Vorschlag: der gewöhnliche Weg trägt und streut sichtbar — ein
+Durchlauf endet knapp über null, zwei bauen fast alles. Bei sechs ist jede
+Entscheidung weg, weil man einfach alles nimmt. Der sehr starke Kader bleibt bei
+jeder Obergrenze im Minus; das ist kein Fall für mehr Einnahmen, sondern für
+WIRT-P1-04.
+
+**Geprüft:** `npm test` **158/158** (vorher 154), `npm run build` erfolgreich.
+Vier neue Regressionen: Angebote überleben ein Neuladen und hängen am Verein,
+nicht an einer Konstante; Unterschreiben prüft vor dem Schreiben und sperrt bei
+vollen Plätzen; Verträge bringen mehr Einnahmen, laufen ab und werden gemeldet;
+der Reiter rendert Angebote und laufende Verträge ohne NaN.
+**Gegenprobe:** würfelt man die Angebote bei jedem Blick neu, werden alle vier
+rot.
+
+**Nachtrag vom selben Tag, weil der Fehler sich wiederholen kann.** Der
+Statuseintrag dieses Pakets im Arbeitsplan („BEREIT" statt „VORGELEGT") ist
+beim ersten Anlauf verlorengegangen: Das Änderungsskript hatte vier
+Ersetzungen, lief bei der zweiten auf einen Fehlschlag und schreibt die Datei
+erst am Ende — die erste, im Speicher bereits erledigte Ersetzung fiel damit
+weg. Nachgezogen wurde danach nur der Teil, der aufgefallen war.
+
+Gefunden hat es niemand beim Lesen des Vermerks, sondern erst ein späterer
+Blick auf die Paketliste. **Wer mehrere Ersetzungen in einem Skript
+zusammenfasst, schreibt nach jeder oder prüft danach das Ergebnis** — ein
+Abbruch in der Mitte sieht sonst aus wie „nichts passiert", ist aber
+„teilweise passiert und alles verworfen".
+
+**Offen bleibt:**
+
+- **WIRT-P1-01 — Saisonabrechnung sichtbar.** Der Spieler sieht jetzt, wo das
+  Geld herkommt, aber noch nicht, wohin es geht.
+- **WIRT-P1-05 — Abschluss.** `abschlussWirtschaft` hat weiterhin null
+  Aufrufer: die Restkasse wird beim Vereinsende nicht zu Vermächtnispunkten.
+- **WIRT-P1-04 — Folgen einer leeren Kasse.** Für den sehr starken Kader die
+  einzige Antwort, die bleibt.
+- **Preise, Rechtsform und Vorstandsziel haben keine Oberfläche.**
+- **Kein Gerätetest.**
+
+## WIRT-P1-01 — Die Saisonabrechnung wird sichtbar (Claude, 17.09.2026)
+
+**Basis-Commit:** Stand des Zweigs `claude/wirt-p0-04` (Pull Request #13).
+**Branch:** `claude/wirt-p1-01`. **Vorgelegt zur Abnahme.**
+Kette: `claude/vereinswirtschaft` → `wirt-p0-02` → `wirt-p0-03` → `wirt-p0-04`
+→ dieser.
+
+**Das Problem.** Seit P0-02 wird jede Saison abgerechnet, seit P0-03 gibt der
+Verein Geld aus und seit P0-04 nimmt er welches ein. Der Spieler sah davon
+genau eine Zahl: den Kassenstand. Warum er sich verändert hatte, stand
+nirgends — und damit war jede wirtschaftliche Entscheidung eine Wette ohne
+Rückmeldung.
+
+**Was gebaut wurde.** Der Beleg aus `vereinSaison` wandert in
+`p.vereinBericht.wirtschaft` und wird im Abschlussbildschirm unter der
+bestehenden Vereinskachel gezeigt:
+
+- jeder Einnahme- und Ausgabeposten einzeln, mit Vorzeichen und Farbe,
+- Wirtschaftsereignisse mit Betrag **und Text** — ein Sturmschaden soll erzählt
+  werden, nicht nur gebucht,
+- die Vorstandsprämie als Posten, ein verfehltes Ziel als eigene Zeile,
+- Ergebnis und neuer Kassenstand,
+- Zuschauerschnitt und Auslastung, fertig gewordene Bauprojekte, ausgelaufene
+  Werbeverträge.
+
+**DIESELBE QUELLE WIE DIE BUCHUNG.** Der Beleg wird gelesen, nicht nachgerechnet
+— dieselbe Regel wie beim Coinbeleg am Karriereende. Zwei Rechnungen laufen
+früher oder später auseinander, und dann glaubt der Spieler der falschen.
+
+**Mitgenommen wird der Beleg EINER Saison, nicht die Chronik.** Fünfzehn
+gehörten nicht in einen Karrierebericht, der ein Jahr zusammenfasst.
+
+**Geprüft:** `npm test` **160/160** (vorher 158), `npm run build` erfolgreich.
+Zwei neue Regressionen: der Bericht zeigt **jeden** gebuchten Posten (Einnahmen
+wie Ausgaben, namentlich abgeglichen) samt Zuschauerzahl, und ein Bericht ohne
+Wirtschaftsteil bleibt unverändert lesbar; dazu verfehltes und erfülltes Ziel,
+fertige Bauten, ausgelaufene Verträge und Ereignistexte.
+**Gegenprobe:** lässt man die Ausgabenzeilen weg, wird die erste rot
+(„Ausgabe fehlt: Spielergehälter · 18 Spieler, Ø 62").
+
+**Eine Fussnote zum Prüfstand.** Zwei Anläufe sind an handgebauten
+Spielerständen gescheitert (`p.nat.flag`, dann `p.club.tier`) — der
+Abschlussbildschirm liest mehr Felder, als man beim Nachbauen ahnt. Die
+Regression benutzt jetzt einen echten, über `runFinish` abgeschlossenen
+Spieler. Das ist die Regel, nicht die Ausnahme: ein erfundener Zustand prüft,
+was man sich vorstellt, ein erzeugter prüft, was passiert.
+
+**Offen bleibt:**
+
+- **WIRT-P1-05 — Abschluss.** `abschlussWirtschaft` hat weiterhin null
+  Aufrufer: die Restkasse wird beim Vereinsende nicht zu Vermächtnispunkten.
+  Danach wäre der Gerätetest sinnvoll.
+- **WIRT-P1-04 — Folgen einer leeren Kasse.**
+- **Preise, Rechtsform und Vorstandsziel haben keine Oberfläche.**
+- **WIRT-P1-02 — Stadionausbau spürbar machen.**
+- **Kein Gerätetest.**
+
+## WIRT-P1-05 — Die Restkasse zählt beim Abschluss (Claude, 17.09.2026)
+
+**Basis-Commit:** Stand des Zweigs `claude/wirt-p1-01` (Pull Request #15).
+**Branch:** `claude/wirt-p1-05`. **Vorgelegt zur Abnahme.**
+Kette: `vereinswirtschaft` → `p0-02` → `p0-03` → `p0-04` → `p1-01` → dieser.
+
+**Das Problem.** `abschlussWirtschaft` war seit dem Wirtschaftskern fertig und
+geprüft — und hatte **null Aufrufer**. Was am Ende der fünfzehn Jahre in der
+Kasse lag, verfiel. Damit war Wirtschaften ab dem Jahr, in dem alles gebaut
+war, gleichgültig, und genau das sollte die Umstellung auf Geld abschaffen.
+
+**Was geändert wurde:**
+
+1. **`abschluss` addiert die Kassenpunkte.** Vier Millionen ergeben einen
+   Punkt, gedeckelt bei 250 — zum Vergleich wiegt ein Aufstieg 120 und eine
+   Meisterschaft 90. Spürbar, aber kein Ersatz für Sport. Schulden zählen nicht
+   negativ; der Abschluss soll nicht zweimal bestrafen.
+2. **Der Plakettenfaktor wirkt auf beide Teile, jeden genau einmal.** Das
+   VC-Extra „Vermächtnisplakette" verspricht „+15 % Abschlusspunkte", nicht
+   „+15 % auf den Kassenanteil". `abschlussWirtschaft` rechnet ihn in seinen
+   eigenen Punktwert ein; der sportliche Teil wird in `abschluss` einmal damit
+   multipliziert. Eine Regression prüft, dass das Verhältnis 1,15 bleibt —
+   doppelt angewandt wären es 1,32.
+3. **Mehr Punkte heissen auch mehr VC und frühere Boni.** Gewollte Folge, kein
+   Nebeneffekt: `vc` und `BONI` hängen an derselben Punktzahl.
+4. **Der Abschlussbildschirm zeigt die Aufteilung** („… sportlich · … aus der
+   Kasse") und nennt die Plakette, wenn sie gekauft wurde. Ohne diese Zeile
+   sähe der Spieler nur eine gewachsene Zahl und würde beim nächsten Verein
+   wieder alles bis zur letzten Mark verbauen. War die Kasse leer, sagt der
+   Bildschirm auch das.
+
+**Geprüft:** `npm test` **164/164** (vorher 160), `npm run build` erfolgreich.
+Vier neue Regressionen: die Kasse zählt mit 4 Mio je Punkt, Schulden nicht
+negativ, der Deckel hält; die Plakette wirkt auf beide Teile und genau einmal;
+ein Verein ohne Wirtschaftsfelder bleibt abschliessbar und erfindet nichts;
+der Abschlussbildschirm nennt Aufteilung, leere Kasse und Plakette.
+**Gegenprobe:** lässt man die Kassenpunkte wieder weg, werden zwei davon rot.
+
+Dafür ist der Prüfstand um `renderVereinAbschluss` gewachsen — der
+Abschlussbildschirm hatte bis jetzt keinen.
+
+**Damit ist die Wirtschaft vollständig durchgeschaltet:** Geld wird eingenommen
+(P0-04), ausgegeben (P0-03), abgerechnet (P0-02), angezeigt (P1-01) und zählt
+am Ende (P1-05). **Ab hier ist ein Gerätetest sinnvoll.**
+
+**Offen bleibt:**
+
+- **WIRT-P1-04 — Folgen einer leeren Kasse.** Die Kasse darf weiterhin ins
+  Minus laufen, ohne dass etwas passiert. Für den sehr starken Kader, der seiner
+  Infrastruktur davongelaufen ist, die einzige verbleibende Antwort.
+- **WIRT-P1-02 — Stadionausbau spürbar machen.**
+- **Preise, Rechtsform und Vorstandsziel haben keine Oberfläche.** Sie rechnen
+  mit den Vorgabewerten mit; einstellen kann man sie nicht.
+- **Die Versionsnummer bleibt 35.192.0.** Die Kette ändert Spielverhalten und
+  müsste sie bei einer neuen APK erhöhen — das entscheidet Codex beim
+  Ausliefern.
+- **Kein Gerätetest.** Jetzt wäre er dran.
+## Nachbesserung nach Gegenlesen — Wirtschaftskern (Claude, 17.09.2026)
+
+Nach dem Bau der ganzen Kette habe ich den eigenen Diff systematisch
+gegengelesen. Drei Befunde betreffen diesen Zweig; keiner davon ist von den
+Regressionen gefunden worden, weil sie prüfen, dass die Rechnung **in sich**
+stimmt — nicht, ob sie das **Richtige** rechnet.
+
+**1. Die Stimmung fiel jede Saison, ohne dass jemand etwas tat.** Der
+Stimmungsschaden mass den Abstand zum ertragreichsten Preis. Der liegt fast
+überall UNTER 1 (gemessen: Liga 1 0,22, Liga 3 0,24, selbst ein voll
+ausgebauter Drittligist 0,34) — und 1 ist die Voreinstellung, hinter der keine
+Entscheidung steht. Gemessen an einem Drittligisten auf Platz 9: 60 → 55 → 54
+→ 47 → 42 → 37 → 31 → 23 in acht Saisons, danach gegen null. Da die Stimmung
+auf Auslastung und Merchandising wirkt, war es eine Abwärtsspirale — und eine
+Preisoberfläche, mit der man hätte gegensteuern können, gibt es nicht.
+**Der Normalpreis ist kein Übergriff:** die Grenze ist jetzt nie kleiner als 1.
+Derselbe Lauf endet nun bei 67 statt 23. Überteuerung kostet weiterhin.
+
+**2. Die Vermächtnisplakette hob den Punktedeckel an.** Der Faktor wurde NACH
+der Deckelung angewandt: aus 250 wurden 288, während drei Stellen „gedeckelt
+bei 250" behaupteten. Jetzt wird erst gerechnet, dann gedeckelt.
+
+**3. „Scoutnetz" war ein Placebo für 70 VC.** Das Extra versprach „Bleibt der
+Akademie erhalten" über ein Feld `akademieAufnahmen`, das niemand liest. Es ist
+**ersatzlos entfernt** statt notdürftig verdrahtet: der naheliegende Anker
+`bonus.aufnahmen` aus den Abschluss-BONI wird ebenfalls nur ANGEZEIGT und nie
+gelesen (App.jsx:9483, bestehender Code, nicht aus dieser Runde). An etwas
+anzudocken, das selbst nichts tut, wäre derselbe Fehler mit mehr Zeilen.
+
+**Dazu zwei Prüfungen, die nichts geprüft haben:**
+`assert.equal(e.zuschauer, Math.round(plaetze * auslastung))` war tautologisch —
+`auslastung` wird aus `zuschauer` berechnet, die Gleichung gilt für jede
+Umsetzung. Und der Grenzfall setzte `baustelle` im Singular, ein Rest des
+verworfenen Entwurfs, den kein Code liest; die halbfertige Baustelle, die der
+Testname verspricht, kam nie vor.
+
+**Geprüft:** `npm test` 147/147 (vorher 144). Drei neue Regressionen: die
+Stimmung fällt bei Voreinstellung in keiner Ligastufe, der Deckel hält auch mit
+Plakette, und **jedes VC-Extra muss über einen Schlüssel wirken, den jemand
+liest** — die Prüfung, die „Scoutnetz" verhindert hätte.
+
+**Offen für Codex:** `bonus.aufnahmen` in den Abschluss-BONI hat keinen Leser.
+Das ist bestehender Code, nicht aus dieser Runde — deshalb nur vermerkt.
+
+## Nachbesserung nach Gegenlesen — Anschluss (Claude, 17.09.2026)
+
+Vier Befunde aus dem Gegenlesen betreffen diesen Zweig. Wie bei der Wurzel gilt:
+keiner ist von den Regressionen gefunden worden.
+
+**1. Nach einem Aufstieg war das Vorstandsziel unerreichbar.** Der Kommentar
+behauptete „nach einem Aufstieg ist Klassenerhalt die Ansage, nicht der Titel" —
+die Rechnung reichte aber nur die neue Ligastufe weiter und weiterhin den
+**alten Tabellenplatz**, aus dem `zielSetzen` das Ziel ableitet. Ein Meister,
+der aufstieg, bekam „Um den Titel spielen" mit Soll 1 in der Liga darüber, und
+die Prämie wurde nie gezahlt. Umgekehrt bekam ein Absteiger „Klassenerhalt" in
+einer Liga, die er vermutlich dominiert. Ein Tabellenplatz aus einer anderen
+Liga ist keine Aussage über die neue: ein Aufsteiger gilt jetzt als Letzter, ein
+Absteiger als Dritter.
+
+**2. Die Gehälter wurden mit dem gealterten Kader gerechnet.** Die
+Entwicklungsschleife ändert Alter und Stärke **in place** und reicht dieselben
+Objekte weiter; die Abrechnung bekam damit die Stärken der KOMMENDEN Saison.
+Schon ein gewöhnlicher Zuwachs von +2 verteuert 18 Erstligaspieler von 30,0 auf
+33,6 Mio — jedes Jahr, von der Gehaltsratsche weiter aufgeschlagen. Jetzt wird
+der Kader kopiert, bevor irgendetwas altert.
+
+**3. Zwei Sponsorenwirkungen hatten keinen Leser.** `medizin` (Vitalis: „wirkt
+wie eine Stufe Medizin") und `jugend` (Almgut: „Nachwuchs entwickelt sich etwas
+schneller") wurden von `wirkung` summiert und von niemandem abgeholt — die
+Verträge versprachen etwas, das nicht geschah. Beide werden jetzt in der
+Entwicklungsschleife gelesen.
+
+**4. Die abgeleitete Ligastufe landete im Spielstand.** `mitWirtschaft` schreibt
+sie auf das zurückgegebene Objekt, und mehrere dieser Objekte werden gespeichert
+— nach einem Aufstieg stünde dort ein veralteter Wert. Noch liest niemand das
+rohe Feld, aber es war eine geladene Waffe. `ohneAbgeleitetes` entfernt sie am
+Speicherrand.
+
+**Noch offen aus diesem Befundsatz:** die Wirtschaftszahlen der Chronik haben
+weiterhin nur einen Leser (`ausgelaufen`). Die Anzeige braucht `geldText` und
+zieht deshalb nach WIRT-P0-03 um.
+
+**Geprüft:** `npm test` 157/157 (vorher 152), `npm run build` erfolgreich. Fünf
+neue Regressionen, darunter ein Lauf, der bis zu einem echten Aufstieg spielt
+und prüft, dass das neue Ziel kein Soll 1 trägt.
+
+## Nachbesserung nach Gegenlesen — Ausbau (Claude, 17.09.2026)
+
+Zwei Punkte aus dem Befundsatz, die erst hier möglich waren:
+
+**1. Die Chronik zeigt die Wirtschaft des Jahres.** Die Kurzfassung lag seit
+WIRT-P0-02 im Spielstand und hatte genau einen Leser (`ausgelaufen`) — acht
+weitere Felder wurden in jeden Spielstand geschrieben und von niemandem
+gelesen. Das ist der Fehler, den dieses Projekt selbst zweimal anschreibt
+(„Ein Feld ohne Leser waere wieder nur eine Zahl"). Jetzt steht im Chronikjahr
+Ergebnis, Kassenstand, Zuschauerzahl, Stimmung, Gehaltsniveau, das
+Vorstandsziel samt Ausgang, die Ereignisse und ausgelaufene Verträge. Die
+Anzeige braucht `geldText` und war deshalb in P0-02 nicht möglich.
+
+**2. Bauen und VC-Extras speichern nichts Abgeleitetes mehr.** `bauStarten`
+und `extraKaufen` geben ein `mitWirtschaft`-Ergebnis zurück, das direkt in den
+Spielstand wandert — samt der abgeleiteten Ligastufe. `ohneAbgeleitetes`
+entfernt sie jetzt an beiden Stellen.
+
+**Dazu nachgezogen:** die Zahl der VC-Extras von vier auf drei. „Scoutnetz" ist
+bei der Nachbesserung des Wirtschaftskerns ersatzlos entfernt worden, weil es
+für 70 VC über ein Feld wirkte, das niemand liest.
+
+**Geprüft:** `npm test` 164/164, `npm run build` erfolgreich. Zwei neue
+Regressionen: die Chronik zeigt Kasse, Zuschauer und Stimmung ohne NaN, und
+weder Bau noch Extrakauf legen die Ligastufe in den Spielstand.
+
+## Nachbesserung nach Gegenlesen — Sponsoren (Claude, 17.09.2026)
+
+**1. Der angezeigte Betrag war nicht der, der ankommt.** Die Abrechnung bucht
+`betrag × kommerz` der Rechtsform — ein e.V. bekommt 92 Prozent, und da es
+keine Oberfläche für die Rechtsform gibt, ist jeder Verein im Spiel ein e.V.
+Die Oberfläche zeigte den Bruttobetrag: ein Angebot über 2,97 Mio tauchte im
+Beleg als 2,73 Mio auf, und bei einem Vierjahresvertrag lag die genannte
+Gesamtsumme rund eine Million daneben. Wer Angebote vergleicht, verglich Zahlen,
+die nie eintreffen — und das ist die einzige Entscheidung, die dieses Paket
+erzeugt. `werbeErtrag` rechnet es jetzt an einer Stelle, für Buchung wie
+Anzeige; ein Satz im Reiter sagt auch, warum weniger ankommt als verhandelt.
+
+**2. Alle Angebote unterschrieben hiess: drei neue.** `mitAngeboten` prüfte
+`Array.isArray(angebote) && angebote.length` und legte bei einer LEEREN Liste
+nach. Wer alle drei Angebote einer Saison annahm, bekam beim nächsten Blick auf
+den Bildschirm sofort drei frische — genau der Automat, den das Paket
+verhindern soll, und die Zeile „Für diese Saison liegt nichts mehr vor." war
+unerreichbarer toter Code. Jetzt wird nur ein FEHLENDES Feld nachgelegt; alte
+Spielstände bekommen weiterhin ihre Auswahl.
+
+**Geprüft:** `npm test` 170/170, `npm run build` erfolgreich. Zwei neue
+Regressionen: der angezeigte Betrag stimmt mit dem gebuchten Posten überein,
+und eine leergeräumte Angebotsliste bleibt leer.
+
+## Nachbesserung nach Gegenlesen — Saisonabrechnung (Claude, 17.09.2026)
+
+**Stimmung und Gehaltsniveau fehlten im Beleg.** Beide treiben die ganze
+Wirtschaft — die Stimmung über Auslastung und Merchandising, das Gehaltsniveau
+über die Ratsche — und **keine der beiden Zahlen tauchte irgendwo im Spiel
+auf**. Der Spieler sah Zuschauer und Merchandising Jahr für Jahr sinken und die
+Gehaltszeile steigen, ohne zu erfahren, dass es diese Werte überhaupt gibt.
+
+Beide stehen jetzt im Karrierebericht, und zwar **mit Richtung**: „Stimmung 64
+(+4) · Gehaltsniveau 118 % und steigend". Ein Wert, der sich bewegt, ist erst
+als Bewegung eine Auskunft.
+
+**Geprüft:** `npm test` 172/172, `npm run build` erfolgreich. Die bestehende
+Belegprüfung verlangt jetzt beide Angaben.
+## Nachbesserung, zweiter Durchgang (Claude, 18.09.2026)
+
+Die beiden letzten offenen Punkte aus dem Gegenlesen.
+
+**1. Jede Saisonabrechnung rechnete 153 vollständige Einnahmerechnungen für
+einen einzigen Skalar.** `ueberzogen` ruft `bestPreis` für drei Felder, jeder
+Aufruf sucht in 51 Schritten und rechnet bei jedem Schritt die vollen
+Saisoneinnahmen — Ergebnis bis auf eine Zahl weggeworfen.
+
+Die Abkürzung ergibt sich aus der Korrektur des Vortags. Der Term ist
+`max(0, preis − max(1, optimum))`; für `preis ≤ 1` ist er **immer** null, ganz
+gleich wo das Optimum liegt. Also braucht es das Optimum dort auch nicht —
+keine Näherung, dieselbe Zahl auf kürzerem Weg. Und weil es keine
+Preisoberfläche gibt, steht überall die Voreinstellung 1: **50 Abrechnungen
+fallen von 51 auf 17 ms**, bei unverändertem Ergebnis (Normalpreis 60,
+Wucherpreis 30, vorher wie nachher).
+
+Eine Regression prüft die Grenze von beiden Seiten: unterhalb und bei 1 kostet
+der Preis nichts, darüber fällt die Stimmung monoton. Eine falsche Abkürzung
+zeigte sich dort als Knick.
+
+**2. `browser.yml` hatte den Zeilenumbruch am Dateiende verloren.** Eine
+unveränderte Zeile stand dadurch als `-/+`-Paar im Diff und hätte künftig jeden
+Vergleich verrauscht und `git blame` auf diesen Zweig gezeigt. Wiederhergestellt.
+
+**Nicht angefasst:** `tools/spieltest.cjs` und `tools/browser/charakter.spec.js`
+fehlt derselbe Umbruch — der fehlt aber schon auf `main` und stammt nicht aus
+dieser Runde. Vermerkt statt nebenbei miterledigt.
+
+**Geprüft:** `npm test` 148/148 (vorher 147).
+
+## Nachtrag aus dem Gerätetest: Null ist nicht „0 Tsd" (Claude, 18.09.2026)
+
+**Basis-Commit:** `23a7052` (Kopf dieses Zweigs).
+
+Beim Rundgang durch die fertige Kette im Browser (siehe `BETA-HINWEIS.md` auf
+`claude/beta-35.193`) stand die leere Vereinskasse als **„0 Tsd €"** da — im
+Partnerkopf sogar in Erfolgsgrün. Das ist keine Aussage, das liest sich wie ein
+Messfehler; „Tsd" sagt einem Leser, dass etwas gemessen wurde und klein ausfiel,
+und genau das stimmt bei null nicht.
+
+Die Ursache liegt hier und nicht in der Oberfläche: `geldText` fällt für alles
+unter einer Million in den `Tsd`-Zweig, und null ist unter einer Million. Der
+Sonderfall steht jetzt **vor** der Staffelung, damit er auch in Währungen greift,
+deren Kurs die Null streckt (`0 × 160` ist in Yen ebenfalls null, landete vorher
+aber genauso im `Tsd`-Zweig).
+
+**Änderung:** eine Zeile in `geldText` — `x === 0` liefert `"0 €"` bzw. `"0"`.
+
+**Geprüft:** `npm test` 148/148, unverändert grün; drei neue Zusicherungen in
+der bestehenden Währungsprüfung (`€`, `¥`, ohne Symbol). **Gegenprobe:** nimmt
+man die Zeile wieder heraus, wird `not ok 1 — Währung: Anzeige folgt dem Land,
+Rechnung bleibt in Euro` rot.
+
+**Warum der Vermerk hier und nicht auf dem Beta-Zweig:** gefunden wurde es dort,
+zu Hause ist es hier. Läge die Korrektur nur in der Beta, ginge sie beim
+Zusammenführen dieses Pull Requests verloren und der Fehler stünde in `main`.
+
+**Offen, ausdrücklich nicht miterledigt:** die Oberfläche schreibt „Stärke 55.2"
+mit Punkt, während Geld „11,6" mit Komma schreibt. Bestehender Code, nicht aus
+dieser Runde.
+
+## Nachtrag aus dem Gerätetest: die Lücke, die keine war (Claude, 18.09.2026)
+
+**Basis-Commit:** Kopf dieses Zweigs nach dem Nachziehen von
+`claude/wirt-p0-02` (enthält die `geldText`-Korrektur aus #6).
+
+Im Ausbaureiter stand bei leerer Kasse zweimal dieselbe Zahl untereinander:
+
+```
+Bauen · 4 Mio €
+Dafür fehlen 4 Mio €
+```
+
+Das ist logisch richtig und trotzdem unbrauchbar. Die Zeile „Dafür fehlen" wurde
+in #11 gerade deshalb eingeführt, damit ein gesperrter Knopf nicht wortlos
+dasteht — aber sie sagt nur dann etwas Neues, wenn schon **etwas** in der Kasse
+liegt. Bei null ist die Lücke definitionsgemäß der Preis, und die Wiederholung
+liest sich wie ein Stottern.
+
+**Änderung:** die Zeile erscheint nur noch bei `VEREIN.kasse(v) > 0`. Der Preis
+selbst steht unverändert auf dem Knopf, der Knopf bleibt gesperrt.
+
+**Geprüft:** `npm test` 165/165, `npm run build` erfolgreich. Die bestehende
+Prüfung des Ausbaureiters prüft die Grenze jetzt **von beiden Seiten** — bei
+Kasse 0 darf die Zeile nicht erscheinen, bei Kasse 2 muss sie es. Nur die erste
+Hälfte zu prüfen wäre der bequeme Fehler gewesen: eine Zeile, die nie mehr
+erscheint, hätte sie ebenfalls bestanden. **Gegenprobe:** stellt man die alte
+Bedingung wieder her, wird `not ok 54 — Der Ausbaureiter zeigt Geld und VC
+getrennt, ohne NaN` rot.
+
+**Gefunden beim Rundgang durch die Oberfläche im Browser**, nicht im Prüfstand:
+der prüfte, dass die Zeile da ist, nicht ob sie etwas beiträgt.
+
+## Nachtrag aus dem Gerätetest: der Reiter heißt „Partner" (Claude, 18.09.2026)
+
+**Basis-Commit:** Kopf dieses Zweigs nach dem Nachziehen von
+`claude/wirt-p0-03` (enthält die beiden Korrekturen aus #6 und #11).
+
+Dieser Zweig hat dem Vereinsbildschirm einen **sechsten** Reiter gegeben. Beim
+Rundgang im Browser bei 320 Pixeln stand „Chronik" dadurch außerhalb des Bildes
+— erreichbar, weil die Leiste waagerecht scrollt, aber zwei Wischer entfernt und
+ohne dass etwas darauf hindeutet, dass dort noch etwas kommt.
+
+**Änderung:** die Beschriftung heißt „Partner" statt „Sponsoren". Die Kennung
+`sponsoren` bleibt unverändert — sie steht in `startReiter`, im Prüfstand und
+in gespeicherten Zuständen. Geändert wird nur, was der Spieler liest, und
+„Partner" ist ohnehin das Wort, mit dem der Reiter sich selbst überschreibt
+(„Partner · 0 von 3").
+
+**Geprüft:** `npm test` 171/171, `npm run build` erfolgreich. Die bestehende
+Prüfung des Reiters hält die Entscheidung jetzt fest: in der Reiterleiste steht
+`Partner`, nicht `Sponsoren`, und `Chronik` steht weiter daneben.
+**Gegenprobe:** mit der alten Beschriftung wird `not ok 60 — Der Sponsorenreiter
+zeigt Angebote und laufende Verträge, ohne NaN` rot.
+
+**Was diese Prüfung ausdrücklich NICHT tut:** nachweisen, dass die Leiste passt.
+Ein Zeichenbudget wäre Scheingenauigkeit — die Schrift ist proportional, und
+„Aufstellung" ist mit elf Zeichen länger als „Sponsoren" mit neun, ohne je
+gestört zu haben. Gemessen wurde im Browser; festgehalten ist die Messung im
+Browserlauf `tools/browser/beta-wirtschaft.spec.js` auf `claude/beta-35.193`.
+Der kann hier nicht mitkommen, weil er die Testwerkzeuge der Beta braucht, um
+überhaupt bis in den Spielbetrieb zu gelangen — vermerkt statt nachgebaut.
+
+**Offen für Codex:** falls später ein siebter Reiter dazukommt, ist die
+Kürzung verbraucht. Dann trägt die Leiste eher ein Überlaufzeichen als noch
+kürzere Wörter.
+
+## WIRT-P1-04 — Folgen einer leeren Kasse: Lizenzauflage (Claude, 18.09.2026)
+
+**Basis-Commit:** `060a225` (`claude/wirt-p1-05`). Zur Abnahme durch Codex.
+
+### Warum das Paket nötig war
+
+Bis hierher durfte die Kasse beliebig tief ins Minus laufen, ohne dass etwas
+geschah. Gemessen am echten Spielablauf (`VEREIN.vereinSaison`, fünfzehn
+Saisons, Kader je Saison aus dem Nachwuchs aufgefüllt, zwei Saaten):
+
+| Kaderstärke | ab Jahr im Minus | tiefster Stand |
+|------------:|-----------------:|---------------:|
+| 48 | – | 0 |
+| 55 | 14 | −10 |
+| 62 | 4–5 | −135 |
+| 70 | 3–4 | −285 |
+| 78 | **1** | **−703** |
+
+Ein Spitzenkader steht **ab der ersten Saison** im Minus und endet bei einer
+dreiviertel Milliarde Schulden. Kein Randfall, sondern der Normalfall ab
+Stärke 62.
+
+### Die Entscheidung und ein eigener Irrtum
+
+Ich habe drei Mittel vorgelegt und zu einer Staffelung aus Zins und
+Zwangsverkauf geraten, mit dem Einwand, Punktabzug allein löse das
+wirtschaftliche Problem nicht. **Kevin hat Punktabzug gewählt.**
+
+Der Einwand war **teilweise falsch**, und das gehört in den Vermerk, weil ihn
+sonst der Nächste wiederholt: Punktabzug wirkt sehr wohl wirtschaftlich, nur
+über den sportlichen Weg. Ein Abzug drückt in der Tabelle, das führt zum
+Abstieg — und ein Abstieg **halbiert die Gehälter** (`kaderKosten` teilt durch
+die Ligastufe) und senkt die Ratsche gleich dreifach über `ligaTeil`,
+`platzTeil` und den Abstiegsmalus in `gehaltsZiel`.
+
+**Er war aber auch nicht ganz falsch, und das ist der wichtigste Befund dieser
+Runde.** Siehe „Was gemessen wurde".
+
+### Was gebaut wurde
+
+1. **`lizenzPruefung` im Rechenkern** (`vereinswirtschaft.js`, Leaf-Modul, reine
+   Rechnung). Geduldet wird `max(2 Mio, halbe Saisoneinnahme)`. Darunter kostet
+   es 3, 6 oder 9 Punkte, gestaffelt nach **Rahmen** unter der Linie.
+   - **Der Rahmen hängt an den Einnahmen, nicht an einer festen Zahl.** 20 Mio
+     sind für einen Erstligisten nichts und für einen Fünftligisten das Ende —
+     dieselbe Falle wie beim Gehaltsteiler, die dieses Projekt schon einmal
+     erlebt hat. Eine Regression prüft, dass gleich tief *in Rahmen* in jeder
+     Liga gleich teuer ist.
+   - **Der Rahmen sorgt dafür, dass Bauen nicht bestraft wird.** Wer sein Geld
+     in eine Tribüne steckt, steht kurz im Minus und verdient danach mehr.
+   - **3/6/9 ist keine erfundene Zahl**, sondern die Staffel, die DFL und DFB
+     bei Lizenzverstössen tatsächlich verhängen.
+   - **Die Einnahmen werden durchgereicht, nicht neu gerechnet.** Die Abrechnung
+     hat sie ohnehin; sie ein zweites Mal zu holen wäre derselbe Fehler wie in
+     `ueberzogen`, wo 153 vollständige Einnahmerechnungen je Saison für einen
+     einzigen Skalar anfielen.
+2. **`abzugAnwenden` in `verein.js`** zieht die Punkte ab, **sortiert die
+   Tabelle neu und vergibt die Plätze neu**. Das ist der Kern: ein Abzug, der
+   als Zahl danebensteht, während der Verein seinen erspielten Platz behält,
+   wäre Kosmetik — genau die Sorte Feld ohne Leser, von der dieses Projekt
+   schon mehrere hatte. Sortiert wird mit **demselben Vergleich** wie
+   `ligaSpielen`; zwei Sortierungen für dieselbe Tabelle laufen auseinander,
+   sobald jemand eine davon anfasst.
+3. **Die Auflage trifft die kommende Saison**, nicht die abgelaufene. So macht
+   es der Fussball auch, und anders ginge es gar nicht: die Tabelle steht schon.
+4. **Drei Zustände, drei Aussagen in der Oberfläche.** Kasse im Plus: nichts.
+   Kasse im Minus, aber im Rahmen: Vorwarnung. Auflage beschlossen: die Zahl,
+   stehend im Vereinsbildschirm und im Saisonbeleg, dazu die abgelaufene
+   Auflage in der Chronik. **Eine Strafe, die erst auffällt, wenn sie schon
+   wirkt, lässt dem Spieler keine Gegenwehr.**
+
+### Was gemessen wurde — auch das Unangenehme
+
+Gegenprobe über acht Läufe, gleiche Saat, gleiche Saisonzahl, einmal mit und
+einmal ohne Auflage:
+
+| Stärke | Saat | ohne | mit | Punkte | Abstiege mit |
+|---:|---:|---:|---:|---:|---:|
+| 55 | beide | 0 / −10 | 0 / −10 | 0 | unverändert |
+| 62 | 20260917 | −135 | **−107** | 48 | 3 (vorher 2) |
+| 62 | 4711 | −53 | −53 | 12 | 3 |
+| 70 | 20260917 | −269 | −323 | 84 | 1 (vorher 0) |
+| 70 | 4711 | −285 | −293 | 66 | 1 |
+| 78 | 20260917 | −703 | −662 | 84 | **0** |
+| 78 | 4711 | −530 | −600 | 72 | **0** |
+
+**Sportlich wirkt die Auflage, wirtschaftlich nicht.** Über eine Laufbahn
+werden 48 bis 84 Punkte abgezogen, der 78er-Verein fällt im Schnitt von Platz
+~2 auf 5,9 — das kostet Titel, Prämien und Stimmung. Auf die Schulden ist die
+Wirkung dagegen **Rauschen in beide Richtungen** (+21 %, 0 %, −20 %, −3 %,
++6 %, −13 %).
+
+**Der Grund ist gemessen, nicht vermutet:** der 78er-Verein steht **52 Punkte**
+über dem Abstiegsplatz. Neun Punkte schließen ein Sechstel davon. Ein Kader,
+der seiner Liga so weit davongelaufen ist, ist durch Punktabzug **nicht
+absteigbar** — das ist keine Kalibrierfrage, sondern eine Grenze des Mittels.
+Die Staffel höher zu drehen kauft nichts: auch dreissig Punkte reichten nicht,
+und eine Tabelle mit dreissig Minuspunkten liest sich wie ein Anzeigefehler.
+
+**Ich habe die Staffel deshalb nicht nachgeschärft.** Sie ist dort richtig, wo
+sie verhältnismässig ist (Stärke 62: drei statt zwei Abstiege, Schulden von
+−135 auf −107), und mehr ist mit diesem Mittel nicht zu holen.
+
+### Geprüft
+
+- `npm test` **184/184** (vorher 177), `npm run build` erfolgreich.
+- Sieben neue Regressionen: der Rahmen hängt an den Einnahmen und behandelt
+  alle Ligen gleich tief gleich teuer; die Staffel 3/6/9 samt Deckel und der
+  Warnung innerhalb des Rahmens; die Abrechnung beschliesst aus der Kasse
+  **nach** der Saison; der Abzug sortiert die Tabelle **wirklich** um (Platz,
+  nicht Punktzahl, samt Tordifferenz-Gleichstand und Klemmung bei null); die
+  Auflage der Vorsaison trifft die nächste und steht in der Chronik; alte
+  Spielstände starten ohne Auflage und ein negativer Abzug wird nicht zum
+  Geschenk; die Oberfläche unterscheidet die drei Zustände.
+- **Die Zusicherung, die mir am wichtigsten ist:** die bestehende
+  Fünfzehn-Jahres-Kalibrierung prüft jetzt zusätzlich, dass der **gewöhnliche
+  Weg nie eine Auflage bekommt** (Liga 1 bis 5). Eine Strafe, die den
+  Normalfall trifft, wäre ein Fehler, auch wenn sie richtig rechnet.
+- **Drei Gegenproben, alle rot:** wird der Abzug nur durchgereicht statt
+  angewandt, wird `not ok 66` rot; wird die Tabelle nicht neu sortiert,
+  `not ok 65`; ist der Rahmen eine feste Zahl statt aus den Einnahmen,
+  `not ok 152`.
+
+### Zwei eigene Fehler auf dem Weg
+
+Beide lagen in den **Prüfungen**, nicht im Code, und beide sind dieselbe Sorte:
+Kopfrechnen an einer Staffel.
+
+1. `kasse: -(rahmen*2)` sind **zwei Rahmen Schulden**, also **einer** unter der
+   Linie — 3 Punkte, nicht 6. Die Prüfung erwartete 6.
+2. 63 − 6 = 57 stand in der Testtabelle **gleich** mit dem Vierten, und die
+   bessere Tordifferenz (+23 gegen +8) hielt den Verein auf Platz 3. Die
+   Prüfung erwartete 4.
+
+Beide stehen jetzt als Kommentar an der jeweiligen Prüfung. Der zweite ist
+nachträglich der nützlichere Fall: er zeigt, dass **einsortiert** und nicht nur
+abgezogen wird.
+
+### Ausdrücklich offen
+
+- **Lizenzentzug — Zwangsabstieg statt Punktabzug**, wenn die Auflage mehrere
+  Saisons hintereinander greift. Dasselbe Verfahren, nur seine letzte Stufe,
+  und nach der Messung das Einzige, was den extremen Fall schliesst. **Nicht
+  gebaut, weil nicht beauftragt** — Entscheidung des Eigentümers.
+- **Preise, Rechtsform und Vorstandsziel haben weiterhin keine Oberfläche.**
+  Gerade beim Punktabzug fällt das auf: der Preishebel wäre eine der wenigen
+  Stellschrauben, mit der ein verschuldeter Verein gegensteuern könnte.
+- **WIRT-P1-02 — Stadionausbau spürbar machen.**
+- **Kein Gerätetest.** Die Oberflächenteile sind im Prüfstand gerendert, aber
+  niemand hat die Auflage im Spiel gesehen.
+
+## WIRT-P1-04b — Lizenzentzug als letzte Stufe (Claude, 18.09.2026)
+
+**Basis-Commit:** `f86ad78` (`claude/wirt-p1-04`). Zur Abnahme durch Astra.
+
+### Warum es das Paket braucht
+
+P1-04 hat seine eigene Grenze gemessen und offengelegt: der Punktabzug wirkt
+sportlich, aber ein Kader, der seiner Liga weit davongelaufen ist, steht **52
+Punkte** über dem Abstiegsplatz. Neun Punkte schließen ein Sechstel davon. Ein
+78er-Verein blieb über fünfzehn Saisons oben und verschuldet, bei **null**
+Abstiegen. Die Staffel höher zu drehen kauft nichts — auch dreissig Punkte
+reichten nicht, und eine Tabelle mit dreissig Minuspunkten liest sich wie ein
+Anzeigefehler.
+
+### Die Regel
+
+**Drei Saisons in Folge auf der höchsten Abzugsstufe** — also mehr als drei
+Kreditrahmen unter der Linie — heisst Lizenzentzug: Zwangsabstieg, unabhängig
+von der Tabelle. Dasselbe Verfahren wie in P1-04, nur seine letzte Stufe; 1860
+München und Rangers sind genau das.
+
+Vier Entscheidungen, die den Unterschied machen:
+
+1. **Nur die höchste Stufe zählt.** Wer knapp unter der Linie steht, hat ein
+   Problem; wer mehr als drei Rahmen darunter steht, hat keinen Betrieb mehr,
+   den man genehmigen könnte.
+2. **Besserung genügt, Gesundung nicht nötig.** Der Zähler springt auf null,
+   sobald der Verein die höchste Stufe verlässt. Ein Ausweg, der nur über eine
+   volle Kasse führte, wäre kein Ausweg, sondern eine verzögerte
+   Unvermeidlichkeit.
+3. **Zwei volle Saisons Vorwarnung**, sichtbar im Vereinsbildschirm mit Zähler
+   und Ausweg. Ein Zwangsabstieg ohne Ansage wäre Willkür.
+4. **Nach dem Entzug beginnt die Zählung von vorn**, und die offene Auflage ist
+   abgegolten. Sonst stiege derselbe Verein jede Saison erneut ab, ohne je die
+   Gelegenheit zu bekommen, sich unten zu fangen — und genau dort halbieren
+   sich die Gehälter (`kaderKosten` teilt durch die Ligastufe). Das ist die
+   eigentliche Wirkung dieser Stufe.
+
+**Der Entzug schlägt das sportliche Ergebnis**, aber es bleibt bei **einer**
+Liga: zweimal für dasselbe Jahr nach unten wäre Doppelbestrafung.
+
+### Ein Nebenbefund aus dem Prüfstand
+
+Beim Schreiben der Regression fiel auf: **ein Verein in der untersten Liga, dem
+die Lizenz fehlt, wurde bei gutem Ergebnis befördert.** Der Entzug greift dort
+mangels tieferer Liga nicht, und `neueLiga` zeigte munter nach oben. Wer keine
+Lizenz für seine Liga bekommt, bekommt erst recht keine für die darüber — er
+bleibt jetzt, wo er ist. Gefunden nicht durch Nachdenken, sondern weil die
+Prüfung eine Zahl lieferte, die nicht passte.
+
+### Was gemessen wurde
+
+Gleiche Läufe wie in P1-04, gleiche Saaten, einmal mit und einmal ohne die
+letzte Stufe:
+
+| Stärke | Saat | ohne | mit | Entzüge | Endliga |
+|---:|---:|---:|---:|---:|---|
+| 62 | 20260917 | −107 | −105 | 1 | unverändert |
+| 62 | 4711 | −53 | −51 | 0 | unverändert |
+| 70 | 20260917 | −323 | **−228** | 2 | unverändert |
+| 70 | 4711 | −293 | **−243** | 2 | unverändert |
+| 78 | 20260917 | −662 | **−575** | 3 | **2. Bundesliga** statt Bundesliga |
+| 78 | 4711 | −600 | **−486** | 2 | unverändert |
+
+**13 bis 29 Prozent weniger Schulden genau dort, wo der Punktabzug allein
+nichts ausrichtete** — und der Spitzenverein steht am Ende tatsächlich eine
+Liga tiefer, statt fünfzehn Jahre unbehelligt oben zu bleiben.
+
+**Geheilt ist er nicht, und das steht hier, weil es wichtig ist:** er pendelt.
+Sportlich ist er zu stark für unten, finanziell zu schwach für oben, also
+steigt er ab, kommt zurück, verliert die Lizenz wieder. Jede Runde nach unten
+halbiert die Gehälter — deshalb die Besserung. Wer das für falsch hält, hat
+einen Punkt; es ist aber eine kohärente Vereinsgeschichte und keine Sackgasse.
+
+### Geprüft
+
+- `npm test` **189/189** (vorher 184), `npm run build` erfolgreich.
+- Vier neue Regressionen: der Zähler zählt nur die höchste Stufe und verzeiht
+  Besserung (alle drei unteren Stufen setzen zurück); der Entzug steigt ab,
+  obwohl der Verein sportlich gehalten hat; in der untersten Liga bleibt es
+  beim Punktabzug **und der Verein steigt auch nicht auf**; die Oberfläche
+  zählt die Jahre sichtbar mit und wird im letzten Jahr deutlich.
+- **Drei Gegenproben, alle rot:** wirkt der Entzug nicht auf die Liga, wird
+  `not ok 99` rot; setzt der Zähler bei Besserung nicht zurück, `not ok 159`;
+  darf ein Verein ohne Lizenz aufsteigen, `not ok 100`.
+
+### Ein eigener Fehler, der wichtiger ist als das Paket
+
+Die erste Fassung der Entzugs-Regression prüfte nur, **dass sich die Liga
+ändert**. Das erfüllt auch ein gewöhnlicher sportlicher Abstieg — und der
+Testverein (Kader 60) wurde in der obersten Liga Letzter, stieg also ohnehin
+ab. Die Gegenprobe „Entzug wirkt nicht auf die Liga" blieb deshalb **grün**:
+die Prüfung mass gar nicht, was sie behauptete.
+
+Behoben durch zweierlei: ein Kader, der sportlich hält (Stärke 84, also genau
+das P1-04-Szenario), und eine ausdrückliche Zusicherung `abstieg === false`.
+Erst damit isoliert sie den Zwangsabstieg. **Eine Gegenprobe, die grün bleibt,
+ist ein Befund über die Prüfung, nicht über den Code** — das ist die Lehre, und
+sie steht als Kommentar an der Regression.
+
+### Ausdrücklich offen
+
+- **Der Ausschluss aus dem Spielbetrieb** als Stufe unter dem Entzug. In der
+  untersten Liga bleibt es beim Punktabzug; der Beleg sagt das, statt stumm
+  nichts zu tun.
+- **Kein Schuldenschnitt.** Ein Insolvenzverfahren würde die Schulden kürzen;
+  das wäre eine eigene Entscheidung und hier bewusst nicht getroffen.
+- **Kein Gerätetest.**
+
+## WIRT-P0-05-UI — Vereinsführung bedienbar machen (Claude, 18.09.2026)
+
+**Basis-Commit:** `2a483b1` (`claude/wirt-p1-04b-lizenzentzug`). Zur Abnahme
+durch Astra.
+
+### Drei fertige Systeme, die im Spiel nicht vorkamen
+
+Seit WIRT-P0-05 rechnen Preise, Rechtsform und Vorstandsziel vollständig mit —
+Elastizität nach Ansehen, Gastrostufe, Sortiment, Rechtsform und Stimmung; vier
+Rechtsformen mit Einlage, Wechselkosten, Vermarktungsfaktor und Zielhärte; ein
+Vorstandsziel je Saison mit Prämie. Geprüft war alles.
+
+**Bedienen konnte man nichts davon.** Nachgezählt am Stand vor dieser Runde:
+
+| | Vorkommen in `App.jsx` |
+|---|---|
+| `preisSetzen` | 0 (existierte nicht) |
+| `rechtsformWechseln` | **0 Aufrufer** |
+| `zielSetzen` | 0 (nur 4× in `verein.js`) |
+
+Praktische Folge: `preisFaktor` las an jeder Stelle die Voreinstellung 1. Die
+51-Werte-Rechnung in `bestPreis`, über die im Vermerk vom 17.09.2026 steht „der
+Hinweis ist damit keine Schätzung mehr, sondern ein Versprechen", hatte
+niemanden, dem sie etwas versprechen konnte.
+
+### Was gebaut wurde
+
+1. **Preise — drei Regler** mit dem gerechneten Ertragsmaximum als Hinweis. Wer
+   darüber geht, sieht es in Rot und zahlt jede Saison Stimmung. **Der Hinweis
+   ist kein Zwang:** Überteuern kann eine bewusste Entscheidung sein, und die
+   Rechnung dahinter war immer schon darauf ausgelegt.
+2. **Rechtsform** — der jeweils nächste Schritt mit Einlage, Kosten und
+   Wirkung. Ist er nicht möglich, steht der Grund **auf dem Knopf**
+   („Dafür ist der Verein zu klein — nötig ist mindestens Liga 4").
+3. **Vorstandsziel** — sichtbar, **bevor** es entschieden ist. Ein Ziel, das
+   man erst aus dem Abschlussbericht erfährt, ist keines. Gewählt wird es
+   weiterhin nicht; der Vorstand gibt es vor.
+
+**Die Durchreichungen stehen in `verein.js`**, nicht in `App.jsx` — dieselbe
+Linie wie bei `bauStarten` und `extraKaufen`: die Oberfläche importiert `WIRT`
+nicht selbst.
+
+**Der Reiter heisst jetzt „Führung"** statt „Ausbau". Ein **siebter** Reiter kam
+nicht in Frage: bei 320 Pixeln lag schon der sechste zwei Wischer entfernt
+(gemessen beim Rundgang am 18.09.2026, Befund aus #13). Der Reiter trägt
+stattdessen mehr, und der Ausbau bekommt eine eigene Überschrift darin.
+
+### Geprüft
+
+- `npm test` **194/194** (vorher 189), `npm run build` erfolgreich.
+- Fünf neue Regressionen. Die erste ist die wichtige: **sie prüft die
+  Einnahme, nicht das Feld.** Ein Regler, der einen Wert speichert, den die
+  Rechnung nicht liest, wäre dieselbe Sorte Placebo wie „Scoutnetz" und
+  „Bekannte Adresse" — nur mit Schieberegler. Gemessen wird deshalb über zwei
+  echte Saisons, dass der billigere Eintritt das Stadion stärker füllt.
+  Dazu: Klemmung und Prüfung vor dem Schreiben; der Hinweis liegt in den
+  Grenzen; die Rechtsform wechselt nur nach vorn, nur mit Liga und Geld, bucht
+  Kosten und Einlage richtig und lässt **kein abgeleitetes `ligastufe` im
+  Spielstand**; der Reiter rendert alles ohne NaN und ein alter Stand ohne
+  Ziel zeigt keine leere Kachel.
+- **Drei Gegenproben, alle rot:** schreibt `preisSetzen` in ein Feld, das
+  niemand liest, fallen zwei Prüfungen; fehlt die Klemmung, fällt eine;
+  wandert `ligastufe` in den Spielstand, fällt die Rechtsformprüfung.
+
+### Ausdrücklich offen
+
+- **Das Vorstandsziel bleibt eine Vorgabe, keine Wahl.** So ist es entworfen;
+  eine Auswahl unter mehreren Zielen wäre ein eigenes Paket.
+- **Die Preise wirken erst in der nächsten Abrechnung.** Es gibt keine
+  Vorschau, was ein Reglerwert konkret einbringt — nur das Maximum als Marke.
+- **Kein Gerätetest.** Die Regler sind im Prüfstand gerendert, aber niemand hat
+  sie gezogen.
+
+## WIRT-P1-02 — Stadionausbau spürbar machen (Claude, 18.09.2026)
+
+**Basis-Commit:** `02dade3` (`claude/wirt-vereinsfuehrung-ui`). Zur Abnahme
+durch Astra.
+
+### Was gebaut wurde
+
+1. **Stadionkachel im Führungsreiter:** Plätze, letzte Zuschauerzahl mit
+   Auslastung, und — der eigentliche Punkt — **was die nächste Ausbaustufe
+   brächte** („33.000 Plätze, 11.000 mehr"). Bis hierher war der Stadionausbau
+   eine Zahlung ins Ungewisse: man sah danach eine grössere Zahl in der
+   Abrechnung, ohne je erfahren zu haben, wie viele Plätze man überhaupt hat.
+   Ist alles gebaut, steht das da, statt eine leere Zeile zu zeigen.
+2. **Ausverkauftes Haus ab 97 % Auslastung**, im Saisonbeleg und in der Chronik.
+3. **Der Beleg nennt die Bezugsgrösse.** „Ø 21.780 Zuschauer" sagt nichts;
+   „Ø 21.780 von 22.000 · 99 % ausgelastet" sagt alles.
+
+### Die Schwelle ist gemessen, nicht gesetzt
+
+Vor dem Festlegen durchgerechnet, weil **ein Ereignis, das nie eintritt, wieder
+ein Placebo wäre** — davon hatte dieses Projekt genug:
+
+| Verein | höchste Auslastung |
+|---|---:|
+| Erstligist, Rang 1–3 | **99,0 %** (die Deckelung) |
+| Drittligist, Rang 1 | 91,7 % |
+| Fünftligist, Rang 1 | 86,6 % |
+
+97 % ist also erreichbar und trotzdem etwas wert.
+
+### Es zahlt in Stimmung, nicht in Geld
+
++3 Stimmungspunkte, dieselbe Grössenordnung wie ein fertiges Bauprojekt. **Kein
+Geldposten**, und das ist Absicht: die Zuschauer stecken bereits in Ticket-,
+Gastro- und Merchandisingertrag. Ein Bonus obendrauf wäre dieselbe Einnahme
+zweimal — genau der Fehler, den WIRT-P1-03 bei der Personalpauschale schon
+einmal hatte. Eine Regression hält fest, dass kein Einnahmeposten dieses Namens
+entsteht.
+
+### Eine bestehende Prüfung musste nachgeschärft werden
+
+`Der Stimmungsschaden wächst stetig über dem Normalpreis` wurde rot. **Der Grund
+war kein Fehler, sondern richtiges Verhalten:** ein Kampfpreis von 0,6 füllt das
+Stadion über die Ausverkaufsmarke und hebt die Stimmung um 3. Billige Karten,
+volles Haus, zufriedene Fans.
+
+Die alte Zusicherung lautete „unterhalb und bei 1 sind alle Werte GLEICH" — zu
+stark formuliert für das, was sie eigentlich schützt. Sie schützt die Abkürzung
+in `ueberzogen` (der Überteuerungsschaden ist bei und unter 1 beweisbar null).
+Das wird jetzt genauer getroffen: **0,8 gegen 1,0** — beide unter der
+Ausverkaufsmarke, also ohne Bonus, und deshalb exakt gleich. Dazu neu über die
+ganze Spanne 0,6 bis 1,6: **teurer darf die Stimmung nie heben.** Das ist eine
+stärkere Aussage als vorher, nicht eine schwächere.
+
+### Ein Befund, den ich NICHT geändert habe
+
+**Die Auslastung hängt überhaupt nicht an der Kapazität.** Ein Stadion mit
+64.000 Plätzen füllt sich zu denselben 99 % wie eines mit 8.000 — nachgerechnet
+über alle sechs Ausbaustufen. Der Ausbau ist damit reines Aufwärts ohne Risiko;
+realistisch wäre, dass eine Verdopplung der Plätze die Auslastung drückt.
+
+Das ist eine **Balance-Entscheidung des Eigentümers** und gehörte nicht zu
+diesem Auftrag. Vermerkt statt nebenbei miterledigt.
+
+### Geprüft
+
+- `npm test` **198/198** (vorher 194), `npm run build` erfolgreich.
+- Vier neue Regressionen: die Ausverkaufsmarke ist erreichbar (Spitze) **und
+  nicht geschenkt** (hinten bleibt es darunter); das volle Haus erzeugt keinen
+  Geldposten, hebt aber messbar die Stimmung; die Stadionkachel nennt aktuelle
+  Plätze, die nächste Stufe und den Unterschied, und sagt „voll ausgebaut",
+  wenn nichts mehr kommt; Plätze und Marke wandern aus dem Beleg in die Chronik.
+- **Drei Gegenproben, alle rot:** liegt die Schwelle über der Deckelung, fallen
+  zwei Prüfungen; zahlt das volle Haus in Geld statt Stimmung, fällt eine;
+  nennt die Kachel die nächste Stufe nicht, fällt die Oberflächenprüfung.
+
+### Ausdrücklich offen
+
+- **Die Auslastung ignoriert die Kapazität** (oben, mit Zahlen).
+- **Kein Gerätetest.**
+
+## „Bekannte Adresse" bekommt einen Leser (Claude, 18.09.2026)
+
+**Basis-Commit:** `703d377` (`main`). Zur Abnahme durch Astra.
+
+### Der Befund
+
+Das Vermächtnis-Extra **„Bekannte Adresse"** kostet 350 Abschlusspunkte und
+verspricht: „Die Akademie nimmt jedes Jahr ein Talent mehr auf."
+
+```
+verein.js:1063   { id: "netzwerk2", ab: 350, n: "Bekannte Adresse",
+                   fx: { aufnahmen: 1 } }
+App.jsx:9565     v.bonus.aufnahmen ? "+" + v.bonus.aufnahmen + " Aufnahme je Jahr" : null
+```
+
+Der Wert wanderte über `neuerVerein` brav nach `v.bonus.aufnahmen` und wurde im
+Vereinsbildschirm angezeigt. **Gelesen hat ihn niemand.** Die drei Geschwister
+hatten längst Leser — `startOvr` in `verein.js:377`, `zuwachs` in `:958`,
+`ausbauStart` in `:1354`; dieses eine nicht.
+
+Dieselbe Sorte Fehler wie das entfernte „Scoutnetz", nur teurer: 350 Punkte
+sammelt man über mehrere Vereinsleben.
+
+Gefunden beim Nachsehen der offenen Punkte, nicht aus einem Auftrag heraus —
+vermerkt war er seit dem 17.09.2026 als „bestehender Code, nicht aus dieser
+Runde".
+
+### Die Änderung
+
+`akaJahr` und `akaVerbuchen` nehmen einen vierten Parameter `extraAufnahmen`;
+der neue Jahrgang wird um diesen Wert grösser.
+
+**Als Argument, nicht als Feld auf der Akademie.** Die Akademie kennt den
+Verein nicht und soll ihn nicht kennen — `machAkademie(H)` bekommt bewusst
+keinen Vereinsstand. Den Bonus auf der Akademie zu spiegeln wäre die zweite
+Wahrheit, die früher oder später von der ersten abweicht; genau dieser Fehler
+steht als Begründung schon über `CLAUDE.md`.
+
+Durchgereicht wird er im Abschluss-Handler (`App.jsx`), der als Einziger beide
+Seiten sieht. `verein?.bonus?.aufnahmen` fängt ab, dass die Akademie früher
+freigeschaltet ist als der Verein.
+
+### Geprüft
+
+- `npm test` **142/142** (vorher 140), `npm run build` erfolgreich.
+- Zwei neue Regressionen, und die zweite ist der Punkt:
+  1. **Am Rechenkern:** gleiche Saat, einmal mit und einmal ohne Bonus — die
+     Zahl der Aufnahmen unterscheidet sich um genau den Bonus. Dazu die
+     kaputten Fälle: `0`, `-3` und `"kaputt"` ändern nichts und werden nicht
+     zum Geschenk.
+  2. **Über den echten Karriereabschluss.** In `App.jsx` stehen **zwei**
+     Bindungen namens `verein`: die Vereinsablage (`useState`, Zeile 17593)
+     und eine **Zeichenkette** in einer Renderfunktion (Zeile 14705). Greift
+     die falsche, ist der Bonus still wieder wirkungslos — und die Prüfung am
+     Rechenkern bliebe grün. Deshalb misst diese Regression durch den Handler.
+- **Gegenproben, beide rot:** wird der Bonus im Kern nicht addiert, fallen
+  **beide** Prüfungen; wird im Handler `undefined` statt des Vereinsbonus
+  durchgereicht, fällt **nur die zweite**. Genau dafür ist sie da.
+
+### Ausdrücklich offen
+
+- **Die Anzeige im Vereinsbildschirm bleibt unverändert.** Sie stimmt jetzt
+  einfach — vorher versprach sie etwas, das nicht geschah.
+- **Nicht nachkalibriert.** Ein Talent mehr je Jahr ist eine spürbare Wirkung;
+  ob 350 Punkte dafür der richtige Preis sind, ist eine Balance-Frage des
+  Eigentümers und nicht Teil dieser Runde.
+
+## Prüfstand von Hand startbar (Claude, 17.09.2026)
+
+**Basis-Commit:** `a96660f`. **Branch:** `claude/ci-handstart`.
+**Vorgelegt zur Abnahme, nicht zusammengeführt.**
+
+**Auftrag.** Kevin: „Mach das mit workflow_dispatch in regression.yml".
+
+**Das Problem.** `.github/workflows/regression.yml` lief bei `pull_request` und
+bei Pushes auf `main` — sonst nie. Ein Branch ohne offenen Pull Request war
+damit für die CI unsichtbar: `npm test` und `npm run build` liefen dort nur auf
+dem Rechner dessen, der ihn gepusht hat. Bei der Übergabe zwischen drei
+Beteiligten ist das die schwächste Stelle, weil der Empfänger einem Prüfbericht
+glauben muss, den er nicht nachstellen kann.
+
+**Die Änderung.** Drei Zeilen: `workflow_dispatch:` als dritter Auslöser, mit
+einem Kommentar, der den Weg in der Oberfläche nennt (Actions →
+„Spielregressionen" → „Run workflow" → Branch wählen). `browser.yml` und
+`apk.yml` hatten den Auslöser bereits; damit sind alle drei Arbeitsabläufe
+gleich bedienbar. `README.md` nennt die Möglichkeit im Abschnitt „Prüfstände",
+weil sie sonst niemand findet.
+
+**Was sich NICHT ändert.** Ein reiner Branch-Push startet weiterhin nichts. Der
+Auslöser ist ein Knopf, kein Automatismus — wer prüfen will, drückt ihn.
+
+**Geprüft:** YAML gelesen und die drei Auslöser bestätigt (`pull_request`,
+`push`, `workflow_dispatch`), `npm test` und `npm run build` erfolgreich. Der
+Knopf selbst ist erst nach der Abnahme zu sehen: GitHub zeigt „Run workflow"
+nur für Arbeitsabläufe, die auf dem Standardbranch liegen. Solange das hier
+nicht in `main` ist, gibt es den Knopf also noch nicht — das ist kein Fehler,
+sondern der Grund, warum diese Änderung überhaupt nötig ist.
+
+**Offen bleibt:** Nach der Zusammenführung einmal tatsächlich drücken und
+nachsehen, ob der Lauf auf einem fremden Branch durchgeht. Das kann erst
+danach jemand tun.

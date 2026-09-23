@@ -29,6 +29,7 @@ test('Neue Frisuren hängen geschlechtsspezifisch und mit stabilen Namen hinten 
  assert.deepEqual(m.slice(10),['Mittellange Locken','Lange Locken','Box Braids','Zurückgebundene Locs','Asymmetrischer Fringe']);
  assert.deepEqual(w.slice(10),['Vollpony','Curtain Bangs','Asymmetrischer Bob','Half-up','Langer Flechtzopf','Lange Wellen','Twin Buns']);
  assert.equal(frisurName(26,'m'),'Mittellange Locken');
+ assert.equal(frisurName(27,'m'),'Lange Locken');
  assert.equal(frisurName(30,'m'),'Asymmetrischer Fringe');
  assert.equal(frisurName(24,'w'),'Vollpony');
  assert.equal(frisurName(30,'w'),'Twin Buns');

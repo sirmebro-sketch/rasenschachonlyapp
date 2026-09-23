@@ -40,8 +40,17 @@ jede Runde, ohne Ausnahme:
   die Entscheidung darüber, und die trifft Codex.
 - **Die Abnahme vorlegen:** ein Vermerk in `ENTWICKLUNG.md` mit Basis-Commit,
   Änderungen, durchgeführten Prüfungen samt Ergebnis und ausdrücklich offenen
-  Punkten. Ein Pull Request ist der bevorzugte Weg, weil dort die CI läuft —
-  ein reiner Branch-Push löst sie nicht aus.
+  Punkten. Übergeben wird über den Branch.
+- **Den Pull Request eröffnet Claude, entschieden wird er von Codex**
+  (Kevin, 17.09.2026). Eröffnen und Zusammenführen sind zwei Handlungen: das
+  Eröffnen ändert an `main` nichts, es legt den Vorschlag sichtbar hin und
+  lässt die CI daran laufen (`.github/workflows/regression.yml`, `on:
+  pull_request` — ein reiner Branch-Push löst sie nicht aus). Abnahme,
+  Prüfung, Gegenprobe und der Merge-Knopf liegen bei Codex.
+  Daraus folgt, was Claude am Pull Request **nicht** tut: nicht
+  zusammenführen, nicht freigeben, kein Auto-Merge einschalten, keinen
+  fremden Pull Request schliessen. Der Vermerk in `ENTWICKLUNG.md` gehört
+  trotzdem hinein — die CI prüft, ob es baut, nicht ob es stimmt.
 - **Eine Entscheidung von Codex wird umgesetzt, nicht neu verhandelt.** Wer
   einen Fehler darin sieht, sagt es einmal mit Begründung; danach gilt die
   Entscheidung. Der Eigentümer kann sie aufheben.

@@ -1,4 +1,30 @@
+# 35.195.0 · Vereinswirtschaft und gemeinsame Qualitätsrunde
+
+Vereinskasse, Preise, Sponsoren, Ausbau, Saisonabrechnung und Lizenzfolgen sind verbunden.
+Neue Spielklänge, Startbild und App-Icon; lange Locken und bessere mobile Bedienung.
+Kartentexte, lange Namen, kleine Bildschirmhöhen und mehrere Hilfe-/Leertexte korrigiert.
+Android-Geräteprüfung der neuen Audio-/Optikfunktionen bleibt offen.
+
 # Änderungen
+
+## Noch nicht veröffentlicht
+
+- Männerfrisur 27 „Lange Locken“ rahmt das Gesicht mit getrennten Kronen-/Seitenlocken statt einer tiefen geschlossenen Haarfläche; gespeicherte Frisur-ID und übriger Katalog bleiben unverändert.
+
+- Auf schmalen Smartphones zeigt die Charakter-Kategorienleiste jetzt dezent an, dass weitere Kategorien horizontal erreichbar sind; der Hinweis wechselt beim Wischen passend zwischen Anfang, Mitte und Ende.
+
+- Neues Rasenschach-XI-Startmotiv erscheint beim Appstart als kurzer Ladescreen mit dezentem Ladekreis unter dem XI.
+- Separater PR-Beta-Build mit eigener App-ID ermöglicht die Installation neben der produktiven Android-App, ohne Release oder main-Merge.
+
+- Neues Rasenschach-XI-Motiv ersetzt das bisherige App-Icon vollflächig; Android liefert nur noch die jeweilige Launcher-Maske, ohne zweiten Innenrand.
+- PR-Beta kann als getrennte Debug-App `de.rasenschach.xi.beta` neben der produktiven App installiert werden.
+- Launcher-Regression prüft WebP-RIFF-Länge, 432×432-Maße und die tatsächlich verwendeten Android-Icon-Verweise.
+
+
+## Noch nicht veröffentlicht – Sol: Spielklänge zur Astra-Abnahme
+
+- Eigene, kurze Sounds für Menüs, Entscheidungen, Sonderschuss, Saison, Titel, Wildcards und Sammelkarten. Kein durchgehender Soundtrack.
+- Lautstärke in den Einstellungen zwischen Aus, Leise und Normal wählbar; die Auswahl bleibt beim Neustart erhalten.
 
 ## 35.194.1 – Kleine Korrekturen nach unabhängiger Qualitätsprüfung
 

@@ -156,6 +156,9 @@ Astra darf eigene geprüfte Runden im autorisierten Rahmen integrieren. Die
 allgemeine Schreibfreigabe darunter hebt die Grenzen von Lemming und Claude
 nicht auf. Keine dieser Dateien umgeht technische Plattformfreigaben.
 
+Kurzfassung der Arbeitsteilung am Pull Request: **Claude legt vor, Codex
+entscheidet.** Der Knopf, der `main` verändert, gehört genau einer Seite.
+
 ### Freigabe für die weitere Zusammenarbeit (15.09.2026)
 
 Der Eigentümer hat im Chat Commit `4cc06f4` (35.181.0), dessen Upload nach
@@ -228,6 +231,25 @@ zusätzlichen Elterncommit übernehmen, wie in 35.178 geschehen. Keine ungeprüf
 Arbeit überschreiben und keine Force-Pushes zur vermeintlichen Bereinigung.
 Im Entwicklungsvermerk Quell- und Zielcommit sowie die Entscheidung nennen.
 
+### Eigene Spielklänge
+
+Die 16 MP3-Dateien unter `public/sounds/` sind eigens für Rasenschach XI aus
+Sinustönen, Obertönen und synthetischem Rauschen erzeugt; es werden keine
+Fremdaufnahmen oder fremden Melodien verwendet. `python3 tools/generate-sounds.py`
+erzeugt sie deterministisch neu (benötigt NumPy und ffmpeg mit libmp3lame).
+Dateinamen und Abspielregeln stehen in `sound.js`. Ein `data-sound` an einer
+Schaltfläche überschreibt den dezenten Standardton, `data-sound="none"` verhindert
+ihn für Aktionen mit einem eigenen unmittelbaren Klang. Beim Pack öffnet ein
+kurzer Antipp-Ton den Browser-Audiokanal, der eigentliche Pack-Klang folgt erst
+nach erfolgreicher Buchung.
+
+Die Lautstärke `rasenschach:sound` (0/1/2) ist eine normale lokale Einstellung:
+Sie wird beim Laden ausgelesen und bei „Alles löschen“ entfernt. Standard ist
+„Leise“. Es gibt keine Hintergrundmusik oder automatische Wiedergabe beim Start;
+die App spielt erst nach einer Bedienaktion. Audiofehler dürfen den Spielablauf
+nicht unterbrechen. Den Klang auf einem echten Android-Gerät mit Medienlautstärke,
+Stummschalter und Unterbrechungen prüfen, bevor er veröffentlicht wird.
+
 ### Versionsschema
 
 `package.json` führt die Version als `major.minor.patch` (derzeit 35.194.1).
@@ -242,7 +264,11 @@ reine Werkzeug- oder Dokumentationsänderungen erhöhen sie nicht.
 **`npm test`** — `node --test tools/*.test.cjs`. Wie viele Prüfungen es gerade
 sind, sagt die Ausgabe des Laufs (`# pass`); eine Zahl an dieser Stelle wäre nach
 der nächsten Runde wieder falsch. Läuft in der CI bei Pushes auf `main` und Pull
-Requests (`.github/workflows/regression.yml`).
+Requests (`.github/workflows/regression.yml`) — und seit 17.09.2026 zusätzlich
+**von Hand auf jedem Branch**: Actions → „Spielregressionen" → „Run workflow" →
+Branch wählen. Damit ist eine Übergabe auch dann automatisch geprüft, wenn dazu
+noch kein Pull Request offen ist; ein reiner Branch-Push allein startet
+weiterhin nichts.
 Schwerpunkt: Abschlussbelohnungen und Kaufbuchungen, Speicherfehler an jedem
 einzelnen Schritt, simulierte Prozessabbrüche, Import mit Rücknahme,
 Ereignisstände nach Umsortierung des Katalogs.
@@ -348,11 +374,19 @@ und ohne Bewegung ab, einschließlich Abschlussbutton und Text im Sichtbereich.
 
 ### App-Icon
 
-`artwork/app-icon.svg` ist die scharfe Vektorfassung. `python tools/app-icon.py`
-erzeugt daraus beziehungsweise aus derselben Geometrie das native Android-
-Foreground und die Legacy-PNGs in allen Dichten. Benötigt Python fonttools
-mit WOFF2-Unterstützung und Inkscape. Die Buchstaben stammen aus der bereits
-eingebetteten Spielschrift; keine externe Ersatzschrift.
+`artwork/app-icon-source.webp` ist seit 18.09.2026 die freigegebene vollflächige
+Rasterquelle des Launcher-Icons. `artwork/app-icon.svg` ist nur ein dünner
+Vorschau-Wrapper auf diese Datei. `python tools/app-icon.py` kopiert die Quelle
+in die Android-Ressourcen, richtet Legacy- und Adaptive-Icon-Verweise ein und
+entfernt die früheren Legacy-PNG-Dubletten. Das Skript benötigt nur Python aus
+der Standardbibliothek.
+
+Die freigegebene Quelle ist eine quadratische 432-px-WebP. Der Generator prüft
+RIFF-Länge und Bildmaße, bevor er sie in die Android-Ressourcen übernimmt.
+Beim Adaptive Icon ist das vollständige Motiv die einzige sichtbare Bildebene;
+der Foreground bleibt transparent und Android liefert allein die äußere Rund-/
+Squircle-Maske. Dadurch gibt es weder eine zweite skalierte Bildkopie noch einen
+künstlichen Innenrand oder eine Naht.
 
 ### Isolierter Spieltest (35.191)
 

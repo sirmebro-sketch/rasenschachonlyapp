@@ -209,7 +209,7 @@ Die Reihenfolge ist eine Qualitäts-/Risikoreihenfolge. Der letzte Nutzerauftrag
 
 **Abnahme:** kein wandernder Effekt über lesekritischem Inhalt, sofern nicht bewusst sehr dezent; keine abgeschnittenen Rechtecke; Seltenheiten bleiben visuell unterscheidbar.
 
-### CARD-P0-02 – Packkontur und Folie systematisch prüfen — BEREIT
+### CARD-P0-02 – Packkontur und Folie systematisch prüfen — UMGESETZT / ASTRA-ABNAHME OFFEN
 
 **Ziel:** Holo-/Glanzfläche folgt der gezackten Packform, Druck bleibt darüber stabil und nichts wirkt seitlich/oben abgeschnitten.
 
@@ -217,7 +217,11 @@ Die Reihenfolge ist eine Qualitäts-/Risikoreihenfolge. Der letzte Nutzerauftrag
 
 **Abnahme:** alle Packstufen in Galerie und schmaler Browseransicht, mit/ohne Bewegung; mindestens Gold/Legende auf Android nachziehen.
 
+**Lemming-Prüfrunde 18.09.2026:** Auf Live-main wurde bei 320/390 px mit und ohne Bewegung kein Kontur-, Überlagerungs- oder Abschneidefehler reproduziert; deshalb blieb der Produktcode unverändert. PR #31 ergänzt eine gezielte Browserregression für Pack-/Folienbox, sichtbaren Packpfad, Beschriftungsgrenzen und Ruhemodus samt Screenshots. Browser- und Build-Eigenprüfung sind grün; Gold/Legende auf echtem Android bleiben ausdrücklich für Astra offen. Details: [Prüfbericht CARD-P0-02](pruefberichte/2026-09-18-card-p0-02-packkontur.md).
+
 ### WILD-P0-01 – Wildcard-Seltenheiten als konsistente Familie — SICHTPRÜFUNG
+
+**Teilstand 18.09.2026 – mobile Aufdeckung umgesetzt / Astra-Abnahme offen:** Alle sieben Seltenheiten wurden bei 320/390 px mit und ohne Spielanimation anhand langer realer Katalogtexte sichtbar geprüft. Kein Produktfehler war reproduzierbar; Produkt- und Effektcode blieben unverändert. Galerie und Browserregression prüfen jetzt Text-/Buttongrenzen, Bühnenstabilität sowie Material-/Prägungskontur und erzeugen die vollständige mobile Screenshot-Matrix. Der Vergleich im Pass und eine Android-Nachkontrolle bleiben außerhalb dieser begrenzten Teilrunde offen. Details: `pruefberichte/2026-09-18-wild-p0-01-aufdeckung.md`.
 
 **Ziel:** alle Seltenheitsstufen teilen dieselbe Informationslogik; höhere Stufen steigern Material/Bühne, nicht Unlesbarkeit.
 
