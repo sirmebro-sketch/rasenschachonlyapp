@@ -1,3 +1,8 @@
+# 35.195.1 · Ruhigere Gold- und Legendärkarten
+
+Goldene und legendäre Spielerkarten haben eine durchgehende Fläche wie Bronze.
+Die dunklen Kästen hinter Namen und Auszeichnungen entfallen; der Folienschimmer ist dezenter.
+
 # 35.195.0 · Vereinswirtschaft und gemeinsame Qualitätsrunde
 
 Vereinskasse, Preise, Sponsoren, Ausbau, Saisonabrechnung und Lizenzfolgen sind verbunden.
