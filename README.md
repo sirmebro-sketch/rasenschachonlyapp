@@ -233,22 +233,29 @@ Im Entwicklungsvermerk Quell- und Zielcommit sowie die Entscheidung nennen.
 
 ### Eigene Spielklänge
 
-Die 16 MP3-Dateien unter `public/sounds/` sind eigens für Rasenschach XI aus
-Sinustönen, Obertönen und synthetischem Rauschen erzeugt; es werden keine
-Fremdaufnahmen oder fremden Melodien verwendet. `python3 tools/generate-sounds.py`
-erzeugt sie deterministisch neu (benötigt NumPy und ffmpeg mit libmp3lame).
-Dateinamen und Abspielregeln stehen in `sound.js`. Ein `data-sound` an einer
-Schaltfläche überschreibt den dezenten Standardton, `data-sound="none"` verhindert
-ihn für Aktionen mit einem eigenen unmittelbaren Klang. Beim Pack öffnet ein
-kurzer Antipp-Ton den Browser-Audiokanal, der eigentliche Pack-Klang folgt erst
-nach erfolgreicher Buchung.
+Die kurzen MP3 unter `public/sounds/` und die drei langen Ogg/Vorbis-Stücke unter
+`public/music/` sind aus eigenen Noten, Sinustönen und synthetischem Rauschen
+erzeugt. Es sind keine fremden Aufnahmen, Sample-Libraries oder erkennbar
+übernommenen Melodien eingebaut. Reproduktion: `python3 tools/generate-sounds.py`
+und `python3 tools/generate-soundtrack.py` (NumPy, FFmpeg mit libmp3lame und
+libvorbis). Mit `--masters /pfad/zum/ordner` werden unkomprimierte WAV-Master
+zusätzlich exportiert. Erzeugung, Inventar und offen gebliebene Hör-/Geräteprüfung
+stehen im [Sol-Prüfbericht](pruefberichte/2026-09-23-sol-musik-und-sounddesign.md).
 
-Die Lautstärke `rasenschach:sound` (0/1/2) ist eine normale lokale Einstellung:
-Sie wird beim Laden ausgelesen und bei „Alles löschen“ entfernt. Standard ist
-„Leise“. Es gibt keine Hintergrundmusik oder automatische Wiedergabe beim Start;
-die App spielt erst nach einer Bedienaktion. Audiofehler dürfen den Spielablauf
-nicht unterbrechen. Den Klang auf einem echten Android-Gerät mit Medienlautstärke,
-Stummschalter und Unterbrechungen prüfen, bevor er veröffentlicht wird.
+`sound.js` bleibt der einzige Abspieler. `data-sound` an einer Schaltfläche setzt
+den leisen Standardton außer Kraft; `data-sound="none"` unterdrückt ihn bei
+Aktionen mit eigenem Ton. Die Kartenseltenheit wird erst bei der sichtbaren
+Aufdeckung hörbar. Die Musik wird nur bei Bedarf geladen und wechselt bei
+Spielabschnitten mit Überblendung, nicht bei jedem Seitenwechsel.
+
+`rasenschach:sound` und `rasenschach:music` sind getrennte lokale Einstellungen
+(0 = aus, 1 = leise, 2 = normal). Effekte bleiben standardmäßig leise; Musik
+beginnt ausgeschaltet und startet erst nach bewusster Wahl und Bedienaktion.
+Beide Schlüssel werden bei „Alles löschen“ entfernt. Beim Wechsel in den
+Hintergrund pausiert Audio; erst die nächste Spielbedienung setzt eingeschaltete
+Musik leise fort. Browser-Audio darf Entscheidungen und Speicherungen nie
+blockieren. Die tatsächliche Wirkung auf fremde Musik/Podcasts ist auf einem
+Android-Gerät zu prüfen; WebView-Audiofokus ist hier nicht vermessen.
 
 ### Versionsschema
 

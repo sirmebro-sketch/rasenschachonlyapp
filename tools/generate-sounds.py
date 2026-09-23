@@ -5,12 +5,15 @@ Deterministic synthesis; no samples, recordings, borrowed melodies or licenses.
 Run from the repository root: python3 tools/generate-sounds.py
 """
 from pathlib import Path
+import argparse
 import subprocess
+import wave
 import numpy as np
 
 RATE = 44100
 OUT = Path(__file__).resolve().parents[1] / "public" / "sounds"
 RNG = np.random.default_rng(11092026)
+MASTERS = None
 
 
 class Cue:
@@ -52,14 +55,19 @@ class Cue:
         end = min(len(self.samples), at + len(wave))
         self.samples[at:end] += wave[:end - at]
 
-    def write(self, name):
+    def write(self, name, ceiling=.65):
         # Gentle saturation, a short fade and conservative phone-speaker headroom.
         x = np.tanh(self.samples * 1.25)
         fade = min(180, len(x) // 4)
         x[:fade] *= np.linspace(0, 1, fade)
         x[-fade:] *= np.linspace(1, 0, fade)
-        x *= .65 / max(np.max(np.abs(x)), 1e-8)
+        x *= ceiling / max(np.max(np.abs(x)), 1e-8)
         pcm = (x * 32767).astype("<i2").tobytes()
+        if MASTERS:
+            MASTERS.mkdir(parents=True, exist_ok=True)
+            with wave.open(str(MASTERS / (name + ".wav")), "wb") as output:
+                output.setnchannels(1); output.setsampwidth(2); output.setframerate(RATE)
+                output.writeframes(pcm)
         subprocess.run(["ffmpeg", "-hide_banner", "-loglevel", "error", "-y",
                         "-f", "s16le", "-ar", str(RATE), "-ac", "1", "-i", "pipe:0",
                         "-codec:a", "libmp3lame", "-b:a", "64k", str(OUT / (name + ".mp3"))],
@@ -85,7 +93,31 @@ def render():
     Cue(.57).tone(0, .18, 330, .32).tone(.16, .25, 392, .32).tone(.29, .23, 587, .27).write("transfer")
     Cue(.38).rustle(0, .16, .16).tone(.06, .27, 392, .31).tone(.13, .24, 587, .21).write("flip")
     Cue(1.71).tone(0, .50, 196, .28, "soft").tone(.27, .53, 294, .23, "soft").tone(.56, .72, 392, .3, "soft").tone(.82, .66, 494, .24).tone(1.07, .55, 659, .18).write("farewell")
+    # Closely related quiet button variants; the mixer chooses one per touch.
+    Cue(.11).tone(0, .083, 587, .32, end_hz=494).write("tap_2", .42)
+    Cue(.11).tone(0, .083, 740, .27, end_hz=587).write("tap_3", .40)
+    Cue(.18).rustle(0, .10, .13).tone(.018, .15, 392, .23, end_hz=294).write("back", .41)
+    Cue(.24).tone(0, .17, 220, .34).tone(.06, .15, 185, .18).write("denied", .43)
+    Cue(.40).rustle(0, .17, .12).tone(.10, .22, 392, .29).tone(.19, .19, 494, .25).write("save", .46)
+    Cue(.44).rustle(0, .19, .20).tone(.09, .20, 196, .38, "bass", 98).tone(.23, .18, 392, .22).write("buy", .48)
+    Cue(.39).rustle(0, .17, .13).tone(.05, .24, 392, .25).tone(.16, .21, 294, .22).write("sell", .42)
+    Cue(.65).tone(0, .21, 196, .33, "bass", 112).tone(.14, .29, 392, .24).tone(.28, .27, 494, .23).tone(.41, .20, 659, .20).write("unlock", .51)
+    Cue(.24).tone(0, .15, 294, .27).tone(.08, .14, 392, .23).write("progress", .39)
+    Cue(.65).tone(0, .25, 147, .30, "bass", 95).tone(.13, .34, 392, .23).tone(.27, .30, 494, .28).tone(.40, .22, 587, .24).write("breakthrough", .51)
+    Cue(.82).tone(0, .26, 196, .32, "bass", 80).tone(.16, .30, 392, .22).tone(.30, .33, 494, .26).tone(.44, .34, 659, .23).tone(.57, .23, 784, .19).write("milestone", .53)
+    Cue(1.39).tone(0, .30, 147, .39, "bass", 74).tone(.18, .36, 392, .21).tone(.38, .35, 494, .25).tone(.57, .43, 587, .26).tone(.79, .46, 784, .23).tone(1.03, .30, 988, .15).write("champion", .54)
+    Cue(.30).tone(0, .19, 294, .25).tone(.08, .19, 392, .21).write("card_bronze", .39)
+    Cue(.43).tone(0, .23, 392, .26).tone(.11, .23, 494, .22).tone(.21, .20, 659, .19).write("card_silver", .43)
+    Cue(.63).tone(0, .25, 196, .29, "bass", 102).tone(.14, .31, 392, .24).tone(.28, .29, 587, .24).tone(.40, .22, 784, .17).write("card_gold", .47)
+    Cue(.97).tone(0, .30, 147, .34, "bass", 73).tone(.20, .30, 392, .23).tone(.36, .35, 494, .25).tone(.53, .36, 659, .23).tone(.70, .23, 988, .14).write("card_legendary", .52)
+    Cue(.22).rustle(0, .16, .17).tone(.08, .12, 196, .14).write("pack_open", .66)
+    # Fixed, rarity-neutral cue. The actual tier only sounds at reveal.
+    Cue(.29).rustle(0, .13, .11).tone(.09, .19, 392, .20, "soft", 440).write("pack_tension", .33)
+    Cue(.54).tone(0, .24, 196, .33, "bass", 95).tone(.11, .26, 294, .22).tone(.25, .24, 392, .20).write("injury", .43)
 
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--masters", type=Path, help="directory for uncompressed PCM masters")
+    MASTERS = parser.parse_args().masters
     render()

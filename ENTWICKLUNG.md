@@ -2549,3 +2549,14 @@ sondern der Grund, warum diese Änderung überhaupt nötig ist.
 **Offen bleibt:** Nach der Zusammenführung einmal tatsächlich drücken und
 nachsehen, ob der Lauf auf einem fremden Branch durchgeht. Das kann erst
 danach jemand tun.
+## 23.09.2026 · Sol · zusätzliche Klangwelt zur Astra-Abnahme
+
+Von `main` `5491fa7` aus wurden die bereits integrierten Sol-Sounds um drei
+lange Musikstücke, neue Bedien- und Belohnungszeichen und eine auf die sichtbare
+Kartenenthüllung abgestimmte Klangfolge ergänzt. Ein einziger Abspieler,
+getrennte dauerhaft gespeicherte Regler und Musikstandard Aus. Herkunft,
+Inventar, Asset-Prüfung und offene Geräte-/Hörabnahme stehen im
+[Sol-Prüfbericht](pruefberichte/2026-09-23-sol-musik-und-sounddesign.md).
+Diese Änderung liegt nur auf `sol/klangwelt-musik-20260923`; Astra entscheidet
+über Integration und spätere Versionsnummer. Der finale Test-/CI-Stand wird
+im Bericht am PR-Head nachgetragen.

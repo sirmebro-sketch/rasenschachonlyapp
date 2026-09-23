@@ -225,3 +225,10 @@ Prüfung: Versionskonsistenz und Diff lokal prüfen; Web-/Android-Build und Sign
 Offen am Gerät: Update über 35.169.0 ohne Deinstallation, Spielstand erhalten, Start im Vollbild, Randwischen, Rückkehr aus Benachrichtigungen/anderer App, Tastatur und Displayausschnitt.
 
 Android-Referenz: https://developer.android.com/develop/ui/views/layout/immersive
+# Noch nicht veröffentlicht · Sol-Klangpaket zur Astra-Abnahme
+
+Drei eigene Musikstücke begleiten Hauptmenü, Karrierealltag und Saisonendspurt.
+Musik lässt sich unabhängig von den Spielklängen ausschalten und wird erst nach
+bewusster Wahl gestartet. Neue ruhige Bedien-, Erfolgs- und Kartenklänge machen
+Training, Meilensteine und Packöffnungen deutlicher. Kartenseltenheit erklingt
+erst beim Aufdecken. Die vorhandenen Sounds bleiben Teil derselben Klangwelt.
