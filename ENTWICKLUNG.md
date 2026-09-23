@@ -16,9 +16,15 @@ andere Verbraucher bleibt unverändert; Bronze/Silber erhalten weiterhin keine
 Holografie. Eine Regression schützt gegen die 16-%-Rückkehr und hält die neue
 Spielerkarten-Abstufung fest.
 
-Prüfung: GitHub-PR-CI für `npm test`, `npm run build`, Galerie und Browserprüfung
-wird am exakten PR-Head ausgewertet. Lokale Browser-/Android-Sichtprüfung ist in
-dieser Umgebung nicht verfügbar; das wird nicht als durchgeführt ausgegeben.
+Eigenprüfung am Produktcode-Head `6dface38`: GitHub `Spielregressionen`
+erfolgreich mit 237/237 Tests und Produktionsbuild. `Visuelle Browsertests`
+erfolgreich mit 70 bestandenen und 29 nach bestehenden Projektfiltern
+übersprungenen Prüfungen; der neue Holo-Test lief in handy, schmal und desktop.
+Den erzeugten 390-px-Screenshot habe ich geöffnet: Bronze/Silber bleiben ohne
+Holo, Gold ist klar irisierend, Legendär sichtbar kräftiger; Porträt, Name, OVR,
+Sekundärinfo und die kompakten Ruhmeshallen-Karten bleiben lesbar und innerhalb
+der Kartenkontur. Der PR-Beta-APK-Workflow war ebenfalls erfolgreich; das ist
+kein physischer Android-Gerätetest. Reale Android-Sichtung bleibt offen.
 
 Status: umgesetzt, Astra-Abnahme offen; kein main-Merge und kein Release.
 
