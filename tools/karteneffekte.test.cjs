@@ -15,3 +15,12 @@ test('Folien trennen SVG-Referenzen und lassen Pack-Folien flächig',async()=>{
  assert.doesNotMatch(html,/M2 2 H98/);
  assert.equal((html.match(/aria-hidden="true"/g)||[]).length,3);
 });
+
+test('Spielerkarten-Holo bleibt deutlich sichtbar und andere Folien unveraendert',()=>{
+ const fs=require('node:fs');
+ const src=fs.readFileSync('karteneffekte.jsx','utf8');
+ assert.match(src,/const deckkraft=dezent\?\(stark\?\.78:\.66\):1/);
+ assert.doesNotMatch(src,/dezent\s*\?\s*\.16/);
+ for(const farbe of ['#ff6ecb','#8f7dff','#55e8ff','#77ffad','#ffd76d'])assert.match(src,new RegExp(farbe,'i'));
+ assert.match(src,/const deckkraft=dezent[^\n]+:1/);
+});
