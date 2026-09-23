@@ -136,8 +136,10 @@
 
 /* Astra-Abnahme: Labels dürfen den Vereinsnamen im schmalen Pass nicht verdrängen. */
 @media (max-width: 520px) {
-  .spielerpass-daten .passzeile { flex-wrap: wrap; gap: 3px 6px; }
-  .spielerpass-daten .passzeile > span:first-child { flex-basis: 100%; }
+  .spielerpass-kopf { flex-wrap: wrap; }
+  .spielerpass-kopf > :last-child { margin-left: auto; }
+  .spielerpass-kopf .spielerpass-daten { order: 1; flex-basis: 100% !important; }
+  .spielerpass-daten .passzeile { gap: 3px 6px; }
   .spielerpass-daten .passzeile > span:last-child { flex: 1 1 0; min-width: 0; text-align: left; }
 }
 /* Bei geringer Höhe Platz für das fokussierte Feld lassen. Auch Querformat;

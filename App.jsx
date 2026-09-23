@@ -13858,7 +13858,7 @@ function Pass({ p, full }) {
         <span>Spielerpass</span>
         <span className="m" style={{ letterSpacing: ".10em" }}>{nr}</span>
       </div>
-      <div style={{ display: "flex", gap: 11, alignItems: "flex-start" }}>
+      <div className="spielerpass-kopf" style={{ display: "flex", gap: 11, alignItems: "flex-start" }}>
         {/* Lichtbild — auf jedem Pass derselbe harte Rahmen */}
         <div style={{ border: "2px solid var(--tinte)", padding: 2, flexShrink: 0, background: c1 + "1A" }}>
           <Avatar seed={p.avatar} zuege={p.zuege} club={p.club} size={62} g={p.g} nat={p.nation.id} meta={p.meta} />
@@ -15517,6 +15517,13 @@ function CreateScreen({ onStart, onBack, meta }) {
   useEffect(() => {
     if (!eigenerName) setName(namensVorschlag(nation, gender, avatar + namensDreh * 7919));
   }, [nation, gender, avatar, eigenerName, namensDreh]);
+  useEffect(() => {
+    // Ein mehrzeiliger Vorschautext darf das gerade bearbeitete Feld nicht
+    // unter den Rand schieben, insbesondere bei eingeblendeter Tastatur.
+    const eingabe = document.getElementById(formularId + "-name");
+    if (window.innerHeight <= 540 && document.activeElement === eingabe)
+      eingabe?.scrollIntoView({ block: "nearest" });
+  }, [name, formularId]);
   useEffect(() => {
     setZuege((z) => {
       // Manuelle Farben bleiben beim Nationalitätswechsel erhalten.

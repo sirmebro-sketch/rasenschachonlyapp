@@ -39,10 +39,12 @@ test('Kurzer Bildschirm: Namenseingabe bleibt frei und langer Name vollständig'
  const input=page.getByRole('textbox',{name:'Name der Spielerin oder des Spielers'});
  const name='Alexandermilian Muster';
  await input.fill(name);
- await expect(input).toBeInViewport();
- const box=await input.boundingBox();
- const free=await page.evaluate(({x,y})=>document.elementFromPoint(x,y)?.tagName,{x:box.x+box.width/2,y:box.y+box.height/2});
- expect(free).toBe('INPUT');
+ // Nach dem React-Render muss das fokussierte Feld von selbst sichtbar bleiben.
+ await expect(input).toBeInViewport({ratio:1});
+ await expect.poll(()=>input.evaluate(el=>{
+  const r=el.getBoundingClientRect();
+  return document.elementFromPoint(r.x+r.width/2,r.y+r.height/2)===el;
+ })).toBe(true);
  const label=page.locator('.char-vorschau [title]').first();
  await expect(label).toContainText(name);
  expect(await label.evaluate(el=>el.scrollWidth<=el.clientWidth+1)).toBe(true);

@@ -42,8 +42,8 @@ und Leistungstests bleiben offen; eine vollständige Geräteabnahme wird nicht b
 
 - Gold-/Legendenkarten: Folie überstrahlte kleine Informationen. Dunkler Informationsgrund,
   hellere und größere Sekundärtexte; Folie und Porträt bleiben sichtbar. Im Browser nachgesehen.
-- Spielerpass: auf schmalen Displays stehen Beschriftung und Wert untereinander;
-  der Vereinsname verliert dadurch nicht mehr seine gesamte verfügbare Breite.
+- Spielerpass: auf schmalen Displays stehen Porträt und Stärke über den Passdaten.
+  Namen und Vereinsangaben bekommen die gesamte Kartenbreite statt einer engen Mittelspalte.
 - Charaktererstellung: lange Namen umbrechen; bei niedriger Bildschirmhöhe sind
   Vorschau und Abschlussleiste nicht mehr angeheftet und verdecken keine Namenseingabe.
 - Hinweise präzisiert: Wunschverein maximal drei bedingte Angebote, Porträt versus Statur,
@@ -102,3 +102,14 @@ und dunklen Kontexten angesehen; Augen und Brauen liegen frei auf der Gesichtsfl
 Die Preisoberfläche meldete bei normalen Gastro-/Fanartikelpreisen fälschlich einen
 Stimmungsschaden, obwohl der Kern Normalpreise schützt. Der Hinweis folgt jetzt dieser
 Grenze; eine Regression prüft Normal- und überhöhte Preise. 236/236 Tests erneut grün.
+
+## Abschließende mobile Korrektur
+
+Die ersten beiden kombinierten Browserläufe hatten ausschließlich drei Fehler im neuen
+Test für geringe Höhe (je Bildschirmprojekt); 64 Prüfungen bestanden, 29 wurden gemäß
+bestehender Projektfilter übersprungen. Das Umbruchwachstum der Namensvorschau schob das
+fokussierte Feld unter den unteren Rand. Die Erstellung hält es nun nach einer
+Namensänderung im sichtbaren Bereich, solange es fokussiert ist und die Höhe maximal
+540 px beträgt. Der Test prüft vollständige Sichtbarkeit und freie Trefffläche nach
+dem Render ohne erneutes Antippen. Die erste Testeingabe wurde außerdem auf die echte
+22-Zeichen-Grenze begrenzt. Finaler CI-Ausgang folgt im Nachtrag.
