@@ -42,10 +42,29 @@ Versionierung, Audio sowie Release-/Android-Infrastruktur.
   die tatsächlich gerenderten Farbstopps, den ausschließlich bei Gold vorhandenen
   feinen Iris-Akzent, fehlende Holografie bei Bronze/Silber sowie den Ruhemodus.
 
-## Noch offen
+## Eigenprüfung
 
-CI, Produktionsbuild und Browserlauf müssen am exakten PR-Head ausgewertet werden.
-Eine echte visuelle Beurteilung des finalen Screenshots und ein physischer
-Android-Gerätetest sind bis dahin nicht als erfolgt zu werten.
+Produkt-/Teststand: `36bb83c3211c5997e55994c35e96c6cdcee1db81`.
 
-**Status:** umgesetzt / Astra-Abnahme offen / nicht in main integriert.
+- GitHub `Spielregressionen`: **240/240 bestanden**, 0 fehlgeschlagen; `npm run build` erfolgreich.
+- GitHub `Visuelle Browsertests`: **74 bestanden**, **31 projektbedingt übersprungen**, 0 fehlgeschlagen.
+- Der neue Test `Gold wirkt metallisch, Legendaer bleibt irisierend` bestand in `handy`, `schmal` und `desktop`.
+- GitHub `Beta-APK fuer PR`: erfolgreich. Das belegt Build/Synchronisierung, nicht die Darstellung auf einem physischen Android-Gerät.
+- Die drei Screenshots aus dem Browserartefakt wurden geöffnet und bewertet:
+  Gold zeigt eine klar warme, gelb-/bronzegoldene Metallfläche mit hellem Lichtzug;
+  die dominanten Magenta-/Cyan-/Grün-Regenbogenbänder sind dort nicht mehr sichtbar.
+  Legendär bleibt dagegen deutlich mehrfarbig irisierend. Porträt, Name, OVR,
+  Position/Alter und die Ruhmeshallen-Zeile bleiben innerhalb der Kartenkontur
+  lesbar; in der schmalen Ansicht greift die bestehende Namenskürzung.
+
+Ein vorheriger Zwischenstand der neuen Unit-Regression war rot, weil beim Schreiben
+des Testfiles Regex-Zeichen und eingebettete Template-Backticks falsch maskiert
+worden waren. Der Produktcode war davon nicht betroffen; die Testsyntax wurde
+korrigiert und erst der oben genannte grüne Stand als Eigenprüfung gewertet.
+
+## Offen
+
+Physischer Android-Gerätetest der optischen Wirkung. Die Browser-Sichtprüfung ersetzt
+diesen nicht.
+
+**Status:** umgesetzt / zur Astra-Abnahme / nicht in main integriert.
