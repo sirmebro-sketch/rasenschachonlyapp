@@ -1,0 +1,53 @@
+import {test,expect} from '@playwright/test';
+const oeffnen=async page=>{
+ await page.getByRole('button',{name:/Dein Verein 1/}).click();
+ await page.getByRole('button',{name:/Jugendakademie/}).click();
+ await page.getByRole('button',{name:'Ausbau',exact:true}).click();
+};
+test.beforeEach(async({page})=>{
+ await page.goto('/.preview/spieltest.html');
+ await page.getByRole('button',{name:'Akademie-Kacheln',exact:true}).click();
+ for(let i=0;i<2;i++) await page.getByRole('button',{name:'Verstanden',exact:true}).click();
+ await oeffnen(page);
+});
+test('Detail zeigt Preis ohne Abbuchung, expliziter Kauf bleibt nach Laden erhalten',async({page},info)=>{
+ const kachel=page.getByRole('button',{name:/Plätze Stufe/});
+ await expect(page.locator('.kauf-kachel')).toHaveCount(9);
+ await kachel.click();
+ const dialog=page.getByRole('dialog',{name:'Trainingsplätze'});
+ await expect(dialog.getByText('Stufe 1 / 6',{exact:true})).toBeVisible();
+ await dialog.getByRole('button',{name:'Schließen'}).click();
+ await expect(kachel).toBeFocused();
+ await expect(kachel).toContainText('16 VC');
+ await kachel.click();
+ await dialog.getByRole('button',{name:'Auf Stufe 2 ausbauen · 16 VC',exact:true}).click();
+ await expect(dialog.getByRole('status')).toContainText('Stufe 2 gespeichert');
+ await expect(dialog.getByText('0 VC',{exact:true})).toBeVisible();
+ await expect(dialog.getByRole('button',{name:'Auf Stufe 3 ausbauen · 30 VC'})).toBeDisabled();
+ await dialog.getByRole('button',{name:'Schließen'}).click();
+ await expect(kachel).toBeFocused();
+ await expect(kachel).toContainText('Stufe 2 / 6');
+ expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1)).toBe(true);
+ await page.screenshot({path:info.outputPath('akademie-kacheln.png'),fullPage:true});
+ await page.getByRole('button',{name:'Gespeicherten Stand laden',exact:true}).click();
+ await oeffnen(page);
+ await expect(kachel).toContainText('Stufe 2 / 6');
+ await kachel.click();
+ await expect(page.getByRole('dialog').getByText('0 VC',{exact:true})).toBeVisible();
+});
+test('Unbezahlbar und Maximum bleiben erklärbar; Escape und Zurück schließen nur Details',async({page})=>{
+ await page.getByRole('button',{name:/Scouting Stufe/}).click();
+ const dialog=page.getByRole('dialog');
+ await expect(dialog.getByText('Noch 2 VC nötig.',{exact:true})).toBeVisible();
+ await expect(dialog.getByRole('button',{name:/Auf Stufe 2 ausbauen/})).toBeDisabled();
+ await page.keyboard.press('Escape');
+ await expect(dialog).toHaveCount(0);
+ const medizin=page.getByRole('button',{name:/Medizin Stufe/});
+ await medizin.click();
+ await expect(dialog.getByText('Vollständig ausgebaut.',{exact:true})).toBeVisible();
+ await expect(dialog.getByRole('button',{name:/ausbauen/})).toHaveCount(0);
+ await page.goBack();
+ await expect(dialog).toHaveCount(0);
+ await expect(medizin).toBeFocused();
+ await expect(page.locator('.kauf-kachel')).toHaveCount(9);
+});

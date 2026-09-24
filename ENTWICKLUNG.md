@@ -1,3 +1,25 @@
+## 24.09.2026 · Astra · Kaufkacheln-Pilot (noch nicht veröffentlicht)
+
+Basis c48b699 (35.195.2). Gemeinsame Kacheln/Detaildialog in kauf-ui.jsx,
+Akademie-Anbindung, neun vorläufige SVG-Symbole und isolierter Prüfstand.
+Die Speicherung bleibt im bestehenden akaKaufen/bucheAenderung; lokale Sperre
+verhindert parallele Bestätigungen, Erfolg folgt erst auf true. Native Dialoge
+übernehmen Fokus/Inert/Escape, vorhandener Zurück-Stapel schließt die Details.
+Kleine Container wechseln bei großer Anzeige in eine Spalte.
+
+Prüfung: npm test 237/237; npm run build erfolgreich (bekannte Bundlegrößenwarnung).
+Cloud-Browser: 390 und 320 px tatsächlich bedient und Screenshots angesehen;
+Kauf 16 VC → Stufe 2 / 0 VC, nach erneutem Laden erhalten; unbezahlbar und Maximum
+sichtbar erklärt; Escape stellt Fokus wieder auf die Kachel. Lokaler automatischer
+Browserlauf kann ohne installierten Chromium nicht starten; CI-Lauf am PR prüfen.
+Android, verzögerte/fehlgeschlagene UI-Speicherung und große Anzeige sind noch
+keine vollständige Abnahme. Kein neues APK, keine Versionsänderung.
+
+Drei getrennte Lemming-Pakete und stabile Schnittstellen stehen in
+[KAUF-UI-ARBEITSPLAN.md](KAUF-UI-ARBEITSPLAN.md). Vermögen/Profimannschaft bleiben
+für die Folgeintegration vorgesehen. Sols separater Audio-Branch bleibt offen;
+bei späterer Zusammenführung den Erfolg-nach-Speicherung-Fix beibehalten.
+
 ## 24.09.2026 · Astra · 35.195.2 · Abnahme neuer Übergaben
 
 Basis `5491fa7`. PR #49 und #50 mit mobilen Nachbesserungen übernommen;

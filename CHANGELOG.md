@@ -21,6 +21,9 @@ Android-Geräteprüfung der neuen Audio-/Optikfunktionen bleibt offen.
 
 ## Noch nicht veröffentlicht
 
+- Jugendakademie als Kaufoberflächen-Pilot: kompakte Ausbauskacheln mit Detailfenster,
+  sichtbaren Preisen und Sperrgründen; Erfolg erst nach gespeicherter Buchung.
+
 - Die Spielerpass-Vorschau in der Charaktererstellung bleibt beim Öffnen und Schließen der Feinheiten gleich aufgebaut und gleich skaliert; das Porträt ist in beiden Zuständen moderat größer.
 - Goldene und legendäre Spielerkarten zeigen wieder einen deutlich sichtbaren, regenbogenartig irisierenden Holoeffekt. Legendäre Karten schimmern kräftiger als Gold; Bronze, Silber, Packs und Wildcard-Folien bleiben unverändert.
 

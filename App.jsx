@@ -1,4 +1,5 @@
 import appPackage from "./package.json";
+import { KaufKachel, KaufDetail, KAUF_CSS } from "./kauf-ui.jsx";
 import { WildcardPraegung, WildcardBuehne, WILDCARD_CSS } from "./wildcardoptik.jsx";
 import { Bartform } from "./bartformen.jsx";
 import { gesichtsAnker } from "./gesichtsanker.js";
@@ -6935,6 +6936,10 @@ function AkademieScreen({ aka, verein, onKauf, onGruenden, onBack, onAendern }) 
   const [tnotiz, setTnotiz] = useState("");
   const [reiter, setReiter] = useState("ausbau");
   const [jubel, setJubel] = useState(null);      // zuletzt ausgebaute Abteilung
+  const [auswahl, setAuswahl] = useState(null);
+  const [kauft, setKauft] = useState(false);
+  const [kaufNotiz, setKaufNotiz] = useState("");
+  const kaufSperre = useRef(false);
   const reiterRef = useRef(null);
   /* Gegen alte oder unvollständige Sicherungen absichern: fehlende Felder
      werden aus dem Ausgangszustand aufgefüllt. */
@@ -7126,47 +7131,52 @@ function AkademieScreen({ aka, verein, onKauf, onGruenden, onBack, onAendern }) 
         </div></div>
 
         {reiter === "ausbau" && (
-          <div className="g1" style={{ marginTop: 12 }}>
+          <div className="g1 kauf-uebersicht" style={{ marginTop: 12 }}>
             <div className="m" style={{ fontSize: 10.5, color: "var(--mu)" }}>
               Voller Ausbau: noch {rest} VC · Ausbaustufen {akaAusbau(a)} von {AKA_STUFEN}
             </div>
-            {ABTEILUNGEN.map((x) => {
-              const st = akaStufe(a, x.id);
-              const preis = akaPreis(a, x.id);
+            <div className="kauf-raster">
+              {ABTEILUNGEN.map(x => {
+                const st = akaStufe(a, x.id), preis = akaPreis(a, x.id);
+                return <KaufKachel key={x.id} icon={"akademie." + x.id} titel={x.kurz || x.n}
+                  stufe={st} maximum={AKA_MAX} preis={preis} nutzen={x.wirkt}
+                  status={preis == null ? "Maximum erreicht" : a.vc >= preis ? "Ausbau möglich" : `Noch ${preis - a.vc} VC nötig`}
+                  onOpen={() => { setAuswahl(x.id); setKaufNotiz(""); }}/>
+              })}
+            </div>
+            {auswahl && (() => {
+              const x = ABTEILUNGEN.find(x => x.id === auswahl);
+              const st = akaStufe(a, x.id), preis = akaPreis(a, x.id);
               const geht = preis != null && a.vc >= preis;
-              return (
-                <div className="pan pad" key={x.id}>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 10, flexWrap: "wrap" }}>
-                    <div className="d" style={{ fontSize: 17 }}>{x.n}</div>
-                    <div className="m" style={{ fontSize: 11, color: st >= AKA_MAX ? "var(--go)" : "var(--mu)" }}>
-                      Stufe {st} von {AKA_MAX}</div>
-                  </div>
-                  <div style={{ display: "flex", gap: 3, marginTop: 7 }}>
-                    {Array.from({ length: AKA_MAX }, (_, i) => (
-                      <i key={i} style={{ flex: 1, height: 6, borderRadius: 0, display: "block",
-                        background: i < st ? (st >= AKA_MAX ? "var(--go)" : "var(--ok)") : "var(--ln2)",
-                        boxShadow: jubel && jubel.id === x.id && i === st - 1
-                          ? "0 0 10px var(--go)" : "none",
-                        transition: RUHE ? "none" : "background .5s ease, box-shadow .5s ease" }} />))}
-                  </div>
-                  <p style={{ fontSize: 12, color: "var(--mu)", marginTop: 7 }}>{x.t}</p>
-                  <div className="m" style={{ fontSize: 10, color: "var(--ac)", marginTop: 3 }}>{x.wirkt}</div>
-                  {preis == null
-                    ? <div className="m" style={{ fontSize: 11.5, color: "var(--go)", marginTop: 9 }}>Vollständig ausgebaut.</div>
-                    : <button className={"btn sm" + (geht ? " pri" : "")} disabled={!geht}
-                        style={{ marginTop: 9, width: "auto", opacity: geht ? 1 : .5 }}
-                        onClick={() => { if (!geht) return; haptik(st + 1 >= AKA_MAX ? "gross" : "gut");
-                          setJubel({ id: x.id, stufe: st + 1 }); onKauf(x.id);
-                          setTimeout(() => setJubel(null), 2600); }}>
-                        Auf Stufe {st + 1} · {preis} VC
-                      </button>}
-                  {jubel && jubel.id === x.id && (
-                    <div className="rs-auf m" style={{ fontSize: 11.5, marginTop: 8, color: "var(--go)" }}>
-                      {x.n} steht jetzt auf Stufe {jubel.stufe}
-                      {jubel.stufe >= AKA_MAX ? " — fertig ausgebaut." : "."}
-                    </div>)}
-                </div>);
-            })}
+              return <KaufDetail titel={x.n} registerBack={zurueckAnmelden}
+                onClose={() => { if (!kaufSperre.current) setAuswahl(null); }}>
+                <p>{x.t}</p><p><strong>Wirkung:</strong> {x.wirkt}</p>
+                <dl><dt>Aktueller Ausbau</dt><dd>Stufe {st} / {AKA_MAX}</dd>
+                  <dt>Guthaben</dt><dd>{a.vc} VC</dd>
+                  {preis != null && <><dt>Nächste Stufe</dt><dd>{st + 1} / {AKA_MAX}</dd>
+                    <dt>Einmaliger Preis</dt><dd>{preis} VC</dd></>}</dl>
+                {preis == null ? <p>Vollständig ausgebaut.</p> : <>
+                  {!geht && <p>Noch {preis - a.vc} VC nötig.</p>}
+                  <button type="button" className="btn pri" disabled={!geht || kauft}
+                    onClick={async () => {
+                      if (kaufSperre.current || !geht) return;
+                      kaufSperre.current = true; setKauft(true); setKaufNotiz("");
+                      try {
+                        const ok = await onKauf(x.id);
+                        if (ok === true) {
+                          haptik(st + 1 >= AKA_MAX ? "gross" : "gut");
+                          setJubel({id:x.id, stufe:st + 1});
+                          setKaufNotiz(`${x.n}: Stufe ${st + 1} gespeichert.`);
+                          setTimeout(() => setJubel(null), 2600);
+                        } else setKaufNotiz("Ausbau nicht gespeichert. Bitte erneut versuchen.");
+                      } catch { setKaufNotiz("Ausbau nicht gespeichert. Bitte erneut versuchen."); }
+                      finally { kaufSperre.current = false; setKauft(false); }
+                    }}>{kauft ? "Wird gespeichert …" : `Auf Stufe ${st + 1} ausbauen · ${preis} VC`}</button>
+                </>}
+                <p role="status" aria-live="polite">{kaufNotiz}</p>
+              </KaufDetail>;
+            })()}
+
           </div>)}
 
         {reiter === "jahrgang" && (
@@ -7360,7 +7370,7 @@ function useSchriftBefund() {
   return befund;
 }
 
-const CSS = SCHRIFTEN + AUFDECK_CSS + WILDCARD_CSS + `
+const CSS = SCHRIFTEN + AUFDECK_CSS + WILDCARD_CSS + KAUF_CSS + `
 .fl{
  /* Grund: dunkles Zeitungspapier — die Nachtausgabe. Vorher Rasen bei Nacht,
     davor ein Blauschwarz. Warm, weil der Karton der Sammelkarten (#E9E2D3)
