@@ -1,3 +1,18 @@
+## 24.09.2026 · Astra · Bedienfeedback im Kaufpilot
+
+Basis e4dd451, Kevin beauftragt optisches und haptisches Kachelfeedback.
+Kacheln erhalten einen gedrückten Zustand aus Fläche und Innenrahmen, ohne
+Bewegung. Kauf-/Schließen-Buttons besitzen bereits btn:active. Zentrale Haptik
+war vorhanden, aber Android-VIBRATE fehlte; Berechtigung ergänzt. Impuls jetzt
+bei click statt pointerdown: tatsächliche Touch-/Maus-/Tastaturbetätigung,
+keine Scrollanfänge. Ruhe, abgeschaltete Vibration und gesperrte Aktionen bleiben
+stumm; bestehende Entprellung bleibt. Kein zusätzliches Haptiksystem.
+
+244 Regressionen und Produktionsbuild bestanden. Browserprüfung am Pilot-PR;
+physische Vibrationsstärke muss Kevin am Android-Gerät beurteilen. Kein Release.
+Lemming 3: vor Abschluss aktuellen Pilot abrufen und Feedback mitprüfen.
+Andere Abnahmen laufen getrennt auf main-Basis, keine Änderung seiner Testdateien.
+
 ## 24.09.2026 · Astra · KAUF-01/02 integriert, unabhängige Abnahme offen
 
 Lemming 1 (#55, bc71be5) und Lemming 2 (#56, e5d88e0) im Kaufpilot

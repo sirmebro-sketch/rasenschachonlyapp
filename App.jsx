@@ -10807,7 +10807,7 @@ if (typeof document !== "undefined" && document.addEventListener) {
 }
 
 function haptik(art) {
-  if (RUHE) return;
+  if (RUHE || !VIBRATION) return;
   /* Die Rückmeldung für Schaltflächen läuft zentral, einzelne Stellen melden
      zusätzlich. Damit daraus kein Doppelrütteln wird: kurz hintereinander nur
      einmal — ein kräftigerer Impuls darf einen schwächeren aber ablösen. */
@@ -18277,19 +18277,19 @@ function FlutlichtApp() {
   };
   useEffect(() => { ladeAlles().catch(() => {}); }, []);
 
-  /* Vibration für jede Schaltfläche — an einer Stelle statt an zweiundsiebzig.
-     Auf pointerdown, damit die Rückmeldung im selben Moment kommt wie die
-     Berührung. Gesperrte Schaltflächen bleiben stumm, kräftige Aktionen
-     (Klasse „pri") bekommen den deutlicheren Impuls. */
+  /* 24.09.2026: Erst eine aktivierte Schaltfläche vibriert, nicht der Beginn
+     einer Scrollgeste. Click umfasst Touch, Maus und Tastatur und liegt nach
+     der vom WebView benötigten Benutzeraktivierung. Capture erhält das Ziel,
+     bevor ein Kaufdialog es entfernt; vorhandene Einzelimpulse werden entprellt. */
   useEffect(() => {
     if (typeof document === "undefined") return;
-    const beiBeruehrung = (e) => {
+    const beiBetaetigung = (e) => {
       const el = e.target && e.target.closest ? e.target.closest("button") : null;
-      if (!el || el.disabled) return;
+      if (!el || el.disabled || el.getAttribute("aria-disabled") === "true") return;
       haptik(el.classList && el.classList.contains("pri") ? "wahl" : "tipp");
     };
-    document.addEventListener("pointerdown", beiBeruehrung, true);
-    return () => document.removeEventListener("pointerdown", beiBeruehrung, true);
+    document.addEventListener("click", beiBetaetigung, true);
+    return () => document.removeEventListener("click", beiBetaetigung, true);
   }, []);
   useEffect(() => { if (topRef.current) topRef.current.scrollIntoView({ block: "start" }); }, [step, phase]);
 
