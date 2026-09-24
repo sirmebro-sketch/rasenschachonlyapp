@@ -144,3 +144,33 @@ test('Ein großer Erfolg blockiert schnelle Klickfolgen und derselbe Klang wird 
     remove();
   } finally {setSoundLevel(0);global.Audio=oldAudio;global.document=oldDocument;global.performance=oldPerformance;}
 });
+
+
+test('Verspaetete Musikfehler stoppen weder neue Tracks noch neuere Starts; synchrone Fehler bleiben isoliert', async () => {
+  const {installSoundButtons,setMusicLevel,setMusicContext,setSoundLevel}=await import('../sound.js');
+  const oldAudio=global.Audio, oldDocument=global.document;
+  const handlers={}, made=[];
+  global.document={hidden:false,addEventListener:(k,v)=>handlers[k]=v,removeEventListener:k=>delete handlers[k]};
+  global.Audio=class {
+    constructor(src){this.src=src;this.paused=true;this.volume=0;made.push(this);}
+    play(){if(this.throws)throw Error('synchron');this.paused=false;return this.pending??Promise.resolve();}
+    pause(){this.paused=true;}
+  };
+  let remove;
+  try {
+    setSoundLevel(0);setMusicLevel(0);setMusicContext('menu');
+    remove=installSoundButtons(document);setMusicLevel(1);
+    const click=()=>handlers.click({target:{closest:()=>null}});
+    click();const old=made[0];old.paused=true;
+    let reject;old.pending=new Promise((_,r)=>reject=r);click();
+    setMusicContext('career');const next=made[1];
+    reject(Error('alter Track'));await Promise.resolve();await Promise.resolve();
+    assert.equal(next.paused,false,'alter Track darf neuen Track nicht stoppen');
+    next.paused=true;next.pending=new Promise((_,r)=>reject=r);click();
+    next.paused=true;next.pending=Promise.resolve();click();
+    reject(Error('alter Versuch'));await Promise.resolve();await Promise.resolve();
+    assert.equal(next.paused,false,'alter Versuch darf neueren Start nicht stoppen');
+    next.paused=true;next.throws=true;
+    assert.doesNotThrow(click,'Audiofehler darf die Bedienung nicht unterbrechen');
+  } finally {remove?.();setMusicLevel(0);setSoundLevel(0);global.Audio=oldAudio;global.document=oldDocument;}
+});

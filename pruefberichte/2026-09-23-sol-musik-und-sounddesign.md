@@ -122,3 +122,24 @@ Kompatibilitätsgründen vorhanden, im aktuellen Ablauf ohne eigenen Auslöser.
   ersetzen diese Hör- und Geräteprüfung nicht.
 
 **Status:** umgesetzt zur unabhängigen Astra-Abnahme; nicht nach `main` integriert.
+
+## Astra-Nachprüfung · 24.09.2026
+
+Quellhead `268dea4`: 238 Tests unabhängig erneut bestanden; Audio-Code und
+Generatoren gelesen. Reproduzierter Fehler: Ein noch offenes play()-Promise
+beim Wiederanlaufen des Menütracks wurde nach Wechsel zum Karrieretrack
+abgelehnt. Der alte catch-Aufruf pausierte den neuen Track (paused false → true).
+Auch ein synchroner Fehler beim Wiederanlaufen war nicht abgefangen.
+
+Korrektur auf Astra-Arbeitsbranch: Track-Identität und fortlaufende
+Wiedergabeversuche prüfen, bevor eine Ablehnung den Mischer pausieren darf.
+Regression deckt alten Track, älteren Versuch desselben Tracks und synchronen
+Fehler ab. Danach 239 Tests und Produktionsbuild erfolgreich.
+
+Entscheidung: technische Korrektur zur Übernahme in Sols PR; keine klangliche
+Endabnahme und keine Veröffentlichung des Musikpakets. In dieser Umgebung steht
+kein prüfbarer Hörkanal zur Verfügung; Signalwerte oder Audio-Mocks ersetzen
+keine subjektive Hörprobe. Insbesondere Handy-Lautsprecher, längeres Hören,
+WebView-Loop und Audiofokus neben einem Podcast bleiben offen. PR #48 bleibt
+Draft. Für eine Freigabe sind diese Befunde nachzuliefern; die Assets bleiben
+vollständig erhalten.

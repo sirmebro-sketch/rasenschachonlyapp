@@ -53,6 +53,15 @@ function pauseMusic() {
   if (outgoing) { outgoing.pause(); outgoing.src=""; outgoing=null; }
 }
 function clearMusic() { pauseMusic(); if (music) { music.src=""; music=null; } }
+// Astra 24.09.2026: Ein alter play()-Fehler darf weder einen neuen Track
+// noch einen neueren Wiedergabeversuch desselben Tracks pausieren.
+function playMusic(current) {
+  const attempt = current._playAttempt = (current._playAttempt || 0) + 1;
+  const failed = () => {
+    if (music === current && current._playAttempt === attempt) pauseMusic();
+  };
+  try { current.play()?.catch?.(failed); } catch (_) { failed(); }
+}
 function startMusic() {
   if (!musicLevel || !gestureReady || typeof Audio==="undefined" ||
       (typeof document!=="undefined" && document.hidden)) return;
@@ -60,8 +69,7 @@ function startMusic() {
   if (music?._track===name) {
     if (music.paused) {
       music.volume=0;
-      const started=music.play();
-      started?.catch?.(() => pauseMusic());
+      playMusic(music);
     }
     mix(); return;
   }
@@ -69,11 +77,7 @@ function startMusic() {
   outgoing=music;
   music=new Audio(url("music",name,".ogg"));
   music._track=name; music.loop=true; music.preload="auto"; music.volume=0;
-  const current=music;
-  try {
-    const started=music.play();
-    started?.catch?.(() => { if (music===current) clearMusic(); });
-  } catch (_) { clearMusic(); return; }
+  playMusic(music);
   mix();
 }
 export function setMusicLevel(value) {
