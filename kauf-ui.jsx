@@ -22,11 +22,26 @@ export function KaufDetail({ titel, onClose, registerBack, children }) {
   useEffect(() => {
     const el = dialog.current, vorher = document.activeElement;
     const overflow = document.body.style.overflow;
-    // Native modal: Fokus bleibt im Fenster, Hintergrund ist inert; kein eigener Tab-Nachbau.
+    // Native modal hält den Hintergrund inert. Tab-Grenzen zusätzlich sichern:
+    // Chromium gibt bei nur einem aktiven Button sonst den Fokus an den Browser ab.
     el.showModal();
     document.body.style.overflow = 'hidden';
+    const halteFokus = (event) => {
+      if (event.key !== 'Tab') return;
+      const ziele = Array.from(el.querySelectorAll('button, a[href], input, select, textarea, [tabindex]'))
+        .filter(k => k.tabIndex >= 0 && !k.matches(':disabled') && k.getClientRects().length > 0);
+      const erstes = ziele[0], letztes = ziele[ziele.length - 1];
+      if (!erstes) { event.preventDefault(); el.focus(); return; }
+      const aktiv = document.activeElement;
+      if (!ziele.includes(aktiv) || (event.shiftKey ? aktiv === erstes : aktiv === letztes)) {
+        event.preventDefault();
+        (event.shiftKey ? letztes : erstes).focus();
+      }
+    };
+    el.addEventListener('keydown', halteFokus);
     const abmelden = registerBack?.(() => schliessen.current());
     return () => {
+      el.removeEventListener('keydown', halteFokus);
       abmelden?.(); el.close(); document.body.style.overflow = overflow;
       if (vorher?.isConnected) vorher.focus({preventScroll:true});
     };
@@ -59,6 +74,6 @@ export const KAUF_CSS = `
 .kauf-detail-inhalt{font-size:15px;line-height:1.5;margin-top:18px}
 .kauf-detail-inhalt p{margin:12px 0}.kauf-detail-inhalt .btn{min-height:48px;white-space:normal}
 .kauf-detail-inhalt dl{display:grid;grid-template-columns:1fr auto;gap:8px;margin:16px 0}.kauf-detail-inhalt dd{margin:0;font-weight:700;text-align:right}
-@container kauf (max-width:270px){.kauf-raster{grid-template-columns:1fr}}
+@container kauf (max-width:320px){.kauf-raster{grid-template-columns:1fr}}
 @media(min-width:680px){.kauf-raster{grid-template-columns:repeat(3,minmax(0,1fr))}.kauf-detail{inset:0;margin:auto;height:fit-content}}
 `;

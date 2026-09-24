@@ -1,3 +1,18 @@
+## 24.09.2026 · Astra · KAUF-03-Befunde behoben
+
+Lemming-3-PR #59, 0846eba, auf Produktbasis 3be4a3c ausgewertet und übernommen.
+Die unabhängigen Prüffälle und der historische Bericht bleiben unverändert.
+Fokusbefund bestätigt: native Dialoge können Tab an die Browseroberfläche geben,
+insbesondere mit nur einem aktiven Button. KaufDetail begrenzt Tab/Shift+Tab nun
+auf die sichtbaren, aktiven Fokusziele; native Modalität, Escape/Zurück und
+Fokuswiederherstellung bleiben bestehen. Der Listener wird beim Schließen entfernt.
+
+320-px-Umbruch: Einspaltenansicht greift nun bis 320 px Containerbreite, sodass
+„Trainingsplätze“ nicht mehr in einen einzelnen Endbuchstaben umbricht. Keine
+Kauf-/Speicherlogik geändert. Vollständige KAUF-03-Browserprüfungen werden am
+integrierten Pilotkopf erneut ausgeführt. Physischer Android-/Haptiktest offen.
+Gold/Rekordbuch bleiben im separaten PR #60. Kein Pilot-Main-Merge in dieser Runde.
+
 ## 24.09.2026 · Astra · Bedienfeedback im Kaufpilot
 
 Basis e4dd451, Kevin beauftragt optisches und haptisches Kachelfeedback.

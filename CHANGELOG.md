@@ -1,5 +1,8 @@
 # In Vorbereitung · Kaufpilot
 
+Der Kaufdialog hält den Tastaturfokus auch bei gesperrtem Kauf. Auf sehr schmalen
+Bildschirmen bekommen Kacheln eine volle Zeile für lesbare Titel und Nutzen.
+
 Kaufkacheln reagieren beim Drücken sichtbar. Die Android-Vibrationsberechtigung
 ist ergänzt; kurze Impulse begleiten Betätigungen, Scrollanfänge bleiben stumm.
 Ruhemodus und die Vibrationseinstellung werden beachtet.
