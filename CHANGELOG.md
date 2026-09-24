@@ -29,7 +29,7 @@ Android-Geräteprüfung der neuen Audio-/Optikfunktionen bleibt offen.
 ## Noch nicht veröffentlicht
 
 - Die Spielerpass-Vorschau in der Charaktererstellung bleibt beim Öffnen und Schließen der Feinheiten gleich aufgebaut und gleich skaliert; das Porträt ist in beiden Zuständen moderat größer.
-- Goldene und legendäre Spielerkarten zeigen wieder einen deutlich sichtbaren, regenbogenartig irisierenden Holoeffekt. Legendäre Karten schimmern kräftiger als Gold; Bronze, Silber, Packs und Wildcard-Folien bleiben unverändert.
+- Goldene Spielerkarten wirken wieder klar wie glänzendes Edelmetall: warme Goldreflexe dominieren, der irisierende Farbschimmer bleibt nur als feiner Akzent. Legendäre Karten behalten ihren kräftigen Regenbogen-Holoeffekt; Bronze, Silber, Packs und Wildcard-Folien bleiben unverändert.
 
 - Männerfrisur 27 „Lange Locken“ rahmt das Gesicht mit getrennten Kronen-/Seitenlocken statt einer tiefen geschlossenen Haarfläche; gespeicherte Frisur-ID und übriger Katalog bleiben unverändert.
 
