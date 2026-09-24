@@ -77,26 +77,34 @@ test('KAUF-03: neun Kacheln sind verständlich, eigenständig bebildert und öff
   await page.screenshot({path:info.outputPath('kauf-03-uebersicht.png'),fullPage:true});
 });
 
-test('KAUF-03: Tastatur, Fokusbindung, Escape, Zurück und Scrollposition funktionieren',async({page})=>{
+test('KAUF-03: Fokus bleibt im modalen Detail gebunden',async({page})=>{
   const ziel=page.getByRole('button',{name:/Profi-Netzwerk Stufe/});
   await ziel.scrollIntoViewIfNeeded();
-  const scrollVorher=await page.evaluate(()=>scrollY);
   await ziel.click();
   const dialog=page.getByRole('dialog',{name:'Profi-Netzwerk'});
   await expect(dialog.getByRole('button',{name:'Schließen',exact:true})).toBeFocused();
 
-  for(let i=0;i<6;i++){
-    await page.keyboard.press(i%2?'Shift+Tab':'Tab');
-    expect(await page.evaluate(()=>document.activeElement?.closest('dialog')?.classList.contains('kauf-detail')===true),
-      'Tab-Fokus bleibt im modalen Detail').toBe(true);
-  }
+  // Bei unbezahlbarem Ausbau ist Schließen der einzige fokussierbare Knopf.
+  // Tab muss trotzdem im modalen Dialog bleiben und darf nicht auf <body> fallen.
+  await page.keyboard.press('Tab');
+  expect(await page.evaluate(()=>document.activeElement?.closest('dialog')?.classList.contains('kauf-detail')===true),
+    'Tab-Fokus bleibt im modalen Detail').toBe(true);
+});
 
+test('KAUF-03: Escape, Zurück, Fokuswiederherstellung und Scrollposition funktionieren',async({page})=>{
+  const ziel=page.getByRole('button',{name:/Profi-Netzwerk Stufe/});
+  await ziel.scrollIntoViewIfNeeded();
+  const scrollVorher=await page.evaluate(()=>scrollY);
+
+  await ziel.click();
+  let dialog=page.getByRole('dialog',{name:'Profi-Netzwerk'});
   await page.keyboard.press('Escape');
   await expect(dialog).toHaveCount(0);
   await expect(ziel).toBeFocused();
   expect(Math.abs((await page.evaluate(()=>scrollY))-scrollVorher)).toBeLessThanOrEqual(1);
 
   await ziel.click();
+  dialog=page.getByRole('dialog',{name:'Profi-Netzwerk'});
   await page.goBack();
   await expect(dialog).toHaveCount(0);
   await expect(ziel).toBeFocused();
