@@ -10795,7 +10795,7 @@ if (typeof document !== "undefined" && document.addEventListener) {
 }
 
 function haptik(art) {
-  if (RUHE) return;
+  if (RUHE || !VIBRATION) return;
   /* Die Rückmeldung für Schaltflächen läuft zentral, einzelne Stellen melden
      zusätzlich. Damit daraus kein Doppelrütteln wird: kurz hintereinander nur
      einmal — ein kräftigerer Impuls darf einen schwächeren aber ablösen. */
@@ -13438,7 +13438,13 @@ function Spielerkarte({ karte, gross, aufgedeckt = true, onTippen, jubel }) {
           letterSpacing: ".1em" }}>{st.n.toUpperCase()}</div>
       </button>);
   }
-  const fl = KARTEN.flaeche(karte.stufe);
+  // Astra-Abnahme 24.09.2026: heller Goldgrund braucht dunkle Druckfarbe.
+  // Sonst verschwinden Stufenname und OVR im gleichfarbigen Metallreflex.
+  // Durchgehende Fläche auch ohne Animation, keine Kästen hinter Texten.
+  const gold = karte.stufe === "gold";
+  const druck = gold ? "#241b09" : st.farbe;
+  const neben = gold ? "#392a10" : folie ? "#e4e2d9" : "var(--mu)";
+  const fl = gold ? {oben:"#ebcc77",unten:"#c79a35",kante:"#fff0b8"} : KARTEN.flaeche(karte.stufe);
   const merk = KARTEN.merkmaleVon(karte);
   /* GEFEIERT WIRD NUR, WAS SELTEN IST. Eine Feier bei jeder Bronzekarte ist
      keine Feier, sondern eine Wartezeit. Und `RUHE` hat das letzte Wort —
@@ -13458,7 +13464,7 @@ function Spielerkarte({ karte, gross, aufgedeckt = true, onTippen, jubel }) {
          Stufenfarbe kräftig im Kartongrund, unten dunkel. Eine Sammelkarte
          ist ein Stück Pappe, kein Fenster. */
       background: "linear-gradient(150deg," + fl.oben + " 0%," + fl.unten + " 100%)",
-      position: "relative", overflow: "hidden" }}>
+      position: "relative", overflow: "hidden", color: gold ? "#241b09" : undefined }}>
       {/* Ein feiner Glanz über der oberen Kante — das, was eine gedruckte
           Karte von einem Rechteck unterscheidet. */}
       <span aria-hidden style={{ position: "absolute", left: 0, right: 0, top: 0,
@@ -13476,12 +13482,12 @@ function Spielerkarte({ karte, gross, aufgedeckt = true, onTippen, jubel }) {
           meta={karte.stufe === "legende" ? { mk_rahmen4: true, rahmenWahl: "mk_rahmen4" }
             : karte.stufe === "gold" ? { mk_gold: true, rahmenWahl: "mk_gold" } : null} />
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div className="eb" style={{ color: st.farbe }}>
+          <div className="eb" style={{ color: druck }}>
             {st.n} · {POS[karte.pos] ? POS[karte.pos].short : karte.pos}</div>
           <div className="d" style={{ fontSize: Math.round(17 * gr), overflow: "hidden",
             textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
             {karte.flag ? karte.flag + " " : ""}{karte.name}</div>
-          <div className="m" style={{ fontSize: gross ? 12 : 11, color: folie ? "#e4e2d9" : "var(--mu)", marginTop: 2 }}>
+          <div className="m" style={{ fontSize: gross ? 12 : 11, color: neben, marginTop: 2 }}>
             {karte.alter} Jahre{karte.verein ? " · " + karte.verein : ""}
             {karte.herkunft === "halle" ? " · Ruhmeshalle" : ""}
             {karte.herkunft === "akademie" ? " · aus der Jugend" : ""}</div>
@@ -13494,23 +13500,23 @@ function Spielerkarte({ karte, gross, aufgedeckt = true, onTippen, jubel }) {
               Alte Karten haben kein `zusatz` — dann fällt die Zeile weg,
               statt „Jahrgang undefined" zu zeigen. */}
           {karte.herkunft === "akademie" && typVon({typ:karte.zusatz?.typ}) && (
-            <div className="m" style={{fontSize:12,color:folie?"#e4e2d9":"var(--mu)",marginTop:5}}>
+            <div className="m" style={{fontSize:12,color:neben,marginTop:5}}>
               Talenttyp: {typVon({typ:karte.zusatz.typ}).n}
             </div>)}
           {karte.herkunft === "akademie" && karte.zusatz && karte.zusatz.jahrgang && (
-            <div className="m" style={{ fontSize: 10.5, color: "var(--ac)", marginTop: 2 }}>
+            <div className="m" style={{ fontSize: 10.5, color: gold ? neben : "var(--ac)", marginTop: 2 }}>
               Eigengewächs, Jahrgang {karte.zusatz.jahrgang}
               {karte.zusatz.klub ? " · erster Profiklub: " + karte.zusatz.klub : ""}
               {karte.zusatz.ns ? " · Nationalspieler" : ""}</div>)}
         </div>
-        <div className="d" style={{ fontSize: Math.round(26 * gr), color: st.farbe,
+        <div className="d" style={{ fontSize: Math.round(26 * gr), color: druck,
           lineHeight: 1 }}>{karte.ovr}</div>
       </div>
 
       {/* Anlage nur zeigen, wenn sie ueber der Staerke liegt — „Anlage 70" bei
           Staerke 70 ist keine Auskunft, sondern Fuellsel. */}
       {karte.pot > karte.ovr && (
-        <div className="m" style={{ fontSize: gross ? 12 : 11, color: folie ? "#e4e2d9" : "var(--mu)", marginTop: 7 }}>
+        <div className="m" style={{ fontSize: gross ? 12 : 11, color: neben, marginTop: 7 }}>
           Anlage {karte.pot} · noch {karte.pot - karte.ovr} zu holen</div>)}
       {/* MERKMALE ALS SYMBOLE (Kevins Wunsch). Höchstens drei — was jeder
           hat, zeichnet niemanden aus. */}
@@ -13520,12 +13526,12 @@ function Spielerkarte({ karte, gross, aufgedeckt = true, onTippen, jubel }) {
           {merk.map((m) => (
             <span key={m.id} title={m.n} style={{ display: "flex", alignItems: "center",
               gap: 4 }}>
-              <Merkzeichen sym={m.sym} farbe={st.farbe} groesse={gross ? 15 : 13} />
-              <span className="m" style={{ fontSize: gross ? 12 : 11, color: folie ? "#e4e2d9" : "var(--mu)" }}>{m.n}</span>
+              <Merkzeichen sym={m.sym} farbe={druck} groesse={gross ? 15 : 13} />
+              <span className="m" style={{ fontSize: gross ? 12 : 11, color: neben }}>{m.n}</span>
             </span>))}
         </div>)}
       {karte.sonderkarte && (
-        <div className="eb" style={{ color: "var(--go)", marginTop: 7 }}>Sonderkarte</div>)}
+        <div className="eb" style={{ color: gold ? druck : "var(--go)", marginTop: 7 }}>Sonderkarte</div>)}
     </div>
   );
 }
@@ -17225,45 +17231,58 @@ const zaehlOrte = (x) => {
   return 0;
 };
 
+/* Das Rekordbuch mischt bewusst zwei Arten von Zahlen: echte Bestwerte
+   (z. B. Höchststärke) und lebenslange Summen (z. B. alle Pflichtspiele).
+   Die alte Beschriftung mit „Meiste …“ ließ Summen wie Rekorde EINER Laufbahn
+   wirken. Die Gruppe ist deshalb Teil der Definition und nicht nur Deko. */
+const REKORD_GRUPPEN = [
+  { id:"best", titel:"Bestwerte", zeichen:"↑", farbe:"var(--go)",
+    text:"Höchster Wert aus einer einzelnen Laufbahn oder Saison" },
+  { id:"gesamt", titel:"Gesamtbilanz", zeichen:"Σ", farbe:"var(--ac)",
+    text:"Über alle abgeschlossenen Laufbahnen zusammengerechnet" },
+  { id:"wege", titel:"Stationen & Rollen", zeichen:"#", farbe:"var(--ok)",
+    text:"Vielfalt, Vereinswege und besondere Rollen" },
+];
+
 const REKORDE = [
-  ["Höchste Karrierepunkte",     (g) => g.bestPunkte,   ""],
-  ["Höchste Gesamtstärke",       (g) => g.ovrMax,       ""],
-  ["Meiste Pflichtspiele",       (g) => g.apps,         "insgesamt"],
-  ["Meiste Tore",                (g) => g.goals,        "insgesamt"],
-  ["Meiste Vorlagen",            (g) => g.assists,      "insgesamt"],
-  ["Meiste Spiele ohne Gegentor", (g) => g.cs,          "insgesamt"],
-  ["Tore in einer Saison",       (g) => g.toreSaisonMax, "Bestwert"],
-  ["Meiste Länderspiele",        (g) => g.caps,         "insgesamt"],
-  ["Meiste Titel",               (g) => g.titel,        "insgesamt"],
-  ["Meisterschaften",            (g) => g.meister,      ""],
-  ["Pokalsiege",                 (g) => g.pokale,       ""],
-  ["Internationale Titel",       (g) => g.intTitel,     ""],
-  ["Turniersiege mit dem Land",  (g) => g.ntTitel,      ""],
-  ["Längste Vereinstreue",       (g) => g.treueMax,     "Jahre am Stück"],
-  ["Ältester Einsatz",           (g) => g.altMax,       "Jahre"],
+  { titel:"Karrierepunkte",          hol:(g)=>g.bestPunkte,   gruppe:"best",   hinweis:"beste Laufbahn" },
+  { titel:"Gesamtstärke",            hol:(g)=>g.ovrMax,       gruppe:"best",   hinweis:"höchster Karrierewert" },
+  { titel:"Tore in einer Saison",    hol:(g)=>g.toreSaisonMax,gruppe:"best",   hinweis:"beste einzelne Saison" },
+  { titel:"Längste Vereinstreue",    hol:(g)=>g.treueMax,     gruppe:"best",   hinweis:"Saisons am Stück" },
+  { titel:"Ältestes Karriereende",   hol:(g)=>g.altMax,       gruppe:"best",   hinweis:"Alter in Jahren" },
+
+  { titel:"Pflichtspiele",           hol:(g)=>g.apps,         gruppe:"gesamt", hinweis:"alle Laufbahnen" },
+  { titel:"Tore",                    hol:(g)=>g.goals,        gruppe:"gesamt", hinweis:"alle Laufbahnen" },
+  { titel:"Vorlagen",                hol:(g)=>g.assists,      gruppe:"gesamt", hinweis:"alle Laufbahnen" },
+  { titel:"Spiele ohne Gegentor",    hol:(g)=>g.cs,           gruppe:"gesamt", hinweis:"alle Laufbahnen" },
+  { titel:"A-Länderspiele",          hol:(g)=>g.caps,         gruppe:"gesamt", hinweis:"alle Laufbahnen" },
+  { titel:"Titel",                   hol:(g)=>g.titel,        gruppe:"gesamt", hinweis:"alle Laufbahnen" },
+  { titel:"Meisterschaften",         hol:(g)=>g.meister,      gruppe:"gesamt", hinweis:"alle Laufbahnen" },
+  { titel:"Pokalsiege",              hol:(g)=>g.pokale,       gruppe:"gesamt", hinweis:"alle Laufbahnen" },
+  { titel:"Internationale Titel",    hol:(g)=>g.intTitel,     gruppe:"gesamt", hinweis:"alle Laufbahnen" },
+  { titel:"Nationalteam-Titel",      hol:(g)=>g.ntTitel,      gruppe:"gesamt", hinweis:"große Turniere" },
+  { titel:"Aufstiege",               hol:(g)=>g.aufstiege,    gruppe:"gesamt", hinweis:"alle Laufbahnen" },
+
   /* ZAEHLOBJEKTE, KEINE ZAHLEN (35.140, F30). `laender`, `ligen` und
      `vereine` sind Karten der Form { DE: 1, FR: 1, … } — sie zaehlen, WIE
-     OFT jeder Ort bespielt wurde. `rekordListe` prueft `wert > 0`, und das
-     ist bei einem Objekt immer falsch: die drei Zeilen fielen seit 35.116
-     IMMER weg, auch bei 4 Laendern, 5 Ligen und 12 Vereinen.
-
-     Gezaehlt wird die Zahl VERSCHIEDENER Eintraege, nicht die Summe der
-     Besuche — wer dreimal in Spanien spielte, war in EINEM Land. Alte oder
-     beschaedigte Staende, in denen dort schon eine Zahl steht, werden
-     mitgenommen. */
-  ["Bespielte Länder",           (g) => zaehlOrte(g.laender), ""],
-  ["Bespielte Ligen",            (g) => zaehlOrte(g.ligen),   ""],
-  ["Verschiedene Vereine",       (g) => zaehlOrte(g.vereine), ""],
-  ["Aufstiege geschafft",        (g) => g.aufstiege,    ""],
-  ["Saisons als Kapitän",        (g) => g.kapitaen,     ""],
+     OFT jeder Ort bespielt wurde. Gezaehlt wird hier die Zahl VERSCHIEDENER
+     Eintraege, nicht die Summe der Besuche. Alte oder beschaedigte Staende,
+     in denen dort schon eine Zahl steht, werden mitgenommen. */
+  { titel:"Bespielte Länder",        hol:(g)=>zaehlOrte(g.laender), gruppe:"wege", hinweis:"verschiedene Länder" },
+  { titel:"Bespielte Ligen",         hol:(g)=>zaehlOrte(g.ligen),   gruppe:"wege", hinweis:"verschiedene Ligen" },
+  { titel:"Verschiedene Vereine",    hol:(g)=>zaehlOrte(g.vereine), gruppe:"wege", hinweis:"verschiedene Stationen" },
+  /* `kapitaen` zaehlt in bilanzErgaenzen genau einmal je Laufbahn, in der
+     die Vereinsbinde erreicht wurde. Es sind keine Kapitaens-Saisons. */
+  { titel:"Laufbahnen als Kapitän",  hol:(g)=>g.kapitaen, gruppe:"wege",
+    hinweis:"mind. einmal Vereinskapitän", zeichen:"C" },
 ];
 
 function rekordListe(g) {
   if (!g) return [];
-  return REKORDE.map(([titel, hol, zusatz]) => {
+  return REKORDE.map((rekord) => {
     let wert = 0;
-    try { wert = hol(g) || 0; } catch (e) { wert = 0; }
-    return wert > 0 ? { titel, wert, zusatz } : null;
+    try { wert = rekord.hol(g) || 0; } catch (e) { wert = 0; }
+    return wert > 0 ? { ...rekord, wert } : null;
   }).filter(Boolean);
 }
 
@@ -17373,21 +17392,49 @@ function HallScreen({ hall, onBack, ges, aka, verein }) {
           const rk = rekordListe(ges);
           if (rk.length < 3) return null;
           return (
-            <div className="pan pad" style={{ marginBottom: 14 }}>
+            <div className="pan pad" data-testid="rekordbuch" style={{ marginBottom: 14 }}>
               <div className="eb" style={{ color: "var(--ac)" }}>Das ewige Rekordbuch</div>
-              <div className="m" style={{ fontSize: 11, color: "var(--mu)", marginTop: 2, marginBottom: 8 }}>
-                Über alle {ges.karrieren} {ges.karrieren === 1 ? "Laufbahn" : "Laufbahnen"} hinweg
+              <div className="m" style={{ fontSize: 11, color: "var(--mu)", marginTop: 2 }}>
+                Über alle {ges.karrieren} {ges.karrieren === 1 ? "Laufbahn" : "Laufbahnen"} hinweg · Bestwerte und Summen getrennt
               </div>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "3px 12px" }}>
-                {rk.map((r) => (
-                  <div key={r.titel} style={{ display: "flex", justifyContent: "space-between",
-                    alignItems: "baseline", gap: 6, padding: "3px 0",
-                    borderBottom: "1px solid var(--ln)" }}>
-                    <span className="m" style={{ fontSize: 10.5, color: "var(--mu)",
-                      overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{r.titel}</span>
-                    <span className="d" style={{ fontSize: 14, whiteSpace: "nowrap" }}>{r.wert}</span>
-                  </div>))}
-              </div>
+              {REKORD_GRUPPEN.map((gruppe) => {
+                const werte = rk.filter((r) => r.gruppe === gruppe.id);
+                if (!werte.length) return null;
+                return (
+                  <section key={gruppe.id} aria-label={gruppe.titel} style={{ marginTop: 11 }}>
+                    <div style={{ display: "flex", alignItems: "baseline", gap: 7, flexWrap: "wrap",
+                      paddingBottom: 4, borderBottom: "1px solid var(--ln2)" }}>
+                      <span className="d" aria-hidden="true" style={{ color: gruppe.farbe,
+                        fontSize: 14, minWidth: 14 }}>{gruppe.zeichen}</span>
+                      <span className="eb" style={{ color: gruppe.farbe }}>{gruppe.titel}</span>
+                      <span className="m" style={{ fontSize: 9.5, color: "var(--mu)" }}>{gruppe.text}</span>
+                    </div>
+                    <div style={{ display: "grid",
+                      gridTemplateColumns: "repeat(auto-fit,minmax(min(100%,210px),1fr))",
+                      gap: "4px 12px", marginTop: 3 }}>
+                      {werte.map((r) => (
+                        <div key={r.titel} aria-label={r.titel + ": " + r.wert + ". " + r.hinweis}
+                          style={{ minWidth: 0, display: "grid",
+                            gridTemplateColumns: "24px minmax(0,1fr) auto",
+                            alignItems: "center", gap: 7, padding: "6px 0",
+                            borderBottom: "1px solid var(--ln)" }}>
+                          <span className="d" aria-hidden="true" style={{
+                            width: 22, height: 22, display: "grid", placeItems: "center",
+                            border: "1px solid " + gruppe.farbe, color: gruppe.farbe,
+                            fontSize: (r.zeichen || gruppe.zeichen).length > 1 ? 8.5 : 12,
+                            lineHeight: 1 }}>{r.zeichen || gruppe.zeichen}</span>
+                          <span style={{ minWidth: 0 }}>
+                            <span className="m" style={{ display: "block", fontSize: 11.25,
+                              color: "var(--tx)", lineHeight: 1.2 }}>{r.titel}</span>
+                            <span className="m" style={{ display: "block", fontSize: 9.5,
+                              color: "var(--mu)", marginTop: 2 }}>{r.hinweis}</span>
+                          </span>
+                          <span className="d" style={{ fontSize: 16, whiteSpace: "nowrap",
+                            paddingLeft: 4 }}>{r.wert}</span>
+                        </div>))}
+                    </div>
+                  </section>);
+              })}
             </div>);
         })()}
         {/* DIE ZEITLEISTE (35.119). Unter dem Rekordbuch: die Rekorde sagen
@@ -18265,19 +18312,19 @@ function FlutlichtApp() {
   };
   useEffect(() => { ladeAlles().catch(() => {}); }, []);
 
-  /* Vibration für jede Schaltfläche — an einer Stelle statt an zweiundsiebzig.
-     Auf pointerdown, damit die Rückmeldung im selben Moment kommt wie die
-     Berührung. Gesperrte Schaltflächen bleiben stumm, kräftige Aktionen
-     (Klasse „pri") bekommen den deutlicheren Impuls. */
+  /* 24.09.2026: Erst eine aktivierte Schaltfläche vibriert, nicht der Beginn
+     einer Scrollgeste. Click umfasst Touch, Maus und Tastatur und liegt nach
+     der vom WebView benötigten Benutzeraktivierung. Capture erhält das Ziel,
+     bevor ein Kaufdialog es entfernt; vorhandene Einzelimpulse werden entprellt. */
   useEffect(() => {
     if (typeof document === "undefined") return;
-    const beiBeruehrung = (e) => {
+    const beiBetaetigung = (e) => {
       const el = e.target && e.target.closest ? e.target.closest("button") : null;
-      if (!el || el.disabled) return;
+      if (!el || el.disabled || el.getAttribute("aria-disabled") === "true") return;
       haptik(el.classList && el.classList.contains("pri") ? "wahl" : "tipp");
     };
-    document.addEventListener("pointerdown", beiBeruehrung, true);
-    return () => document.removeEventListener("pointerdown", beiBeruehrung, true);
+    document.addEventListener("click", beiBetaetigung, true);
+    return () => document.removeEventListener("click", beiBetaetigung, true);
   }, []);
   useEffect(() => { if (topRef.current) topRef.current.scrollIntoView({ block: "start" }); }, [step, phase]);
 

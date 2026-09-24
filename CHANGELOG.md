@@ -1,3 +1,11 @@
+# 35.197.0 · Goldkarten, Rekordbuch und Bedienfeedback
+
+Goldkarten zeigen poliertes Gold mit dunkler, gut lesbarer Schrift; legendäre
+Karten behalten ihren Regenbogenschimmer. Das Rekordbuch trennt Bestwerte und
+Gesamtsummen, benennt Kapitänslaufbahnen korrekt und bleibt mobil lesbar.
+Die Android-Vibrationsberechtigung ist ergänzt. Schaltflächen melden tatsächliche
+Betätigungen statt Scrollanfänge; Ruhemodus und Vibrationseinstellung gelten weiter.
+
 # 35.196.0 · Musik und erweiterte Spielklänge
 
 Drei eigene Begleitmusikstücke für Menü, Karriere und Endspurt sowie 19 zusätzliche
@@ -28,8 +36,8 @@ Android-Geräteprüfung der neuen Audio-/Optikfunktionen bleibt offen.
 
 ## Noch nicht veröffentlicht
 
+
 - Die Spielerpass-Vorschau in der Charaktererstellung bleibt beim Öffnen und Schließen der Feinheiten gleich aufgebaut und gleich skaliert; das Porträt ist in beiden Zuständen moderat größer.
-- Goldene und legendäre Spielerkarten zeigen wieder einen deutlich sichtbaren, regenbogenartig irisierenden Holoeffekt. Legendäre Karten schimmern kräftiger als Gold; Bronze, Silber, Packs und Wildcard-Folien bleiben unverändert.
 
 - Männerfrisur 27 „Lange Locken“ rahmt das Gesicht mit getrennten Kronen-/Seitenlocken statt einer tiefen geschlossenen Haarfläche; gespeicherte Frisur-ID und übriger Katalog bleiben unverändert.
 
