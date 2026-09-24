@@ -16,11 +16,14 @@ test('Folien trennen SVG-Referenzen und lassen Pack-Folien flächig',async()=>{
  assert.equal((html.match(/aria-hidden="true"/g)||[]).length,3);
 });
 
-test('Spielerkarten-Holo bleibt deutlich sichtbar und andere Folien unveraendert',()=>{
+test('Gold bleibt Edelmetall, Legendaer behaelt den Regenbogen-Holocharakter',()=>{
  const fs=require('node:fs');
  const src=fs.readFileSync('karteneffekte.jsx','utf8');
- assert.match(src,/const deckkraft=dezent\?\(stark\?\.78:\.66\):1/);
- assert.doesNotMatch(src,/dezent\s*\?\s*\.16/);
+ assert.match(src,/const goldMetall=dezent&&!stark/);
+ assert.match(src,/const deckkraft=dezent\\?\\(stark\\?\\.78:\\.72\\):1/);
+ assert.doesNotMatch(src,/dezent\\s*\\?\\s*\\.16/);
+ for(const farbe of ['#704407','#bd7d12','#efb936','#fff0a0','#d89518','#f5d061','#7b500c'])assert.match(src,new RegExp(farbe,'i'));
  for(const farbe of ['#ff6ecb','#8f7dff','#55e8ff','#77ffad','#ffd76d'])assert.match(src,new RegExp(farbe,'i'));
- assert.match(src,/const deckkraft=dezent[^\n]+:1/);
+ assert.match(src,/rs-gold-iris/);
+ assert.match(src,/#efb4ff[^\\n]+stopOpacity="\\.08"/i);
 });
