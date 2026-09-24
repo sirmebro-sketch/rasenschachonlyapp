@@ -160,6 +160,8 @@ Die Reihenfolge ist eine Qualitäts-/Risikoreihenfolge. Der letzte Nutzerauftrag
 
 **Abnahme:** echter Browserklickweg auf schmalen Größen; kein verdeckter Pflichtbutton; gespeicherte Auswahl nach Start identisch.
 
+**Lemming-Nachlauf 23.09.2026 – umgesetzt / Astra-Abnahme offen:** Die Spielerpass-Vorschau bleibt beim Öffnen/Schließen der Feinheiten nun bei identischer Geometrie und 112-px-Porträt statt zwischen mehreren Größen zu springen. PR #49 ergänzt die 320/390-px-Regression für echten Startablauf und isolierte Sichtprobe. Sichtprüfung, erster Fehlversuch mit verbliebener mobiler Altregel und finale CI stehen in [pruefberichte/2026-09-23-lemming-char-vorschau-stabil.md](pruefberichte/2026-09-23-lemming-char-vorschau-stabil.md).
+
 ### CHAR-FIX-02 – Hals/Kragen sauber maskieren — ERLEDIGT
 
 **Einordnung:** gezielter Korrekturschritt nach CHAR-P1-05 und vor dem nächsten Karten-/Effektpaket. Der sichtbare Porträtfehler soll zuerst bereinigt werden, ohne die bestehende Charakteridentität oder gespeicherte Kennungen zu verändern.

@@ -1,3 +1,40 @@
+## 24.09.2026 · Astra · 35.195.2 · Abnahme neuer Übergaben
+
+Basis `5491fa7`. PR #49 und #50 mit mobilen Nachbesserungen übernommen;
+Sols PR #48 technisch geprüft, Fehlerkorrektur als #51 vorgelegt, Veröffentlichung
+bis Hör-/Geräteprüfung zurückgestellt. Entscheidungen, genaue Quellheads,
+Prüfungen und Grenzen: [Abnahmebericht](pruefberichte/2026-09-24-astra-abnahme.md).
+
+## 23.09.2026 · Lemming · Spielerkarten-Holo nach 35.195.1
+
+Basis `5491fa7` / Version 35.195.1. Nutzerbefund: Der zuvor deutlich
+regenbogenartige Holoeffekt auf Gold-/Legendär-Spielerkarten ist seit dem letzten
+Kartenpatch kaum noch sichtbar. Ursache reproduziert: 35.195.1 führte für genau
+diesen Spielerpfad `dezent` mit 16 % Gesamtdeckkraft ein. Dadurch wurden die
+bereits nur teiltransparenten Farbstopps effektiv auf ungefähr 5 % oder weniger
+abgeschwächt.
+
+Kleine Korrektur auf `lemming/spielerkarten-holo-intensitaet`: Nur der
+`dezent`-Pfad in `karteneffekte.jsx` wird angehoben. Gold verwendet 66 %,
+Legendär 78 % Gesamtdeckkraft und einen klar irisierenden Verlauf aus Magenta,
+Violett, Cyan, Grün und Gold. Die Folie bleibt per bestehendem Schichtenvertrag
+hinter Porträt und Information. Der normale Effektpfad für Packs, Wildcards und
+andere Verbraucher bleibt unverändert; Bronze/Silber erhalten weiterhin keine
+Holografie. Eine Regression schützt gegen die 16-%-Rückkehr und hält die neue
+Spielerkarten-Abstufung fest.
+
+Eigenprüfung am Produktcode-Head `6dface38`: GitHub `Spielregressionen`
+erfolgreich mit 237/237 Tests und Produktionsbuild. `Visuelle Browsertests`
+erfolgreich mit 70 bestandenen und 29 nach bestehenden Projektfiltern
+übersprungenen Prüfungen; der neue Holo-Test lief in handy, schmal und desktop.
+Den erzeugten 390-px-Screenshot habe ich geöffnet: Bronze/Silber bleiben ohne
+Holo, Gold ist klar irisierend, Legendär sichtbar kräftiger; Porträt, Name, OVR,
+Sekundärinfo und die kompakten Ruhmeshallen-Karten bleiben lesbar und innerhalb
+der Kartenkontur. Der PR-Beta-APK-Workflow war ebenfalls erfolgreich; das ist
+kein physischer Android-Gerätetest. Reale Android-Sichtung bleibt offen.
+
+Status: umgesetzt, Astra-Abnahme offen; kein main-Merge und kein Release.
+
 ## 23.09.2026 · Astra · 35.195.1 · Kartenflächen nach Nutzerfeedback
 
 Basis `095da80`. Kevin beanstandet die dunklen Ausschnitte auf Gold-/Legendärkarten
