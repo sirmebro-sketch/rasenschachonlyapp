@@ -11,7 +11,7 @@ test.beforeEach(async({page})=>{
  await oeffnen(page);
 });
 test('Detail zeigt Preis ohne Abbuchung, expliziter Kauf bleibt nach Laden erhalten',async({page},info)=>{
- const kachel=page.getByRole('button',{name:/Plätze Stufe/});
+ const kachel=page.getByRole('button',{name:/Trainingsplätze Stufe/});
  await expect(page.locator('.kauf-kachel')).toHaveCount(9);
  await kachel.click();
  const dialog=page.getByRole('dialog',{name:'Trainingsplätze'});
@@ -19,6 +19,7 @@ test('Detail zeigt Preis ohne Abbuchung, expliziter Kauf bleibt nach Laden erhal
  await dialog.getByRole('button',{name:'Schließen'}).click();
  await expect(kachel).toBeFocused();
  await expect(kachel).toContainText('16 VC');
+ await expect(kachel).toContainText('Erhöht Startstärke und jährliche Entwicklung.');
  await kachel.click();
  await dialog.getByRole('button',{name:'Auf Stufe 2 ausbauen · 16 VC',exact:true}).click();
  await expect(dialog.getByRole('status')).toContainText('Stufe 2 gespeichert');

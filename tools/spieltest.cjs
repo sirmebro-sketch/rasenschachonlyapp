@@ -44,7 +44,7 @@ async function pruefStart(fort){
  }
  if(fort==='akademie'){
   await store.set(VER_KEY,JSON.stringify(VEREIN.gruenden(VEREIN.leererVerein(),{name:'Prüfverein',stadt:'Hamburg',land:'GER',weltjahr:2026}).v));
-  await store.set(AKA_KEY,JSON.stringify({...leereAkademie(),gegruendet:true,name:'Prüfakademie',vc:16,stufen:{...leereAkademie().stufen,medizin:6}}));
+  await store.set(AKA_KEY,JSON.stringify({...leereAkademie(),gegruendet:2026,name:'Prüfakademie',vc:16,stufen:{...leereAkademie().stufen,medizin:6}}));
  }
  if(fort==='wirtschaft'){
   const r=VEREIN.gruenden(VEREIN.leererVerein(),{name:'Prüfverein Donaudampfschifffahrt',stadt:'Hamburg',land:'GER',weltjahr:2026});

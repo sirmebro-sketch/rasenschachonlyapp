@@ -1,7 +1,7 @@
 {
   "name": "rasenschach",
   "private": true,
-  "version": "35.195.2",
+  "version": "35.196.0",
   "type": "module",
   "scripts": {
     "build": "vite build",

@@ -1,3 +1,42 @@
+## 24.09.2026 · Astra · KAUF-01/02 integriert, unabhängige Abnahme offen
+
+Lemming 1 (#55, bc71be5) und Lemming 2 (#56, e5d88e0) im Kaufpilot
+zusammengeführt, anschließend main 62d3f68 (35.196.0 samt Musik) übernommen.
+Beide Lieferungen angenommen mit kleinen Integrationskorrekturen: Reichweiten-SVG
+innerhalb der ViewBox, verständliche „Spitzenstärke“ statt „Peak“, Akademietexte
+in Kacheln und Details angebunden, Testnamen angepasst und Gründungsjahr im
+isolierten Akademie-Prüfstand korrigiert. Keine Spielbalance geändert.
+
+240 Regressionstests und Produktionsbuild bestanden. Icons bei 32/48/64 px,
+Akademie bei 390 und 320 px im Browser betrachtet. Expliziter Kauf von Stufe 1
+auf 2 kostet exakt 16 VC; danach 0 VC und Folgekauf gesperrt, Speicherbestätigung
+sichtbar. Dies ersetzt nicht Lemming 3 oder einen echten Android-Test.
+Details: pruefberichte/2026-09-24-astra-kauf-abnahme.md.
+Goldkarten #57 und Rekorde #58 auf Kevins Wunsch für eine spätere Runde zurückgestellt.
+Kein Main-Merge, keine Versionsänderung: nächste Aufgabe KAUF-03 auf diesem Pilot.
+
+## 24.09.2026 · Astra · 35.196.0 · Musik im regulären Release
+
+Basis main `c48b699`; Sol-PR #48, Head `3a7df6549778074158674d3f2a26a7da0a8874fb`,
+inklusive Astra-Korrektur #51 übernommen. Porträt-/Holo-Korrekturen aus 35.195.2
+bleiben erhalten. Kaufkacheln und Lemming-Arbeit bleiben auf ihren Branches.
+
+Kevin weist ausdrücklich an, Musik jetzt in main und die reguläre App zu
+integrieren und die Hör-/Geräteprüfung anschließend mit dieser Version selbst
+vorzunehmen. Diese neuere Anweisung ersetzt für dieses Paket die frühere
+Zurückstellung bis zur Geräteprüfung; keine behauptete Hörabnahme.
+
+Drei Ogg-Musikstücke und 35 MP3-Effekte; vorhandene zentrale Audioverwaltung
+erweitert, kein zweites System. Musik standardmäßig aus, Einstellung separat
+von Effekten. App-ID und Release-Signatur unverändert. Version 35.196.0,
+Android-versionCode durch Projektwerkzeug synchronisiert.
+
+Lokale Prüfung der zusammengeführten Fassung: 240/240 Regressionen bestanden,
+Produktionsbuild und Capacitor-Sync erfolgreich. Browser-CI wird am Integrations-PR
+vor dem Merge geprüft; Release-Build und Signatur am anschließenden Main-Commit.
+Offen: subjektive Klangwirkung, längere Nutzung, Lautsprecher,
+WebView-Loops und Audiofokus/Unterbrechungen auf Kevins Android-Gerät.
+
 ## 24.09.2026 · Astra · Kaufkacheln-Pilot (noch nicht veröffentlicht)
 
 Basis c48b699 (35.195.2). Gemeinsame Kacheln/Detaildialog in kauf-ui.jsx,
@@ -2608,3 +2647,14 @@ sondern der Grund, warum diese Änderung überhaupt nötig ist.
 **Offen bleibt:** Nach der Zusammenführung einmal tatsächlich drücken und
 nachsehen, ob der Lauf auf einem fremden Branch durchgeht. Das kann erst
 danach jemand tun.
+## 23.09.2026 · Sol · zusätzliche Klangwelt zur Astra-Abnahme
+
+Von `main` `5491fa7` aus wurden die bereits integrierten Sol-Sounds um drei
+lange Musikstücke, neue Bedien- und Belohnungszeichen und eine auf die sichtbare
+Kartenenthüllung abgestimmte Klangfolge ergänzt. Ein einziger Abspieler,
+getrennte dauerhaft gespeicherte Regler und Musikstandard Aus. Herkunft,
+Inventar, Asset-Prüfung und offene Geräte-/Hörabnahme stehen im
+[Sol-Prüfbericht](pruefberichte/2026-09-23-sol-musik-und-sounddesign.md).
+Diese Änderung liegt nur auf `sol/klangwelt-musik-20260923`; Astra entscheidet
+über Integration und spätere Versionsnummer. Der finale Test-/CI-Stand wird
+im Bericht am PR-Head nachgetragen.

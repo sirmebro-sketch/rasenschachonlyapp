@@ -86,3 +86,91 @@ test('Laufende Klänge folgen der Lautstärke und stoppen beim Verbergen', async
     remove(); assert.deepEqual(listeners,{});
   } finally {setSoundLevel(0); global.Audio=oldAudio;global.document=oldDocument;}
 });
+
+test('Musik startet nur nach Bedienung, wechselt weich und kehrt nicht selbsttätig aus dem Hintergrund zurück', async () => {
+  const { installSoundButtons, setSoundLevel, setMusicLevel, setMusicContext } = await import('../sound.js');
+  const oldAudio=global.Audio, oldDocument=global.document;
+  const handlers={}, started=[];
+  const root={hidden:false,addEventListener:(k,v)=>{handlers[k]=v;},removeEventListener:(k)=>{delete handlers[k];}};
+  global.document=root;
+  global.Audio=class {
+    constructor(src){this.src=src;this.volume=0;this.paused=true;this.loop=false;started.push(this);}
+    play(){this.paused=false;return Promise.resolve();}
+    pause(){this.paused=true;}
+  };
+  try {
+    setSoundLevel(0);setMusicLevel(0);setMusicContext('menu');
+    const remove=installSoundButtons(root);
+    setMusicLevel(1);
+    assert.equal(started.length,0,'keine Wiedergabe allein durch gespeicherte Einstellung');
+    const click=()=>handlers.click({target:{closest:()=>null}});
+    click();
+    assert.match(started[0].src,/music\/ankommen\.ogg$/);
+    assert.equal(started[0].loop,true);
+    setMusicContext('career');
+    assert.match(started[1].src,/music\/karriere\.ogg$/);
+    setMusicContext('career');
+    assert.equal(started.length,2,'Seitenwechsel innerhalb der Karriere startet keinen neuen Track');
+    root.hidden=true;handlers.visibilitychange();
+    assert.equal(started[1].paused,true);
+    root.hidden=false;handlers.visibilitychange();
+    assert.equal(started[1].paused,true,'Hintergrundrückkehr darf Podcast nicht verdrängen');
+    click();
+    assert.equal(started[1].paused,false);
+    setMusicLevel(0);
+    assert.equal(started[1].paused,true);
+    remove();
+  } finally {setMusicLevel(0);setSoundLevel(0);global.Audio=oldAudio;global.document=oldDocument;}
+});
+
+test('Ein großer Erfolg blockiert schnelle Klickfolgen und derselbe Klang wird gedrosselt', async () => {
+  const {playSound,setSoundLevel,installSoundButtons}=await import('../sound.js');
+  const oldAudio=global.Audio,oldDocument=global.document,oldPerformance=global.performance;
+  const sounds=[];let clock=10000;
+  global.performance={now:()=>clock};
+  global.document={hidden:false,addEventListener(){},removeEventListener(){}};
+  global.Audio=class {
+    constructor(src){this.src=src;this.paused=false;sounds.push(this);}
+    play(){return Promise.resolve();}pause(){this.paused=true;}
+  };
+  try {
+    const remove=installSoundButtons(global.document);
+    setSoundLevel(1);
+    playSound('champion');
+    clock+=50;playSound('tap');playSound('progress');playSound('champion');
+    assert.equal(sounds.length,1,'kein Klanggemisch in der Erfolgssequenz');
+    clock+=200;playSound('champion');
+    assert.equal(sounds.length,2,'späterer eigener Erfolg kann ertönen');
+    remove();
+  } finally {setSoundLevel(0);global.Audio=oldAudio;global.document=oldDocument;global.performance=oldPerformance;}
+});
+
+
+test('Verspaetete Musikfehler stoppen weder neue Tracks noch neuere Starts; synchrone Fehler bleiben isoliert', async () => {
+  const {installSoundButtons,setMusicLevel,setMusicContext,setSoundLevel}=await import('../sound.js');
+  const oldAudio=global.Audio, oldDocument=global.document;
+  const handlers={}, made=[];
+  global.document={hidden:false,addEventListener:(k,v)=>handlers[k]=v,removeEventListener:k=>delete handlers[k]};
+  global.Audio=class {
+    constructor(src){this.src=src;this.paused=true;this.volume=0;made.push(this);}
+    play(){if(this.throws)throw Error('synchron');this.paused=false;return this.pending??Promise.resolve();}
+    pause(){this.paused=true;}
+  };
+  let remove;
+  try {
+    setSoundLevel(0);setMusicLevel(0);setMusicContext('menu');
+    remove=installSoundButtons(document);setMusicLevel(1);
+    const click=()=>handlers.click({target:{closest:()=>null}});
+    click();const old=made[0];old.paused=true;
+    let reject;old.pending=new Promise((_,r)=>reject=r);click();
+    setMusicContext('career');const next=made[1];
+    reject(Error('alter Track'));await Promise.resolve();await Promise.resolve();
+    assert.equal(next.paused,false,'alter Track darf neuen Track nicht stoppen');
+    next.paused=true;next.pending=new Promise((_,r)=>reject=r);click();
+    next.paused=true;next.pending=Promise.resolve();click();
+    reject(Error('alter Versuch'));await Promise.resolve();await Promise.resolve();
+    assert.equal(next.paused,false,'alter Versuch darf neueren Start nicht stoppen');
+    next.paused=true;next.throws=true;
+    assert.doesNotThrow(click,'Audiofehler darf die Bedienung nicht unterbrechen');
+  } finally {remove?.();setMusicLevel(0);setSoundLevel(0);global.Audio=oldAudio;global.document=oldDocument;}
+});

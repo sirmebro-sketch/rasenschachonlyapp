@@ -1,6 +1,6 @@
 # Kaufoberflächen: Astra-Pilot und Lemming-Pakete
 
-24.09.2026 · Basis: main c48b699a5653a6a2c44c86a6c3ba721b5df4500f.
+24.09.2026 · Aktualisierte Basis: main 62d3f689085e817169da5a9885fbe573195ef574 (35.196.0).
 Arbeitsbasis für alle drei Pakete: `astra/kaufkacheln-pilot`; beim Start aktuellen
 Head abrufen und im Bericht nennen. Eigener Branch, PR gegen diesen Pilotbranch.
 Kein main-Merge, kein Release, keine Versionsänderung durch Lemming.
@@ -86,3 +86,10 @@ sein Abschlusscheck erfolgt nach Astra-Integration von 1 und 2. Jeder liefert
 einen eigenen Bericht statt parallel ENTWICKLUNG/CHANGELOG zu verändern. Astra
 übernimmt die gemeinsamen Vermerke bei Integration. Pro Paket ein PR und danach
 anhalten. README/AGENTS/LEMMING bleiben verbindlich; dieser Plan grenzt Dateien ab.
+
+## Übergabe nach Integration von KAUF-01 und KAUF-02
+
+Beide Pakete sind im Pilot integriert; KAUF-03 prüft jetzt diesen gemeinsamen
+Stand. Bericht: `pruefberichte/2026-09-24-astra-kauf-abnahme.md`.
+Weiterhin eigener Branch ab aktuellem `astra/kaufkacheln-pilot`, PR dorthin.
+Andere offene Arbeiten (#57/#58) gehören nicht zu dieser Runde.
