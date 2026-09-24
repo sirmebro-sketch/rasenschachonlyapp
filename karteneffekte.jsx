@@ -10,15 +10,30 @@ export const EFFEKT_KONTUREN={
 export function KartenEffekt({form='karte',stark=false,still=false,hsv=false,dezent=false}){
  const id='folie'+React.useId().replace(/[^a-zA-Z0-9_-]/g,'');
  const k=EFFEKT_KONTUREN[form]||EFFEKT_KONTUREN.karte;
+ // 23.09.2026: "dezent" wird nur von Gold-/Legendär-Spielerkarten benutzt.
+ // 16 % Gesamtdeckkraft aus 35.195.1 multiplizierte selbst die kräftigsten
+ // Farb-Stopps auf rund 5 % herunter. Der Inhalt bleibt durch den negativen
+ // Stapelindex frei; deshalb darf die Materialfarbe wieder sichtbar tragen.
+ const deckkraft=dezent?(stark?.78:.66):1;
  return <svg aria-hidden="true" focusable="false" className={'rs-materialkante'+(stark?' rs-folie-stark':'')+(still?' rs-folie-still':'')}
   data-form={form} viewBox={k.box} preserveAspectRatio="none"
-  style={{position:'absolute',inset:0,width:'100%',height:'100%',pointerEvents:'none',overflow:'hidden',zIndex:form==='pack'?1:-1,opacity:dezent ? .16 : 1}}>
+  style={{position:'absolute',inset:0,width:'100%',height:'100%',pointerEvents:'none',overflow:'hidden',zIndex:form==='pack'?1:-1,opacity:deckkraft}}>
   <defs>
    <clipPath id={id+'clip'}><path d={k.pfad}/></clipPath>
    <linearGradient id={id+'holo'} x1="0" y1="0" x2="1" y2=".65">
-    <stop stopColor="#51e5d1" stopOpacity="0"/><stop offset=".25" stopColor={hsv?'#278ae0':stark?'#65e9ef':'#e3ae42'} stopOpacity=".32"/>
-    <stop offset=".48" stopColor={hsv?'#ffffff':stark?'#b98bff':'#fff0a4'} stopOpacity=".08"/>
-    <stop offset=".7" stopColor={hsv?'#91c9ff':stark?'#f8a6d9':'#8de0ce'} stopOpacity=".3"/><stop offset="1" stopColor="#86bdff" stopOpacity="0"/>
+    {dezent ? <>
+     <stop stopColor="#55eadb" stopOpacity=".06"/>
+     <stop offset=".17" stopColor="#ff6ecb" stopOpacity={stark?'.50':'.40'}/>
+     <stop offset=".34" stopColor="#8f7dff" stopOpacity={stark?'.52':'.42'}/>
+     <stop offset=".52" stopColor="#55e8ff" stopOpacity={stark?'.48':'.40'}/>
+     <stop offset=".70" stopColor="#77ffad" stopOpacity={stark?'.44':'.36'}/>
+     <stop offset=".86" stopColor="#ffd76d" stopOpacity={stark?'.46':'.38'}/>
+     <stop offset="1" stopColor="#ff7f9e" stopOpacity=".06"/>
+    </> : <>
+     <stop stopColor="#51e5d1" stopOpacity="0"/><stop offset=".25" stopColor={hsv?'#278ae0':stark?'#65e9ef':'#e3ae42'} stopOpacity=".32"/>
+     <stop offset=".48" stopColor={hsv?'#ffffff':stark?'#b98bff':'#fff0a4'} stopOpacity=".08"/>
+     <stop offset=".7" stopColor={hsv?'#91c9ff':stark?'#f8a6d9':'#8de0ce'} stopOpacity=".3"/><stop offset="1" stopColor="#86bdff" stopOpacity="0"/>
+    </>}
    </linearGradient>
    <linearGradient id={id+'licht'}><stop stopColor="#fff5d6" stopOpacity="0"/><stop offset=".44" stopColor="#fff5d6" stopOpacity="0"/><stop offset=".5" stopColor="#fffbe7" stopOpacity={stark?'.52':'.36'}/><stop offset=".56" stopColor="#fff5d6" stopOpacity="0"/><stop offset="1" stopColor="#fff5d6" stopOpacity="0"/></linearGradient>
    <pattern id={id+'korn'} width="6" height="6" patternUnits="userSpaceOnUse"><path d="M0 6 L6 0" stroke="#fff0c1" strokeWidth=".25" opacity=".16"/></pattern>
