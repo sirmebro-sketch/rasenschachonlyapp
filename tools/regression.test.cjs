@@ -35,7 +35,7 @@ before(async () => {
     .map(n=>`const ${n}=v=>{out[${JSON.stringify(n.slice(3))}]=v;};`).join('\n');
   const extension = `
 import {renderToStaticMarkup} from 'react-dom/server';
-export {simTable, LEAGUES, karriereZeitraum, verdict, vorsatzBelohnen, vorsatzPunkte, bilanzLaden, bilanzErgaenzen, akaGruenden, akaVerbuchen, SAVE_KEY, AKA_KEY, LIFE_KEY, createPlayer, develop, simulateSeason, vcFuer, vcPosten, vcAusHaeusern, leereAkademie, leereBilanz, KARTEN, VEREIN, zufallSetzen, rerollWildcard, ladenGesperrt, saisonSchlagzeile, saisonIndex, EVENTS, strangDran, strangWeiter, laufStand, laufWeiter};
+export {simTable, LEAGUES, karriereZeitraum, verdict, vorsatzBelohnen, vorsatzPunkte, bilanzLaden, bilanzErgaenzen, rekordListe, akaGruenden, akaVerbuchen, SAVE_KEY, AKA_KEY, LIFE_KEY, createPlayer, develop, simulateSeason, vcFuer, vcPosten, vcAusHaeusern, leereAkademie, leereBilanz, KARTEN, VEREIN, zufallSetzen, rerollWildcard, ladenGesperrt, saisonSchlagzeile, saisonIndex, EVENTS, strangDran, strangWeiter, laufStand, laufWeiter};
 export const renderCreate=()=>renderToStaticMarkup(<CreateScreen meta={{}} onStart={()=>{}} onBack={()=>{}}/>);
 export const renderPortraits=()=>renderToStaticMarkup(<>{['m','w'].flatMap(g=>Array.from({length:4},(_,i)=><Avatar key={g+i} seed={1} g={g} zuege={{...zuegeAusKennung(1,g,'GER',{}),stil:2,haut:10+i,haar:9+i,frisur:(g==='w'?14:16)+i,details:i,bart:g==='w'?0:10+i%3}}/>))}</>);
 export const renderEnd=p=>renderToStaticMarkup(<EndScreen p={p} onNew={()=>{}}/>);
@@ -49,6 +49,7 @@ export const renderReveal=card=>renderToStaticMarkup(<WildcardEnthuellung card={
 export const renderShop=(spieler,schritt='training')=>renderToStaticMarkup(<VCLadenAnsicht wo="saison" vc={100} laden={{}} onKauf={()=>{}} spieler={spieler} schritt={schritt}/>);
 export const renderKarriereRueckblick=p=>renderToStaticMarkup(<KarriereRueckblick p={p} onFertig={()=>{}}/>);
 export const renderSaisonRueckblick=(p,s)=>renderToStaticMarkup(<SaisonRueckblick p={p} s={s} onFertig={()=>{}}/>);
+export const renderHall=(ges)=>renderToStaticMarkup(<HallScreen hall={[]} ges={ges} aka={null} verein={null} onBack={()=>{}}/>);
 export async function runFinish(q,initial={}) {
  const out={};const aka={...leereAkademie(),vc:100,verdient:200,gratisPacks:2,...initial.aka};
  const ges=initial.ges||leereBilanz(), verein=initial.verein||null, meta={}, ach={}, seen={}, wcSeen={}, hall=[], hsvZ=0;
@@ -256,6 +257,27 @@ test('Nur fünfjährige Karrieren zählen für neue Freischaltungen; Altbestand 
   assert.equal(E.VEREIN.freigeschaltet(alt).verein,n>=5);
  }
 });
+test('Ruhmeshallen-Rekordbuch trennt Bestwerte, Gesamtsummen und Kapitänslaufbahnen korrekt',()=>{
+ const g={...E.leereBilanz(),karrieren:5,bestPunkte:2726,ovrMax:95,apps:2343,goals:614,
+  assists:241,cs:318,toreSaisonMax:39,caps:458,titel:53,meister:21,pokale:6,
+  intTitel:24,ntTitel:2,treueMax:18,altMax:40,aufstiege:6,kapitaen:1,
+  laender:{GER:2,ENG:1,ESP:1,ITA:1},ligen:{A:1,B:1,C:1},vereine:{A:2,B:1}};
+ const r=E.rekordListe(g), by=new Map(r.map(x=>[x.titel,x]));
+ assert.equal(by.get('Pflichtspiele').wert,2343);
+ assert.equal(by.get('Pflichtspiele').gruppe,'gesamt');
+ assert.equal(by.get('Karrierepunkte').gruppe,'best');
+ assert.equal(by.get('Bespielte Länder').wert,4);
+ assert.equal(by.get('Laufbahnen als Kapitän').wert,1);
+ assert.equal(by.get('Laufbahnen als Kapitän').hinweis,'mind. einmal Vereinskapitän');
+ assert(!r.some(x=>x.titel.startsWith('Meiste ')));
+ assert(!r.some(x=>x.titel==='Saisons als Kapitän'||x.titel==='Ältester Einsatz'));
+ const html=E.renderHall(g);
+ assert(html.includes('Bestwerte')&&html.includes('Gesamtbilanz')&&html.includes('Stationen &amp; Rollen'));
+ assert(html.includes('Bestwerte und Summen getrennt'));
+ assert(html.includes('Spiele ohne Gegentor'));
+ assert(!html.includes('Meiste Pflichtspiele'));
+});
+
 test('Exakter Verkaufserwartungswert jedes Packs liegt zwischen 80 und 120 Prozent',()=>{
  const ranks=['bronze','silber','gold','legende'];
  for(const pk of E.KARTEN.PACKS){

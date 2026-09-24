@@ -28,6 +28,8 @@ Android-Geräteprüfung der neuen Audio-/Optikfunktionen bleibt offen.
 
 ## Noch nicht veröffentlicht
 
+- Das ewige Rekordbuch trennt echte Bestwerte von über alle Laufbahnen addierten Gesamtzahlen, benennt Kapitänslaufbahnen und Karrierealter korrekt und zeigt die Statistik auf schmalen Bildschirmen in lesbaren, gekennzeichneten Gruppen.
+
 - Die Spielerpass-Vorschau in der Charaktererstellung bleibt beim Öffnen und Schließen der Feinheiten gleich aufgebaut und gleich skaliert; das Porträt ist in beiden Zuständen moderat größer.
 - Goldene und legendäre Spielerkarten zeigen wieder einen deutlich sichtbaren, regenbogenartig irisierenden Holoeffekt. Legendäre Karten schimmern kräftiger als Gold; Bronze, Silber, Packs und Wildcard-Folien bleiben unverändert.
 
