@@ -249,24 +249,21 @@ diff --git a/tools/spieltest.cjs b/tools/spieltest.cjs
 diff --git a/CHANGELOG.md b/CHANGELOG.md
 --- a/CHANGELOG.md
 +++ b/CHANGELOG.md
-@@ -27,7 +27,9 @@
+@@ -27,8 +27,10 @@
  # Änderungen
  
--## Noch nicht veröffentlicht
--
--
-+## Noch nicht veröffentlicht
-+
+ ## Noch nicht veröffentlicht
+ 
 +- Das ewige Rekordbuch trennt echte Bestwerte von über alle Laufbahnen addierten Gesamtzahlen, benennt Kapitänslaufbahnen und Karrierealter korrekt und zeigt die Statistik auf schmalen Bildschirmen in lesbaren, gekennzeichneten Gruppen.
 +
-+
+ - Die Spielerpass-Vorschau in der Charaktererstellung bleibt beim Öffnen und Schließen der Feinheiten gleich aufgebaut und gleich skaliert; das Porträt ist in beiden Zuständen moderat größer.
  - Goldene und legendäre Spielerkarten zeigen wieder einen deutlich sichtbaren, regenbogenartig irisierenden Holoeffekt. Legendäre Karten schimmern kräftiger als Gold; Bronze, Silber, Packs und Wildcard-Folien bleiben unverändert.
  
 diff --git a/tools/browser/ruhmeshalle-rekorde.spec.js b/tools/browser/ruhmeshalle-rekorde.spec.js
 new file mode 100644
 --- /dev/null
 +++ b/tools/browser/ruhmeshalle-rekorde.spec.js
-@@ -0,0 +1,26 @@
+@@ -0,0 +1,25 @@
 +import {test,expect} from '@playwright/test';
 +
 +test('Ruhmeshalle: Rekordbuch ist auf mobilen Breiten korrekt beschriftet und lesbar',async({page},info)=>{
@@ -292,4 +289,3 @@ new file mode 100644
 +
 + await buch.screenshot({path:info.outputPath('ruhmeshalle-rekordbuch.png')});
 +});
-+
