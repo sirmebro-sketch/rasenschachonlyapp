@@ -249,7 +249,7 @@ diff --git a/tools/spieltest.cjs b/tools/spieltest.cjs
 diff --git a/CHANGELOG.md b/CHANGELOG.md
 --- a/CHANGELOG.md
 +++ b/CHANGELOG.md
-@@ -27,8 +27,10 @@
+@@ -27,7 +27,9 @@
  # Änderungen
  
  ## Noch nicht veröffentlicht
