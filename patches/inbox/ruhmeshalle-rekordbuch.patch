@@ -1,0 +1,295 @@
+diff --git a/App.jsx b/App.jsx
+--- a/App.jsx
++++ b/App.jsx
+@@ -17225,47 +17225,60 @@
+   return 0;
+ };
+ 
+-const REKORDE = [
+-  ["Höchste Karrierepunkte",     (g) => g.bestPunkte,   ""],
+-  ["Höchste Gesamtstärke",       (g) => g.ovrMax,       ""],
+-  ["Meiste Pflichtspiele",       (g) => g.apps,         "insgesamt"],
+-  ["Meiste Tore",                (g) => g.goals,        "insgesamt"],
+-  ["Meiste Vorlagen",            (g) => g.assists,      "insgesamt"],
+-  ["Meiste Spiele ohne Gegentor", (g) => g.cs,          "insgesamt"],
+-  ["Tore in einer Saison",       (g) => g.toreSaisonMax, "Bestwert"],
+-  ["Meiste Länderspiele",        (g) => g.caps,         "insgesamt"],
+-  ["Meiste Titel",               (g) => g.titel,        "insgesamt"],
+-  ["Meisterschaften",            (g) => g.meister,      ""],
+-  ["Pokalsiege",                 (g) => g.pokale,       ""],
+-  ["Internationale Titel",       (g) => g.intTitel,     ""],
+-  ["Turniersiege mit dem Land",  (g) => g.ntTitel,      ""],
+-  ["Längste Vereinstreue",       (g) => g.treueMax,     "Jahre am Stück"],
+-  ["Ältester Einsatz",           (g) => g.altMax,       "Jahre"],
+-  /* ZAEHLOBJEKTE, KEINE ZAHLEN (35.140, F30). `laender`, `ligen` und
+-     `vereine` sind Karten der Form { DE: 1, FR: 1, … } — sie zaehlen, WIE
+-     OFT jeder Ort bespielt wurde. `rekordListe` prueft `wert > 0`, und das
+-     ist bei einem Objekt immer falsch: die drei Zeilen fielen seit 35.116
+-     IMMER weg, auch bei 4 Laendern, 5 Ligen und 12 Vereinen.
+-
+-     Gezaehlt wird die Zahl VERSCHIEDENER Eintraege, nicht die Summe der
+-     Besuche — wer dreimal in Spanien spielte, war in EINEM Land. Alte oder
+-     beschaedigte Staende, in denen dort schon eine Zahl steht, werden
+-     mitgenommen. */
+-  ["Bespielte Länder",           (g) => zaehlOrte(g.laender), ""],
+-  ["Bespielte Ligen",            (g) => zaehlOrte(g.ligen),   ""],
+-  ["Verschiedene Vereine",       (g) => zaehlOrte(g.vereine), ""],
+-  ["Aufstiege geschafft",        (g) => g.aufstiege,    ""],
+-  ["Saisons als Kapitän",        (g) => g.kapitaen,     ""],
+-];
+-
+-function rekordListe(g) {
+-  if (!g) return [];
+-  return REKORDE.map(([titel, hol, zusatz]) => {
+-    let wert = 0;
+-    try { wert = hol(g) || 0; } catch (e) { wert = 0; }
+-    return wert > 0 ? { titel, wert, zusatz } : null;
+-  }).filter(Boolean);
+-}
++/* Das Rekordbuch mischt bewusst zwei Arten von Zahlen: echte Bestwerte
++   (z. B. Höchststärke) und lebenslange Summen (z. B. alle Pflichtspiele).
++   Die alte Beschriftung mit „Meiste …“ ließ Summen wie Rekorde EINER Laufbahn
++   wirken. Die Gruppe ist deshalb Teil der Definition und nicht nur Deko. */
++const REKORD_GRUPPEN = [
++  { id:"best", titel:"Bestwerte", zeichen:"↑", farbe:"var(--go)",
++    text:"Höchster Wert aus einer einzelnen Laufbahn oder Saison" },
++  { id:"gesamt", titel:"Gesamtbilanz", zeichen:"Σ", farbe:"var(--ac)",
++    text:"Über alle abgeschlossenen Laufbahnen zusammengerechnet" },
++  { id:"wege", titel:"Stationen & Rollen", zeichen:"#", farbe:"var(--ok)",
++    text:"Vielfalt, Vereinswege und besondere Rollen" },
++];
++
++const REKORDE = [
++  { titel:"Karrierepunkte",          hol:(g)=>g.bestPunkte,   gruppe:"best",   hinweis:"beste Laufbahn" },
++  { titel:"Gesamtstärke",            hol:(g)=>g.ovrMax,       gruppe:"best",   hinweis:"höchster Karrierewert" },
++  { titel:"Tore in einer Saison",    hol:(g)=>g.toreSaisonMax,gruppe:"best",   hinweis:"beste einzelne Saison" },
++  { titel:"Längste Vereinstreue",    hol:(g)=>g.treueMax,     gruppe:"best",   hinweis:"Saisons am Stück" },
++  { titel:"Ältestes Karriereende",   hol:(g)=>g.altMax,       gruppe:"best",   hinweis:"Alter in Jahren" },
++
++  { titel:"Pflichtspiele",           hol:(g)=>g.apps,         gruppe:"gesamt", hinweis:"alle Laufbahnen" },
++  { titel:"Tore",                    hol:(g)=>g.goals,        gruppe:"gesamt", hinweis:"alle Laufbahnen" },
++  { titel:"Vorlagen",                hol:(g)=>g.assists,      gruppe:"gesamt", hinweis:"alle Laufbahnen" },
++  { titel:"Spiele ohne Gegentor",    hol:(g)=>g.cs,           gruppe:"gesamt", hinweis:"alle Laufbahnen" },
++  { titel:"A-Länderspiele",          hol:(g)=>g.caps,         gruppe:"gesamt", hinweis:"alle Laufbahnen" },
++  { titel:"Titel",                   hol:(g)=>g.titel,        gruppe:"gesamt", hinweis:"alle Laufbahnen" },
++  { titel:"Meisterschaften",         hol:(g)=>g.meister,      gruppe:"gesamt", hinweis:"alle Laufbahnen" },
++  { titel:"Pokalsiege",              hol:(g)=>g.pokale,       gruppe:"gesamt", hinweis:"alle Laufbahnen" },
++  { titel:"Internationale Titel",    hol:(g)=>g.intTitel,     gruppe:"gesamt", hinweis:"alle Laufbahnen" },
++  { titel:"Nationalteam-Titel",      hol:(g)=>g.ntTitel,      gruppe:"gesamt", hinweis:"große Turniere" },
++  { titel:"Aufstiege",               hol:(g)=>g.aufstiege,    gruppe:"gesamt", hinweis:"alle Laufbahnen" },
++
++  /* ZAEHLOBJEKTE, KEINE ZAHLEN (35.140, F30). `laender`, `ligen` und
++     `vereine` sind Karten der Form { DE: 1, FR: 1, … } — sie zaehlen, WIE
++     OFT jeder Ort bespielt wurde. Gezaehlt wird hier die Zahl VERSCHIEDENER
++     Eintraege, nicht die Summe der Besuche. Alte oder beschaedigte Staende,
++     in denen dort schon eine Zahl steht, werden mitgenommen. */
++  { titel:"Bespielte Länder",        hol:(g)=>zaehlOrte(g.laender), gruppe:"wege", hinweis:"verschiedene Länder" },
++  { titel:"Bespielte Ligen",         hol:(g)=>zaehlOrte(g.ligen),   gruppe:"wege", hinweis:"verschiedene Ligen" },
++  { titel:"Verschiedene Vereine",    hol:(g)=>zaehlOrte(g.vereine), gruppe:"wege", hinweis:"verschiedene Stationen" },
++  /* `kapitaen` zaehlt in bilanzErgaenzen genau einmal je Laufbahn, in der
++     die Vereinsbinde erreicht wurde. Es sind keine Kapitaens-Saisons. */
++  { titel:"Laufbahnen als Kapitän",  hol:(g)=>g.kapitaen, gruppe:"wege",
++    hinweis:"mind. einmal Vereinskapitän", zeichen:"C" },
++];
++
++function rekordListe(g) {
++  if (!g) return [];
++  return REKORDE.map((rekord) => {
++    let wert = 0;
++    try { wert = rekord.hol(g) || 0; } catch (e) { wert = 0; }
++    return wert > 0 ? { ...rekord, wert } : null;
++  }).filter(Boolean);
++}
+ 
+ /* ---------------------------------------- Die Zeitleiste der Welt ---------
+    Stufe E aus dem Prüfbericht zum Meta-Papier: „Eine langfristige Chronik
+@@ -17369,27 +17382,55 @@
+         {/* DAS REKORDBUCH (35.116). Steht über der Rangliste, weil es die
+             ganze Welt zusammenfasst und die Liste nur die zwölf besten.
+             Erscheint erst, wenn es etwas zu zeigen gibt. */}
+-        {(() => {
+-          const rk = rekordListe(ges);
+-          if (rk.length < 3) return null;
+-          return (
+-            <div className="pan pad" style={{ marginBottom: 14 }}>
+-              <div className="eb" style={{ color: "var(--ac)" }}>Das ewige Rekordbuch</div>
+-              <div className="m" style={{ fontSize: 11, color: "var(--mu)", marginTop: 2, marginBottom: 8 }}>
+-                Über alle {ges.karrieren} {ges.karrieren === 1 ? "Laufbahn" : "Laufbahnen"} hinweg
+-              </div>
+-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "3px 12px" }}>
+-                {rk.map((r) => (
+-                  <div key={r.titel} style={{ display: "flex", justifyContent: "space-between",
+-                    alignItems: "baseline", gap: 6, padding: "3px 0",
+-                    borderBottom: "1px solid var(--ln)" }}>
+-                    <span className="m" style={{ fontSize: 10.5, color: "var(--mu)",
+-                      overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{r.titel}</span>
+-                    <span className="d" style={{ fontSize: 14, whiteSpace: "nowrap" }}>{r.wert}</span>
+-                  </div>))}
+-              </div>
+-            </div>);
+-        })()}
++        {(() => {
++          const rk = rekordListe(ges);
++          if (rk.length < 3) return null;
++          return (
++            <div className="pan pad" data-testid="rekordbuch" style={{ marginBottom: 14 }}>
++              <div className="eb" style={{ color: "var(--ac)" }}>Das ewige Rekordbuch</div>
++              <div className="m" style={{ fontSize: 11, color: "var(--mu)", marginTop: 2 }}>
++                Über alle {ges.karrieren} {ges.karrieren === 1 ? "Laufbahn" : "Laufbahnen"} hinweg · Bestwerte und Summen getrennt
++              </div>
++              {REKORD_GRUPPEN.map((gruppe) => {
++                const werte = rk.filter((r) => r.gruppe === gruppe.id);
++                if (!werte.length) return null;
++                return (
++                  <section key={gruppe.id} aria-label={gruppe.titel} style={{ marginTop: 11 }}>
++                    <div style={{ display: "flex", alignItems: "baseline", gap: 7, flexWrap: "wrap",
++                      paddingBottom: 4, borderBottom: "1px solid var(--ln2)" }}>
++                      <span className="d" aria-hidden="true" style={{ color: gruppe.farbe,
++                        fontSize: 14, minWidth: 14 }}>{gruppe.zeichen}</span>
++                      <span className="eb" style={{ color: gruppe.farbe }}>{gruppe.titel}</span>
++                      <span className="m" style={{ fontSize: 9.5, color: "var(--mu)" }}>{gruppe.text}</span>
++                    </div>
++                    <div style={{ display: "grid",
++                      gridTemplateColumns: "repeat(auto-fit,minmax(210px,1fr))",
++                      gap: "4px 12px", marginTop: 3 }}>
++                      {werte.map((r) => (
++                        <div key={r.titel} aria-label={r.titel + ": " + r.wert + ". " + r.hinweis}
++                          style={{ minWidth: 0, display: "grid",
++                            gridTemplateColumns: "24px minmax(0,1fr) auto",
++                            alignItems: "center", gap: 7, padding: "6px 0",
++                            borderBottom: "1px solid var(--ln)" }}>
++                          <span className="d" aria-hidden="true" style={{
++                            width: 22, height: 22, display: "grid", placeItems: "center",
++                            border: "1px solid " + gruppe.farbe, color: gruppe.farbe,
++                            fontSize: (r.zeichen || gruppe.zeichen).length > 1 ? 8.5 : 12,
++                            lineHeight: 1 }}>{r.zeichen || gruppe.zeichen}</span>
++                          <span style={{ minWidth: 0 }}>
++                            <span className="m" style={{ display: "block", fontSize: 11.25,
++                              color: "var(--tx)", lineHeight: 1.2 }}>{r.titel}</span>
++                            <span className="m" style={{ display: "block", fontSize: 9.5,
++                              color: "var(--mu)", marginTop: 2 }}>{r.hinweis}</span>
++                          </span>
++                          <span className="d" style={{ fontSize: 16, whiteSpace: "nowrap",
++                            paddingLeft: 4 }}>{r.wert}</span>
++                        </div>))}
++                    </div>
++                  </section>);
++              })}
++            </div>);
++        })()}
+         {/* DIE ZEITLEISTE (35.119). Unter dem Rekordbuch: die Rekorde sagen
+             WIE VIEL, die Zeitleiste sagt WANN. Erst ab drei Einträgen —
+             darunter ist es eine Aufzählung, keine Geschichte. */}
+diff --git a/tools/regression.test.cjs b/tools/regression.test.cjs
+--- a/tools/regression.test.cjs
++++ b/tools/regression.test.cjs
+@@ -36,5 +36,5 @@
+   const extension = `
+ import {renderToStaticMarkup} from 'react-dom/server';
+-export {simTable, LEAGUES, karriereZeitraum, verdict, vorsatzBelohnen, vorsatzPunkte, bilanzLaden, bilanzErgaenzen, akaGruenden, akaVerbuchen, SAVE_KEY, AKA_KEY, LIFE_KEY, createPlayer, develop, simulateSeason, vcFuer, vcPosten, vcAusHaeusern, leereAkademie, leereBilanz, KARTEN, VEREIN, zufallSetzen, rerollWildcard, ladenGesperrt, saisonSchlagzeile, saisonIndex, EVENTS, strangDran, strangWeiter, laufStand, laufWeiter};
++export {simTable, LEAGUES, karriereZeitraum, verdict, vorsatzBelohnen, vorsatzPunkte, bilanzLaden, bilanzErgaenzen, rekordListe, akaGruenden, akaVerbuchen, SAVE_KEY, AKA_KEY, LIFE_KEY, createPlayer, develop, simulateSeason, vcFuer, vcPosten, vcAusHaeusern, leereAkademie, leereBilanz, KARTEN, VEREIN, zufallSetzen, rerollWildcard, ladenGesperrt, saisonSchlagzeile, saisonIndex, EVENTS, strangDran, strangWeiter, laufStand, laufWeiter};
+ export const renderCreate=()=>renderToStaticMarkup(<CreateScreen meta={{}} onStart={()=>{}} onBack={()=>{}}/>);
+ export const renderPortraits=()=>renderToStaticMarkup(<>{['m','w'].flatMap(g=>Array.from({length:4},(_,i)=><Avatar key={g+i} seed={1} g={g} zuege={{...zuegeAusKennung(1,g,'GER',{}),stil:2,haut:10+i,haar:9+i,frisur:(g==='w'?14:16)+i,details:i,bart:g==='w'?0:10+i%3}}/>))}</>);
+@@ -49,5 +49,6 @@
+ export const renderShop=(spieler,schritt='training')=>renderToStaticMarkup(<VCLadenAnsicht wo="saison" vc={100} laden={{}} onKauf={()=>{}} spieler={spieler} schritt={schritt}/>);
+ export const renderKarriereRueckblick=p=>renderToStaticMarkup(<KarriereRueckblick p={p} onFertig={()=>{}}/>);
+-export const renderSaisonRueckblick=(p,s)=>renderToStaticMarkup(<SaisonRueckblick p={p} s={s} onFertig={()=>{}}/>);
++export const renderSaisonRueckblick=(p,s)=>renderToStaticMarkup(<SaisonRueckblick p={p} s={s} onFertig={()=>{}}/>);
++export const renderHall=(ges)=>renderToStaticMarkup(<HallScreen hall={[]} ges={ges} aka={null} verein={null} onBack={()=>{}}/>);
+ export async function runFinish(q,initial={}) {
+  const out={};const aka={...leereAkademie(),vc:100,verdient:200,gratisPacks:2,...initial.aka};
+@@ -256,7 +257,28 @@
+   assert.equal(E.VEREIN.freigeschaltet(alt).verein,n>=5);
+  }
+ });
+-test('Exakter Verkaufserwartungswert jedes Packs liegt zwischen 80 und 120 Prozent',()=>{
++test('Ruhmeshallen-Rekordbuch trennt Bestwerte, Gesamtsummen und Kapitänslaufbahnen korrekt',()=>{
++ const g={...E.leereBilanz(),karrieren:5,bestPunkte:2726,ovrMax:95,apps:2343,goals:614,
++  assists:241,cs:318,toreSaisonMax:39,caps:458,titel:53,meister:21,pokale:6,
++  intTitel:24,ntTitel:2,treueMax:18,altMax:40,aufstiege:6,kapitaen:1,
++  laender:{GER:2,ENG:1,ESP:1,ITA:1},ligen:{A:1,B:1,C:1},vereine:{A:2,B:1}};
++ const r=E.rekordListe(g), by=new Map(r.map(x=>[x.titel,x]));
++ assert.equal(by.get('Pflichtspiele').wert,2343);
++ assert.equal(by.get('Pflichtspiele').gruppe,'gesamt');
++ assert.equal(by.get('Karrierepunkte').gruppe,'best');
++ assert.equal(by.get('Bespielte Länder').wert,4);
++ assert.equal(by.get('Laufbahnen als Kapitän').wert,1);
++ assert.equal(by.get('Laufbahnen als Kapitän').hinweis,'mind. einmal Vereinskapitän');
++ assert(!r.some(x=>x.titel.startsWith('Meiste ')));
++ assert(!r.some(x=>x.titel==='Saisons als Kapitän'||x.titel==='Ältester Einsatz'));
++ const html=E.renderHall(g);
++ assert(html.includes('Bestwerte')&&html.includes('Gesamtbilanz')&&html.includes('Stationen &amp; Rollen'));
++ assert(html.includes('Bestwerte und Summen getrennt'));
++ assert(html.includes('Spiele ohne Gegentor'));
++ assert(!html.includes('Meiste Pflichtspiele'));
++});
++
++test('Exakter Verkaufserwartungswert jedes Packs liegt zwischen 80 und 120 Prozent',()=>{
+  const ranks=['bronze','silber','gold','legende'];
+  for(const pk of E.KARTEN.PACKS){
+   let ev=0;const enumerate=(a,prob)=>{
+diff --git a/tools/spieltest.cjs b/tools/spieltest.cjs
+--- a/tools/spieltest.cjs
++++ b/tools/spieltest.cjs
+@@ -40,7 +40,13 @@
+     zuege:{...zuegeAusKennung(1234,'m','GER',{}),stil:2,haut:4,frisur:7,bart:3}};
+   const k=KARTEN.ausHalle(h,1);delete k.portraet; // Altstand: Migration testen.
+   const pool=KARTEN.poolErgaenzen({karten:[k]},['bronze','silber','gold','legende'].map(st=>KARTEN.neueKarte(st,2030)));
+-  for(const [key,val] of [[HALL_KEY,[h]],[LIFE_KEY,{...leereBilanz(),karrieren:5,hausKarrieren:5}],[AKA_KEY,{...leereAkademie(),vc:1000,gratisPacks:1}],[KARTEN_KEY,pool],[META_KEY,{mk_haar:true,mk_acc:true}],[WILL_KEY,{...leerGesehen(),schirm:true}]])await store.set(key,JSON.stringify(val));
++  const rekordBilanz={...leereBilanz(),karrieren:5,hausKarrieren:5,bestPunkte:2726,ovrMax:95,
++    apps:2343,goals:614,assists:241,cs:318,toreSaisonMax:39,caps:458,titel:53,meister:21,pokale:6,
++    intTitel:24,ntTitel:2,treueMax:18,altMax:40,aufstiege:6,kapitaen:1,
++    laender:Object.fromEntries(["GER","ENG","ESP","ITA"].map(k=>[k,1])),
++    ligen:Object.fromEntries(["Bundesliga","2. Bundesliga","Premier League","La Liga","Serie A","Ligue 1","Eredivisie","Liga Portugal","Süper Lig"].map(k=>[k,1])),
++    vereine:Object.fromEntries(Array.from({length:9},(_,i)=>["Prüfverein "+(i+1),1]))};
++  for(const [key,val] of [[HALL_KEY,[h]],[LIFE_KEY,rekordBilanz],[AKA_KEY,{...leereAkademie(),vc:1000,gratisPacks:1}],[KARTEN_KEY,pool],[META_KEY,{mk_haar:true,mk_acc:true}],[WILL_KEY,{...leerGesehen(),schirm:true}]])await store.set(key,JSON.stringify(val));
+  }
+  if(fort==='wirtschaft'){
+   const r=VEREIN.gruenden(VEREIN.leererVerein(),{name:'Prüfverein Donaudampfschifffahrt',stadt:'Hamburg',land:'GER',weltjahr:2026});
+diff --git a/CHANGELOG.md b/CHANGELOG.md
+--- a/CHANGELOG.md
++++ b/CHANGELOG.md
+@@ -27,7 +27,9 @@
+ # Änderungen
+ 
+-## Noch nicht veröffentlicht
+-
+-
++## Noch nicht veröffentlicht
++
++- Das ewige Rekordbuch trennt echte Bestwerte von über alle Laufbahnen addierten Gesamtzahlen, benennt Kapitänslaufbahnen und Karrierealter korrekt und zeigt die Statistik auf schmalen Bildschirmen in lesbaren, gekennzeichneten Gruppen.
++
++
+ - Goldene und legendäre Spielerkarten zeigen wieder einen deutlich sichtbaren, regenbogenartig irisierenden Holoeffekt. Legendäre Karten schimmern kräftiger als Gold; Bronze, Silber, Packs und Wildcard-Folien bleiben unverändert.
+ 
+diff --git a/tools/browser/ruhmeshalle-rekorde.spec.js b/tools/browser/ruhmeshalle-rekorde.spec.js
+new file mode 100644
+--- /dev/null
++++ b/tools/browser/ruhmeshalle-rekorde.spec.js
+@@ -0,0 +1,26 @@
++import {test,expect} from '@playwright/test';
++
++test('Ruhmeshalle: Rekordbuch ist auf mobilen Breiten korrekt beschriftet und lesbar',async({page},info)=>{
++ await page.goto('/.preview/spieltest.html');
++ await page.getByRole('button',{name:'Fortgeschritten',exact:true}).click();
++ await page.getByRole('button',{name:/Ruhmeshalle/}).click();
++
++ const buch=page.getByTestId('rekordbuch');
++ await expect(buch).toBeVisible();
++ for(const name of ['Bestwerte','Gesamtbilanz','Stationen & Rollen'])
++  await expect(buch.getByRole('region',{name,exact:true})).toBeVisible();
++
++ await expect(buch.getByText('Pflichtspiele',{exact:true})).toBeVisible();
++ await expect(buch.getByText('Spiele ohne Gegentor',{exact:true})).toBeVisible();
++ await expect(buch.getByText('Laufbahnen als Kapitän',{exact:true})).toBeVisible();
++ await expect(buch.getByText('Meiste Pflichtspiele',{exact:true})).toHaveCount(0);
++ await expect(buch.getByText('Saisons als Kapitän',{exact:true})).toHaveCount(0);
++ await expect(buch.getByText('Ältester Einsatz',{exact:true})).toHaveCount(0);
++
++ expect(await buch.evaluate(el=>el.scrollWidth<=el.clientWidth+1)).toBe(true);
++ const lang=buch.getByText('Spiele ohne Gegentor',{exact:true});
++ expect(await lang.evaluate(el=>el.scrollWidth<=el.clientWidth+1)).toBe(true);
++
++ await buch.screenshot({path:info.outputPath('ruhmeshalle-rekordbuch.png')});
++});
++
