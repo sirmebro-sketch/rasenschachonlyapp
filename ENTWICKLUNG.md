@@ -1,3 +1,62 @@
+## 24.09.2026 · Astra · 35.197.0 · Gold, Rekordbuch und Haptik
+
+Basis main 62d3f68. PR #57 (797a6f2) und #58 (c22a4d5) fachlich geprüft und
+mit kleinen Korrekturen angenommen. Gold wirkt metallisch, hatte im gelieferten
+Stand jedoch zu wenig Kontrast für Stufenname/OVR. Dunkle Druckfarbe auf einem
+hellen durchgehenden Goldgrund ergänzt, auch bei ausgeschalteter Bewegung.
+Legendär bleibt irisierend. Rekordbezeichnungen gegen bilanzErgaenzen geprüft:
+Kapitän zählt Laufbahnen, Alter das Karriereende, übrige Summen/Maxima getrennt.
+Rasterminimum auf verfügbare Breite begrenzt, damit vergrößerte Anzeige passt.
+
+Haptikfix aus Kaufpilot 3be4a3c gezielt übernommen: fehlende Android-VIBRATE-
+Berechtigung, tatsächliche Betätigung statt Scrollbeginn, Ruhe/Abschaltung und
+Entprellung erhalten. Die neuen Kaufkacheln selbst bleiben auf ihrem Pilotbranch
+bis zur separaten KAUF-03-Abnahme. Keine Speicherformat-/Balanceänderung.
+
+245/245 Regressionen, Produktionsbuild und Capacitor-Sync erfolgreich.
+Sichtprüfung Gold/Legendär bei Desktop und 320 px, mit/ohne Bewegung.
+Rekordbuch bei 320 px lesbar, kein horizontaler Überlauf.
+PR-CI und regulärer Main-Android-Build werden vor Abschluss kontrolliert.
+Echter Android-Test (Haptikstärke/Materialwirkung) weiterhin offen.
+Details: pruefberichte/2026-09-24-astra-gold-rekorde.md.
+
+## 24.09.2026 · Lemming · Gold-Spielerkarten wieder als Edelmetall
+
+Basis main `62d3f689085e817169da5a9885fbe573195ef574` / Version 35.196.0. Nutzerbefund:
+Nach der Holo-Verstärkung aus 35.195.2 wirkt die Gold-Seltenheit zu stark wie eine
+Regenbogenfolie und verliert ihren eigenständigen Gold-/Edelmetallcharakter.
+
+Ursache im gemeinsamen `dezent`-Pfad von `karteneffekte.jsx`: Gold und Legendär
+nutzten denselben Magenta/Violett/Cyan/Grün/Gold-Verlauf und unterschieden sich
+im Wesentlichen nur über 66 % bzw. 78 % Gesamtdeckkraft. Die Materialfarbe war
+also schwächer, aber nicht grundsätzlich anders.
+
+Paket auf `lemming/spielerkarten-goldmetall`: Gold (`dezent && !stark`) erhält
+eine eigene warme Metallpalette von dunklem Gold/Bronze über sattes Gold bis zu
+einem hellen Spiegelreflex. Ein sehr schwacher separater Iris-Akzent erhält etwas
+Holo-Lebendigkeit, ohne die Goldfarbe zu übernehmen. Legendär behält den bisherigen
+kräftigen Regenbogenverlauf. Schichtenvertrag, Kontur und Lesbarkeit bleiben
+unverändert; Bronze, Silber, Packs, Wildcards, Spielwerte, IDs und Speicherformat
+werden nicht angefasst.
+
+Regressionen wurden so angepasst, dass Gold die Metallpalette und den feinen
+Iris-Akzent besitzen muss, während Legendär weiterhin die Regenbogenfarben trägt.
+Browserprüfung kontrolliert zusätzlich die getrennten Verläufe, Deckkraft und den
+Ruhemodus.
+
+Eigenprüfung am Produkt-/Teststand `36bb83c`: `Spielregressionen` erfolgreich
+mit 240/240 Tests und Produktionsbuild; PR-Beta-APK erfolgreich. Die visuellen
+Browsertests bestanden mit 74 Prüfungen und 31 projektbedingt übersprungenen Fällen;
+der neue Goldmetall-Test lief in `handy`, `schmal` und `desktop`. Die drei
+erzeugten Screenshots wurden geöffnet: Gold ist klar warm-golden und metallisch,
+ohne die breiten Regenbogenbänder; Legendär bleibt deutlich irisierend. Porträt,
+Name, OVR und Ruhmeshallen-Zeile bleiben innerhalb der Kontur lesbar. Ein früherer
+Zwischenstand war ausschließlich wegen fehlerhaft maskierter Testsyntax rot; das
+wurde vor diesem erfolgreichen Stand korrigiert. Der Beta-Build ist kein physischer
+Android-Gerätetest.
+
+Status: umgesetzt auf Nebenbranch, Astra-Abnahme offen; kein main-Merge und kein Release.
+
 ## 24.09.2026 · Astra · 35.196.0 · Musik im regulären Release
 
 Basis main `c48b699`; Sol-PR #48, Head `3a7df6549778074158674d3f2a26a7da0a8874fb`,

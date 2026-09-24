@@ -40,7 +40,13 @@ async function pruefStart(fort){
     zuege:{...zuegeAusKennung(1234,'m','GER',{}),stil:2,haut:4,frisur:7,bart:3}};
   const k=KARTEN.ausHalle(h,1);delete k.portraet; // Altstand: Migration testen.
   const pool=KARTEN.poolErgaenzen({karten:[k]},['bronze','silber','gold','legende'].map(st=>KARTEN.neueKarte(st,2030)));
-  for(const [key,val] of [[HALL_KEY,[h]],[LIFE_KEY,{...leereBilanz(),karrieren:5,hausKarrieren:5}],[AKA_KEY,{...leereAkademie(),vc:1000,gratisPacks:1}],[KARTEN_KEY,pool],[META_KEY,{mk_haar:true,mk_acc:true}],[WILL_KEY,{...leerGesehen(),schirm:true}]])await store.set(key,JSON.stringify(val));
+  const rekordBilanz={...leereBilanz(),karrieren:5,hausKarrieren:5,bestPunkte:2726,ovrMax:95,
+    apps:2343,goals:614,assists:241,cs:318,toreSaisonMax:39,caps:458,titel:53,meister:21,pokale:6,
+    intTitel:24,ntTitel:2,treueMax:18,altMax:40,aufstiege:6,kapitaen:1,
+    laender:Object.fromEntries(["GER","ENG","ESP","ITA"].map(k=>[k,1])),
+    ligen:Object.fromEntries(["Bundesliga","2. Bundesliga","Premier League","La Liga","Serie A","Ligue 1","Eredivisie","Liga Portugal","Süper Lig"].map(k=>[k,1])),
+    vereine:Object.fromEntries(Array.from({length:9},(_,i)=>["Prüfverein "+(i+1),1]))};
+  for(const [key,val] of [[HALL_KEY,[h]],[LIFE_KEY,rekordBilanz],[AKA_KEY,{...leereAkademie(),vc:1000,gratisPacks:1}],[KARTEN_KEY,pool],[META_KEY,{mk_haar:true,mk_acc:true}],[WILL_KEY,{...leerGesehen(),schirm:true}]])await store.set(key,JSON.stringify(val));
  }
  if(fort==='wirtschaft'){
   const r=VEREIN.gruenden(VEREIN.leererVerein(),{name:'Prüfverein Donaudampfschifffahrt',stadt:'Hamburg',land:'GER',weltjahr:2026});
