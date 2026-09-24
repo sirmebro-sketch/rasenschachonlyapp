@@ -20,7 +20,18 @@ werden nicht angefasst.
 Regressionen wurden so angepasst, dass Gold die Metallpalette und den feinen
 Iris-Akzent besitzen muss, während Legendär weiterhin die Regenbogenfarben trägt.
 Browserprüfung kontrolliert zusätzlich die getrennten Verläufe, Deckkraft und den
-Ruhemodus. CI und visuelle Eigenprüfung werden am exakten PR-Head dokumentiert.
+Ruhemodus.
+
+Eigenprüfung am Produkt-/Teststand `36bb83c`: `Spielregressionen` erfolgreich
+mit 240/240 Tests und Produktionsbuild; PR-Beta-APK erfolgreich. Die visuellen
+Browsertests bestanden mit 74 Prüfungen und 31 projektbedingt übersprungenen Fällen;
+der neue Goldmetall-Test lief in `handy`, `schmal` und `desktop`. Die drei
+erzeugten Screenshots wurden geöffnet: Gold ist klar warm-golden und metallisch,
+ohne die breiten Regenbogenbänder; Legendär bleibt deutlich irisierend. Porträt,
+Name, OVR und Ruhmeshallen-Zeile bleiben innerhalb der Kontur lesbar. Ein früherer
+Zwischenstand war ausschließlich wegen fehlerhaft maskierter Testsyntax rot; das
+wurde vor diesem erfolgreichen Stand korrigiert. Der Beta-Build ist kein physischer
+Android-Gerätetest.
 
 Status: umgesetzt auf Nebenbranch, Astra-Abnahme offen; kein main-Merge und kein Release.
 
