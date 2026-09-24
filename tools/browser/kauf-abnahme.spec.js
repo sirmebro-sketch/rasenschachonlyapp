@@ -127,7 +127,8 @@ test('KAUF-03: höchste Anzeigegröße, Ruhemodus und kurze Bildschirmhöhe blei
   expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1)).toBe(true);
   await page.screenshot({path:info.outputPath('kauf-03-sehr-gross.png'),fullPage:true});
 
-  await page.setViewportSize({width:320,height:420});
+  const viewport=page.viewportSize();
+  await page.setViewportSize({width:viewport?.width||320,height:420});
   const training=page.getByRole('button',{name:/Trainingsplätze Stufe/});
   await training.click();
   const dialog=page.getByRole('dialog',{name:'Trainingsplätze'});
