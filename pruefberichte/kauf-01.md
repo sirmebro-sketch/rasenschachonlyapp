@@ -44,7 +44,9 @@ bestehenden `.kauf-icon`-Gestaltung. Drei matte, gedeckte Flächenakzente
 ## Tatsächlich ausgeführte Prüfungen
 
 - `node --check tools/kauf-icons-vorschau.cjs` – erfolgreich.
-- Statischer Vertragscheck – erfolgreich: exakt 20 verbindliche IDs plus Fallback; die geforderte `KaufIcon`-Schnittstelle ist vorhanden; keine `<text>`, `<image>`- oder `<animate>`-Elemente im Produkt-SVG.
+- Statischer Vertragscheck – erfolgreich: exakt 20 verbindliche IDs plus Fallback;
+  die geforderte `KaufIcon`-Schnittstelle ist vorhanden; keine `<text>`,
+  `<image>`- oder `<animate>`-Elemente im Produkt-SVG.
 - `node tools/kauf-icons-vorschau.cjs` – erfolgreich; erzeugt aus exakt demselben
   Datenblock wie `KaufIcon` eine HTML- und eine SVG-Vorschau mit
   `20 Motive + Fallback × 3 Groessen`.
@@ -64,18 +66,31 @@ bestehenden `.kauf-icon`-Gestaltung. Drei matte, gedeckte Flächenakzente
 
 ## Repository-Prüfungen
 
-`npm test`, `npm run build` und die vorhandenen Playwright-Prüfungen werden auf dem
-exakten PR-Head über die bestehenden GitHub-Workflows ausgeführt. Ergebnisse werden
-nach dem PR-Lauf hier ergänzt; Vorgängerergebnisse werden nicht als eigene Prüfung
-übernommen.
+Auf dem Produktcode-Head `51166e8016bf3f02b4c26df51f442049319b11fe`
+wurden die PR-Workflows tatsächlich ausgeführt:
+
+- **Spielregressionen**, Run `35967734589`: `npm ci --no-audit --no-fund`,
+  `npm test` und `npm run build` erfolgreich. Node-Testausgabe:
+  **237 Tests, 237 bestanden, 0 fehlgeschlagen**. Vite 6.4.3 erzeugte den
+  Produktionsbuild erfolgreich.
+- **Visuelle Browsertests**, Run `35967734601`: Chromium-Installation,
+  `npm run preview:gallery` und `npm run test:browser` erfolgreich.
+  Playwright meldete **80 bestanden, 31 übersprungen, 0 fehlgeschlagen**.
+  Die Akademie-Kacheltests liefen dabei in den Projekten `handy`, `schmal`
+  und `desktop` erfolgreich.
+
+Dieser Bericht wird danach als reiner Dokumentationscommit ergänzt. Weil dadurch
+ein neuer PR-Head entsteht, muss CI auch diesen finalen Head noch bestätigen; das
+Ergebnis wird am PR-Status geprüft, ohne für eine reine Statuszeile eine endlose
+Folge weiterer Dokumentationscommits zu erzeugen.
 
 ## Offene Grenzen
 
-- Keine Android-Geräteprüfung in diesem Paket; für reine dekorative SVG-Geometrie
-  ist sie nicht als Ersatz für die Browser-/Buildprüfung behauptet.
+- Keine Android-Geräteprüfung in diesem Paket; Browser-/Build-Erfolg wird nicht als
+  Gerätetest bezeichnet.
 - Die 32/48/64-Sichtprüfung belegt Lesbarkeit und Unterscheidbarkeit der Motive auf
   dunklem Hintergrund, nicht die abschließende gestalterische Astra-Abnahme.
 - Integration in weitere Kaufbereiche bleibt bei Astra; dieses Paket ändert keine
   Kaufhandler oder Kachellogik.
 
-Status: umgesetzt; Astra-Abnahme und PR-CI noch offen.
+Status: umgesetzt; zur Astra-Abnahme nach grüner CI des finalen PR-Heads, noch nicht integriert.
