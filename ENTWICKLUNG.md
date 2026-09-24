@@ -1,3 +1,25 @@
+## 24.09.2026 · Astra · 35.196.0 · Musik im regulären Release
+
+Basis main `c48b699`; Sol-PR #48, Head `3a7df6549778074158674d3f2a26a7da0a8874fb`,
+inklusive Astra-Korrektur #51 übernommen. Porträt-/Holo-Korrekturen aus 35.195.2
+bleiben erhalten. Kaufkacheln und Lemming-Arbeit bleiben auf ihren Branches.
+
+Kevin weist ausdrücklich an, Musik jetzt in main und die reguläre App zu
+integrieren und die Hör-/Geräteprüfung anschließend mit dieser Version selbst
+vorzunehmen. Diese neuere Anweisung ersetzt für dieses Paket die frühere
+Zurückstellung bis zur Geräteprüfung; keine behauptete Hörabnahme.
+
+Drei Ogg-Musikstücke und 35 MP3-Effekte; vorhandene zentrale Audioverwaltung
+erweitert, kein zweites System. Musik standardmäßig aus, Einstellung separat
+von Effekten. App-ID und Release-Signatur unverändert. Version 35.196.0,
+Android-versionCode durch Projektwerkzeug synchronisiert.
+
+Lokale Prüfung der zusammengeführten Fassung: 240/240 Regressionen bestanden,
+Produktionsbuild und Capacitor-Sync erfolgreich. Browser-CI wird am Integrations-PR
+vor dem Merge geprüft; Release-Build und Signatur am anschließenden Main-Commit.
+Offen: subjektive Klangwirkung, längere Nutzung, Lautsprecher,
+WebView-Loops und Audiofokus/Unterbrechungen auf Kevins Android-Gerät.
+
 ## 24.09.2026 · Astra · 35.195.2 · Abnahme neuer Übergaben
 
 Basis `5491fa7`. PR #49 und #50 mit mobilen Nachbesserungen übernommen;
@@ -2586,3 +2608,14 @@ sondern der Grund, warum diese Änderung überhaupt nötig ist.
 **Offen bleibt:** Nach der Zusammenführung einmal tatsächlich drücken und
 nachsehen, ob der Lauf auf einem fremden Branch durchgeht. Das kann erst
 danach jemand tun.
+## 23.09.2026 · Sol · zusätzliche Klangwelt zur Astra-Abnahme
+
+Von `main` `5491fa7` aus wurden die bereits integrierten Sol-Sounds um drei
+lange Musikstücke, neue Bedien- und Belohnungszeichen und eine auf die sichtbare
+Kartenenthüllung abgestimmte Klangfolge ergänzt. Ein einziger Abspieler,
+getrennte dauerhaft gespeicherte Regler und Musikstandard Aus. Herkunft,
+Inventar, Asset-Prüfung und offene Geräte-/Hörabnahme stehen im
+[Sol-Prüfbericht](pruefberichte/2026-09-23-sol-musik-und-sounddesign.md).
+Diese Änderung liegt nur auf `sol/klangwelt-musik-20260923`; Astra entscheidet
+über Integration und spätere Versionsnummer. Der finale Test-/CI-Stand wird
+im Bericht am PR-Head nachgetragen.
