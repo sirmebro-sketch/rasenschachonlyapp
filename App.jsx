@@ -18,7 +18,8 @@ import React, { useState, useEffect, useLayoutEffect, useRef, useMemo } from "re
    `react-dom` ist ohnehin da: main.jsx baut damit die Wurzel. */
 import { createPortal } from "react-dom";
 import { store } from "./storage.js";
-import { SOUND_KEY, getSoundLevel, setSoundLevel, playSound } from "./sound.js";
+import { SOUND_KEY, MUSIC_KEY, getSoundLevel, getMusicLevel, setSoundLevel,
+  setMusicLevel, setMusicContext, playSound } from "./sound.js";
 import { backupLesen, datenErsetzen, importWiederherstellen, IMPORT_JOURNAL } from "./sicherung.js";
 import { laufStand, laufWeiter } from "./spielstand.js";
 import { SCHRIFTEN } from "./schriften.js";
@@ -7155,8 +7156,9 @@ function AkademieScreen({ aka, verein, onKauf, onGruenden, onBack, onAendern }) 
                     ? <div className="m" style={{ fontSize: 11.5, color: "var(--go)", marginTop: 9 }}>Vollständig ausgebaut.</div>
                     : <button className={"btn sm" + (geht ? " pri" : "")} disabled={!geht}
                         style={{ marginTop: 9, width: "auto", opacity: geht ? 1 : .5 }}
-                        onClick={() => { if (!geht) return; haptik(st + 1 >= AKA_MAX ? "gross" : "gut");
-                          setJubel({ id: x.id, stufe: st + 1 }); onKauf(x.id);
+                        onClick={async () => { if (!geht || !await onKauf(x.id)) return;
+                          haptik(st + 1 >= AKA_MAX ? "gross" : "gut");
+                          setJubel({ id: x.id, stufe: st + 1 });
                           setTimeout(() => setJubel(null), 2600); }}>
                         Auf Stufe {st + 1} · {preis} VC
                       </button>}
@@ -8853,7 +8855,7 @@ const KARTEN_KEY = "rasenschach:karten";
 const SPEICHERSCHLUESSEL = [
   IMPORT_JOURNAL, SAVE_KEY, SEEN_KEY, WILL_KEY, ACH_KEY, LIFE_KEY, META_KEY, HALL_KEY,
   AKA_KEY, VER_KEY, KARTEN_KEY, WC_KEY, HSV_KEY, RUECK_KEY,
-  "rasenschach:ruhe", "rasenschach:vib", "rasenschach:text", SOUND_KEY,
+  "rasenschach:ruhe", "rasenschach:vib", "rasenschach:text", SOUND_KEY, MUSIC_KEY,
   "rasenschach:speed", "rasenschach:schwer", "rasenschach:wach",
   /* Altnamen aus `ALT_KEYS` — ohne sie kehrt der geloeschte Stand zurueck. */
   ...Object.values(ALT_KEYS).flat(),
@@ -11292,6 +11294,7 @@ function markenPruefen(vorher, nachher) {
 function MarkeJubel({ marke, onFertig }) {
   useEffect(() => {
     haptik("gut");
+    playSound("milestone");
     const t = setTimeout(() => onFertig && onFertig(), RUHE ? 700 : 2200);
     return () => clearTimeout(t);
   }, []);
@@ -11311,7 +11314,8 @@ function MarkeJubel({ marke, onFertig }) {
 function TitelJubel({ titel, club, land, onFertig }) {
   useEffect(() => {
     haptik("gross");
-    playSound("trophy");
+    playSound(titel.some((t) => /Meister|Pokal|Cup|Copa|Coppa|Coupe|Champions|Libertadores/i.test(t))
+      ? "champion" : "trophy");
     const t = setTimeout(() => onFertig && onFertig(), RUHE ? 900 : 1400 + titel.length * 900);
     return () => clearTimeout(t);
   }, []);
@@ -12962,7 +12966,7 @@ function Packladen({ vc, pool, verein, gratis, startpaket, startReiter,
     if (aktiv.current) return;
     aktiv.current = true; setSpeichert(true); setMeldung(null);
     try { await fn(); }
-    catch (e) { setMeldung(e.message || "Die Buchung konnte nicht gespeichert werden."); }
+    catch (e) { setMeldung(e.message || "Die Buchung konnte nicht gespeichert werden."); playSound("denied"); }
     finally { aktiv.current = false; setSpeichert(false); }
   };
   const [offen, setOffen] = React.useState(null);      /* gezogene Karten */
@@ -12979,6 +12983,8 @@ function Packladen({ vc, pool, verein, gratis, startpaket, startReiter,
   const [wischt, setWischt] = React.useState([]);
   const [weg, setWeg] = React.useState([]);
   const [offenPack, setOffenPack] = React.useState(null);
+  const aufdeckungLaeuft = React.useRef(null);
+  React.useEffect(() => () => { if (aufdeckungLaeuft.current) clearTimeout(aufdeckungLaeuft.current); }, []);
   const fokusNachAufdecken = React.useRef(null);
   React.useLayoutEffect(() => {
     const el = fokusNachAufdecken.current;
@@ -13030,7 +13036,7 @@ function Packladen({ vc, pool, verein, gratis, startpaket, startReiter,
     if (umsonst) await onGratis(alle); else await onKauf(packId, alle);
     setOffen(alle); setGezeigt([]); setMeldung(null);
     setWischt([]); setWeg([]); setOffenPack(packId);
-    playSound("pack");
+    playSound("pack_open");
   });
 
   if (offen) {
@@ -13081,9 +13087,15 @@ function Packladen({ vc, pool, verein, gratis, startpaket, startReiter,
                   aufgedeckt={gezeigt.indexOf(i) >= 0}
                   jubel={gezeigt.indexOf(i) >= 0}
                   onTippen={(e) => {
+                    if (aufdeckungLaeuft.current || gezeigt.includes(i)) return;
                     if (e.detail === 0) fokusNachAufdecken.current = e.currentTarget.parentElement;
-                    if (gezeigt.indexOf(i) < 0) playSound(k.stufe === "legende" ? "trophy" : "reveal");
-                    setGezeigt((g) => (g.indexOf(i) >= 0 ? g : [...g, i]));
+                    if (!RUHE) playSound("pack_tension"); // Neutral until the card is visible.
+                    aufdeckungLaeuft.current = setTimeout(() => {
+                      aufdeckungLaeuft.current = null;
+                      setGezeigt((g) => (g.includes(i) ? g : [...g, i]));
+                      playSound({bronze:"card_bronze",silber:"card_silver",gold:"card_gold",
+                        legende:"card_legendary"}[k.stufe] || "card_bronze");
+                    }, RUHE ? 0 : 160);
                   }} />
                 {/* ZWEI WEGE, UND BEIDE FUEHREN WEG (35.90, von Kevin
                     gemeldet): „Die gezogenen Karten kann ich nicht zum Fundus
@@ -13270,6 +13282,7 @@ function Packladen({ vc, pool, verein, gratis, startpaket, startReiter,
                             const fehler = await onVerkauf(k);
                             if (fehler) throw Error(fehler);
                             setFragt(null); setMeldung(k.name + " verkauft.");
+                            playSound("sell");
                           })}>
                           Wirklich verkaufen</button>
                         <button className="btn sm" onClick={() => setFragt(null)}>Doch nicht</button>
@@ -14774,6 +14787,7 @@ function Optionen({ ruhe, aufRuhe, onBackup, onZu, onAnleitung, hall, aka, laeuf
   useZurueck(onZu);
   const [vib, setVib] = useState(VIBRATION);
   const [klang, setKlang] = useState(getSoundLevel);
+  const [musik, setMusik] = useState(getMusicLevel);
   const [stufe, setStufe] = useState(TEXTSTUFE);
   const [speed, setSpeed] = useState(SPEEDMODUS);
   const [schwer, setSchwer] = useState(SCHWIERIGKEIT);
@@ -14911,7 +14925,20 @@ function Optionen({ ruhe, aufRuhe, onBackup, onZu, onAnleitung, hall, aka, laeuf
                   {name}</button>))}
             </div>
             <span className="m" style={{ fontSize: 10.5, color: "var(--mu)", display: "block", marginTop: 5 }}>
-              Kurze Signale für Entscheidungen, Saisons und besondere Momente. Keine Dauermusik.</span>
+              Kurze Signale für Entscheidungen, Saisons und besondere Momente.</span>
+          </div>
+          <div style={{ borderTop: "1px solid var(--ln)", paddingTop: 11, marginTop: 12 }}>
+            <span className="eb">Begleitmusik</span>
+            <div className="optionen-auswahl" role="group" aria-label="Lautstärke der Begleitmusik">
+              {[[0, "Aus"], [1, "Leise"], [2, "Normal"]].map(([wert, name]) => (
+                <button key={wert} className={"btn sm" + (musik === wert ? " on" : "")}
+                  data-sound="none" aria-pressed={musik === wert}
+                  onClick={() => { setMusik(wert); setMusicLevel(wert);
+                    merken(MUSIC_KEY, String(wert)); }}>
+                  {name}</button>))}
+            </div>
+            <span className="m" style={{ fontSize: 10.5, color: "var(--mu)", display: "block", marginTop: 5 }}>
+              Drei ruhige Musikstücke, passend zum Spielabschnitt. Anfangs aus, damit eigene Musik weiterlaufen kann.</span>
           </div>
           <button className="btn optionen-schalter" aria-pressed={wach} aria-label="Bildschirm anlassen" style={{ border: 0, padding: "11px 0", opacity: wachGeht ? 1 : .45 }}
             disabled={!wachGeht}
@@ -16763,6 +16790,7 @@ function BackupScreen({ onBack, onImport }) {
     }
     const paket = JSON.stringify({ spiel: "rasenschach", v: VERSION, t: Date.now(), daten });
     setText(paket);
+    playSound("save");
     const n = Object.keys(daten).length;
     setInfo(n + (n === 1 ? " Datensatz" : " Datensätze") + " gesichert ("
       + Math.round(paket.length / 1024) + " KB).");
@@ -18061,6 +18089,10 @@ function FlutlichtApp() {
   const [phase, setPhase] = useState("menu");
   const [p, setP] = useState(null);
   const [step, setStep] = useState("training");
+  useEffect(() => {
+    setMusicContext(phase === "play" ? (["winter","result","retire"].includes(step) ? "climax" : "career")
+      : phase === "end" ? "climax" : "menu");
+  }, [phase, step]);
   /* JEDE neue Seite beginnt oben. Der Browser behält die Rollhöhe der vorigen
      Seite bei — wer aus einem langen Inhaltsverzeichnis heraus eine neue
      Laufbahn startet, landet mitten in der Charaktererstellung, und beim
@@ -18220,6 +18252,7 @@ function FlutlichtApp() {
       if (roh["rasenschach:ruhe"] != null) { setRuhe(roh["rasenschach:ruhe"] === "1"); setRuheState(roh["rasenschach:ruhe"] === "1"); }
       if (roh["rasenschach:vib"] != null) setVibration(roh["rasenschach:vib"] === "1");
       setSoundLevel(roh[SOUND_KEY] == null ? 1 : roh[SOUND_KEY]);
+      setMusicLevel(roh[MUSIC_KEY] == null ? 0 : roh[MUSIC_KEY]);
       if (roh["rasenschach:text"] != null) setTextstufe(parseInt(roh["rasenschach:text"],10) || 0);
       if (roh["rasenschach:speed"] != null) setSpeedmodus(roh["rasenschach:speed"] === "1");
       if (roh["rasenschach:schwer"]) setSchwierigkeit(roh["rasenschach:schwer"]);
@@ -18373,7 +18406,10 @@ function FlutlichtApp() {
     haptik("wahl");
     const n = { ...aka, vc: aka.vc - preis, ausgegeben: (aka.ausgegeben || 0) + preis,
       stufen: { ...aka.stufen, [id]: akaStufe(aka, id) + 1 } };
-    return bucheAenderung({[AKA_KEY]: JSON.stringify(n)}, () => setAka(n));
+    return bucheAenderung({[AKA_KEY]: JSON.stringify(n)}, () => setAka(n)).then((ok) => {
+      if (ok) playSound(akaStufe(n, id) >= AKA_MAX ? "unlock" : "buy");
+      return ok;
+    });
   };
 
   /* Im Laden kaufen. Die Coins liegen in derselben Kasse wie die der Akademie
@@ -18416,12 +18452,13 @@ function FlutlichtApp() {
       const n = { ...aka, vc: kasse - a.preis, ausgegeben: (aka.ausgegeben || 0) + a.preis };
       const stand = laufStand(q, step, {queue, ei, er, growth, season, offers}, EVENTS, VERSION);
       return bucheAenderung({[SAVE_KEY]: JSON.stringify(stand), [AKA_KEY]: JSON.stringify(n)},
-        () => { setP(q); setSave(stand); setAka(n); });
+        () => { setP(q); setSave(stand); setAka(n); }).then((ok) => { if (ok) playSound("buy"); return ok; });
     } else {
       /* Ohne Laufbahn in den Vorrat. `start()` holt ihn ab. */
       const n = { ...aka, vc: kasse - a.preis, ausgegeben: (aka.ausgegeben || 0) + a.preis,
         laden: buchen(aka.laden || {}) };
-      return bucheAenderung({[AKA_KEY]: JSON.stringify(n)}, () => setAka(n));
+      return bucheAenderung({[AKA_KEY]: JSON.stringify(n)}, () => setAka(n))
+        .then((ok) => { if (ok) playSound("buy"); return ok; });
     }
   };
 
@@ -18898,12 +18935,14 @@ function FlutlichtApp() {
   /* PRUEFSTAND-ANFANG: handler */
   const chooseTraining = (id) => {
     haptik("wahl");
-    playSound("training");
     const q = clone(p);
     if (!q.saisonZiel || q.saisonZiel.jahr !== q.year) q.saisonZiel = saisonZielStart(q);
     q.training = q.speed ? autoTraining(q) : id;
     setOvrAlt(p.ovr);
-    setGrowth(develop(q));
+    const fortschritt = develop(q);
+    setGrowth(fortschritt);
+    playSound(Object.values(fortschritt).filter((wert) => wert > 0).reduce((sum, wert) => sum + wert, 0) >= 4
+      ? "breakthrough" : "training");
     q.mv = marketValue(q);
     /* Zwei pro Saison, Punkt. Vorher war es in der HÄLFTE aller Saisons drei
        (chance(.5) ? 2 : 3) — das war zu viel, eine Saison bestand fast nur aus
@@ -18936,7 +18975,8 @@ function FlutlichtApp() {
     q.mv = marketValue(q);
     setP(q);
     setEr({ text: evText(out.text, queue[ei] ? queue[ei]._ctx : {}), extra });
-    playSound("event");
+    playSound(q.injury && !p.injury ? "injury" : q.ovr > p.ovr ? "progress" :
+      q.morale < p.morale - 15 ? "setback" : "event");
   };
   /* 35.37: Ereignisse, die im selben Zug ungueltig geworden sind, ueberspringen.
      -------------------------------------------------------------------------
@@ -19012,7 +19052,9 @@ function FlutlichtApp() {
     const q = clone(base);
     const vorher = { tot: { ...base.tot }, nt: { caps: base.nt.caps } };
     const s = simulateSeason(q);
-    playSound("season");
+    // Title overlays supply their own audible moment after the visible result.
+    if (!(s.trophies || []).length) playSound(s.move?.dir === "auf" ? "breakthrough"
+      : s.move?.dir === "ab" ? "setback" : s.injury?.sev === "schwer" ? "injury" : "season");
     setMarken(markenPruefen(vorher, q).map((m) => ({ ...m, lauf: q.lauf })));
     if (q.speed) { const kauf = []; autoKauf(q, kauf); if (kauf.length) s.notes = [...(s.notes || []), ...kauf]; }
     else { const vk = []; verwalterRunde(q, vk); if (vk.length) s.notes = [...(s.notes || []), ...vk]; }
