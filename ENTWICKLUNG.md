@@ -1,3 +1,29 @@
+## 24.09.2026 · Lemming · Gold-Spielerkarten wieder als Edelmetall
+
+Basis main `62d3f689085e817169da5a9885fbe573195ef574` / Version 35.196.0. Nutzerbefund:
+Nach der Holo-Verstärkung aus 35.195.2 wirkt die Gold-Seltenheit zu stark wie eine
+Regenbogenfolie und verliert ihren eigenständigen Gold-/Edelmetallcharakter.
+
+Ursache im gemeinsamen `dezent`-Pfad von `karteneffekte.jsx`: Gold und Legendär
+nutzten denselben Magenta/Violett/Cyan/Grün/Gold-Verlauf und unterschieden sich
+im Wesentlichen nur über 66 % bzw. 78 % Gesamtdeckkraft. Die Materialfarbe war
+also schwächer, aber nicht grundsätzlich anders.
+
+Paket auf `lemming/spielerkarten-goldmetall`: Gold (`dezent && !stark`) erhält
+eine eigene warme Metallpalette von dunklem Gold/Bronze über sattes Gold bis zu
+einem hellen Spiegelreflex. Ein sehr schwacher separater Iris-Akzent erhält etwas
+Holo-Lebendigkeit, ohne die Goldfarbe zu übernehmen. Legendär behält den bisherigen
+kräftigen Regenbogenverlauf. Schichtenvertrag, Kontur und Lesbarkeit bleiben
+unverändert; Bronze, Silber, Packs, Wildcards, Spielwerte, IDs und Speicherformat
+werden nicht angefasst.
+
+Regressionen wurden so angepasst, dass Gold die Metallpalette und den feinen
+Iris-Akzent besitzen muss, während Legendär weiterhin die Regenbogenfarben trägt.
+Browserprüfung kontrolliert zusätzlich die getrennten Verläufe, Deckkraft und den
+Ruhemodus. CI und visuelle Eigenprüfung werden am exakten PR-Head dokumentiert.
+
+Status: umgesetzt auf Nebenbranch, Astra-Abnahme offen; kein main-Merge und kein Release.
+
 ## 24.09.2026 · Astra · 35.196.0 · Musik im regulären Release
 
 Basis main `c48b699`; Sol-PR #48, Head `3a7df6549778074158674d3f2a26a7da0a8874fb`,
