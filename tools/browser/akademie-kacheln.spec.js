@@ -52,3 +52,17 @@ test('Unbezahlbar und Maximum bleiben erklärbar; Escape und Zurück schließen 
  await expect(medizin).toBeFocused();
  await expect(page.locator('.kauf-kachel')).toHaveCount(9);
 });
+
+test('Kachel hat sichtbaren Druckzustand ohne Bewegung',async({page},info)=>{
+ test.skip(info.project.name!=='desktop','Gedrückt halten per Maus; Touch-Kaufwege laufen in allen Größen.');
+ const kachel=page.getByRole('button',{name:/Trainingsplätze Stufe/});
+ await kachel.hover();
+ const vorher=await kachel.evaluate(el=>({farbe:getComputedStyle(el).backgroundColor,rahmen:getComputedStyle(el).boxShadow}));
+ await page.mouse.down();
+ const gedrueckt=await kachel.evaluate(el=>({farbe:getComputedStyle(el).backgroundColor,rahmen:getComputedStyle(el).boxShadow,bewegung:getComputedStyle(el).transform}));
+ expect(gedrueckt.farbe!==vorher.farbe || gedrueckt.rahmen!==vorher.rahmen).toBe(true);
+ expect(gedrueckt.bewegung).toBe('none');
+ await page.screenshot({path:info.outputPath('kachel-gedrueckt.png')});
+ await page.mouse.up();
+ await expect(page.getByRole('dialog',{name:'Trainingsplätze'})).toBeVisible();
+});

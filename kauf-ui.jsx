@@ -43,6 +43,7 @@ export const KAUF_CSS = `
 .kauf-raster{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
 .kauf-kachel{font:inherit;color:var(--tx);background:var(--pan);border:1px solid var(--ln2);padding:12px;display:flex;flex-direction:column;align-items:flex-start;text-align:left;gap:7px;min-width:0;cursor:pointer;overflow-wrap:anywhere}
 .kauf-kachel:hover{border-color:var(--ac);background:var(--pan2)}
+.kauf-kachel:active{border-color:var(--ac);background:var(--up);box-shadow:inset 0 0 0 2px var(--ac)}
 .kauf-kachel:focus-visible{outline:3px solid var(--ac);outline-offset:2px}
 .kauf-kachel strong{font-size:15px;line-height:1.2}
 .kauf-icon{width:48px;height:48px;flex-shrink:0;color:var(--karton);background:var(--pan2);padding:6px;box-sizing:border-box}

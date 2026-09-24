@@ -1,3 +1,9 @@
+# In Vorbereitung · Kaufpilot
+
+Kaufkacheln reagieren beim Drücken sichtbar. Die Android-Vibrationsberechtigung
+ist ergänzt; kurze Impulse begleiten Betätigungen, Scrollanfänge bleiben stumm.
+Ruhemodus und die Vibrationseinstellung werden beachtet.
+
 # 35.196.0 · Musik und erweiterte Spielklänge
 
 Drei eigene Begleitmusikstücke für Menü, Karriere und Endspurt sowie 19 zusätzliche
