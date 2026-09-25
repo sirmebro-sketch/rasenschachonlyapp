@@ -1,6 +1,8 @@
 # 35.198.0 · Kaufkacheln in Akademie, Verein und Vermögen
 
-Kompakte Bildkacheln zeigen Nutzen, Preis und Zustand. Details erklären Wirkung,
+Die Vermögensseite zeigt zwei Kacheln nebeneinander, bei ausreichend Platz drei.
+Dort stehen nur Symbol, kurzer Name, Preis und Zustand. Andere Kaufbereiche
+zeigen zusätzlich ihren Nutzen. Details erklären Wirkung,
 Unterhalt, Bauzeit und Sperrgründe; ein separater Knopf bestätigt den Kauf.
 Optisches Druckfeedback und bestehende Haptik begleiten die Bedienung.
 Käufe und Anlagen bestätigen Erfolg erst nach gespeicherter Buchung.

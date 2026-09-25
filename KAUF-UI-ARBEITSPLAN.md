@@ -1,5 +1,5 @@
-> Abschlussrunde 25.09.2026: KAUF-01/02/03 angenommen. Astra überträgt den
-> geprüften Pilot mit PR #53 auf Main, einschließlich Vermögen/Anlagen und
+> Abschlussrunde 25.09.2026: KAUF-01/02/03 angenommen. Astra hat den
+> geprüften Pilot mit PR #53 in Main integriert (e3d75f1), einschließlich Vermögen/Anlagen und
 > Vereinsausbau/VC-Extras. Die folgenden Paketaufträge sind historische
 > Arbeitsabgrenzungen, keine erneut auszuführenden Aufträge. Maßgeblich:
 > `pruefberichte/2026-09-25-astra-kauf-abschluss.md` und aktueller Main-Stand.

@@ -1,7 +1,9 @@
 # Rasenschach XI
 
 **Einstieg für neue Chats:** [START-NEUER-CHAT.md](START-NEUER-CHAT.md)
-enthält Zugriffshinweise, Lesereihenfolge und eine datierte Übergabe.
+enthält Zugriffshinweise und die Lesereihenfolge. Aktuelle Ergebnisse stehen in
+[ENTWICKLUNG.md](ENTWICKLUNG.md); der
+[Prüfberichte-Wegweiser](pruefberichte/README.md) erschließt die Nachweise.
 
 Ein deutschsprachiger Fußball-Karriere-Simulator. Eine React-Einzelseite, die
 über Capacitor als Android-App ausgeliefert wird (`de.rasenschach.xi`). Die App
@@ -30,19 +32,25 @@ node tools/android-version.cjs android/app/build.gradle package.json
 cd android && ./gradlew assembleRelease
 ```
 
-Eine Entwicklungsvorschau gibt es bewusst nicht als Skript; `npx vite` genügt,
-wenn man sie braucht.
+Entwicklungsvorschau: `npm run dev`. Voraussetzung ist Node.js ab 22.12.0
+(siehe `package.json`). Die isolierten Prüfoberflächen werden mit
+`npm run preview:gallery` erzeugt; Einzelheiten unter „Visuelle Arbeit“.
 
 ## Aufbau
 
 | Datei | Aufgabe |
 |---|---|
-| `App.jsx` | Spielkern **und** komplette Oberfläche. Mit Abstand die größte Datei. |
+| `App.jsx` | Spielkern und zentrale Oberfläche; gemeinsame Komponenten sind teilweise ausgelagert. |
 | `ereignisse.js` | Ereigniskatalog: Titel, Text, Auswahlmöglichkeiten, Folgen |
 | `namen.js` | Namenskartei, ein Eintrag je Land |
 | `verein.js` | eigener Verein: Liga, Kader, Aufstellung, Taktik, Ausbau |
 | `akademie.js` | Jugendakademie: Talente, Abteilungen, Jahrgänge |
 | `karten.js` | Sammelkarten, Packs, Ziehung, Verkauf |
+| `kauf-ui.jsx` | Gemeinsame Kaufkacheln, Detaildialog und Kaufbestätigung |
+| `kauf-icons.jsx`, `kauf-texte.js` | Kaufmotive und erklärende Texte |
+| `sound.js` | Zentraler Abspieler für Effekte und Musik |
+| `haarformen.jsx`, `bartformen.jsx` | Ausgelagerte Porträtgeometrie |
+| `wildcardoptik.jsx` | Wildcard-Prägungen, Bühnen und Ruhemodus |
 | `karteneffekte.jsx` | Gemeinsame animierte Materialfolie für Karten und Packs |
 | `portraet.js` | Stabile Editoroptionen, Namen und Würfeln mit festgehaltenen Merkmalen |
 | `karrieregeschichten.js` | Persönliche Erinnerungen für den Karriereabschluss |
@@ -55,7 +63,7 @@ wenn man sie braucht.
 | `schriften.js`, `titelbild.js` | eingebettete Schriften und Aufmacherbild |
 | `tools/` | Prüfstände und Werkzeuge, siehe unten |
 
-Die ausgelagerten Module sind **Fabriken** (`machEreignisse`, `machVerein`,
+Die Spielkatalogmodule sind **Fabriken** (`machEreignisse`, `machVerein`,
 `machAkademie`, `machKarten`, `machNamen`): sie bekommen ihre Helfer von
 `App.jsx` übergeben, statt von dort zu importieren. Ein Import wäre ein
 Ringimport — die Datei liefe vor `App.jsx`, und deren Konstanten wären noch in
@@ -97,8 +105,8 @@ Dazu sechs Regeln, die sich aus früheren Fehlern ergeben haben:
    Neue Inhalte bekommen neue, eindeutige Kennungen; bestehende werden nie
    umbenannt und nie so umsortiert, dass alte Stände auf andere Folgen zeigen.
    `npm test` prüft die Eindeutigkeit.
-5. **`App.jsx` ist der wahrscheinlichste Konfliktpunkt.** 19.000 Zeilen, an
-   denen alle drei arbeiten. Wer dort etwas Größeres vorhat, sagt vorher, in
+5. **`App.jsx` ist der wahrscheinlichste Konfliktpunkt.** Eine große Datei, an
+   der mehrere Beteiligte arbeiten. Wer dort etwas Größeres vorhat, sagt vorher, in
    welchem Bereich — das ist billiger als ein Merge-Konflikt in einer Datei
    dieser Größe.
 6. **Nichts Fremdes bleibt stillschweigend liegen.** Arbeit auf einem eigenen
@@ -203,7 +211,9 @@ git fetch --all --prune
 git branch -r --no-merged origin/main
 ```
 
-Jeder gelistete Branch trägt Arbeit, die noch nicht in `main` ist. Erledigte
+Jeder gelistete Branch hat Commits außerhalb der Abstammung von `main`. Das
+ist noch kein Nachweis fehlender Inhalte; siehe „Übergaben nach Rebase oder
+Squash“. Erledigte
 Branches verschwinden von selbst aus der Liste, sobald ihre Commits in `main`
 stehen — auch dann, wenn der Branch als solcher liegen bleibt. Was auf einem
 Branch liegt, zeigt `git log --oneline origin/main..<branch>`.
@@ -259,9 +269,9 @@ Android-Gerät zu prüfen; WebView-Audiofokus ist hier nicht vermessen.
 
 ### Versionsschema
 
-`package.json` führt die Version als `major.minor.patch` (derzeit 35.194.1).
+`package.json` führt die maßgebliche Version als `major.minor.patch`.
 Daraus rechnet `tools/android-version.cjs` den `versionCode`
-(`major*100000 + minor*100 + patch`, also 3519401) und schreibt ihn zusammen mit
+(`major*100000 + minor*100 + patch`) und schreibt ihn zusammen mit
 dem `versionName` nach `android/app/build.gradle`. Beide Felder sollen nie von
 Hand auseinanderlaufen. Die Version wird erhöht, wenn eine neue APK entsteht —
 reine Werkzeug- oder Dokumentationsänderungen erhöhen sie nicht.
@@ -406,8 +416,9 @@ Produktive Spielstände und die Android-App werden davon nicht verändert.
 Im Bildschirmrahmen „Isolierter Spieltest“ auswählen. Bei Codeänderungen
 neu erzeugen. Ein Teststand ersetzt keinen durchgespielten Freischaltweg.
 
-Bisherige Befunde und noch offene Testbereiche:
-[Spieltest 35.191](pruefberichte/35.191-spieltest.md).
+Historische Befunde: [Spieltest 35.191](pruefberichte/35.191-spieltest.md).
+Spätere Prüfungen und noch offene Abnahmen sind über den
+[Prüfberichte-Wegweiser](pruefberichte/README.md) und `ENTWICKLUNG.md` zu finden.
 
 
 ### Kleine Entwicklungsrunden und unabhängige Abnahme (18.09.2026)

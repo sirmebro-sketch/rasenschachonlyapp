@@ -76,3 +76,24 @@ auf Smartphones und drei ab 440 px Rasterbreite: 30 kleine Kacheln statt
 Zustand; Wirkung und Unterhalt stehen im Detaildialog. Der bestehende Browsertest
 prüft nun explizit zwei/drei Spalten und das Fehlen von Nutzen-/Doppeltexten.
 249 Regressionen und Produktionsbuild nach dieser Korrektur erfolgreich.
+
+## Abschlussnachtrag · 25.09.2026
+
+PR #53 ist als `e3d75f1623fbd5ae81a9336a260fa2c38503ced2` in Main integriert.
+Am finalen PR-Stand: 249 Regressionen, 117 Browserfälle bestanden, 33 übersprungen.
+Auch alle drei Main-Workflows sind erfolgreich:
+
+- [Spielregressionen](https://github.com/sirmebro-sketch/rasenschachonlyapp/actions/runs/36115061692)
+- [Visuelle Browsertests](https://github.com/sirmebro-sketch/rasenschachonlyapp/actions/runs/36115061724)
+- [Regulärer Android-Build](https://github.com/sirmebro-sketch/rasenschachonlyapp/actions/runs/36115061813)
+
+Die reguläre APK 35.198.0 / 3519800 wurde bereitgestellt. Release-Signatur im
+Workflow geprüft; heruntergeladenes APK-Manifest bestätigt `de.rasenschach.xi`.
+Alle drei Musikstücke und 35 Effektdateien sind bytegleich mit der Quelle;
+VIBRATE-Berechtigung vorhanden. APK-SHA256:
+`77f2283e44eebf0edd80147538acb40713b0ea1d6c07997b7ce9b92efa445fdd`.
+
+Damit sind die oben als bevorstehend beschriebenen Integration und CI erledigt.
+Die physischen Geräte-/Hörprüfungen sowie übergreifenden Optikabnahmen bleiben
+wie beschrieben offen. Die Workflow-Artefakte haben eine begrenzte Aufbewahrung;
+ein späterer Neuaufbau ist nicht zwingend bytegleich mit dieser APK.

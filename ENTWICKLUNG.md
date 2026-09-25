@@ -1,3 +1,20 @@
+## 25.09.2026 · Astra · Dokumentation bereinigt (35.198.0 unverändert)
+
+Basis Main e3d75f1. README mit package.json und Modulbestand abgeglichen:
+Entwicklungsstart, Node-Voraussetzung, Kauf-/Audio-/Porträtmodule, Versionsschema
+und Rebase-/Squash-Hinweis korrigiert. Prüfberichte erhalten einen Themenwegweiser;
+historische Berichte und Branches bleiben als Nachweise erhalten.
+
+Kaufplan und Changelog auf die abgeschlossene Integration bzw. kompakte
+Vermögensansicht berichtigt. Abschlussnachtrag dokumentiert erfolgreichen
+Main-Build, CI und ausgelieferte APK; damit sind die älteren Zukunftsformulierungen
+unten überholt. Issue #3 bleibt für übergreifende Optik-/Geräteabnahmen offen.
+
+Prüfung: relative Markdown-Dateilinks, referenzierte Module/Skripte und
+`git diff --check`. Nur Dokumentation; keine Spieländerung, keine neue Version
+und kein neuer APK-Build erforderlich. Automatische Main-CI läuft laut Workflow
+auch bei Dokumentationsänderungen.
+
 ## 25.09.2026 · Astra · Vermögensübersicht verdichtet
 
 Kevins Korrektur: Kacheln sollen die Seite verkürzen, keine langen Textkarten.
