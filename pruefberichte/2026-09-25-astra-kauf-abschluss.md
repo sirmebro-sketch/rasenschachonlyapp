@@ -67,3 +67,12 @@ Issue #3 bleibt der übergreifende Charakter-/Optiktracker. Ein Kaufabschluss
 bedeutet keine vollständige Abnahme sämtlicher dortiger Qualitätsziele.
 Physischer Android-Test, Haptikgefühl und Musik-/Unterbrechungstest bleiben bei
 Kevin; sie werden mit der regulären APK durchgeführt. Keine Beta erforderlich.
+
+## Korrektur nach Kevins Rückmeldung
+
+Die erste Vermögensübertragung war zu lang. Kompakte Variante mit zwei Spalten
+auf Smartphones und drei ab 440 px Rasterbreite: 30 kleine Kacheln statt
+30 Textkarten untereinander. Sichtbar bleiben Symbol, Name, Preis und kurzer
+Zustand; Wirkung und Unterhalt stehen im Detaildialog. Der bestehende Browsertest
+prüft nun explizit zwei/drei Spalten und das Fehlen von Nutzen-/Doppeltexten.
+249 Regressionen und Produktionsbuild nach dieser Korrektur erfolgreich.

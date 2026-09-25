@@ -3,13 +3,13 @@ import { createPortal } from 'react-dom';
 import { KaufIcon } from './kauf-icons.jsx';
 
 // Reine Darstellung: Preise, Voraussetzungen und Buchungen bleiben beim Aufrufer.
-export function KaufKachel({ icon, titel, stufe, maximum, preis, preisText, stand, status, nutzen, onOpen }) {
-  return <button type="button" className="kauf-kachel" onClick={onOpen} aria-haspopup="dialog">
+export function KaufKachel({ icon, titel, stufe, maximum, preis, preisText, stand, status, nutzen, onOpen, kompakt = false }) {
+  return <button type="button" className={"kauf-kachel" + (kompakt ? " kauf-kachel-kompakt" : "")} onClick={onOpen} aria-haspopup="dialog">
     <KaufIcon id={icon}/>
     <strong>{titel}</strong>
-    <span className="kauf-stufe">{stand ?? `Stufe ${stufe} / ${maximum}`}</span>
+    {!kompakt && <span className="kauf-stufe">{stand ?? `Stufe ${stufe} / ${maximum}`}</span>}
     {maximum != null && <span className="kauf-leiste" aria-hidden="true">{Array.from({length:maximum},(_,i)=><i key={i} data-aktiv={i<stufe}/>)}</span>}
-    <span className="kauf-nutzen">{nutzen}</span>
+    {!kompakt && <span className="kauf-nutzen">{nutzen}</span>}
     <span className="kauf-preis">{preisText ?? (preis == null ? 'Voll ausgebaut' : `${preis} VC`)}</span>
     <span className="kauf-status">{status}</span>
   </button>;
@@ -96,4 +96,13 @@ export const KAUF_CSS = `
 .kauf-detail-inhalt dl{display:grid;grid-template-columns:1fr auto;gap:8px;margin:16px 0}.kauf-detail-inhalt dd{margin:0;font-weight:700;text-align:right}
 @container kauf (max-width:320px){.kauf-raster{grid-template-columns:1fr}}
 @media(min-width:680px){.kauf-raster{grid-template-columns:repeat(3,minmax(0,1fr))}.kauf-detail{inset:0;margin:auto;height:fit-content}}
+/* Vermögen: bewusst zwei kompakte Spalten auch auf schmalen Smartphones.
+   Ausführliche Wirkung und Voraussetzungen stehen ausschließlich im Dialog. */
+.vermoegen-kompakt .kauf-raster{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.kauf-kachel-kompakt{padding:10px;gap:5px;position:relative}
+.kauf-kachel-kompakt .kauf-icon{width:30px;height:30px;padding:3px}
+.kauf-kachel-kompakt strong{font-size:13px;line-height:1.2;hyphens:auto}
+.kauf-kachel-kompakt .kauf-preis{font-size:13px;padding-top:2px}
+.kauf-kachel-kompakt .kauf-status{font-size:11px;line-height:1.2}
+@container kauf (min-width:440px){.vermoegen-kompakt .kauf-raster{grid-template-columns:repeat(3,minmax(0,1fr))}}
 `;

@@ -16411,7 +16411,7 @@ function MoneyView({ p, onBuy, onInvest, onSell, onDonate }) {
   const cats = [...new Set(SHOP.map((s) => s.cat))];
   const last = p.seasons.length ? p.seasons[p.seasons.length - 1] : null;
   return (
-    <div className="g1">
+    <div className="g1 vermoegen-kompakt">
       {!auto && p.assets.includes("verwalter") && (
         <div className="up pad">
           <div className="eb" style={{ color: "var(--ok)" }}>Vermögensverwalter aktiv</div>
@@ -16464,10 +16464,10 @@ function MoneyView({ p, onBuy, onInvest, onSell, onDonate }) {
       <div className="pan pad">
         <div className="eb" style={{ marginBottom: 8 }}>Geldanlage</div>
         <div className="kauf-uebersicht"><div className="kauf-raster">
-          {INVEST.map(it => <KaufKachel key={it.id} icon="vermoegen.geschaeft"
+          {INVEST.map(it => <KaufKachel kompakt key={it.id} icon="vermoegen.geschaeft"
             titel={KAUF_TEXTE['investition.' + it.id].titel} stand={'Depot: ' + eur(p.depot[it.id] || 0) + ' €'}
             preisText={'Ab ' + eur(it.min) + ' €'} nutzen={KAUF_TEXTE['investition.' + it.id].kurz}
-            status={'Risiko ' + it.risk} onOpen={() => setAuswahl({art:'investition',id:it.id})}/>) }
+            status={(p.depot[it.id] || 0) > 0 ? 'Depot: ' + eur(p.depot[it.id]) + ' €' : 'Details'} onOpen={() => setAuswahl({art:'investition',id:it.id})}/>) }
         </div></div>
       </div>
       {cats.map(cat => <div className="pan pad kauf-uebersicht" key={cat}>
@@ -16476,9 +16476,9 @@ function MoneyView({ p, onBuy, onInvest, onSell, onDonate }) {
           const text = KAUF_TEXTE['vermoegen.' + it.id], cost = kaufPreis(p,it);
           const grund = kaufSperrgrund(p,it);
           const motive = {'Wohnen':'wohnen','Fahrzeug':'fahrzeug','Umfeld':'umfeld','Geschäft':'geschaeft','Vermächtnis':'vermaechtnis'};
-          return <KaufKachel key={it.id} icon={'vermoegen.' + (motive[cat] || 'fahrzeug')}
+          return <KaufKachel kompakt key={it.id} icon={'vermoegen.' + (motive[cat] || 'fahrzeug')}
             titel={text.titel} stand={owned.includes(it.id) ? 'Vorhanden' : 'Noch nicht vorhanden'}
-            preisText={eur(cost) + ' €'} nutzen={text.kurz} status={grund || 'Kauf möglich'}
+            preisText={eur(cost) + ' €'} nutzen={text.kurz} status={owned.includes(it.id) ? 'Vorhanden' : grund ? 'Gesperrt' : 'Verfügbar'}
             onOpen={() => setAuswahl({art:'vermoegen',id:it.id})}/>;
         })}</div>
       </div>)}

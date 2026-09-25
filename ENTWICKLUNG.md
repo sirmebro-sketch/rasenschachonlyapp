@@ -1,3 +1,11 @@
+## 25.09.2026 · Astra · Vermögensübersicht verdichtet
+
+Kevins Korrektur: Kacheln sollen die Seite verkürzen, keine langen Textkarten.
+Vermögen erhält eine eigene kompakte Variante: zwei Spalten auf schmalen
+Smartphones, drei ab 440 px verfügbarer Rasterbreite. Nur Symbol, Name, Preis
+und kurzer Besitz-/Sperrzustand; Wirkung, Unterhalt und Voraussetzungen im
+Detaildialog. Keine Änderung an Buchungen. Akademiepilot bleibt unverändert.
+
 ## 25.09.2026 · Astra · 35.198.0 · Kaufoberflächen abschließen
 
 Pilot d20f78f (KAUF-01/02/03, PRs #55/#56/#59) mit main 6e77432
