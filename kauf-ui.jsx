@@ -3,10 +3,10 @@ import { createPortal } from 'react-dom';
 import { KaufIcon } from './kauf-icons.jsx';
 
 // Reine Darstellung: Preise, Voraussetzungen und Buchungen bleiben beim Aufrufer.
-export function KaufKachel({ icon, titel, stufe, maximum, preis, preisText, stand, status, nutzen, onOpen, kompakt = false }) {
-  return <button type="button" className={"kauf-kachel" + (kompakt ? " kauf-kachel-kompakt" : "")} onClick={onOpen} aria-haspopup="dialog">
+export function KaufKachel({ icon, titel, stufe, maximum, preis, preisText, stand, status, nutzen, onOpen, kurztitel, kompakt = false }) {
+  return <button type="button" className={"kauf-kachel" + (kompakt ? " kauf-kachel-kompakt" : "")} onClick={onOpen} aria-label={kompakt ? `${titel} ${preisText ?? `${preis} VC`} ${status}` : undefined} aria-haspopup="dialog">
     <KaufIcon id={icon}/>
-    <strong>{titel}</strong>
+    <strong>{kurztitel || titel}</strong>
     {!kompakt && <span className="kauf-stufe">{stand ?? `Stufe ${stufe} / ${maximum}`}</span>}
     {maximum != null && <span className="kauf-leiste" aria-hidden="true">{Array.from({length:maximum},(_,i)=><i key={i} data-aktiv={i<stufe}/>)}</span>}
     {!kompakt && <span className="kauf-nutzen">{nutzen}</span>}
@@ -99,7 +99,8 @@ export const KAUF_CSS = `
 /* Vermögen: bewusst zwei kompakte Spalten auch auf schmalen Smartphones.
    Ausführliche Wirkung und Voraussetzungen stehen ausschließlich im Dialog. */
 .vermoegen-kompakt .kauf-raster{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
-.kauf-kachel-kompakt{padding:10px;gap:5px;position:relative}
+.vermoegen-kompakt > .pan{padding:10px}
+.kauf-kachel-kompakt{padding:8px;gap:5px;position:relative}
 .kauf-kachel-kompakt .kauf-icon{width:30px;height:30px;padding:3px}
 .kauf-kachel-kompakt strong{font-size:13px;line-height:1.2;hyphens:auto}
 .kauf-kachel-kompakt .kauf-preis{font-size:13px;padding-top:2px}
