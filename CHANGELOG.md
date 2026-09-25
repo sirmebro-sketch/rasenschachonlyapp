@@ -1,3 +1,13 @@
+# 35.198.0 · Kaufkacheln in Akademie, Verein und Vermögen
+
+Kompakte Bildkacheln zeigen Nutzen, Preis und Zustand. Details erklären Wirkung,
+Unterhalt, Bauzeit und Sperrgründe; ein separater Knopf bestätigt den Kauf.
+Optisches Druckfeedback und bestehende Haptik begleiten die Bedienung.
+Käufe und Anlagen bestätigen Erfolg erst nach gespeicherter Buchung.
+Vermögenskäufe prüfen Voraussetzungen und den aktuellen Vereinspreis;
+der Verwalter rechnet jährlichen Unterhalt korrekt. Anlagen bieten ihren
+Mindestbetrag direkt an und verhindern ungültige Einzahlungen.
+
 # 35.197.0 · Goldkarten, Rekordbuch und Bedienfeedback
 
 Goldkarten zeigen poliertes Gold mit dunkler, gut lesbarer Schrift; legendäre
@@ -35,6 +45,7 @@ Android-Geräteprüfung der neuen Audio-/Optikfunktionen bleibt offen.
 # Änderungen
 
 ## Noch nicht veröffentlicht
+
 
 
 - Die Spielerpass-Vorschau in der Charaktererstellung bleibt beim Öffnen und Schließen der Feinheiten gleich aufgebaut und gleich skaliert; das Porträt ist in beiden Zuständen moderat größer.

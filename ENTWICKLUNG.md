@@ -1,3 +1,79 @@
+## 25.09.2026 · Astra · Vermögensübersicht verdichtet
+
+Kevins Korrektur: Kacheln sollen die Seite verkürzen, keine langen Textkarten.
+Vermögen erhält eine eigene kompakte Variante: zwei Spalten auf schmalen
+Smartphones, drei ab 440 px verfügbarer Rasterbreite. Nur Symbol, Name, Preis
+und kurzer Besitz-/Sperrzustand; Wirkung, Unterhalt und Voraussetzungen im
+Detaildialog. Keine Änderung an Buchungen. Akademiepilot bleibt unverändert.
+
+## 25.09.2026 · Astra · 35.198.0 · Kaufoberflächen abschließen
+
+Pilot d20f78f (KAUF-01/02/03, PRs #55/#56/#59) mit main 6e77432
+(35.197.0, Musik/Gold/Rekordbuch/Haptik) zusammengeführt. Alle drei
+Lemming-Lieferungen angenommen; deren historische Prüfberichte bleiben erhalten.
+Kacheln und Bestätigungsdialoge auf 25 Anschaffungen, fünf Anlagen,
+sechs Vereinsabteilungen und drei VC-Extras übertragen. Speicherbestätigung,
+Doppeltippsperre, Fokusbindung, Escape/Zurück und Ruheeinstellung erhalten.
+
+KAUF-02-Logikbefunde behoben: Kaufvoraussetzungen im Handler, kanonischer
+dynamischer Anteilspreis auch für automatische Käufer, gültige Anlage-ID und
+positive Mindestbeträge, jährlicher statt zwölfmaligem Unterhalt beim Verwalter.
+Neue Vermögensbuchungen nutzen die vorhandene transaktionale Speicherung.
+Keine gespeicherten IDs, keine neue Audio-/Haptikverwaltung.
+
+249 Regressionen bestanden; Produktionsbuild erfolgreich. Browserprüfung des
+320-px-Kaufdialogs mit echter Speicherung erfolgreich. Weitere Transferprüfungen
+und unveränderte KAUF-03-Fälle laufen im Integrations-PR vor dem Main-Merge.
+Reguläre Version 35.198.0 / 3519800. Echter Android-/Hörtest bleibt bei Kevin.
+Details: pruefberichte/2026-09-25-astra-kauf-abschluss.md.
+
+## 24.09.2026 · Astra · KAUF-03-Befunde behoben
+
+Lemming-3-PR #59, 0846eba, auf Produktbasis 3be4a3c ausgewertet und übernommen.
+Die unabhängigen Prüffälle und der historische Bericht bleiben unverändert.
+Fokusbefund bestätigt: native Dialoge können Tab an die Browseroberfläche geben,
+insbesondere mit nur einem aktiven Button. KaufDetail begrenzt Tab/Shift+Tab nun
+auf die sichtbaren, aktiven Fokusziele; native Modalität, Escape/Zurück und
+Fokuswiederherstellung bleiben bestehen. Der Listener wird beim Schließen entfernt.
+
+320-px-Umbruch: Einspaltenansicht greift nun bis 320 px Containerbreite, sodass
+„Trainingsplätze“ nicht mehr in einen einzelnen Endbuchstaben umbricht. Keine
+Kauf-/Speicherlogik geändert. Vollständige KAUF-03-Browserprüfungen werden am
+integrierten Pilotkopf erneut ausgeführt. Physischer Android-/Haptiktest offen.
+Gold/Rekordbuch bleiben im separaten PR #60. Kein Pilot-Main-Merge in dieser Runde.
+
+## 24.09.2026 · Astra · Bedienfeedback im Kaufpilot
+
+Basis e4dd451, Kevin beauftragt optisches und haptisches Kachelfeedback.
+Kacheln erhalten einen gedrückten Zustand aus Fläche und Innenrahmen, ohne
+Bewegung. Kauf-/Schließen-Buttons besitzen bereits btn:active. Zentrale Haptik
+war vorhanden, aber Android-VIBRATE fehlte; Berechtigung ergänzt. Impuls jetzt
+bei click statt pointerdown: tatsächliche Touch-/Maus-/Tastaturbetätigung,
+keine Scrollanfänge. Ruhe, abgeschaltete Vibration und gesperrte Aktionen bleiben
+stumm; bestehende Entprellung bleibt. Kein zusätzliches Haptiksystem.
+
+244 Regressionen und Produktionsbuild bestanden. Browserprüfung am Pilot-PR;
+physische Vibrationsstärke muss Kevin am Android-Gerät beurteilen. Kein Release.
+Lemming 3: vor Abschluss aktuellen Pilot abrufen und Feedback mitprüfen.
+Andere Abnahmen laufen getrennt auf main-Basis, keine Änderung seiner Testdateien.
+
+## 24.09.2026 · Astra · KAUF-01/02 integriert, unabhängige Abnahme offen
+
+Lemming 1 (#55, bc71be5) und Lemming 2 (#56, e5d88e0) im Kaufpilot
+zusammengeführt, anschließend main 62d3f68 (35.196.0 samt Musik) übernommen.
+Beide Lieferungen angenommen mit kleinen Integrationskorrekturen: Reichweiten-SVG
+innerhalb der ViewBox, verständliche „Spitzenstärke“ statt „Peak“, Akademietexte
+in Kacheln und Details angebunden, Testnamen angepasst und Gründungsjahr im
+isolierten Akademie-Prüfstand korrigiert. Keine Spielbalance geändert.
+
+240 Regressionstests und Produktionsbuild bestanden. Icons bei 32/48/64 px,
+Akademie bei 390 und 320 px im Browser betrachtet. Expliziter Kauf von Stufe 1
+auf 2 kostet exakt 16 VC; danach 0 VC und Folgekauf gesperrt, Speicherbestätigung
+sichtbar. Dies ersetzt nicht Lemming 3 oder einen echten Android-Test.
+Details: pruefberichte/2026-09-24-astra-kauf-abnahme.md.
+Goldkarten #57 und Rekorde #58 auf Kevins Wunsch für eine spätere Runde zurückgestellt.
+Kein Main-Merge, keine Versionsänderung: nächste Aufgabe KAUF-03 auf diesem Pilot.
+
 ## 24.09.2026 · Astra · 35.197.0 · Gold, Rekordbuch und Haptik
 
 Basis main 62d3f68. PR #57 (797a6f2) und #58 (c22a4d5) fachlich geprüft und
@@ -78,6 +154,28 @@ Produktionsbuild und Capacitor-Sync erfolgreich. Browser-CI wird am Integrations
 vor dem Merge geprüft; Release-Build und Signatur am anschließenden Main-Commit.
 Offen: subjektive Klangwirkung, längere Nutzung, Lautsprecher,
 WebView-Loops und Audiofokus/Unterbrechungen auf Kevins Android-Gerät.
+
+## 24.09.2026 · Astra · Kaufkacheln-Pilot (noch nicht veröffentlicht)
+
+Basis c48b699 (35.195.2). Gemeinsame Kacheln/Detaildialog in kauf-ui.jsx,
+Akademie-Anbindung, neun vorläufige SVG-Symbole und isolierter Prüfstand.
+Die Speicherung bleibt im bestehenden akaKaufen/bucheAenderung; lokale Sperre
+verhindert parallele Bestätigungen, Erfolg folgt erst auf true. Native Dialoge
+übernehmen Fokus/Inert/Escape, vorhandener Zurück-Stapel schließt die Details.
+Kleine Container wechseln bei großer Anzeige in eine Spalte.
+
+Prüfung: npm test 237/237; npm run build erfolgreich (bekannte Bundlegrößenwarnung).
+Cloud-Browser: 390 und 320 px tatsächlich bedient und Screenshots angesehen;
+Kauf 16 VC → Stufe 2 / 0 VC, nach erneutem Laden erhalten; unbezahlbar und Maximum
+sichtbar erklärt; Escape stellt Fokus wieder auf die Kachel. Lokaler automatischer
+Browserlauf kann ohne installierten Chromium nicht starten; CI-Lauf am PR prüfen.
+Android, verzögerte/fehlgeschlagene UI-Speicherung und große Anzeige sind noch
+keine vollständige Abnahme. Kein neues APK, keine Versionsänderung.
+
+Drei getrennte Lemming-Pakete und stabile Schnittstellen stehen in
+[KAUF-UI-ARBEITSPLAN.md](KAUF-UI-ARBEITSPLAN.md). Vermögen/Profimannschaft bleiben
+für die Folgeintegration vorgesehen. Sols separater Audio-Branch bleibt offen;
+bei späterer Zusammenführung den Erfolg-nach-Speicherung-Fix beibehalten.
 
 ## 24.09.2026 · Astra · 35.195.2 · Abnahme neuer Übergaben
 

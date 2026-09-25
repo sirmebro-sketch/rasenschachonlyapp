@@ -35,7 +35,7 @@ before(async () => {
     .map(n=>`const ${n}=v=>{out[${JSON.stringify(n.slice(3))}]=v;};`).join('\n');
   const extension = `
 import {renderToStaticMarkup} from 'react-dom/server';
-export {simTable, LEAGUES, karriereZeitraum, verdict, vorsatzBelohnen, vorsatzPunkte, bilanzLaden, bilanzErgaenzen, rekordListe, akaGruenden, akaVerbuchen, SAVE_KEY, AKA_KEY, LIFE_KEY, createPlayer, develop, simulateSeason, vcFuer, vcPosten, vcAusHaeusern, leereAkademie, leereBilanz, KARTEN, VEREIN, zufallSetzen, rerollWildcard, ladenGesperrt, saisonSchlagzeile, saisonIndex, EVENTS, strangDran, strangWeiter, laufStand, laufWeiter};
+export {SHOP, INVEST, kaufPreis, kaufSperrgrund, verwalterRunde, autoKauf, simTable, LEAGUES, karriereZeitraum, verdict, vorsatzBelohnen, vorsatzPunkte, bilanzLaden, bilanzErgaenzen, rekordListe, akaGruenden, akaVerbuchen, SAVE_KEY, AKA_KEY, LIFE_KEY, createPlayer, develop, simulateSeason, vcFuer, vcPosten, vcAusHaeusern, leereAkademie, leereBilanz, KARTEN, VEREIN, zufallSetzen, rerollWildcard, ladenGesperrt, saisonSchlagzeile, saisonIndex, EVENTS, strangDran, strangWeiter, laufStand, laufWeiter};
 export const renderCreate=()=>renderToStaticMarkup(<CreateScreen meta={{}} onStart={()=>{}} onBack={()=>{}}/>);
 export const renderPortraits=()=>renderToStaticMarkup(<>{['m','w'].flatMap(g=>Array.from({length:4},(_,i)=><Avatar key={g+i} seed={1} g={g} zuege={{...zuegeAusKennung(1,g,'GER',{}),stil:2,haut:10+i,haar:9+i,frisur:(g==='w'?14:16)+i,details:i,bart:g==='w'?0:10+i%3}}/>))}</>);
 export const renderEnd=p=>renderToStaticMarkup(<EndScreen p={p} onNew={()=>{}}/>);
@@ -50,6 +50,17 @@ export const renderShop=(spieler,schritt='training')=>renderToStaticMarkup(<VCLa
 export const renderKarriereRueckblick=p=>renderToStaticMarkup(<KarriereRueckblick p={p} onFertig={()=>{}}/>);
 export const renderSaisonRueckblick=(p,s)=>renderToStaticMarkup(<SaisonRueckblick p={p} s={s} onFertig={()=>{}}/>);
 export const renderHall=(ges)=>renderToStaticMarkup(<HallScreen hall={[]} ges={ges} aka={null} verein={null} onBack={()=>{}}/>);
+export function wealthHarness(p) {
+ const out={}, buchungAktiv={current:false};
+ const clone=p=>structuredClone(p);
+ let resolveWrite, rejectWrite;
+ const vermoegenSichern=q=>{
+   buchungAktiv.current=true;
+   return new Promise((resolve,reject)=>{resolveWrite=()=>{out.p=q;buchungAktiv.current=false;resolve(true)};rejectWrite=()=>{buchungAktiv.current=false;reject(Error('Speicher ausgefallen'))}});
+ };
+ ${part('  const buy = (id)', '  const donate =')}
+ return {buy,invest,sell,out,commit:()=>resolveWrite(),fail:()=>rejectWrite()};
+}
 export async function runFinish(q,initial={}) {
  const out={};const aka={...leereAkademie(),vc:100,verdient:200,gratisPacks:2,...initial.aka};
  const ges=initial.ges||leereBilanz(), verein=initial.verein||null, meta={}, ach={}, seen={}, wcSeen={}, hall=[], hsvZ=0;
@@ -548,7 +559,7 @@ test('Der Ausbaureiter zeigt Geld und VC getrennt, ohne NaN',()=>{
  const html=E.renderVerein(v,{...E.leereAkademie(),vc:100},'ausbau');
  assert(!html.includes('NaN'),'keine kaputte Zahl');
  assert(html.includes('Vereinskasse'));
- assert(html.includes('Bauen'),'Geldknopf');
+ assert(html.includes('kauf-kachel') && html.includes('Ausbau möglich'),'Ausbau öffnet eine Kaufkachel');
  assert(html.includes('Gastronomie'),'die neuen Abteilungen sind da');
  assert(html.includes('Gründungskapital'),'die VC-Extras stehen im eigenen Abschnitt');
  assert(!html.includes('Kann bei dieser Preislage jede Saison Stimmung kosten.'),'Normalpreise erzeugen keinen Stimmungsschaden');
@@ -563,11 +574,11 @@ test('Der Ausbaureiter zeigt Geld und VC getrennt, ohne NaN',()=>{
  const arm=E.renderVerein(E.VEREIN.mitWirtschaft(spielbereiterVerein({kasse:0})),
    {...E.leereAkademie(),vc:0},'ausbau');
  assert(!arm.includes('Dafür fehlen'),'leere Kasse: keine Wiederholung des Preises');
- assert(arm.includes('Bauen ·'),'der Preis selbst steht trotzdem da');
+ assert(arm.includes('kauf-preis') && arm.includes('Mio'),'Preis bleibt in der Kachel');
  assert(!arm.includes('NaN'));
  const halb=E.renderVerein(E.VEREIN.mitWirtschaft(spielbereiterVerein({kasse:2})),
    {...E.leereAkademie(),vc:0},'ausbau');
- assert(halb.includes('Dafür fehlen'),'angefangene Kasse: die Lücke wird genannt');
+ assert(halb.includes('Nicht genug in der Vereinskasse'),'Kachel nennt den Sperrgrund, Details die genaue Lücke');
  assert(!halb.includes('NaN'));
 });
 
@@ -1511,4 +1522,37 @@ test('Der Aufnahmebonus kommt ueber den echten Karriereabschluss in der Akademie
  assert(ohne>0,'ohne Verein nimmt die Akademie trotzdem auf: '+ohne);
  assert.equal(await lauf(0),ohne,'ein Verein ohne Bonus aendert nichts');
  assert.equal(await lauf(1),ohne+1,'der Bonus kommt an');
+});
+
+
+test('Vermögenskauf prüft Voraussetzungen, Besitz, Geld und Speedmodus im echten Handler',async()=>{
+ const p=player(0);p.money=20;p.assets=[];
+ const h=E.wealthHarness(p);
+ assert.equal(h.buy('unbekannt'),false);assert.equal(h.buy('haus'),false);
+ const pending=h.buy('wohnung');assert.equal(h.buy('wohnung'),false);assert.equal(h.out.p,undefined);
+ h.commit();assert.equal(await pending,true);assert.equal(h.out.p.money,19.65);assert.deepEqual(h.out.p.assets,['wohnung']);
+ assert.equal(p.money,20,'vorheriger Stand unverändert');
+ assert.equal(E.wealthHarness(h.out.p).buy('wohnung'),false);
+ assert.equal(E.wealthHarness({...p,money:0}).buy('wohnung'),false);
+ assert.equal(E.wealthHarness({...p,speed:true}).buy('wohnung'),false);
+});
+test('Anlagen verweigern ungültige IDs, negative Beträge, NaN und Unterschreitung des Minimums',async()=>{
+ const p=player(0);p.money=10;p.depot={};
+ const h=E.wealthHarness(p),it=E.INVEST[0];
+ for(const amount of [-1,0,NaN,Infinity,it.min/2,11])assert.equal(h.invest(it.id,amount),false);
+ assert.equal(h.invest('__proto__',1),false);assert.equal(h.sell('unbekannt'),false);
+ const pending=h.invest(it.id,it.min);assert.equal(h.out.p,undefined);h.commit();assert(await pending);
+ assert.equal(h.out.p.depot[it.id],it.min);assert.equal(h.out.p.money,10-it.min);
+ const sale=E.wealthHarness(h.out.p),selling=sale.sell(it.id);sale.commit();assert(await selling);assert.equal(sale.out.p.money,10);
+});
+test('Fehlgeschlagene Vermögensspeicherung verändert weder Kontostand noch Besitz',async()=>{
+ const p=player(0);p.money=1;p.assets=[];const h=E.wealthHarness(p),pending=h.buy('wohnung');
+ h.fail();await assert.rejects(pending,/Speicher/);assert.equal(h.out.p,undefined);assert.equal(p.money,1);assert.deepEqual(p.assets,[]);
+});
+test('Vereinsanteile verwenden den aktuellen Vereinspreis; Verwalter rechnet Unterhalt jährlich',async()=>{
+ const p=player(0);p.money=50;p.assets=[];
+ const it=E.SHOP.find(x=>x.id==='anteile'),cost=E.kaufPreis(p,it),h=E.wealthHarness(p);
+ const pending=h.buy('anteile',0);h.commit();await pending;assert.equal(h.out.p.money,50-cost);
+ p.wage=1;p.assets=['verwalter'];E.verwalterRunde(p,[]);
+ assert(p.assets.includes('physio'),'0,06 jährlicher Unterhalt liegt unter 22 Prozent von 1 Jahresgehalt');
 });
