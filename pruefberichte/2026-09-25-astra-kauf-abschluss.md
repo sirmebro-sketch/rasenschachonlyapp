@@ -42,6 +42,9 @@ Käufe früher ermöglichen; dies ist die dokumentierte Korrektur des Einheitenf
 - 320-px-Sichtprüfung: Eigentumswohnung mit verständlichem Preis, 8 Tsd €/Jahr,
   separater Bestätigung; nach Kauf erscheint „Kauf gespeichert“, Besitz und
   Guthaben aktualisieren sich. Keine abgeschnittenen Inhalte im Dialog.
+- 320-px-Vereinsprüfung: Stadionbau 50 → 46 Mio, zwei Saisons Bauzeit;
+  Gründungskapital 1000 → 955 VC, weiterer Kauf gesperrt. Beide Zustände bleiben
+  nach erneutem Laden erhalten.
 - Neuer isolierter Vermögensprüfstand und vier Browserfälle: Bestätigung/Laden,
   Mindestanlage/Auflösung, Doppeltippen bei langsamem Speicher, Rollback bei Fehler.
 - Bestehender Vereinswirtschaftstest folgt dem neuen Detaildialog und prüft

@@ -4,7 +4,7 @@ Pilot d20f78f (KAUF-01/02/03, PRs #55/#56/#59) mit main 6e77432
 (35.197.0, Musik/Gold/Rekordbuch/Haptik) zusammengeführt. Alle drei
 Lemming-Lieferungen angenommen; deren historische Prüfberichte bleiben erhalten.
 Kacheln und Bestätigungsdialoge auf 25 Anschaffungen, fünf Anlagen,
-sechs Vereinsabteilungen und vier VC-Extras übertragen. Speicherbestätigung,
+sechs Vereinsabteilungen und drei VC-Extras übertragen. Speicherbestätigung,
 Doppeltippsperre, Fokusbindung, Escape/Zurück und Ruheeinstellung erhalten.
 
 KAUF-02-Logikbefunde behoben: Kaufvoraussetzungen im Handler, kanonischer
