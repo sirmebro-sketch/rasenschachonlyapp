@@ -12,9 +12,12 @@ test('Vereinswirtschaft: Ausbau, Preis und Sponsor überstehen erneutes Laden',a
  await vereinOeffnen(page);
  await expect(page.getByText(/Gründe zuerst deine Jugendakademie/)).toBeVisible();
  await page.getByRole('button',{name:'Führung',exact:true}).click();
- await page.getByRole('button',{name:'Bauen · 4 Mio €',exact:true}).click();
+ await page.getByRole('button',{name:/Stadion Stufe/}).click();
+ await page.getByRole('dialog').getByRole('button',{name:'Bau starten · 4 Mio €',exact:true}).click();
+ await expect(page.getByRole('status')).toContainText('Baustart gespeichert.');
+ await page.getByRole('dialog').getByRole('button',{name:'Schließen',exact:true}).click();
  await expect(page.getByText('46 Mio €',{exact:true})).toBeVisible();
- await expect(page.getByRole('button',{name:'Im Bau · noch 2 Saisons',exact:true})).toBeDisabled();
+ await expect(page.getByRole('button',{name:/Stadion Stufe/})).toContainText('Im Bau · noch 2 Saisons');
  await page.getByRole('slider',{name:'Eintritt Preisfaktor',exact:true}).press('ArrowRight');
  await expect(page.getByRole('slider',{name:'Eintritt Preisfaktor',exact:true})).toHaveValue('1.02');
  await page.getByRole('button',{name:'Partner',exact:true}).click();

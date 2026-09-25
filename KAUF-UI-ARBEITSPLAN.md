@@ -1,3 +1,9 @@
+> Abschlussrunde 25.09.2026: KAUF-01/02/03 angenommen. Astra überträgt den
+> geprüften Pilot mit PR #53 auf Main, einschließlich Vermögen/Anlagen und
+> Vereinsausbau/VC-Extras. Die folgenden Paketaufträge sind historische
+> Arbeitsabgrenzungen, keine erneut auszuführenden Aufträge. Maßgeblich:
+> `pruefberichte/2026-09-25-astra-kauf-abschluss.md` und aktueller Main-Stand.
+
 # Kaufoberflächen: Astra-Pilot und Lemming-Pakete
 
 24.09.2026 · Aktualisierte Basis: main 62d3f689085e817169da5a9885fbe573195ef574 (35.196.0).

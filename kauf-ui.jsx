@@ -1,16 +1,16 @@
-import React, { useEffect, useId, useRef } from 'react';
+import React, { useEffect, useId, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { KaufIcon } from './kauf-icons.jsx';
 
 // Reine Darstellung: Preise, Voraussetzungen und Buchungen bleiben beim Aufrufer.
-export function KaufKachel({ icon, titel, stufe, maximum, preis, status, nutzen, onOpen }) {
+export function KaufKachel({ icon, titel, stufe, maximum, preis, preisText, stand, status, nutzen, onOpen }) {
   return <button type="button" className="kauf-kachel" onClick={onOpen} aria-haspopup="dialog">
     <KaufIcon id={icon}/>
     <strong>{titel}</strong>
-    <span className="kauf-stufe">Stufe {stufe} / {maximum}</span>
-    <span className="kauf-leiste" aria-hidden="true">{Array.from({length:maximum},(_,i)=><i key={i} data-aktiv={i<stufe}/>)}</span>
+    <span className="kauf-stufe">{stand ?? `Stufe ${stufe} / ${maximum}`}</span>
+    {maximum != null && <span className="kauf-leiste" aria-hidden="true">{Array.from({length:maximum},(_,i)=><i key={i} data-aktiv={i<stufe}/>)}</span>}
     <span className="kauf-nutzen">{nutzen}</span>
-    <span className="kauf-preis">{preis == null ? 'Voll ausgebaut' : `${preis} VC`}</span>
+    <span className="kauf-preis">{preisText ?? (preis == null ? 'Voll ausgebaut' : `${preis} VC`)}</span>
     <span className="kauf-status">{status}</span>
   </button>;
 }
@@ -51,6 +51,26 @@ export function KaufDetail({ titel, onClose, registerBack, children }) {
     <header><h2 id={titelId}>{titel}</h2><button type="button" className="btn sm" autoFocus onClick={onClose}>Schließen</button></header>
     <div className="kauf-detail-inhalt">{children}</div>
   </dialog>, document.body);
+}
+
+// Gemeinsame Bestätigung für Geld- und VC-Buchungen. Öffnen bucht nichts.
+export function KaufVorgang({titel, onClose, registerBack, aktionen, children}) {
+  const sperre = useRef(false);
+  const [aktiv, setAktiv] = useState(false), [notiz, setNotiz] = useState('');
+  const schliessen = () => { if (!sperre.current) onClose(); };
+  return <KaufDetail titel={titel} onClose={schliessen} registerBack={registerBack}>
+    {children}
+    <div style={{display:'flex',gap:8,flexWrap:'wrap'}}>{aktionen.map((a,i) =>
+      <button key={i} type="button" className="btn pri" disabled={aktiv || a.gesperrt}
+        onClick={async () => {
+          if (sperre.current || a.gesperrt) return;
+          sperre.current = true; setAktiv(true); setNotiz('');
+          try { setNotiz(await a.ausfuehren() === true ? a.erfolg : 'Nicht gespeichert. Bitte erneut versuchen.'); }
+          catch { setNotiz('Nicht gespeichert. Bitte erneut versuchen.'); }
+          finally { sperre.current = false; setAktiv(false); }
+        }}>{aktiv ? 'Wird gespeichert …' : a.label}</button>)}</div>
+    <p role="status" aria-live="polite">{notiz}</p>
+  </KaufDetail>;
 }
 
 export const KAUF_CSS = `

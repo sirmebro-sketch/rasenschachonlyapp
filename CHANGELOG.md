@@ -1,11 +1,20 @@
-# In Vorbereitung · Kaufpilot
+# 35.198.0 · Kaufkacheln in Akademie, Verein und Vermögen
 
-Der Kaufdialog hält den Tastaturfokus auch bei gesperrtem Kauf. Auf sehr schmalen
-Bildschirmen bekommen Kacheln eine volle Zeile für lesbare Titel und Nutzen.
+Kompakte Bildkacheln zeigen Nutzen, Preis und Zustand. Details erklären Wirkung,
+Unterhalt, Bauzeit und Sperrgründe; ein separater Knopf bestätigt den Kauf.
+Optisches Druckfeedback und bestehende Haptik begleiten die Bedienung.
+Käufe und Anlagen bestätigen Erfolg erst nach gespeicherter Buchung.
+Vermögenskäufe prüfen Voraussetzungen und den aktuellen Vereinspreis;
+der Verwalter rechnet jährlichen Unterhalt korrekt. Anlagen bieten ihren
+Mindestbetrag direkt an und verhindern ungültige Einzahlungen.
 
-Kaufkacheln reagieren beim Drücken sichtbar. Die Android-Vibrationsberechtigung
-ist ergänzt; kurze Impulse begleiten Betätigungen, Scrollanfänge bleiben stumm.
-Ruhemodus und die Vibrationseinstellung werden beachtet.
+# 35.197.0 · Goldkarten, Rekordbuch und Bedienfeedback
+
+Goldkarten zeigen poliertes Gold mit dunkler, gut lesbarer Schrift; legendäre
+Karten behalten ihren Regenbogenschimmer. Das Rekordbuch trennt Bestwerte und
+Gesamtsummen, benennt Kapitänslaufbahnen korrekt und bleibt mobil lesbar.
+Die Android-Vibrationsberechtigung ist ergänzt. Schaltflächen melden tatsächliche
+Betätigungen statt Scrollanfänge; Ruhemodus und Vibrationseinstellung gelten weiter.
 
 # 35.196.0 · Musik und erweiterte Spielklänge
 
@@ -37,11 +46,9 @@ Android-Geräteprüfung der neuen Audio-/Optikfunktionen bleibt offen.
 
 ## Noch nicht veröffentlicht
 
-- Jugendakademie als Kaufoberflächen-Pilot: kompakte Ausbauskacheln mit Detailfenster,
-  sichtbaren Preisen und Sperrgründen; Erfolg erst nach gespeicherter Buchung.
+
 
 - Die Spielerpass-Vorschau in der Charaktererstellung bleibt beim Öffnen und Schließen der Feinheiten gleich aufgebaut und gleich skaliert; das Porträt ist in beiden Zuständen moderat größer.
-- Goldene und legendäre Spielerkarten zeigen wieder einen deutlich sichtbaren, regenbogenartig irisierenden Holoeffekt. Legendäre Karten schimmern kräftiger als Gold; Bronze, Silber, Packs und Wildcard-Folien bleiben unverändert.
 
 - Männerfrisur 27 „Lange Locken“ rahmt das Gesicht mit getrennten Kronen-/Seitenlocken statt einer tiefen geschlossenen Haarfläche; gespeicherte Frisur-ID und übriger Katalog bleiben unverändert.
 

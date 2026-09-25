@@ -1,5 +1,5 @@
 import appPackage from "./package.json";
-import { KaufKachel, KaufDetail, KAUF_CSS } from "./kauf-ui.jsx";
+import { KaufKachel, KaufDetail, KaufVorgang, KAUF_CSS } from "./kauf-ui.jsx";
 import { KAUF_TEXTE } from "./kauf-texte.js";
 import { WildcardPraegung, WildcardBuehne, WILDCARD_CSS } from "./wildcardoptik.jsx";
 import { Bartform } from "./bartformen.jsx";
@@ -3681,9 +3681,10 @@ function verwalterRunde(p, log) {
     const it = shopItem(id);
     if (!it || p.assets.includes(id)) continue;
     if (it.req && !p.assets.includes(it.req)) continue;
-    if (p.money - it.cost < rueckstellung) continue;
-    if (it.up && it.up * 12 > jahresGehalt * .22) continue;  // Unterhalt muss tragbar bleiben
-    p.money -= it.cost; p.assets.push(id); applyFx(p, it.fx); n++;
+    const cost = kaufPreis(p,it);
+    if (p.money - cost < rueckstellung) continue;
+    if (it.up && it.up > jahresGehalt * .22) continue;  // Unterhalt muss tragbar bleiben
+    p.money -= cost; p.assets.push(id); applyFx(p, it.fx); n++;
     if (log) log.push("Dein Verwalter hat gekauft: " + it.name + ".");
   }
   /* 2. Freies Geld anlegen — Aufteilung nach Vermögen und Alter */
@@ -3753,11 +3754,24 @@ function autoKauf(p, log) {
     const it = shopItem(id);
     if (!it || p.assets.includes(id)) continue;
     if (it.req && !p.assets.includes(it.req)) continue;
-    if (p.money < it.cost * 2.2) continue;      // Puffer lassen
-    p.money -= it.cost; p.assets.push(id); applyFx(p, it.fx); n++;
+    const cost = kaufPreis(p,it);
+    if (p.money < cost * 2.2) continue;      // Puffer lassen
+    p.money -= cost; p.assets.push(id); applyFx(p, it.fx); n++;
     if (log) log.push("Angeschafft: " + it.name + ".");
   }
   return n;
+}
+
+function kaufPreis(p, it) {
+  return it.id === "anteile" ? Math.max(6, clubBudget(p.club) * .45) : it.cost;
+}
+function kaufSperrgrund(p, it) {
+  if (!it) return "Unbekannte Anschaffung";
+  if (p.assets.includes(it.id)) return "Bereits vorhanden";
+  if (p.speed) return "Im Speedmodus kauft dein Berater";
+  if (it.req && !p.assets.includes(it.req)) return "Setzt " + shopItem(it.req).name + " voraus";
+  if (p.money < kaufPreis(p,it)) return "Nicht genug Geld verfügbar";
+  return "";
 }
 
 /* ---------------- Anschaffungen und Anlagen ---------------- */
@@ -9368,6 +9382,7 @@ function VereinScreen({ v, aka, onAendern, onZurueck, onAbschluss, startReiter }
      Reiter aufschlagen können, ohne einen Klick nachzubauen. Im Spiel wird er
      nicht gesetzt, dort beginnt der Bildschirm wie immer beim Kader. */
   const [reiter, setReiter] = React.useState(startReiter || "kader");
+  const [kaufAuswahl, setKaufAuswahl] = useState(null);
   const [bericht, setBericht] = React.useState(null);
   /* Welcher Platz gerade besetzt wird (35.49). `null` heisst: keiner offen.
      Bewusst eine Zahl und kein Objekt — der Index ist der Schluessel, unter
@@ -10221,65 +10236,57 @@ function VereinScreen({ v, aka, onAendern, onZurueck, onAbschluss, startReiter }
                 Sechs Abteilungen, jede baut für sich. Eine Stufe wirkt erst ab
                 der Saison nach ihrer Fertigstellung.</div>
             </div>
-            {VEREIN.VEREIN_AUSBAU.map((ab) => {
-              const stufe = VEREIN.ausbauStufe(v, ab.id);
-              const k = VEREIN.ausbauKosten(v, ab.id);
-              const laeuft = (v.baustellen || {})[ab.id];
-              const fehlt = k == null ? 0 : Math.max(0, Math.round((k - VEREIN.kasse(v)) * 100) / 100);
-              return (
-                <div key={ab.id} className="pan pad" style={{ marginTop: 8 }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
-                    <span className="d" style={{ fontSize: 15 }}>{ab.n}</span>
-                    <span className="m" style={{ fontSize: 12 }}>Stufe {stufe} / {VEREIN.AUSBAU_MAX}</span>
-                  </div>
-                  <div className="m" style={{ fontSize: 11.5, marginTop: 2 }}>{ab.t}</div>
-                  <div className="m" style={{ fontSize: 11.5 }}>{ab.wirkt}</div>
-                  <button className="btn sm" style={{ marginTop: 6 }}
-                    disabled={k == null || !!laeuft || fehlt > 0}
-                    onClick={() => { const r = VEREIN.bauStarten(v, ab.id); if (!r.fehler) onAendern(r.v); }}>
-                    {k == null ? "Voll ausgebaut"
-                      : laeuft ? "Im Bau · noch " + laeuft.rest + (laeuft.rest === 1 ? " Saison" : " Saisons")
-                      : "Bauen · " + VEREIN.geldText(k, v.land)}
-                  </button>
-                  {/* „Dafür fehlen" nur, wenn es etwas zu ergänzen GIBT. Bei
-                      leerer Kasse ist die Lücke genau der Preis — die Zeile
-                      wiederholte dann die Zahl direkt über sich. Beim Rundgang
-                      durch die Oberfläche als Stottern aufgefallen: „Bauen ·
-                      4 Mio €" / „Dafür fehlen 4 Mio €". Ist schon etwas da,
-                      aber nicht genug, sagt sie etwas Neues. */}
-                  {k != null && !laeuft && fehlt > 0 && VEREIN.kasse(v) > 0 && (
-                    <div className="m" style={{ fontSize: 11, marginTop: 4 }}>
-                      Dafür fehlen {VEREIN.geldText(fehlt, v.land)}</div>)}
-                </div>);
+            <div className="kauf-uebersicht" style={{marginTop:10}}><div className="kauf-raster">
+            {VEREIN.VEREIN_AUSBAU.map(ab => {
+              const stufe = VEREIN.ausbauStufe(v,ab.id), k = VEREIN.ausbauKosten(v,ab.id);
+              const laeuft = (v.baustellen || {})[ab.id], text = KAUF_TEXTE['verein.' + ab.id];
+              return <KaufKachel key={ab.id} icon={'verein.' + ab.id} titel={text.titel}
+                stufe={stufe} maximum={VEREIN.AUSBAU_MAX} preisText={k == null ? 'Voll ausgebaut' : VEREIN.geldText(k,v.land)}
+                nutzen={text.kurz} status={laeuft ? 'Im Bau · noch ' + laeuft.rest + (laeuft.rest === 1 ? ' Saison' : ' Saisons') : k == null ? 'Maximum erreicht' : VEREIN.kasse(v) < k ? 'Nicht genug in der Vereinskasse' : 'Ausbau möglich'}
+                onOpen={() => setKaufAuswahl({art:'bau',id:ab.id})}/>;
             })}
-
-            <div className="pan pad" style={{ marginTop: 14 }}>
+            </div></div>
+            <div className="pan pad" style={{marginTop:14}}>
               <div className="eb">Mit VC · {aka ? aka.vc : 0} verfügbar</div>
-              <div className="m" style={{ fontSize: 11.5, marginTop: 2 }}>
-                Nur was den Verein überdauert oder mit Geld allein nicht geht.
-                Jedes einmal je Verein.</div>
+              <p className="m">Nur was den Verein überdauert oder mit Geld allein nicht geht. Jedes einmal je Verein.</p>
+              <div className="kauf-uebersicht"><div className="kauf-raster">
+              {VEREIN.VC_EXTRAS.map(ex => {
+                const hat = (v.extras || []).includes(ex.id);
+                return <KaufKachel key={ex.id} titel={ex.n} stand={hat ? 'Vorhanden' : 'Noch nicht vorhanden'}
+                  preis={ex.vc} nutzen={ex.wirkt} status={hat ? 'Bereits vorhanden' : !aka || aka.vc < ex.vc ? 'Nicht genug VC' : 'Kauf möglich'}
+                  onOpen={() => setKaufAuswahl({art:'extra',id:ex.id})}/>;
+              })}
+              </div></div>
             </div>
-            {VEREIN.VC_EXTRAS.map((ex) => {
-              const hat = (v.extras || []).includes(ex.id);
-              return (
-                <div key={ex.id} className="pan pad" style={{ marginTop: 8 }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
-                    <span className="d" style={{ fontSize: 15 }}>{ex.n}</span>
-                    <span className="m" style={{ fontSize: 12 }}>{ex.vc} VC</span>
-                  </div>
-                  <div className="m" style={{ fontSize: 11.5, marginTop: 2 }}>{ex.t}</div>
-                  <div className="m" style={{ fontSize: 11.5 }}>{ex.wirkt}</div>
-                  <button className="btn sm" style={{ marginTop: 6 }}
-                    disabled={hat || !aka || aka.vc < ex.vc}
-                    onClick={() => {
-                      const r = VEREIN.extraKaufen(v, ex.id, aka ? aka.vc : 0);
-                      if (!r.fehler) onAendern(r.v, { ...aka, vc: aka.vc - r.kosten,
-                        ausgegeben: (aka.ausgegeben || 0) + r.kosten });
-                    }}>
-                    {hat ? "Bereits vorhanden" : "Kaufen · " + ex.vc + " VC"}
-                  </button>
-                </div>);
-            })}
+            {kaufAuswahl && (() => {
+              const bau = kaufAuswahl.art === 'bau';
+              const it = (bau ? VEREIN.VEREIN_AUSBAU : VEREIN.VC_EXTRAS).find(it => it.id === kaufAuswahl.id);
+              const text = bau ? KAUF_TEXTE['verein.' + it.id] : {titel:it.n, details:it.t};
+              const k = bau ? VEREIN.ausbauKosten(v,it.id) : it.vc;
+              const probe = bau ? VEREIN.bauStarten(v,it.id) : VEREIN.extraKaufen(v,it.id,aka?.vc || 0);
+              const preis = bau ? VEREIN.geldText(k,v.land) : k + ' VC';
+              const laeuft = bau && (v.baustellen || {})[it.id];
+              return <KaufVorgang key={kaufAuswahl.art + it.id} titel={text.titel} registerBack={zurueckAnmelden}
+                onClose={() => setKaufAuswahl(null)} aktionen={[{
+                  label:k == null ? 'Voll ausgebaut' : (bau ? 'Bau starten · ' : 'Kaufen · ') + preis,
+                  gesperrt:!!probe.fehler, erfolg:bau ? 'Baustart gespeichert.' : 'Kauf gespeichert.',
+                  ausfuehren:() => {
+                    const r = bau ? VEREIN.bauStarten(v,it.id) : VEREIN.extraKaufen(v,it.id,aka?.vc || 0);
+                    if (r.fehler) return false;
+                    return bau ? onAendern(r.v) : onAendern(r.v,{...aka,vc:aka.vc-r.kosten,ausgegeben:(aka.ausgegeben || 0)+r.kosten});
+                  }
+                }]}>
+                <p>{text.details}</p>
+                {!bau && <p>{it.wirkt}</p>}
+                <dl><dt>{bau ? 'Vereinskasse' : 'VC verfügbar'}</dt><dd>{bau ? VEREIN.geldText(VEREIN.kasse(v),v.land) : (aka?.vc || 0) + ' VC'}</dd>
+                  {k != null && <><dt>Einmaliger Preis</dt><dd>{preis}</dd></>}
+                  {bau && <><dt>Aktueller Ausbau</dt><dd>Stufe {VEREIN.ausbauStufe(v,it.id)} / {VEREIN.AUSBAU_MAX}</dd></>}
+                </dl>
+                {bau && <p>Die neue Stufe wirkt ab der Saison nach Fertigstellung.{laeuft ? ' Noch ' + laeuft.rest + (laeuft.rest === 1 ? ' Saison.' : ' Saisons.') : !probe.fehler ? ' Bauzeit: ' + probe.v.baustellen[it.id].rest + (probe.v.baustellen[it.id].rest === 1 ? ' Saison.' : ' Saisons.') : ''}</p>}
+                {probe.fehler && <p>{probe.fehler}</p>}
+              </KaufVorgang>;
+            })()}
+
           </div>)}
 
         {reiter === "chronik" && (
@@ -13450,7 +13457,13 @@ function Spielerkarte({ karte, gross, aufgedeckt = true, onTippen, jubel }) {
           letterSpacing: ".1em" }}>{st.n.toUpperCase()}</div>
       </button>);
   }
-  const fl = KARTEN.flaeche(karte.stufe);
+  // Astra-Abnahme 24.09.2026: heller Goldgrund braucht dunkle Druckfarbe.
+  // Sonst verschwinden Stufenname und OVR im gleichfarbigen Metallreflex.
+  // Durchgehende Fläche auch ohne Animation, keine Kästen hinter Texten.
+  const gold = karte.stufe === "gold";
+  const druck = gold ? "#241b09" : st.farbe;
+  const neben = gold ? "#392a10" : folie ? "#e4e2d9" : "var(--mu)";
+  const fl = gold ? {oben:"#ebcc77",unten:"#c79a35",kante:"#fff0b8"} : KARTEN.flaeche(karte.stufe);
   const merk = KARTEN.merkmaleVon(karte);
   /* GEFEIERT WIRD NUR, WAS SELTEN IST. Eine Feier bei jeder Bronzekarte ist
      keine Feier, sondern eine Wartezeit. Und `RUHE` hat das letzte Wort —
@@ -13470,7 +13483,7 @@ function Spielerkarte({ karte, gross, aufgedeckt = true, onTippen, jubel }) {
          Stufenfarbe kräftig im Kartongrund, unten dunkel. Eine Sammelkarte
          ist ein Stück Pappe, kein Fenster. */
       background: "linear-gradient(150deg," + fl.oben + " 0%," + fl.unten + " 100%)",
-      position: "relative", overflow: "hidden" }}>
+      position: "relative", overflow: "hidden", color: gold ? "#241b09" : undefined }}>
       {/* Ein feiner Glanz über der oberen Kante — das, was eine gedruckte
           Karte von einem Rechteck unterscheidet. */}
       <span aria-hidden style={{ position: "absolute", left: 0, right: 0, top: 0,
@@ -13488,12 +13501,12 @@ function Spielerkarte({ karte, gross, aufgedeckt = true, onTippen, jubel }) {
           meta={karte.stufe === "legende" ? { mk_rahmen4: true, rahmenWahl: "mk_rahmen4" }
             : karte.stufe === "gold" ? { mk_gold: true, rahmenWahl: "mk_gold" } : null} />
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div className="eb" style={{ color: st.farbe }}>
+          <div className="eb" style={{ color: druck }}>
             {st.n} · {POS[karte.pos] ? POS[karte.pos].short : karte.pos}</div>
           <div className="d" style={{ fontSize: Math.round(17 * gr), overflow: "hidden",
             textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
             {karte.flag ? karte.flag + " " : ""}{karte.name}</div>
-          <div className="m" style={{ fontSize: gross ? 12 : 11, color: folie ? "#e4e2d9" : "var(--mu)", marginTop: 2 }}>
+          <div className="m" style={{ fontSize: gross ? 12 : 11, color: neben, marginTop: 2 }}>
             {karte.alter} Jahre{karte.verein ? " · " + karte.verein : ""}
             {karte.herkunft === "halle" ? " · Ruhmeshalle" : ""}
             {karte.herkunft === "akademie" ? " · aus der Jugend" : ""}</div>
@@ -13506,23 +13519,23 @@ function Spielerkarte({ karte, gross, aufgedeckt = true, onTippen, jubel }) {
               Alte Karten haben kein `zusatz` — dann fällt die Zeile weg,
               statt „Jahrgang undefined" zu zeigen. */}
           {karte.herkunft === "akademie" && typVon({typ:karte.zusatz?.typ}) && (
-            <div className="m" style={{fontSize:12,color:folie?"#e4e2d9":"var(--mu)",marginTop:5}}>
+            <div className="m" style={{fontSize:12,color:neben,marginTop:5}}>
               Talenttyp: {typVon({typ:karte.zusatz.typ}).n}
             </div>)}
           {karte.herkunft === "akademie" && karte.zusatz && karte.zusatz.jahrgang && (
-            <div className="m" style={{ fontSize: 10.5, color: "var(--ac)", marginTop: 2 }}>
+            <div className="m" style={{ fontSize: 10.5, color: gold ? neben : "var(--ac)", marginTop: 2 }}>
               Eigengewächs, Jahrgang {karte.zusatz.jahrgang}
               {karte.zusatz.klub ? " · erster Profiklub: " + karte.zusatz.klub : ""}
               {karte.zusatz.ns ? " · Nationalspieler" : ""}</div>)}
         </div>
-        <div className="d" style={{ fontSize: Math.round(26 * gr), color: st.farbe,
+        <div className="d" style={{ fontSize: Math.round(26 * gr), color: druck,
           lineHeight: 1 }}>{karte.ovr}</div>
       </div>
 
       {/* Anlage nur zeigen, wenn sie ueber der Staerke liegt — „Anlage 70" bei
           Staerke 70 ist keine Auskunft, sondern Fuellsel. */}
       {karte.pot > karte.ovr && (
-        <div className="m" style={{ fontSize: gross ? 12 : 11, color: folie ? "#e4e2d9" : "var(--mu)", marginTop: 7 }}>
+        <div className="m" style={{ fontSize: gross ? 12 : 11, color: neben, marginTop: 7 }}>
           Anlage {karte.pot} · noch {karte.pot - karte.ovr} zu holen</div>)}
       {/* MERKMALE ALS SYMBOLE (Kevins Wunsch). Höchstens drei — was jeder
           hat, zeichnet niemanden aus. */}
@@ -13532,12 +13545,12 @@ function Spielerkarte({ karte, gross, aufgedeckt = true, onTippen, jubel }) {
           {merk.map((m) => (
             <span key={m.id} title={m.n} style={{ display: "flex", alignItems: "center",
               gap: 4 }}>
-              <Merkzeichen sym={m.sym} farbe={st.farbe} groesse={gross ? 15 : 13} />
-              <span className="m" style={{ fontSize: gross ? 12 : 11, color: folie ? "#e4e2d9" : "var(--mu)" }}>{m.n}</span>
+              <Merkzeichen sym={m.sym} farbe={druck} groesse={gross ? 15 : 13} />
+              <span className="m" style={{ fontSize: gross ? 12 : 11, color: neben }}>{m.n}</span>
             </span>))}
         </div>)}
       {karte.sonderkarte && (
-        <div className="eb" style={{ color: "var(--go)", marginTop: 7 }}>Sonderkarte</div>)}
+        <div className="eb" style={{ color: gold ? druck : "var(--go)", marginTop: 7 }}>Sonderkarte</div>)}
     </div>
   );
 }
@@ -16392,6 +16405,7 @@ function StatsView({ p }) {
 
 /* ---------- Vermögen ---------- */
 function MoneyView({ p, onBuy, onInvest, onSell, onDonate }) {
+  const [auswahl, setAuswahl] = useState(null);
   const owned = p.assets;
   const auto = !!p.speed;                        // im Speedmodus kauft der Berater
   const cats = [...new Set(SHOP.map((s) => s.cat))];
@@ -16449,58 +16463,47 @@ function MoneyView({ p, onBuy, onInvest, onSell, onDonate }) {
       })()}
       <div className="pan pad">
         <div className="eb" style={{ marginBottom: 8 }}>Geldanlage</div>
-        {INVEST.map((it) => {
-          const held = p.depot[it.id] || 0;
-          const steps = [.1, .5, 2, 10].filter((v) => v >= it.min && v <= p.money);
-          return (
-            <div key={it.id} style={{ padding: "8px 0", borderBottom: "1px solid var(--ln)" }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 8, flexWrap: "wrap" }}>
-                <div>
-                  <span style={{ fontSize: 13 }}>{it.name}</span>
-                  <span className="chip" style={{ marginLeft: 7 }}>Risiko {it.risk}</span>
-                </div>
-                <span className="m" style={{ fontSize: 11.5, color: held > 0 ? "var(--ac)" : "var(--mu)" }}>{eur(held)} €</span>
-              </div>
-              <div style={{ fontSize: 11.5, color: "var(--mu)", marginTop: 2 }}>{it.desc}</div>
-              <div style={{ display: "flex", gap: 5, marginTop: 7, flexWrap: "wrap" }}>
-                {steps.map((v) => <button key={v} className="btn sm" disabled={auto}
-                  onClick={() => { if (!auto) onInvest(it.id, v); }}>+{eur(v)}</button>)}
-                {held > 0 && <button className="btn sm" onClick={() => onSell(it.id)}>Auflösen</button>}
-                {!steps.length && held === 0 && <span className="m" style={{ fontSize: 10.5, color: "var(--mu)" }}>Mindestanlage {eur(it.min)} €</span>}
-              </div>
-            </div>
-          );
-        })}
+        <div className="kauf-uebersicht"><div className="kauf-raster">
+          {INVEST.map(it => <KaufKachel key={it.id} icon="vermoegen.geschaeft"
+            titel={KAUF_TEXTE['investition.' + it.id].titel} stand={'Depot: ' + eur(p.depot[it.id] || 0) + ' €'}
+            preisText={'Ab ' + eur(it.min) + ' €'} nutzen={KAUF_TEXTE['investition.' + it.id].kurz}
+            status={'Risiko ' + it.risk} onOpen={() => setAuswahl({art:'investition',id:it.id})}/>) }
+        </div></div>
       </div>
-
-      {cats.map((cat) => (
-        <div className="pan pad" key={cat}>
-          <div className="eb" style={{ marginBottom: 8 }}>{cat}</div>
-          <div className="g1">
-            {SHOP.filter((s) => s.cat === cat).map((s) => {
-              const has = owned.includes(s.id);
-              const cost = s.id === "anteile" ? Math.max(6, clubBudget(p.club) * .45) : s.cost;
-              const blocked = s.req && !owned.includes(s.req);
-              return (
-                <div key={s.id} style={{ display: "flex", gap: 10, alignItems: "center", justifyContent: "space-between", flexWrap: "wrap" }}>
-                  <div style={{ flex: 1, minWidth: 170 }}>
-                    <div style={{ fontSize: 13, color: has ? "var(--go)" : "var(--tx)" }}>{s.name}{has ? " ✓" : ""}</div>
-                    <div style={{ fontSize: 11.5, color: "var(--mu)" }}>{s.desc}</div>
-                    <div className="m" style={{ fontSize: 10, color: "var(--mu)", marginTop: 2 }}>
-                      {eur(cost)} €{s.up ? " · Unterhalt " + eur(s.up) + " €/Jahr" : ""}
-                      {blocked ? " · setzt " + shopItem(s.req).name + " voraus" : ""}
-                    </div>
-                  </div>
-                  <button className="btn sm" disabled={auto || has || blocked || p.money < cost}
-                    onClick={() => { if (!auto) onBuy(s.id, cost); }}>
-                    {has ? "Vorhanden" : "Kaufen"}
-                  </button>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      ))}
+      {cats.map(cat => <div className="pan pad kauf-uebersicht" key={cat}>
+        <div className="eb" style={{marginBottom:8}}>{cat}</div>
+        <div className="kauf-raster">{SHOP.filter(s => s.cat === cat).map(it => {
+          const text = KAUF_TEXTE['vermoegen.' + it.id], cost = kaufPreis(p,it);
+          const grund = kaufSperrgrund(p,it);
+          const motive = {'Wohnen':'wohnen','Fahrzeug':'fahrzeug','Umfeld':'umfeld','Geschäft':'geschaeft','Vermächtnis':'vermaechtnis'};
+          return <KaufKachel key={it.id} icon={'vermoegen.' + (motive[cat] || 'fahrzeug')}
+            titel={text.titel} stand={owned.includes(it.id) ? 'Vorhanden' : 'Noch nicht vorhanden'}
+            preisText={eur(cost) + ' €'} nutzen={text.kurz} status={grund || 'Kauf möglich'}
+            onOpen={() => setAuswahl({art:'vermoegen',id:it.id})}/>;
+        })}</div>
+      </div>)}
+      {auswahl && (() => {
+        const anlage = auswahl.art === 'investition';
+        const it = (anlage ? INVEST : SHOP).find(it => it.id === auswahl.id);
+        const text = KAUF_TEXTE[auswahl.art + '.' + it.id];
+        const grund = anlage ? (auto ? 'Im Speedmodus übernimmt dein Berater die Anlagen.' : p.money < it.min ? 'Für die Mindestanlage reicht das Geld nicht.' : '') : kaufSperrgrund(p,it);
+        const held = p.depot[it.id] || 0;
+        const aktionen = anlage ? [
+          ...[...new Set([it.min,.1,.5,2,10])].filter(v => v >= it.min).sort((a,b) => a-b).map(v => ({label:eur(v) + ' € anlegen',
+            gesperrt:auto || p.money < v, ausfuehren:() => onInvest(it.id,v), erfolg:'Anlage gespeichert.'})),
+          ...(held > 0 ? [{label:'Depot auflösen · ' + eur(held) + ' €', ausfuehren:() => onSell(it.id), erfolg:'Auflösung gespeichert.'}] : [])
+        ] : [{label:'Kaufen · ' + eur(kaufPreis(p,it)) + ' €',gesperrt:!!grund,ausfuehren:() => onBuy(it.id),erfolg:'Kauf gespeichert.'}];
+        return <KaufVorgang key={auswahl.art + it.id} titel={text.titel} registerBack={zurueckAnmelden}
+          onClose={() => setAuswahl(null)} aktionen={aktionen}>
+          <p>{text.details}</p>
+          <dl><dt>Verfügbar</dt><dd>{eur(p.money)} €</dd>
+            {anlage ? <><dt>Mindestanlage</dt><dd>{eur(it.min)} €</dd><dt>Depotwert</dt><dd>{eur(held)} €</dd><dt>Risiko</dt><dd>{it.risk}</dd></>
+              : <><dt>Einmaliger Preis</dt><dd>{eur(kaufPreis(p,it))} €</dd><dt>Unterhalt pro Jahr</dt><dd>{eur(it.up || 0)} €</dd></>}
+          </dl>
+          {!anlage && it.req && <p>Voraussetzung: {shopItem(it.req).name}.</p>}
+          {grund && <p>{grund}</p>}
+        </KaufVorgang>;
+      })()}
 
       <div className="pan pad">
         <div className="eb" style={{ marginBottom: 6 }}>Spenden</div>
@@ -17237,45 +17240,58 @@ const zaehlOrte = (x) => {
   return 0;
 };
 
+/* Das Rekordbuch mischt bewusst zwei Arten von Zahlen: echte Bestwerte
+   (z. B. Höchststärke) und lebenslange Summen (z. B. alle Pflichtspiele).
+   Die alte Beschriftung mit „Meiste …“ ließ Summen wie Rekorde EINER Laufbahn
+   wirken. Die Gruppe ist deshalb Teil der Definition und nicht nur Deko. */
+const REKORD_GRUPPEN = [
+  { id:"best", titel:"Bestwerte", zeichen:"↑", farbe:"var(--go)",
+    text:"Höchster Wert aus einer einzelnen Laufbahn oder Saison" },
+  { id:"gesamt", titel:"Gesamtbilanz", zeichen:"Σ", farbe:"var(--ac)",
+    text:"Über alle abgeschlossenen Laufbahnen zusammengerechnet" },
+  { id:"wege", titel:"Stationen & Rollen", zeichen:"#", farbe:"var(--ok)",
+    text:"Vielfalt, Vereinswege und besondere Rollen" },
+];
+
 const REKORDE = [
-  ["Höchste Karrierepunkte",     (g) => g.bestPunkte,   ""],
-  ["Höchste Gesamtstärke",       (g) => g.ovrMax,       ""],
-  ["Meiste Pflichtspiele",       (g) => g.apps,         "insgesamt"],
-  ["Meiste Tore",                (g) => g.goals,        "insgesamt"],
-  ["Meiste Vorlagen",            (g) => g.assists,      "insgesamt"],
-  ["Meiste Spiele ohne Gegentor", (g) => g.cs,          "insgesamt"],
-  ["Tore in einer Saison",       (g) => g.toreSaisonMax, "Bestwert"],
-  ["Meiste Länderspiele",        (g) => g.caps,         "insgesamt"],
-  ["Meiste Titel",               (g) => g.titel,        "insgesamt"],
-  ["Meisterschaften",            (g) => g.meister,      ""],
-  ["Pokalsiege",                 (g) => g.pokale,       ""],
-  ["Internationale Titel",       (g) => g.intTitel,     ""],
-  ["Turniersiege mit dem Land",  (g) => g.ntTitel,      ""],
-  ["Längste Vereinstreue",       (g) => g.treueMax,     "Jahre am Stück"],
-  ["Ältester Einsatz",           (g) => g.altMax,       "Jahre"],
+  { titel:"Karrierepunkte",          hol:(g)=>g.bestPunkte,   gruppe:"best",   hinweis:"beste Laufbahn" },
+  { titel:"Gesamtstärke",            hol:(g)=>g.ovrMax,       gruppe:"best",   hinweis:"höchster Karrierewert" },
+  { titel:"Tore in einer Saison",    hol:(g)=>g.toreSaisonMax,gruppe:"best",   hinweis:"beste einzelne Saison" },
+  { titel:"Längste Vereinstreue",    hol:(g)=>g.treueMax,     gruppe:"best",   hinweis:"Saisons am Stück" },
+  { titel:"Ältestes Karriereende",   hol:(g)=>g.altMax,       gruppe:"best",   hinweis:"Alter in Jahren" },
+
+  { titel:"Pflichtspiele",           hol:(g)=>g.apps,         gruppe:"gesamt", hinweis:"alle Laufbahnen" },
+  { titel:"Tore",                    hol:(g)=>g.goals,        gruppe:"gesamt", hinweis:"alle Laufbahnen" },
+  { titel:"Vorlagen",                hol:(g)=>g.assists,      gruppe:"gesamt", hinweis:"alle Laufbahnen" },
+  { titel:"Spiele ohne Gegentor",    hol:(g)=>g.cs,           gruppe:"gesamt", hinweis:"alle Laufbahnen" },
+  { titel:"A-Länderspiele",          hol:(g)=>g.caps,         gruppe:"gesamt", hinweis:"alle Laufbahnen" },
+  { titel:"Titel",                   hol:(g)=>g.titel,        gruppe:"gesamt", hinweis:"alle Laufbahnen" },
+  { titel:"Meisterschaften",         hol:(g)=>g.meister,      gruppe:"gesamt", hinweis:"alle Laufbahnen" },
+  { titel:"Pokalsiege",              hol:(g)=>g.pokale,       gruppe:"gesamt", hinweis:"alle Laufbahnen" },
+  { titel:"Internationale Titel",    hol:(g)=>g.intTitel,     gruppe:"gesamt", hinweis:"alle Laufbahnen" },
+  { titel:"Nationalteam-Titel",      hol:(g)=>g.ntTitel,      gruppe:"gesamt", hinweis:"große Turniere" },
+  { titel:"Aufstiege",               hol:(g)=>g.aufstiege,    gruppe:"gesamt", hinweis:"alle Laufbahnen" },
+
   /* ZAEHLOBJEKTE, KEINE ZAHLEN (35.140, F30). `laender`, `ligen` und
      `vereine` sind Karten der Form { DE: 1, FR: 1, … } — sie zaehlen, WIE
-     OFT jeder Ort bespielt wurde. `rekordListe` prueft `wert > 0`, und das
-     ist bei einem Objekt immer falsch: die drei Zeilen fielen seit 35.116
-     IMMER weg, auch bei 4 Laendern, 5 Ligen und 12 Vereinen.
-
-     Gezaehlt wird die Zahl VERSCHIEDENER Eintraege, nicht die Summe der
-     Besuche — wer dreimal in Spanien spielte, war in EINEM Land. Alte oder
-     beschaedigte Staende, in denen dort schon eine Zahl steht, werden
-     mitgenommen. */
-  ["Bespielte Länder",           (g) => zaehlOrte(g.laender), ""],
-  ["Bespielte Ligen",            (g) => zaehlOrte(g.ligen),   ""],
-  ["Verschiedene Vereine",       (g) => zaehlOrte(g.vereine), ""],
-  ["Aufstiege geschafft",        (g) => g.aufstiege,    ""],
-  ["Saisons als Kapitän",        (g) => g.kapitaen,     ""],
+     OFT jeder Ort bespielt wurde. Gezaehlt wird hier die Zahl VERSCHIEDENER
+     Eintraege, nicht die Summe der Besuche. Alte oder beschaedigte Staende,
+     in denen dort schon eine Zahl steht, werden mitgenommen. */
+  { titel:"Bespielte Länder",        hol:(g)=>zaehlOrte(g.laender), gruppe:"wege", hinweis:"verschiedene Länder" },
+  { titel:"Bespielte Ligen",         hol:(g)=>zaehlOrte(g.ligen),   gruppe:"wege", hinweis:"verschiedene Ligen" },
+  { titel:"Verschiedene Vereine",    hol:(g)=>zaehlOrte(g.vereine), gruppe:"wege", hinweis:"verschiedene Stationen" },
+  /* `kapitaen` zaehlt in bilanzErgaenzen genau einmal je Laufbahn, in der
+     die Vereinsbinde erreicht wurde. Es sind keine Kapitaens-Saisons. */
+  { titel:"Laufbahnen als Kapitän",  hol:(g)=>g.kapitaen, gruppe:"wege",
+    hinweis:"mind. einmal Vereinskapitän", zeichen:"C" },
 ];
 
 function rekordListe(g) {
   if (!g) return [];
-  return REKORDE.map(([titel, hol, zusatz]) => {
+  return REKORDE.map((rekord) => {
     let wert = 0;
-    try { wert = hol(g) || 0; } catch (e) { wert = 0; }
-    return wert > 0 ? { titel, wert, zusatz } : null;
+    try { wert = rekord.hol(g) || 0; } catch (e) { wert = 0; }
+    return wert > 0 ? { ...rekord, wert } : null;
   }).filter(Boolean);
 }
 
@@ -17385,21 +17401,49 @@ function HallScreen({ hall, onBack, ges, aka, verein }) {
           const rk = rekordListe(ges);
           if (rk.length < 3) return null;
           return (
-            <div className="pan pad" style={{ marginBottom: 14 }}>
+            <div className="pan pad" data-testid="rekordbuch" style={{ marginBottom: 14 }}>
               <div className="eb" style={{ color: "var(--ac)" }}>Das ewige Rekordbuch</div>
-              <div className="m" style={{ fontSize: 11, color: "var(--mu)", marginTop: 2, marginBottom: 8 }}>
-                Über alle {ges.karrieren} {ges.karrieren === 1 ? "Laufbahn" : "Laufbahnen"} hinweg
+              <div className="m" style={{ fontSize: 11, color: "var(--mu)", marginTop: 2 }}>
+                Über alle {ges.karrieren} {ges.karrieren === 1 ? "Laufbahn" : "Laufbahnen"} hinweg · Bestwerte und Summen getrennt
               </div>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "3px 12px" }}>
-                {rk.map((r) => (
-                  <div key={r.titel} style={{ display: "flex", justifyContent: "space-between",
-                    alignItems: "baseline", gap: 6, padding: "3px 0",
-                    borderBottom: "1px solid var(--ln)" }}>
-                    <span className="m" style={{ fontSize: 10.5, color: "var(--mu)",
-                      overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{r.titel}</span>
-                    <span className="d" style={{ fontSize: 14, whiteSpace: "nowrap" }}>{r.wert}</span>
-                  </div>))}
-              </div>
+              {REKORD_GRUPPEN.map((gruppe) => {
+                const werte = rk.filter((r) => r.gruppe === gruppe.id);
+                if (!werte.length) return null;
+                return (
+                  <section key={gruppe.id} aria-label={gruppe.titel} style={{ marginTop: 11 }}>
+                    <div style={{ display: "flex", alignItems: "baseline", gap: 7, flexWrap: "wrap",
+                      paddingBottom: 4, borderBottom: "1px solid var(--ln2)" }}>
+                      <span className="d" aria-hidden="true" style={{ color: gruppe.farbe,
+                        fontSize: 14, minWidth: 14 }}>{gruppe.zeichen}</span>
+                      <span className="eb" style={{ color: gruppe.farbe }}>{gruppe.titel}</span>
+                      <span className="m" style={{ fontSize: 9.5, color: "var(--mu)" }}>{gruppe.text}</span>
+                    </div>
+                    <div style={{ display: "grid",
+                      gridTemplateColumns: "repeat(auto-fit,minmax(min(100%,210px),1fr))",
+                      gap: "4px 12px", marginTop: 3 }}>
+                      {werte.map((r) => (
+                        <div key={r.titel} aria-label={r.titel + ": " + r.wert + ". " + r.hinweis}
+                          style={{ minWidth: 0, display: "grid",
+                            gridTemplateColumns: "24px minmax(0,1fr) auto",
+                            alignItems: "center", gap: 7, padding: "6px 0",
+                            borderBottom: "1px solid var(--ln)" }}>
+                          <span className="d" aria-hidden="true" style={{
+                            width: 22, height: 22, display: "grid", placeItems: "center",
+                            border: "1px solid " + gruppe.farbe, color: gruppe.farbe,
+                            fontSize: (r.zeichen || gruppe.zeichen).length > 1 ? 8.5 : 12,
+                            lineHeight: 1 }}>{r.zeichen || gruppe.zeichen}</span>
+                          <span style={{ minWidth: 0 }}>
+                            <span className="m" style={{ display: "block", fontSize: 11.25,
+                              color: "var(--tx)", lineHeight: 1.2 }}>{r.titel}</span>
+                            <span className="m" style={{ display: "block", fontSize: 9.5,
+                              color: "var(--mu)", marginTop: 2 }}>{r.hinweis}</span>
+                          </span>
+                          <span className="d" style={{ fontSize: 16, whiteSpace: "nowrap",
+                            paddingLeft: 4 }}>{r.wert}</span>
+                        </div>))}
+                    </div>
+                  </section>);
+              })}
             </div>);
         })()}
         {/* DIE ZEITLEISTE (35.119). Unter dem Rekordbuch: die Rekorde sagen
@@ -19241,17 +19285,29 @@ function FlutlichtApp() {
     setP(q); setOffers(neu);
   };
 
-  const buy = (id, cost) => {
-    const q = clone(p); const it = shopItem(id);
-    if (!it || q.assets.includes(id) || q.money < cost) return;
-    q.money -= cost; q.assets.push(id); applyFx(q, it.fx);
-    q.ovr = ovrOf(q.attrs, q.pos); setP(q);
+  const vermoegenSichern = (q) => {
+    const stand = laufStand(q, step, {queue, ei, er, growth, season, offers}, EVENTS, VERSION);
+    return bucheAenderung({[SAVE_KEY]:JSON.stringify(stand)}, () => {setP(q); setSave(stand);});
+  };
+  const buy = (id) => {
+    const it = shopItem(id);
+    if (buchungAktiv.current || kaufSperrgrund(p,it)) return false;
+    const q = clone(p);
+    q.money -= kaufPreis(q,it); q.assets.push(id); applyFx(q,it.fx);
+    q.ovr = ovrOf(q.attrs,q.pos);
+    return vermoegenSichern(q);
   };
   const invest = (id, amt) => {
-    const q = clone(p); if (q.money < amt) return;
-    q.money -= amt; q.depot[id] = (q.depot[id] || 0) + amt; setP(q);
+    const it = INVEST.find(it => it.id === id);
+    if (buchungAktiv.current || p.speed || !it || !Number.isFinite(amt) || amt <= 0 || amt < it.min || p.money < amt) return false;
+    const q = clone(p); q.money -= amt; q.depot[id] = (q.depot[id] || 0) + amt;
+    return vermoegenSichern(q);
   };
-  const sell = (id) => { const q = clone(p); q.money += q.depot[id] || 0; q.depot[id] = 0; setP(q); };
+  const sell = (id) => {
+    if (buchungAktiv.current || !INVEST.some(it => it.id === id) || !(p.depot[id] > 0)) return false;
+    const q = clone(p); q.money += q.depot[id]; q.depot[id] = 0;
+    return vermoegenSichern(q);
+  };
   const donate = (v) => {
     const q = clone(p); if (q.money < v) return;
     q.money -= v; q.donated += v;

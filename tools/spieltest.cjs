@@ -40,7 +40,13 @@ async function pruefStart(fort){
     zuege:{...zuegeAusKennung(1234,'m','GER',{}),stil:2,haut:4,frisur:7,bart:3}};
   const k=KARTEN.ausHalle(h,1);delete k.portraet; // Altstand: Migration testen.
   const pool=KARTEN.poolErgaenzen({karten:[k]},['bronze','silber','gold','legende'].map(st=>KARTEN.neueKarte(st,2030)));
-  for(const [key,val] of [[HALL_KEY,[h]],[LIFE_KEY,{...leereBilanz(),karrieren:5,hausKarrieren:5}],[AKA_KEY,{...leereAkademie(),vc:1000,gratisPacks:1}],[KARTEN_KEY,pool],[META_KEY,{mk_haar:true,mk_acc:true}],[WILL_KEY,{...leerGesehen(),schirm:true}]])await store.set(key,JSON.stringify(val));
+  const rekordBilanz={...leereBilanz(),karrieren:5,hausKarrieren:5,bestPunkte:2726,ovrMax:95,
+    apps:2343,goals:614,assists:241,cs:318,toreSaisonMax:39,caps:458,titel:53,meister:21,pokale:6,
+    intTitel:24,ntTitel:2,treueMax:18,altMax:40,aufstiege:6,kapitaen:1,
+    laender:Object.fromEntries(["GER","ENG","ESP","ITA"].map(k=>[k,1])),
+    ligen:Object.fromEntries(["Bundesliga","2. Bundesliga","Premier League","La Liga","Serie A","Ligue 1","Eredivisie","Liga Portugal","Süper Lig"].map(k=>[k,1])),
+    vereine:Object.fromEntries(Array.from({length:9},(_,i)=>["Prüfverein "+(i+1),1]))};
+  for(const [key,val] of [[HALL_KEY,[h]],[LIFE_KEY,rekordBilanz],[AKA_KEY,{...leereAkademie(),vc:1000,gratisPacks:1}],[KARTEN_KEY,pool],[META_KEY,{mk_haar:true,mk_acc:true}],[WILL_KEY,{...leerGesehen(),schirm:true}]])await store.set(key,JSON.stringify(val));
  }
  if(fort==='akademie'){
   await store.set(VER_KEY,JSON.stringify(VEREIN.gruenden(VEREIN.leererVerein(),{name:'Prüfverein',stadt:'Hamburg',land:'GER',weltjahr:2026}).v));
@@ -53,16 +59,23 @@ async function pruefStart(fort){
   const v=VEREIN.autoAufstellen({...r.v,kader,kasse:50});
   await store.set(VER_KEY,JSON.stringify(v));
  }
+ if(fort==='vermoegen'){
+  const p=createPlayer({name:'Kaufprüfung',nation:'GER',pos:'ST',foot:'rechts',number:9});
+  p.money=2;p.assets=[];p.depot={};
+  await store.set(SAVE_KEY,JSON.stringify(laufStand(p,'training',{queue:[]},EVENTS,VERSION)));
+  await store.set(WILL_KEY,JSON.stringify({...leerGesehen(),schirm:true}));
+ }
  root.render(<RasenschachXI key={Date.now()}/>);
 }
 document.getElementById('frisch').onclick=()=>pruefStart(false);
 document.getElementById('fort').onclick=()=>pruefStart(true);
 document.getElementById('akademie').onclick=()=>pruefStart('akademie');
+document.getElementById('vermoegen').onclick=()=>pruefStart('vermoegen');
 document.getElementById('wirtschaft').onclick=()=>pruefStart('wirtschaft');
 document.getElementById('laden').onclick=()=>root.render(<RasenschachXI key={Date.now()}/>);
 document.getElementById('ident').onclick=()=>root.render(<IdentitaetsProbe/>);
 root.render(<RasenschachXI/>);
 `;
 const r=await build({stdin:{contents:src+demo,resolveDir:process.cwd(),loader:'jsx'},bundle:true,platform:'browser',format:'iife',write:false,minify:true,define:{'process.env.NODE_ENV':'"production"'},plugins:[{name:'isoliert',setup(b){b.onLoad({filter:/[/\\]storage\.js$/},()=>({loader:'js',contents:`import {serialisierterSpeicher} from './sicherung.js';const prefix='rs-pruefung:';export const store=serialisierterSpeicher({get:async k=>{const v=sessionStorage.getItem(prefix+k);return v==null?null:{value:v}},set:async(k,v)=>sessionStorage.setItem(prefix+k,v),delete:async k=>sessionStorage.removeItem(prefix+k)});store.clearTest=async()=>{Object.keys(sessionStorage).filter(k=>k.startsWith(prefix)).forEach(k=>sessionStorage.removeItem(k))};`}))}}]});
-fs.mkdirSync('.preview',{recursive:true});fs.writeFileSync('.preview/spieltest.html',`<!doctype html><html lang="de"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Rasenschach isolierter Spieltest</title><style>${fs.readFileSync('charakter-ui.css','utf8')}</style><body><aside style="background:#193b2d;color:white;padding:8px;font:12px system-ui">TESTSTAND · getrennte Daten <button id="frisch">Neues Spiel</button> <button id="fort">Fortgeschritten</button> <button id="wirtschaft">Vereinswirtschaft</button> <button id="akademie">Akademie-Kacheln</button> <button id="laden">Gespeicherten Stand laden</button> <button id="ident">Porträtkette</button></aside><div id="root"></div><script>${r.outputFiles[0].text.replace(/<\/script/gi,'<\\/script')}</script></body></html>`);
+fs.mkdirSync('.preview',{recursive:true});fs.writeFileSync('.preview/spieltest.html',`<!doctype html><html lang="de"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Rasenschach isolierter Spieltest</title><style>${fs.readFileSync('charakter-ui.css','utf8')}</style><body><aside style="background:#193b2d;color:white;padding:8px;font:12px system-ui">TESTSTAND · getrennte Daten <button id="frisch">Neues Spiel</button> <button id="fort">Fortgeschritten</button> <button id="vermoegen">Vermögenskauf</button> <button id="wirtschaft">Vereinswirtschaft</button> <button id="akademie">Akademie-Kacheln</button> <button id="laden">Gespeicherten Stand laden</button> <button id="ident">Porträtkette</button></aside><div id="root"></div><script>${r.outputFiles[0].text.replace(/<\/script/gi,'<\\/script')}</script></body></html>`);
 })();
